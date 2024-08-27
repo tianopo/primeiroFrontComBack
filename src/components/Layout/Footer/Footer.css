@@ -1,3 +1,3 @@
 .footer-light {
-  @apply border-borda-light bg-fundo_secundario-light;
+  @apply border-edge-primary bg-secundary;
 }

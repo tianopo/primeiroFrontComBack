@@ -1,16 +1,8 @@
-.button {
-  @apply w-11/12 rounded-4 border-1 border-solid p-2.5 text-16 font-semibold shadow-xl duration-300 ease-in-out hover:opacity-80 active:translate-y-1 disabled:cursor-not-allowed disabled:active:-translate-y-0 md:w-64;
-}
-
 /* Cor */
-.button-light {
-  @apply border-borda-light bg-secundaria-light text-white;
-}
-
 .button_trocar_idioma-light {
-  @apply border-borda-light text-icone-light hover:bg-selecionado-light;
+  @apply border-edge-primary text-write-secundary hover:bg-selected-primary;
 }
 
 .button_trocar_tema-light {
-  @apply border-borda-light hover:bg-hover-light;
+  @apply border-edge-primary hover:bg-selected-primary;
 }

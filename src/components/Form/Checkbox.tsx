@@ -5,8 +5,8 @@ import { labelFormatted } from "src/utils/formatation/labelFormatted";
 import { FlexCol } from "../Flex/FlexCol";
 import { FlexRow } from "../Flex/FlexRow";
 import { ErrorMessages } from "./ErrorMessages/ErrorMessages";
-import { Label } from "./Label/Label";
 import "./Input.css";
+import { Label } from "./Label/Label";
 
 export interface ICheckbox extends IUseForm {
   title: string;
@@ -37,7 +37,7 @@ export const Checkbox = ({ disabled, required, title, onChange, ...rest }: IChec
             onChange && onChange(e);
           }}
           className={`
-          checkbox_input-light
+          checkbox_white
           h-4
           w-4
           outline-none

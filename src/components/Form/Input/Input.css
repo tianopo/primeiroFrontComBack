@@ -1,0 +1,33 @@
+.input {
+  @apply h-10 w-full overflow-hidden text-ellipsis whitespace-nowrap rounded-4 border-1 p-2.5 text-12 outline-none duration-300;
+
+  @apply hover:border-primary;
+
+  @apply focus:border-primary focus:shadow-primary;
+}
+
+.input::placeholder {
+  @apply h-fit text-12;
+}
+
+.input_container {
+  @apply flex w-full flex-col gap-2.5;
+}
+
+.input_textarea {
+  @apply resize-none;
+}
+
+.options-list {
+  max-height: 200px;
+  overflow-y: auto;
+  border-radius: 4px;
+}
+
+.option-item {
+  border-bottom: 1px solid #fff;
+}
+
+.option-item:last-child {
+  border-bottom: none;
+}

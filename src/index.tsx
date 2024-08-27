@@ -7,13 +7,16 @@ import "react-toastify/dist/ReactToastify.css";
 import { queryClient } from "./config/api";
 import "./index.css";
 import "./languages/translation";
+import { AccessControlProvider } from "./routes/context/AccessControl";
 import { browserRouter } from "./routes/rotasApp";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <ToastContainer />
-      <RouterProvider router={browserRouter} />
+      <AccessControlProvider>
+        <ToastContainer />
+        <RouterProvider router={browserRouter} />
+      </AccessControlProvider>
     </QueryClientProvider>
   </React.StrictMode>,
 );

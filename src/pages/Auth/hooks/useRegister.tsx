@@ -37,7 +37,7 @@ export const useRegister = () => {
         24 * 60 * 60 * 1000,
       );
 
-      navigate(app.perfil);
+      navigate(app.home);
     },
     onError: (erro: AxiosError) => responseError(erro),
   });

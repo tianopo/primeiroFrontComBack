@@ -1,0 +1,9 @@
+.h-calc-header {
+  height: calc(100vh - 67.19px);
+}
+
+@media (max-width: 768px) {
+  .h-calc-header {
+    height: 100vh;
+  }
+}

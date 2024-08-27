@@ -1,0 +1,3 @@
+.container_tab {
+  @apply w-full cursor-pointer border-b-1;
+}

@@ -10,10 +10,8 @@
   "files.exclude": {
     "**/.git": true,
     ".github": true,
-    ".eslintrc.json": true,
-    ".eslintignore": true,
-    ".lintstagedrc.json": true,
-    ".eslintrc-commit.json": true,
+    "eslint.config.mjs": false,
+    ".lintstagedrc.json": false,
     ".prettierrc": true,
     ".husky": true,
     ".tool-versions": true,

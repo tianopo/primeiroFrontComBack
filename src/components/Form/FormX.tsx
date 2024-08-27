@@ -1,6 +1,6 @@
 import { FormHTMLAttributes, forwardRef } from "react";
 import { useFormContext } from "react-hook-form";
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 interface IFormX extends FormHTMLAttributes<HTMLFormElement> {
   onSubmit: (data: any) => void;
 }

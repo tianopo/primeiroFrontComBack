@@ -1,7 +1,6 @@
 import { AxiosError } from "axios";
 import { toast } from "react-toastify";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export function responseError(err: AxiosError<any, any> | string) {
   let errorMessage;
 

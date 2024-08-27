@@ -3,4 +3,7 @@ export const apiRoute = {
   signup: "/auth/signup",
   logout: (token: string) => `/auth/logout/${token}`,
   token: (token: string) => `/user/${token}`,
+
+  multa: "send/multa",
+  transactions: "send/transactions",
 };

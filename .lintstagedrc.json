@@ -2,7 +2,7 @@
   "src/**/*.+(js|jsx|ts|tsx|html|css)": [
     "prettier --write"
   ],
-  "src/**/*.+(js|jsx|ts|tsx)": [
-    "eslint -c .eslintrc-commit.json --fix"
+  "src/**/*.+(js|json|ts|tsx)": [
+    "eslint --fix"
   ]
 }

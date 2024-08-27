@@ -7,7 +7,7 @@ import "./Button.css";
 export const ButtonChangeTheme = () => {
   const { theme, setTheme } = useTheme();
   const options: { theme: keyof ITheme; icone: JSX.Element }[] = [
-    { theme: "light", icone: <Sun size="20px" weight="fill" className="text-icone-light" /> },
+    { theme: "light", icone: <Sun size="20px" weight="fill" className="text-write-secundary" /> },
     { theme: "dark", icone: <Moon size="20px" weight="fill" className="text-icone-dark" /> },
   ];
 

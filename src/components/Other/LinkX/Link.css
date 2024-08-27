@@ -1,4 +1,4 @@
 /* Cor */
 .link-light {
-  @apply text-escrita-light hover:text-hover-light;
+  @apply text-write-primaryhover:text-hover-light;
 }

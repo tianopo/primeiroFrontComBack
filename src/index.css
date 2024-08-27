@@ -2,7 +2,7 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
-@import url("https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
 
 * {
   box-sizing: border-box;
@@ -13,34 +13,50 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-text-size-adjust: 100%;
-  font-family: "Roboto";
-  overflow-x: hidden;
+  font-family: "Montserrat";
+}
+
+span {
+  @apply z-10 text-10 font-medium leading-pattern;
 }
 
 p {
-  @apply text-16 leading-tight;
+  @apply z-10 text-12 font-medium leading-pattern;
 }
 
 h6 {
-  @apply text-20 leading-tight;
+  @apply z-10 text-16 font-medium leading-pattern;
 }
 
 h5 {
-  @apply text-24 leading-tight;
+  @apply z-10 text-20 font-medium leading-pattern;
 }
 
 h4 {
-  @apply text-30 leading-tight;
+  @apply z-10 text-24 font-medium leading-pattern;
 }
 
 h3 {
-  @apply text-38 leading-tight;
+  @apply z-10 text-30 font-medium leading-pattern;
 }
 
 h2 {
-  @apply text-48 leading-tight;
+  @apply z-10 text-36 font-medium leading-pattern;
 }
 
-h1 {
-  @apply text-60 leading-tight;
+::-webkit-scrollbar {
+  @apply w-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(34, 139, 229, 0.5);
+  border-radius: 12px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 139, 229, 0.7);
 }

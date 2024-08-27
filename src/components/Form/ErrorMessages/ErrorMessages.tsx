@@ -1,5 +1,3 @@
-import "./ErrorMessage.css";
-
 interface IErrorMessages {
   errors?: string;
 }
@@ -9,5 +7,5 @@ export const ErrorMessages = ({ errors }: IErrorMessages) => {
     return <></>;
   }
 
-  return <span className={`label_required-light text-12 font-normal`}>{errors}</span>;
+  return <span className="text-variation-error">{errors}</span>;
 };

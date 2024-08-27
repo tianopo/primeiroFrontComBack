@@ -1,126 +1,86 @@
-import { Sidebar } from "@phosphor-icons/react";
+import { Bell, Gear, List } from "@phosphor-icons/react";
 import { useState } from "react";
-import { FlexRow } from "src/components/Flex/FlexRow";
-import "./Header.css";
+import { useNavigate } from "react-router-dom";
+import { InputSearch } from "src/components/Form/Input/InputSearch";
+import { IconX } from "src/components/Icons/IconX";
+import { app } from "src/routes/app";
+import "../Sidebar/Sidebar.css";
+import { SidebarX } from "../Sidebar/SidebarX";
 
 interface INavbar {
+  icon?: JSX.Element;
   text: string;
   route: string;
 }
 
 interface IHeader {
-  image?: string;
-  title?: string;
-  navbar?: INavbar[];
+  navbar: INavbar[];
 }
 
-export const Header = ({ image, title, navbar }: IHeader) => {
+export const Header = ({ navbar }: IHeader) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleMenuToggle = () => setMenuOpen(!menuOpen);
 
   return (
     <>
-      <header
-        className={`
-      header-light
-      sticky
-      top-0
-      z-10
-      flex
-      h-20
-      w-full
-      flex-row
-      justify-between
-      rounded-b-6
-      border-b-1
-      p-3
-      `}
-      >
-        <FlexRow className="gap-3">
-          {image && (
-            <img
-              src={image}
-              alt={title}
-              className={`
-              header_imagem-light
-              h-12
-              w-10
-              rounded-20
-              border-1
-              p-0.5
-          `}
-            />
-          )}
-          {title && <h1 className="text-20 font-bold text-escrita-light">{title}</h1>}
-        </FlexRow>
-        {navbar && (
-          <>
-            <FlexRow className={`hidden gap-1 md:flex`}>
-              {navbar.map(({ text, route }: INavbar, key: number) => (
-                <a key={key} href={route}>
-                  <p
-                    className={`
-                    p-2
-                    text-16
-                    font-bold
-                    text-escrita-light
-                    hover:underline
-                    `}
-                  >
-                    {text.toUpperCase()}
-                  </p>
-                </a>
-              ))}
-            </FlexRow>
-
-            <FlexRow className={`flex items-center justify-center px-4 md:hidden`}>
-              <div className="relative inline-block w-auto pt-1 duration-300">
-                <button
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  onBlur={() =>
-                    setTimeout(() => {
-                      setMenuOpen(false);
-                    }, 100)
-                  }
-                  className={`navbar_mobile_button-light rounded-6 border-1`}
-                >
-                  <Sidebar
-                    className={`h-7 w-7 rounded-6 border-2 border-slate-300 text-escrita-light hover:bg-slate-600`}
-                  />
-                </button>
-                {menuOpen && (
-                  <div
-                    className={`
-                    menu_mobile-light
-                    absolute
-                    right-0
-                    w-auto
-                    rounded-6
-                    border-1
-                    duration-300
-                    `}
-                  >
-                    {navbar.map(({ text, route }, key: number) => (
-                      <a key={key} href={route}>
-                        <p
-                          className={`
-                        p-2
-                        text-16
-                        font-bold
-                        text-escrita-light
-                        hover:underline
-                        `}
-                        >
-                          {text.toUpperCase()}
-                        </p>
-                      </a>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </FlexRow>
-          </>
-        )}
+      <header className="sticky z-10 flex h-fit w-full items-center justify-between gap-2.5 bg-white shadow-sm md:gap-0">
+        <img src="logo/logo-icon.png" alt="logo da Reurb" width={93} height={67.19} />
+        <div className="w-full md:w-72">
+          <InputSearch title="pesquisar" placeholder="Pesquisar Projeto" />
+        </div>
+        <div className="hidden items-center gap-2 md:flex">
+          <IconX
+            name="Acessos"
+            icon={
+              <Gear
+                className="cursor-pointer rounded-6 text-write-secundary hover:bg-secundary hover:text-write-primary"
+                width={19.45}
+                height={20}
+                weight="fill"
+                onClick={() => navigate(app.management)}
+              />
+            }
+          />
+          <IconX
+            name="Notificações"
+            icon={
+              <Bell
+                className="cursor-pointer rounded-6 text-write-secundary hover:bg-secundary hover:text-write-primary"
+                width={19.45}
+                height={20}
+                weight="fill"
+              />
+            }
+          />
+          <div
+            className="flex cursor-pointer items-center gap-5 rounded-6 p-2.5 text-write-secundary hover:bg-secundary hover:text-write-primary"
+            onClick={() => navigate(app.management)}
+          >
+            <h5>Matheus Henrique</h5>
+          </div>
+        </div>
+        <div className="mr-2 w-fit">
+          <List
+            className="cursor-pointer text-write-secundary md:hidden"
+            size={24}
+            onClick={handleMenuToggle}
+          />
+        </div>
       </header>
+      {menuOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black bg-opacity-25"
+          onClick={() =>
+            setTimeout(() => {
+              setMenuOpen(false);
+            }, 100)
+          }
+        >
+          <SidebarX navbar={navbar} menuOpen />
+        </div>
+      )}
     </>
   );
 };

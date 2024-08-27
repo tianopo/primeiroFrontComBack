@@ -1,4 +1,4 @@
 /* Cor */
 .divider-light {
-  @apply border-borda-light;
+  @apply border-edge-primary;
 }
