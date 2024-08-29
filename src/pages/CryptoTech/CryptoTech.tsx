@@ -51,7 +51,7 @@ export const CryptoTech = () => {
         <div>
           <h2 className="section-1-text text-white">web design</h2>
           <h2 className="section-1-text text-white">develop @</h2>
-          <h2 className="section-1-text text-white">marketing</h2>
+          <h2 className="section-1-text text-white">trading</h2>
           <h5 className="z-50 font-extralight tracking-wider text-white">
             Cresça seu negócio online com a gente
           </h5>
