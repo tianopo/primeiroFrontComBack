@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { toast } from "react-toastify";
 import { Button } from "src/components/Buttons/Button";
@@ -7,17 +7,19 @@ import { FlexRow } from "src/components/Flex/FlexRow";
 import { FormX } from "src/components/Form/FormX";
 import { InputX } from "src/components/Form/Input/InputX";
 import { Select } from "src/components/Form/Select/Select";
+import { formatCPF } from "src/utils/formats";
+import { HandleListEdit } from "./components/HandleListEdit";
 import { UploadXLSButton } from "./components/UploadXLSButton";
 import { handleDownload } from "./config/handleDownload";
 import { ITransactionData, useTransaction } from "./useTransactions";
 
 export const Transactions = () => {
   const { mutate, isPending, context } = useTransaction();
-  const { reset, getValues } = context;
+  const { reset, getValues, setValue } = context;
 
   const [vendas, setVendas] = useState<any[]>([]);
   const [compras, setCompras] = useState<any[]>([]);
-  const [tipoTransacao, setTipoTransacao] = useState<string>("compras");
+  const [tipoTransacao, setTipoTransacao] = useState<string>("");
   const [formData, setFormData] = useState<any[]>([]);
 
   const [numeroOrdem, setNumeroOrdem] = useState<string>("");
@@ -94,22 +96,45 @@ export const Transactions = () => {
 
   const handleEdit = (index: number) => {
     const item = formData[index];
+    reset();
+    console.log(item, "item");
     setNumeroOrdem(item.numeroOrdem);
+    setTipoTransacao(item.tipoTransacao);
     setDataHoraTransacao(item.dataHoraTransacao);
     setExchangeUtilizada(item.exchangeUtilizada);
     setAtivoDigital(item.ativoDigital);
-    setNomeVendedor(item.nomeVendedor);
-    setNomeComprador(item.nomeComprador);
-    setCpfComprador(item.cpfComprador);
-    setQuantidadeComprada(item.quantidadeComprada);
-    setQuantidadeVendida(item.quantidadeVendida);
-    setValorCompra(item.valorCompra);
-    setValorVenda(item.valorVenda);
-    setValorTokenDataCompra(item.valorTokenDataCompra);
-    setValorTokenDataVenda(item.valorTokenDataVenda);
+
+    if (item.tipoTransacao === "compras") {
+      setNomeVendedor(item.nomeVendedor);
+      setNomeComprador(item.nomeComprador);
+      setCpfComprador("");
+      setQuantidadeComprada(item.quantidadeComprada);
+      setQuantidadeVendida("");
+      setValorCompra(item.valorCompra);
+      setValorVenda("");
+      setValorTokenDataCompra(item.valorTokenDataCompra);
+      setValorTokenDataVenda("");
+    } else if (item.tipoTransacao === "vendas") {
+      setNomeVendedor("");
+      setNomeComprador(item.nomeComprador);
+      setCpfComprador(item.cpfComprador);
+      setQuantidadeComprada("");
+      setQuantidadeVendida(item.quantidadeVendida);
+      setValorCompra("");
+      setValorVenda(item.valorVenda);
+      setValorTokenDataCompra("");
+      setValorTokenDataVenda(item.valorTokenDataVenda);
+    }
+
     setTaxaTransacao(item.taxaTransacao);
-    setTipoTransacao(item.tipoTransacao);
     handleDelete(index);
+  };
+
+  const handleCpfChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setCpfComprador(formatCPF(e.target.value));
+    const formattedCPF = formatCPF(e.target.value);
+    setCpfComprador(formattedCPF);
+    console.log(formattedCPF);
   };
 
   return (
@@ -119,6 +144,7 @@ export const Transactions = () => {
         <Select
           title="Tipo Transação"
           options={["compras", "vendas"]}
+          placeholder="compras"
           value={tipoTransacao}
           onChange={handleTipoTransacaoChange}
         />
@@ -158,7 +184,7 @@ export const Transactions = () => {
             />
             <Select
               title="Ativo Digital"
-              placeholder="Tether (USDT)"
+              placeholder="USDT"
               options={["BTC", "USDT", "BNB", "ETH", "USDC", "DOGE"]}
               value={ativoDigital}
               onChange={(e) => setAtivoDigital(e.target.value)}
@@ -166,64 +192,73 @@ export const Transactions = () => {
             />
           </div>
           {tipoTransacao === "vendas" && (
-            <div className="flex w-full flex-col flex-wrap gap-2 md:w-5/12 md:flex-row">
+            <div className={`flex w-full flex-col flex-wrap gap-2 md:w-5/12 md:flex-row`}>
               <InputX
                 title="Nome Comprador"
                 placeholder="Nome do Comprador"
                 value={nomeComprador}
                 onChange={(e) => setNomeComprador(e.target.value)}
+                required
               />
               <InputX
                 title="Cpf Comprador"
                 placeholder="CPF do Comprador"
                 value={cpfComprador}
-                onChange={(e) => setCpfComprador(e.target.value)}
+                onChange={handleCpfChange}
+                required
               />
               <InputX
                 title="Quantidade Vendida"
                 placeholder="Quantidade Vendida"
                 value={quantidadeVendida}
                 onChange={(e) => setQuantidadeVendida(e.target.value)}
+                required
               />
               <InputX
                 title="Valor Venda"
                 placeholder="Valor da Venda"
                 value={valorVenda}
                 onChange={(e) => setValorVenda(e.target.value)}
+                required
               />
               <InputX
                 title="Valor Token Data Venda"
                 placeholder="Valor do Token na Data da Venda"
                 value={valorTokenDataVenda}
                 onChange={(e) => setValorTokenDataVenda(e.target.value)}
+                required
               />
             </div>
           )}
           {tipoTransacao === "compras" && (
-            <div className="flex w-full flex-col flex-wrap gap-2 md:w-5/12 md:flex-row">
+            <div className={`flex w-full flex-col flex-wrap gap-2 md:w-5/12 md:flex-row`}>
               <InputX
                 title="Nome Vendedor"
                 placeholder="Nome do Vendedor"
                 value={nomeVendedor}
                 onChange={(e) => setNomeVendedor(e.target.value)}
+                required
               />
               <InputX
                 title="Quantidade Comprada"
                 placeholder="Quantidade Comprada"
                 value={quantidadeComprada}
                 onChange={(e) => setQuantidadeComprada(e.target.value)}
+                required
               />
               <InputX
                 title="Valor Compra"
                 placeholder="Valor da Compra"
                 value={valorCompra}
                 onChange={(e) => setValorCompra(e.target.value)}
+                required
               />
               <InputX
                 title="Valor Token Data Compra"
                 placeholder="Valor do Token na Data da Compra"
                 value={valorTokenDataCompra}
                 onChange={(e) => setValorTokenDataCompra(e.target.value)}
+                required
               />
             </div>
           )}
@@ -245,84 +280,7 @@ export const Transactions = () => {
         </Button>
         <UploadXLSButton setFormData={setFormData} formData={formData} />
       </div>
-      <div className="mt-4">
-        <h2 className="text-20 font-bold">Dados Armazenados:</h2>
-        <ul className="flex flex-row flex-wrap gap-2">
-          {formData.map((item, index) => (
-            <li
-              key={index}
-              className="cursor-pointer rounded-lg border bg-gray-100 p-4"
-              onClick={() => handleEdit(index)}
-            >
-              {item.tipoTransacao === "compras" && (
-                <>
-                  <p>
-                    <strong>Número Ordem:</strong> {item.numeroOrdem}
-                  </p>
-                  <p>
-                    <strong>Data e Hora Transação:</strong> {item.dataHoraTransacao}
-                  </p>
-                  <p>
-                    <strong>Exchange Utilizada:</strong> {item.exchangeUtilizada}
-                  </p>
-                  <p>
-                    <strong>Ativo Digital:</strong> {item.ativoDigital}
-                  </p>
-                  <p>
-                    <strong>Nome Vendedor:</strong> {item.nomeVendedor}
-                  </p>
-                  <p>
-                    <strong>Quantidade Comprada:</strong> {item.quantidadeComprada}
-                  </p>
-                  <p>
-                    <strong>Valor Compra:</strong> {item.valorCompra}
-                  </p>
-                  <p>
-                    <strong>Valor Token Data Compra:</strong> {item.valorTokenDataCompra}
-                  </p>
-                  <p>
-                    <strong>Taxa Transação:</strong> {item.taxaTransacao}
-                  </p>
-                </>
-              )}
-              {item.tipoTransacao === "vendas" && (
-                <>
-                  <p>
-                    <strong>Número Ordem:</strong> {item.numeroOrdem}
-                  </p>
-                  <p>
-                    <strong>Data e Hora Transação:</strong> {item.dataHoraTransacao}
-                  </p>
-                  <p>
-                    <strong>Exchange Utilizada:</strong> {item.exchangeUtilizada}
-                  </p>
-                  <p>
-                    <strong>Ativo Digital:</strong> {item.ativoDigital}
-                  </p>
-                  <p>
-                    <strong>Nome Comprador:</strong> {item.nomeComprador}
-                  </p>
-                  <p>
-                    <strong>CPF Comprador:</strong> {item.cpfComprador}
-                  </p>
-                  <p>
-                    <strong>Quantidade Vendida:</strong> {item.quantidadeVendida}
-                  </p>
-                  <p>
-                    <strong>Valor Venda:</strong> {item.valorVenda}
-                  </p>
-                  <p>
-                    <strong>Valor Token Data Venda:</strong> {item.valorTokenDataVenda}
-                  </p>
-                  <p>
-                    <strong>Taxa Transação:</strong> {item.taxaTransacao}
-                  </p>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
+      <HandleListEdit formData={formData} handleEdit={handleEdit} />
     </FlexCol>
   );
 };

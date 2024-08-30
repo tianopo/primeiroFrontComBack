@@ -20,7 +20,7 @@ export const UploadXLSButton = ({ setFormData, formData }: IUploadXLSButton) => 
         const fileData = await readFile(file);
         allData.push(...fileData);
       }
-      console.log(formData);
+
       const combinedData = [...formData, ...allData];
       if (setFormData) setFormData(combinedData);
     }
@@ -76,7 +76,7 @@ export const UploadXLSButton = ({ setFormData, formData }: IUploadXLSButton) => 
         numeroOrdem,
         tipoTransacao: tipoTransacao === "BUY" ? "compras" : "vendas",
         dataHoraTransacao,
-        exchangeUtilizada: selectedBroker, // Use the selected broker here
+        exchangeUtilizada: selectedBroker,
         ativoDigital: cryptocurrency,
         nomeVendedor: tipoTransacao === "BUY" ? counterparty : "",
         nomeComprador: tipoTransacao === "SELL" ? counterparty : "",

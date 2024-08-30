@@ -1,5 +1,11 @@
 import { CaretDown, CaretUp } from "@phosphor-icons/react";
-import { ChangeEventHandler, ForwardRefRenderFunction, forwardRef, useState } from "react";
+import {
+  ChangeEventHandler,
+  ForwardRefRenderFunction,
+  forwardRef,
+  useEffect,
+  useState,
+} from "react";
 import { useFormContext } from "react-hook-form";
 import { IUseForm } from "src/interfaces/IUseForm";
 import { labelFormatted } from "src/utils/formatation/labelFormatted";
@@ -30,6 +36,10 @@ const BeginSelect: ForwardRefRenderFunction<HTMLInputElement, ISelect> = (
   const [isOpen, setIsOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | undefined>(value);
 
+  useEffect(() => {
+    setSelectedOption(value);
+  }, [value]);
+
   const handleOptionClick = (option: string) => {
     setSelectedOption(option);
     setIsOpen(false);
@@ -59,7 +69,7 @@ const BeginSelect: ForwardRefRenderFunction<HTMLInputElement, ISelect> = (
           name={words}
           placeholder={placeholder}
           disabled={disabled}
-          value={selectedOption || ""}
+          value={selectedOption || value || ""}
           readOnly={true}
           onChange={(e) => {
             selectRegister?.onChange(e);
