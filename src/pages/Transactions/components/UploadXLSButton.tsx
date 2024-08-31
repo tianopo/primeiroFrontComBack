@@ -1,5 +1,7 @@
 import { ChangeEvent, Dispatch, SetStateAction, useState } from "react";
+import { toast } from "react-toastify";
 import { Select } from "src/components/Form/Select/Select";
+import { excelDateToJSDate } from "src/utils/formats";
 import * as XLSX from "xlsx";
 
 interface IUploadXLSButton {
@@ -15,7 +17,7 @@ export const UploadXLSButton = ({
   setVendas,
   setCompras,
 }: IUploadXLSButton) => {
-  const [selectedBroker, setSelectedBroker] = useState<string>("Bybit https://www.bybit.com/ SG");
+  const [selectedBroker, setSelectedBroker] = useState<string>("");
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -61,10 +63,90 @@ export const UploadXLSButton = ({
   };
 
   const processExcel = (workbook: XLSX.WorkBook): any[] => {
+    switch (selectedBroker) {
+      case "Bybit https://www.bybit.com/ SG":
+        return processExcelBybit(workbook);
+      case "Binance https://www.binance.com/ CN":
+        return processExcelBinance(workbook);
+      case "Gate.IO https://www.gate.io/ AE":
+        return processExcelGateIO(workbook);
+      case "Kucoin https://www.kucoin.com/ SC":
+        return processExcelKucoin(workbook);
+      default: {
+        toast.error("Escolha uma Exchange Válida");
+        return [];
+      }
+    }
+  };
+
+  const processExcelBinance = (workbook: XLSX.WorkBook): any[] => {
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+
+    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
+    const [, ...rows] = json;
+
+    return rows.map((row) => {
+      const [
+        orderNumber, // "Order Number"
+        orderType, // "Order Type"
+        assetType, // "Asset Type"
+        fiatType, // "Fiat Type"
+        totalPrice, // "Total Price"
+        price, // "Price"
+        quantity, // "Quantity"
+        exchangeRate, // "Exchange rate"
+        makerFee, // "Maker Fee"
+        makerFeeRate, // "Maker Fee Rate"
+        takerFee, // "Taker Fee"
+        takerFeeRate, // "Taker Fee Rate"
+        counterparty, // "Counterparty"
+        status, // "Status"
+        createdTime, // "Created Time"
+      ] = row;
+      const formatTotalPrice = (price: string) => {
+        if (Number.isInteger(price)) {
+          return `${price},00`;
+        } else {
+          return parseFloat(price).toFixed(2).replace(".", ",");
+        }
+      };
+
+      return {
+        numeroOrdem: orderNumber,
+        tipoTransacao: orderType === "Buy" ? "compras" : "vendas",
+        dataHoraTransacao: excelDateToJSDate(Number(createdTime)),
+        exchangeUtilizada: selectedBroker,
+        ativoDigital: assetType,
+        cpfComprador: orderType === "Sell" ? "" : "",
+        apelidoVendedor: orderType === "Buy" ? counterparty : "",
+        apelidoComprador: orderType === "Sell" ? counterparty : "",
+        quantidadeComprada: orderType === "Buy" ? quantity : "",
+        quantidadeVendida: orderType === "Sell" ? quantity : "",
+        valorCompra: orderType === "Buy" ? formatTotalPrice(totalPrice) : "",
+        valorVenda: orderType === "Sell" ? formatTotalPrice(totalPrice) : "",
+        valorTokenDataCompra: orderType === "Buy" ? price : "",
+        valorTokenDataVenda: orderType === "Sell" ? price : "",
+        taxaTransacao: orderType === "Buy" ? takerFee : makerFee,
+      };
+    });
+  };
+
+  const processExcelGateIO = (workbook: XLSX.WorkBook): any[] => {
+    // Lógica de processamento específica para Gate.IO
+    return [];
+  };
+
+  const processExcelKucoin = (workbook: XLSX.WorkBook): any[] => {
+    // Lógica de processamento específica para Kucoin
+    return [];
+  };
+
+  const processExcelBybit = (workbook: XLSX.WorkBook): any[] => {
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
-
+    console.log(json);
     const [, ...rows] = json;
     return rows.map((row) => {
       const [
@@ -83,7 +165,12 @@ export const UploadXLSButton = ({
         status,
         dataHoraTransacao,
       ] = row;
-      const reais = (item: string) => item.replace(/\./g, ",");
+      const formatToTwoDecimalPlaces = (value: string): string => {
+        const numericValue = parseFloat(value);
+        const roundedValue = numericValue.toFixed(2);
+
+        return roundedValue.replace(".", ",");
+      };
 
       return {
         numeroOrdem,
@@ -96,8 +183,8 @@ export const UploadXLSButton = ({
         apelidoComprador: tipoTransacao === "SELL" ? counterparty : "",
         quantidadeComprada: tipoTransacao === "BUY" ? coinAmount : "",
         quantidadeVendida: tipoTransacao === "SELL" ? coinAmount : "",
-        valorCompra: tipoTransacao === "BUY" ? reais(fiatAmount) : "",
-        valorVenda: tipoTransacao === "SELL" ? reais(fiatAmount) : "",
+        valorCompra: tipoTransacao === "BUY" ? formatToTwoDecimalPlaces(fiatAmount) : "",
+        valorVenda: tipoTransacao === "SELL" ? formatToTwoDecimalPlaces(fiatAmount) : "",
         valorTokenDataCompra: tipoTransacao === "BUY" ? price : "",
         valorTokenDataVenda: tipoTransacao === "SELL" ? price : "",
         taxaTransacao: transactionFees,
@@ -131,7 +218,7 @@ export const UploadXLSButton = ({
         <input
           id="file-upload"
           type="file"
-          accept=".xls, .xlsx"
+          accept=".xls, .xlsx, .csv"
           multiple
           className="hidden"
           onChange={handleFileChange}

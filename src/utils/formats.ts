@@ -169,17 +169,6 @@ export const formatDateHour = (value: string): string => {
   return input;
 };
 
-export const formatDateToISO = (dateString: string): string => {
-  if (!dateString) return "";
-  const [datePart, timePart] = dateString.split(" ");
-  if (!datePart || !timePart) return "";
-
-  const [day, month, year] = datePart.split("/");
-  const [hour, minute] = timePart.split(":");
-  if (!day || !month || !year || !hour || !minute) return "";
-  return `${year}-${month}-${day}T${hour}:${minute}:00`;
-};
-
 export const formatISOToDateAndTime = (isoString: string): { date: string; time: string } => {
   if (!isoString) return { date: "", time: "" };
   const [dateTimePart] = isoString.split("T");
@@ -192,4 +181,12 @@ export const formatISOToDateAndTime = (isoString: string): { date: string; time:
   const time = `${hour}:${minute}`;
 
   return { date, time };
+};
+
+export const excelDateToJSDate = (serial: number) => {
+  const excelEpoch = new Date(Date.UTC(1900, 0, 1));
+
+  const jsDate = new Date(excelEpoch.getTime() + (serial - 1) * 86400 * 1000);
+
+  return jsDate.toISOString().slice(0, 19).replace("T", " ");
 };
