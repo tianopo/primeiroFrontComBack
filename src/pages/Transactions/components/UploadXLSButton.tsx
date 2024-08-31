@@ -44,10 +44,13 @@ export const UploadXLSButton = ({
   const readFile = (file: File): Promise<any[]> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
+
       reader.onload = (e) => {
         const data = e.target?.result;
         if (data) {
-          const workbook = XLSX.read(data, { type: "array" });
+          const workbook = XLSX.read(data, {
+            type: selectedBroker === "Gate.IO https://www.gate.io/ AE" ? "string" : "array",
+          });
           const result = processExcel(workbook);
           setSelectedBroker("");
           resolve(result);
@@ -59,7 +62,9 @@ export const UploadXLSButton = ({
         console.error("Error reading file:", error);
         reject(error);
       };
-      reader.readAsArrayBuffer(file);
+      selectedBroker === "Gate.IO https://www.gate.io/ AE"
+        ? reader.readAsText(file)
+        : reader.readAsArrayBuffer(file);
     });
   };
 
@@ -134,8 +139,51 @@ export const UploadXLSButton = ({
   };
 
   const processExcelGateIO = (workbook: XLSX.WorkBook): any[] => {
-    // Lógica de processamento específica para Gate.IO
-    return [];
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+
+    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
+    const [, ...rows] = json;
+
+    const formatNumber = (value: string): string => {
+      return parseFloat(value).toFixed(2).replace(".", ",").split("/")[0];
+    };
+
+    return rows.map((row) => {
+      const [
+        no, // Ex: "No"
+        time, // Ex: "Time"
+        type, // Ex: "Type"
+        fundType, // Ex: "Fund Type"
+        paymentMethod, // Ex: "Payment Method"
+        price, // Ex: "Price"
+        amount, // Ex: "Amount"
+        total, // Ex: "Total"
+        status, // Ex: "Status"
+        name, // Ex: "Name"
+      ] = row;
+      const ativoDigital = fundType.split("/")[0];
+
+      return {
+        numeroOrdem: no,
+        tipoTransacao: type === "Compra" ? "compras" : "vendas",
+        dataHoraTransacao: excelDateToJSDate(Number(time)),
+        exchangeUtilizada: selectedBroker,
+        ativoDigital,
+        cpfComprador: type === "Venda" ? "" : "",
+        apelidoVendedor: type === "Compra" ? name : "",
+        apelidoComprador: type === "Venda" ? name : "",
+        nomeVendedor: type === "Compra" ? name : "",
+        nomeComprador: type === "Venda" ? name : "",
+        quantidadeComprada: type === "Compra" ? amount : "",
+        quantidadeVendida: type === "Venda" ? amount : "",
+        valorCompra: type === "Compra" ? formatNumber(total.toString()) : "",
+        valorVenda: type === "Venda" ? formatNumber(total.toString()) : "",
+        valorTokenDataCompra: type === "Compra" ? price : "",
+        valorTokenDataVenda: type === "Venda" ? price : "",
+        taxaTransacao: "0",
+      };
+    });
   };
 
   const processExcelKucoin = (workbook: XLSX.WorkBook): any[] => {
@@ -144,13 +192,6 @@ export const UploadXLSButton = ({
 
     const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
     const [, ...rows] = json;
-
-    // Função para formatar a data
-    const formatDate = (excelDate: number): string => {
-      const epoch = new Date(1899, 11, 30); // Data base do Excel
-      const date = new Date(epoch.getTime() + excelDate * 24 * 60 * 60 * 1000);
-      return date.toISOString().replace("T", " ").substring(0, 19);
-    };
 
     const formatNumber = (value: string): string => {
       return parseFloat(value).toFixed(2).replace(".", ",");
@@ -193,9 +234,10 @@ export const UploadXLSButton = ({
   const processExcelBybit = (workbook: XLSX.WorkBook): any[] => {
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
+
     const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
-    console.log(json);
     const [, ...rows] = json;
+
     return rows.map((row) => {
       const [
         numeroOrdem,
@@ -261,7 +303,7 @@ export const UploadXLSButton = ({
           htmlFor="file-upload"
           className={`w-full ${selectedBroker ? "block" : "hidden"} cursor-pointer rounded bg-blue-500 px-4 py-2 text-center font-bold text-white hover:bg-blue-700`}
         >
-          Escolher Arquivo(s) .xls
+          Escolher Arquivo(s) Excel
         </label>
         <input
           id="file-upload"
