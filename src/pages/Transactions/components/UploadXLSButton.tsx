@@ -49,6 +49,7 @@ export const UploadXLSButton = ({
         if (data) {
           const workbook = XLSX.read(data, { type: "array" });
           const result = processExcel(workbook);
+          setSelectedBroker("");
           resolve(result);
         } else {
           reject("No data found");
@@ -138,8 +139,55 @@ export const UploadXLSButton = ({
   };
 
   const processExcelKucoin = (workbook: XLSX.WorkBook): any[] => {
-    // Lógica de processamento específica para Kucoin
-    return [];
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+
+    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
+    const [, ...rows] = json;
+
+    // Função para formatar a data
+    const formatDate = (excelDate: number): string => {
+      const epoch = new Date(1899, 11, 30); // Data base do Excel
+      const date = new Date(epoch.getTime() + excelDate * 24 * 60 * 60 * 1000);
+      return date.toISOString().replace("T", " ").substring(0, 19);
+    };
+
+    const formatNumber = (value: string): string => {
+      return parseFloat(value).toFixed(2).replace(".", ",");
+    };
+
+    return rows.map((row) => {
+      const [
+        time, // "TIME"
+        side, // "SIDE"
+        status, // "STATUS"
+        legalCurrency, // "LEGAL/CURRENCY"
+        legalAmount, // "LEGAL_AMOUNT"
+        price, // "PRICE"
+        currencyAmount, // "CURRENCY_AMOUNT"
+        rate, // "RATE"
+        traderName, // "OP_TRADER_NAME"
+        orderId, // "ORDER_ID"
+      ] = row;
+
+      return {
+        numeroOrdem: orderId,
+        tipoTransacao: side === "BUY" ? "compras" : "vendas",
+        dataHoraTransacao: excelDateToJSDate(Number(time)),
+        exchangeUtilizada: selectedBroker,
+        ativoDigital: legalCurrency.split("/")[1],
+        cpfComprador: side === "SELL" ? "" : "",
+        apelidoVendedor: side === "BUY" ? traderName : "",
+        apelidoComprador: side === "SELL" ? traderName : "",
+        quantidadeComprada: side === "BUY" ? currencyAmount : "",
+        quantidadeVendida: side === "SELL" ? currencyAmount : "",
+        valorCompra: side === "BUY" ? formatNumber(legalAmount.toString()) : "",
+        valorVenda: side === "SELL" ? formatNumber(legalAmount.toString()) : "",
+        valorTokenDataCompra: side === "BUY" ? price : "",
+        valorTokenDataVenda: side === "SELL" ? price : "",
+        taxaTransacao: rate,
+      };
+    });
   };
 
   const processExcelBybit = (workbook: XLSX.WorkBook): any[] => {
@@ -211,7 +259,7 @@ export const UploadXLSButton = ({
       <div className="flex w-full md:w-1/2">
         <label
           htmlFor="file-upload"
-          className="w-full cursor-pointer rounded bg-blue-500 px-4 py-2 text-center font-bold text-white hover:bg-blue-700"
+          className={`w-full ${selectedBroker ? "block" : "hidden"} cursor-pointer rounded bg-blue-500 px-4 py-2 text-center font-bold text-white hover:bg-blue-700`}
         >
           Escolher Arquivo(s) .xls
         </label>
