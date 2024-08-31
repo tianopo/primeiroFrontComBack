@@ -7,7 +7,7 @@ import { FlexRow } from "src/components/Flex/FlexRow";
 import { FormX } from "src/components/Form/FormX";
 import { InputX } from "src/components/Form/Input/InputX";
 import { Select } from "src/components/Form/Select/Select";
-import { formatCPF } from "src/utils/formats";
+import { formatCPFOrCNPJ } from "src/utils/formats";
 import { HandleListEdit } from "./components/HandleListEdit";
 import { UploadXLSButton } from "./components/UploadXLSButton";
 import { handleDownload } from "./config/handleDownload";
@@ -15,7 +15,7 @@ import { ITransactionData, useTransaction } from "./useTransactions";
 
 export const Transactions = () => {
   const { mutate, isPending, context } = useTransaction();
-  const { reset, getValues, setValue } = context;
+  const { reset, getValues } = context;
 
   const [vendas, setVendas] = useState<any[]>([]);
   const [compras, setCompras] = useState<any[]>([]);
@@ -28,6 +28,8 @@ export const Transactions = () => {
   const [ativoDigital, setAtivoDigital] = useState<string>("");
   const [nomeVendedor, setNomeVendedor] = useState<string>("");
   const [nomeComprador, setNomeComprador] = useState<string>("");
+  const [apelidoVendedor, setApelidoVendedor] = useState<string>("");
+  const [apelidoComprador, setApelidoComprador] = useState<string>("");
   const [cpfComprador, setCpfComprador] = useState<string>("");
   const [quantidadeComprada, setQuantidadeComprada] = useState<string>("");
   const [quantidadeVendida, setQuantidadeVendida] = useState<string>("");
@@ -60,6 +62,7 @@ export const Transactions = () => {
     const values = getValues();
     const updatedValues = {
       ...values,
+      cpfComprador,
       tipoTransacao,
     };
     setFormData((prevData) => [...prevData, updatedValues]);
@@ -73,7 +76,7 @@ export const Transactions = () => {
       vendas,
       compras,
     };
-
+    console.log(formData);
     handleDownload(formData);
     mutate(combinedData);
   };
@@ -97,7 +100,6 @@ export const Transactions = () => {
   const handleEdit = (index: number) => {
     const item = formData[index];
     reset();
-    console.log(item, "item");
     setNumeroOrdem(item.numeroOrdem);
     setTipoTransacao(item.tipoTransacao);
     setDataHoraTransacao(item.dataHoraTransacao);
@@ -106,7 +108,9 @@ export const Transactions = () => {
 
     if (item.tipoTransacao === "compras") {
       setNomeVendedor(item.nomeVendedor);
-      setNomeComprador(item.nomeComprador);
+      setNomeComprador("");
+      setApelidoVendedor(item.apelidoVendedor);
+      setApelidoComprador("");
       setCpfComprador("");
       setQuantidadeComprada(item.quantidadeComprada);
       setQuantidadeVendida("");
@@ -117,6 +121,8 @@ export const Transactions = () => {
     } else if (item.tipoTransacao === "vendas") {
       setNomeVendedor("");
       setNomeComprador(item.nomeComprador);
+      setApelidoVendedor("");
+      setApelidoComprador(item.apelidoComprador);
       setCpfComprador(item.cpfComprador);
       setQuantidadeComprada("");
       setQuantidadeVendida(item.quantidadeVendida);
@@ -131,10 +137,8 @@ export const Transactions = () => {
   };
 
   const handleCpfChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setCpfComprador(formatCPF(e.target.value));
-    const formattedCPF = formatCPF(e.target.value);
+    const formattedCPF = formatCPFOrCNPJ(e.target.value);
     setCpfComprador(formattedCPF);
-    console.log(formattedCPF);
   };
 
   return (
@@ -198,6 +202,12 @@ export const Transactions = () => {
                 placeholder="Nome do Comprador"
                 value={nomeComprador}
                 onChange={(e) => setNomeComprador(e.target.value)}
+              />
+              <InputX
+                title="Apelido Comprador"
+                placeholder="Apelido do Comprador"
+                value={apelidoComprador}
+                onChange={(e) => setApelidoComprador(e.target.value)}
                 required
               />
               <InputX
@@ -237,6 +247,12 @@ export const Transactions = () => {
                 placeholder="Nome do Vendedor"
                 value={nomeVendedor}
                 onChange={(e) => setNomeVendedor(e.target.value)}
+              />
+              <InputX
+                title="Apelido Vendedor"
+                placeholder="Apelido do Vendedor"
+                value={apelidoVendedor}
+                onChange={(e) => setApelidoVendedor(e.target.value)}
                 required
               />
               <InputX
@@ -278,7 +294,12 @@ export const Transactions = () => {
         <Button onClick={handleSend} disabled={isPending}>
           Enviar
         </Button>
-        <UploadXLSButton setFormData={setFormData} formData={formData} />
+        <UploadXLSButton
+          setFormData={setFormData}
+          formData={formData}
+          setCompras={setCompras}
+          setVendas={setVendas}
+        />
       </div>
       <HandleListEdit formData={formData} handleEdit={handleEdit} />
     </FlexCol>

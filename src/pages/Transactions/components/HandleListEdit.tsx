@@ -32,6 +32,9 @@ export const HandleListEdit = ({ formData, handleEdit }: IHandleListEdit) => {
                   <strong>Nome Vendedor:</strong> {item.nomeVendedor}
                 </p>
                 <p>
+                  <strong>Apelido Vendedor:</strong> {item.apelidoVendedor}
+                </p>
+                <p>
                   <strong>Quantidade Comprada:</strong> {item.quantidadeComprada}
                 </p>
                 <p>
@@ -61,6 +64,9 @@ export const HandleListEdit = ({ formData, handleEdit }: IHandleListEdit) => {
                 </p>
                 <p>
                   <strong>Nome Comprador:</strong> {item.nomeComprador}
+                </p>
+                <p>
+                  <strong>Apelido Comprador:</strong> {item.apelidoComprador}
                 </p>
                 <p>
                   <strong>CPF Comprador:</strong> {item.cpfComprador}

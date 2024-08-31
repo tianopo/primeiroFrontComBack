@@ -9,6 +9,7 @@ import * as Yup from "yup";
 
 export interface IVenda {
   nomeComprador: string;
+  apelidoComprador: string;
   cpfComprador: string;
   numeroOrdem: string;
   dataHoraTransacao: string;
@@ -23,6 +24,7 @@ export interface IVenda {
 
 export interface ICompra {
   nomeVendedor: string;
+  apelidoVendedor: string;
   numeroOrdem: string;
   dataHoraTransacao: string;
   exchangeUtilizada: string;
@@ -41,6 +43,7 @@ export interface ITransactionData {
 
 const vendaSchema = Yup.object({
   nomeComprador: Yup.string().required("Nome do Comprador é obrigatório"),
+  apelidoComprador: Yup.string().required("Apelido do Comprador é obrigatório"),
   cpfComprador: Yup.string().required("CPF do Comprador é obrigatório"),
   numeroOrdem: Yup.string().required("Número da Ordem é obrigatório"),
   dataHoraTransacao: Yup.string()
@@ -60,6 +63,7 @@ const vendaSchema = Yup.object({
 
 const compraSchema = Yup.object({
   nomeVendedor: Yup.string().required("Nome do Vendedor é obrigatório"),
+  apelidoVendedor: Yup.string().required("Apelido do Vendedor é obrigatório"),
   numeroOrdem: Yup.string().required("Número da Ordem é obrigatório"),
   dataHoraTransacao: Yup.string()
     .required("Data e Hora da Transação é obrigatória")

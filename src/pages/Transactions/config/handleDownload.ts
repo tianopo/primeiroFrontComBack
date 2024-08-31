@@ -2,9 +2,9 @@ export const handleDownload = (formData: any[]) => {
   const textContent = formData
     .map((item) => {
       const operationCode = item.tipoTransacao === "compras" ? "0110" : "0120";
-      const dataSeparada = item.dataHoraTransacao.split(" ")[0].split("-");
+      const dataSeparada = item.dataHoraTransacao?.split(" ")[0].split("-");
       const dataHoraTransacao = `${dataSeparada[2]}${dataSeparada[1]}${dataSeparada[0]}`;
-      const tipoTransaction = (item: string) => item.replace("R$", "").replace(/\./g, "");
+      const tipoTransaction = (item: string) => item?.replace("R$", "").replace(/\./g, "");
       const valorOperacao = `${item.tipoTransacao === "compras" ? tipoTransaction(item.valorCompra) : tipoTransaction(item.valorVenda)}`;
       const simboloAtivoDigital = item.ativoDigital || "";
       const quantidadeRaw =
@@ -15,7 +15,7 @@ export const handleDownload = (formData: any[]) => {
         .replace(".", ",");
       const exchange = item.exchangeUtilizada.split(" ")[0];
       const exchangeURL = item.exchangeUtilizada.split(" ")[1];
-      const siglaPaisOrigemExchange = item.exchangeUtilizada.split(" ")[2];
+      const siglaPaisOrigemExchange = item.exchangeUtilizada?.split(" ")[2];
 
       return {
         line: `${operationCode}|${dataHoraTransacao}|I|${valorOperacao}|0,00|${simboloAtivoDigital}|${quantidade}|${exchange}|${exchangeURL}|${siglaPaisOrigemExchange}`,

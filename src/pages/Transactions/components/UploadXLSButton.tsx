@@ -5,9 +5,16 @@ import * as XLSX from "xlsx";
 interface IUploadXLSButton {
   setFormData?: Dispatch<SetStateAction<any[]>>;
   formData: any[];
+  setVendas: Dispatch<SetStateAction<any[]>>;
+  setCompras: Dispatch<SetStateAction<any[]>>;
 }
 
-export const UploadXLSButton = ({ setFormData, formData }: IUploadXLSButton) => {
+export const UploadXLSButton = ({
+  setFormData,
+  formData,
+  setVendas,
+  setCompras,
+}: IUploadXLSButton) => {
   const [selectedBroker, setSelectedBroker] = useState<string>("Bybit https://www.bybit.com/ SG");
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -23,6 +30,12 @@ export const UploadXLSButton = ({ setFormData, formData }: IUploadXLSButton) => 
 
       const combinedData = [...formData, ...allData];
       if (setFormData) setFormData(combinedData);
+
+      const newCompras = allData.filter((item) => item.tipoTransacao === "compras");
+      const newVendas = allData.filter((item) => item.tipoTransacao === "vendas");
+
+      setCompras((prev) => [...prev, ...newCompras]);
+      setVendas((prev) => [...prev, ...newVendas]);
     }
   };
 
@@ -78,8 +91,9 @@ export const UploadXLSButton = ({ setFormData, formData }: IUploadXLSButton) => 
         dataHoraTransacao,
         exchangeUtilizada: selectedBroker,
         ativoDigital: cryptocurrency,
-        nomeVendedor: tipoTransacao === "BUY" ? counterparty : "",
-        nomeComprador: tipoTransacao === "SELL" ? counterparty : "",
+        cpfComprador: tipoTransacao === "SELL" ? "" : "",
+        apelidoVendedor: tipoTransacao === "BUY" ? counterparty : "",
+        apelidoComprador: tipoTransacao === "SELL" ? counterparty : "",
         quantidadeComprada: tipoTransacao === "BUY" ? coinAmount : "",
         quantidadeVendida: tipoTransacao === "SELL" ? coinAmount : "",
         valorCompra: tipoTransacao === "BUY" ? reais(fiatAmount) : "",
