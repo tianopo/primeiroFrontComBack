@@ -71,14 +71,19 @@ export const Transactions = () => {
     toast.success("Adicionado");
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const combinedData = {
       vendas,
       compras,
     };
+
     console.log(formData);
-    handleDownload(formData);
-    mutate(combinedData);
+
+    mutate(combinedData, {
+      onSuccess: () => {
+        handleDownload(formData);
+      },
+    });
   };
 
   const handleDelete = (index: number) => {
