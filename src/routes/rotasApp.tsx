@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import { LayoutX } from "src/components/Layout/LayoutX/LayoutX";
 import { Auth } from "src/pages/Auth/Auth.views";
+import { Compliance } from "src/pages/Compliance/Compliance";
 import { CryptoTech } from "src/pages/CryptoTech/CryptoTech";
 import { Perfil } from "src/pages/Perfil/Perfil.views";
 import { Test } from "src/pages/Teste/Teste";
@@ -16,6 +17,7 @@ export const browserRouter = createBrowserRouter([
       { path: "/auth", element: <Auth /> },
       { path: "/teste", element: <Test /> },
       { path: "/transactions", element: <Transactions /> },
+      { path: "/compliance", element: <Compliance /> },
     ],
   },
   {

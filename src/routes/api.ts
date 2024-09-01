@@ -6,4 +6,6 @@ export const apiRoute = {
 
   multa: "send/multa",
   transactions: "send/transactions",
+
+  compliance: "compliance",
 };

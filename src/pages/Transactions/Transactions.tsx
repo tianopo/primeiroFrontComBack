@@ -7,7 +7,7 @@ import { FlexRow } from "src/components/Flex/FlexRow";
 import { FormX } from "src/components/Form/FormX";
 import { InputX } from "src/components/Form/Input/InputX";
 import { Select } from "src/components/Form/Select/Select";
-import { formatCPFOrCNPJ } from "src/utils/formats";
+import { formatCPFOrCNPJ, formatCurrency, formatDateTime } from "src/utils/formats";
 import { HandleListEdit } from "./components/HandleListEdit";
 import { UploadXLSButton } from "./components/UploadXLSButton";
 import { handleDownload } from "./config/handleDownload";
@@ -141,9 +141,24 @@ export const Transactions = () => {
     handleDelete(index);
   };
 
+  const handleDateTimeChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const formattedDate = formatDateTime(e.target.value);
+    setDataHoraTransacao(formattedDate);
+  };
+
   const handleCpfChange = (e: ChangeEvent<HTMLInputElement>) => {
     const formattedCPF = formatCPFOrCNPJ(e.target.value);
     setCpfComprador(formattedCPF);
+  };
+
+  const handleValorVendaChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const formattedCPF = formatCurrency(e.target.value);
+    setValorVenda(formattedCPF);
+  };
+
+  const handleValorCompraChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const formattedCPF = formatCurrency(e.target.value);
+    setValorCompra(formattedCPF);
   };
 
   return (
@@ -173,9 +188,9 @@ export const Transactions = () => {
             />
             <InputX
               title="Data Hora Transação"
-              placeholder="Data e Hora da Transação"
+              placeholder="AAAA-MM-DD HH:MM:SS"
               value={dataHoraTransacao}
-              onChange={(e) => setDataHoraTransacao(e.target.value)}
+              onChange={handleDateTimeChange}
               required
             />
             <Select
@@ -233,7 +248,7 @@ export const Transactions = () => {
                 title="Valor Venda"
                 placeholder="Valor da Venda"
                 value={valorVenda}
-                onChange={(e) => setValorVenda(e.target.value)}
+                onChange={handleValorVendaChange}
                 required
               />
               <InputX
@@ -271,7 +286,7 @@ export const Transactions = () => {
                 title="Valor Compra"
                 placeholder="Valor da Compra"
                 value={valorCompra}
-                onChange={(e) => setValorCompra(e.target.value)}
+                onChange={handleValorCompraChange}
                 required
               />
               <InputX
