@@ -45,7 +45,7 @@ const vendaSchema = Yup.object({
   nomeComprador: Yup.string().required("Nome do Comprador é obrigatório"),
   apelidoComprador: Yup.string().required("Apelido do Comprador é obrigatório"),
   cpfComprador: Yup.string().required("CPF do Comprador é obrigatório"),
-  numeroOrdem: Yup.string().required("Número da Ordem é obrigatório"),
+  numeroOrdem: Yup.string().required("Número da Ordem é obrigatório").label("Número Ordem"),
   dataHoraTransacao: Yup.string()
     .required("Hora da Transação é obrigatória")
     .matches(

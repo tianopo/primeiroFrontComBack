@@ -149,6 +149,7 @@ export const Transactions = () => {
   const handleCpfChange = (e: ChangeEvent<HTMLInputElement>) => {
     const formattedCPF = formatCPFOrCNPJ(e.target.value);
     setCpfComprador(formattedCPF);
+    z;
   };
 
   const handleValorVendaChange = (e: ChangeEvent<HTMLInputElement>) => {

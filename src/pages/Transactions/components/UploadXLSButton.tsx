@@ -110,16 +110,16 @@ export const UploadXLSButton = ({
         status, // "Status"
         createdTime, // "Created Time"
       ] = row;
-      const formatTotalPrice = (price: string) => {
+      const formatTotalPrice = (price: string): string => {
         if (Number.isInteger(price)) {
           return `${price},00`;
         } else {
-          return parseFloat(price).toFixed(2).replace(".", ",");
+          return parseFloat(price).toFixed(2).replace(".", ",").toString();
         }
       };
-
+      console.log(row);
       return {
-        numeroOrdem: orderNumber,
+        numeroOrdem: orderNumber.toString(),
         tipoTransacao: orderType === "Buy" ? "compras" : "vendas",
         dataHoraTransacao: excelDateToJSDate(Number(createdTime)),
         exchangeUtilizada: selectedBroker,
@@ -127,13 +127,13 @@ export const UploadXLSButton = ({
         cpfComprador: orderType === "Sell" ? "" : "",
         apelidoVendedor: orderType === "Buy" ? counterparty : "",
         apelidoComprador: orderType === "Sell" ? counterparty : "",
-        quantidadeComprada: orderType === "Buy" ? quantity : "",
-        quantidadeVendida: orderType === "Sell" ? quantity : "",
+        quantidadeComprada: orderType === "Buy" ? quantity.toString() : "",
+        quantidadeVendida: orderType === "Sell" ? quantity.toString() : "",
         valorCompra: orderType === "Buy" ? formatTotalPrice(totalPrice) : "",
         valorVenda: orderType === "Sell" ? formatTotalPrice(totalPrice) : "",
-        valorTokenDataCompra: orderType === "Buy" ? price : "",
-        valorTokenDataVenda: orderType === "Sell" ? price : "",
-        taxaTransacao: orderType === "Buy" ? takerFee : makerFee,
+        valorTokenDataCompra: orderType === "Buy" ? price.toString() : "",
+        valorTokenDataVenda: orderType === "Sell" ? price.toString() : "",
+        taxaTransacao: orderType === "Buy" ? takerFee.toString() : makerFee.toString(),
       };
     });
   };

@@ -45,7 +45,6 @@ export const Compliance = () => {
           placeholder="XX.XXX.XXX/0001-XX"
           value={cnpj}
           onChange={handleCnpjChange}
-          required
         />
         <Button disabled={isPending || Object.keys(errors).length > 0}>Salvar</Button>
       </FormX>
