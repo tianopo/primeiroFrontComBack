@@ -8,14 +8,14 @@ import { apiRoute } from "src/routes/api";
 import * as Yup from "yup";
 
 export interface IVenda {
-  nomeComprador: string;
+  nomeComprador?: string;
   apelidoComprador: string;
-  cpfComprador: string;
+  cpfComprador?: string;
   numeroOrdem: string;
   dataHoraTransacao: string;
   exchangeUtilizada: string;
   ativoDigital: string;
-  tipoTransacao: "venda";
+  tipoTransacao: "vendas";
   quantidadeVendida: string;
   valorVenda: string;
   valorTokenDataVenda: string;
@@ -23,13 +23,13 @@ export interface IVenda {
 }
 
 export interface ICompra {
-  nomeVendedor: string;
+  nomeVendedor?: string;
   apelidoVendedor: string;
   numeroOrdem: string;
   dataHoraTransacao: string;
   exchangeUtilizada: string;
   ativoDigital: string;
-  tipoTransacao: "compra";
+  tipoTransacao: "compras";
   quantidadeComprada: string;
   valorCompra: string;
   valorTokenDataCompra: string;
@@ -42,9 +42,9 @@ export interface ITransactionData {
 }
 
 const vendaSchema = Yup.object({
-  nomeComprador: Yup.string().required("Nome do Comprador é obrigatório"),
+  nomeComprador: Yup.string().optional(),
   apelidoComprador: Yup.string().required("Apelido do Comprador é obrigatório"),
-  cpfComprador: Yup.string().required("CPF do Comprador é obrigatório"),
+  cpfComprador: Yup.string().optional(),
   numeroOrdem: Yup.string().required("Número da Ordem é obrigatório").label("Número Ordem"),
   dataHoraTransacao: Yup.string()
     .required("Hora da Transação é obrigatória")
@@ -54,7 +54,7 @@ const vendaSchema = Yup.object({
     ),
   exchangeUtilizada: Yup.string().required("Exchange Utilizada é obrigatória"),
   ativoDigital: Yup.string().required("Ativo Digital é obrigatório"),
-  tipoTransacao: Yup.string().oneOf(["venda"]).required("Tipo de Transação é obrigatório"),
+  tipoTransacao: Yup.string().oneOf(["vendas"]).required("Tipo de Transação é obrigatório"),
   quantidadeVendida: Yup.string().required("Quantidade Vendida é obrigatória"),
   valorVenda: Yup.string().required("Valor da Venda é obrigatório"),
   valorTokenDataVenda: Yup.string().required("Valor do Token na Data da Venda é obrigatório"),
@@ -62,7 +62,7 @@ const vendaSchema = Yup.object({
 });
 
 const compraSchema = Yup.object({
-  nomeVendedor: Yup.string().required("Nome do Vendedor é obrigatório"),
+  nomeVendedor: Yup.string().optional(),
   apelidoVendedor: Yup.string().required("Apelido do Vendedor é obrigatório"),
   numeroOrdem: Yup.string().required("Número da Ordem é obrigatório"),
   dataHoraTransacao: Yup.string()
@@ -73,7 +73,7 @@ const compraSchema = Yup.object({
     ),
   exchangeUtilizada: Yup.string().required("Exchange Utilizada é obrigatória"),
   ativoDigital: Yup.string().required("Ativo Digital é obrigatório"),
-  tipoTransacao: Yup.string().oneOf(["compra"]).required("Tipo de Transação é obrigatório"),
+  tipoTransacao: Yup.string().oneOf(["compras"]).required("Tipo de Transação é obrigatório"),
   quantidadeComprada: Yup.string().required("Quantidade Comprada é obrigatória"),
   valorCompra: Yup.string().required("Valor da Compra é obrigatório"),
   valorTokenDataCompra: Yup.string().required("Valor do Token na Data da Compra é obrigatório"),
@@ -99,10 +99,20 @@ export const useTransaction = () => {
     reValidateMode: "onChange",
   });
 
+  const contextCompra = useForm<ICompra>({
+    resolver: yupResolver(compraSchema),
+    reValidateMode: "onChange",
+  });
+
+  const contextVenda = useForm<IVenda>({
+    resolver: yupResolver(vendaSchema),
+    reValidateMode: "onChange",
+  });
+
   async function path(data: ITransactionData): Promise<ITransactionData> {
     const result = await api().post(apiRoute.transactions, data);
     return result.data;
   }
 
-  return { mutate, isPending, context };
+  return { mutate, isPending, context, contextCompra, contextVenda };
 };

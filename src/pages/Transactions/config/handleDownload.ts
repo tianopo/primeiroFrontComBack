@@ -18,7 +18,7 @@ export const handleDownload = (formData: any[]) => {
       const siglaPaisOrigemExchange = item.exchangeUtilizada?.split(" ")[2];
 
       return {
-        line: `${operationCode}|${dataHoraTransacao}|I|${valorOperacao}|0,00|${simboloAtivoDigital}|${quantidade}|${exchange}|${exchangeURL}|${siglaPaisOrigemExchange}`,
+        line: `${operationCode}|${dataHoraTransacao}|I|${valorOperacao.trim()}|0,00|${simboloAtivoDigital}|${quantidade}|${exchange}|${exchangeURL}|${siglaPaisOrigemExchange}`,
         operationCode: parseInt(operationCode, 10),
       };
     })

@@ -1,5 +1,5 @@
 import { ChangeEvent, useState } from "react";
-import { FormProvider } from "react-hook-form";
+import { FieldErrors, FormProvider, UseFormReturn } from "react-hook-form";
 import { toast } from "react-toastify";
 import { Button } from "src/components/Buttons/Button";
 import { FlexCol } from "src/components/Flex/FlexCol";
@@ -11,10 +11,10 @@ import { formatCPFOrCNPJ, formatCurrency, formatDateTime } from "src/utils/forma
 import { HandleListEdit } from "./components/HandleListEdit";
 import { UploadXLSButton } from "./components/UploadXLSButton";
 import { handleDownload } from "./config/handleDownload";
-import { ITransactionData, useTransaction } from "./useTransactions";
+import { ICompra, ITransactionData, IVenda, useTransaction } from "./useTransactions";
 
 export const Transactions = () => {
-  const { mutate, isPending, context } = useTransaction();
+  const { mutate, isPending, context, contextCompra, contextVenda } = useTransaction();
   const { reset, getValues } = context;
 
   const [vendas, setVendas] = useState<any[]>([]);
@@ -38,6 +38,7 @@ export const Transactions = () => {
   const [valorTokenDataCompra, setValorTokenDataCompra] = useState<string>("");
   const [valorTokenDataVenda, setValorTokenDataVenda] = useState<string>("");
   const [taxaTransacao, setTaxaTransacao] = useState<string>("");
+  const [isValid, setIsValid] = useState<boolean>(true);
 
   const handleTipoTransacaoChange = (e: { target: { value: string } }) => {
     reset();
@@ -58,17 +59,74 @@ export const Transactions = () => {
     reset();
   };
 
-  const handleSave = () => {
+  const formatErrors = (errors: FieldErrors<any>): string => {
+    return Object.values(errors)
+      .map((error) => {
+        if (typeof error === "object" && "message" in error) {
+          return error.message;
+        }
+        return "Erro desconhecido";
+      })
+      .join(". ");
+  };
+
+  const isFormValid = async (
+    tipoTransacao: string,
+    values: any,
+    contextVenda: UseFormReturn<IVenda>,
+    contextCompra: UseFormReturn<ICompra>,
+  ): Promise<boolean> => {
+    let isValid = true;
+    const contextTipo = tipoTransacao === "vendas" ? contextVenda : contextCompra;
+    await contextTipo.reset(values);
+
+    await contextTipo.trigger();
+    const { errors } = contextTipo.formState;
+    const errorMessages = formatErrors(errors);
+
+    if (errorMessages) {
+      toast.error(`Erros de ${tipoTransacao}: ${errorMessages}`);
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
+  const handleSave = async () => {
     const values = getValues();
-    const updatedValues = {
+    const updatedValues: any = {
       ...values,
-      cpfComprador,
       tipoTransacao,
+      dataHoraTransacao,
+      ativoDigital,
+      cpfComprador,
+      valorCompra,
+      valorVenda,
     };
-    setFormData((prevData) => [...prevData, updatedValues]);
-    if (tipoTransacao === "vendas") setVendas((prevData) => [...prevData, updatedValues]);
-    if (tipoTransacao === "compras") setCompras((prevData) => [...prevData, updatedValues]);
-    toast.success("Adicionado");
+    if (isValid) {
+      setIsValid(false);
+      await isFormValid(tipoTransacao, updatedValues, contextVenda, contextCompra);
+    }
+
+    if (tipoTransacao.length > 0) {
+      const isValidForm = await isFormValid(
+        tipoTransacao,
+        updatedValues,
+        contextVenda,
+        contextCompra,
+      );
+
+      if (!isValidForm) {
+        return;
+      }
+
+      setFormData((prevData) => [...prevData, updatedValues]);
+      if (tipoTransacao === "vendas") setVendas((prevData) => [...prevData, updatedValues]);
+      if (tipoTransacao === "compras") setCompras((prevData) => [...prevData, updatedValues]);
+      toast.success("Adicionado");
+    } else {
+      toast.error("Não há Tipo de Transação");
+    }
   };
 
   const handleSend = async () => {
@@ -76,9 +134,7 @@ export const Transactions = () => {
       vendas,
       compras,
     };
-
     console.log(formData);
-
     mutate(combinedData, {
       onSuccess: () => {
         handleDownload(formData);

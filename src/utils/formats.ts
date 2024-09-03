@@ -193,7 +193,7 @@ export const formatDateHour = (value: string): string => {
 };
 
 export const excelDateToJSDate = (serial: number) => {
-  const excelEpoch = new Date(Date.UTC(1900, 0, 1));
+  const excelEpoch = new Date(Date.UTC(1900, 0, 0));
 
   const jsDate = new Date(excelEpoch.getTime() + (serial - 1) * 86400 * 1000);
 
