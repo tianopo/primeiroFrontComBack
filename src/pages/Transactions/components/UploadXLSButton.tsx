@@ -2,6 +2,7 @@ import { ChangeEvent, Dispatch, SetStateAction, useState } from "react";
 import { toast } from "react-toastify";
 import { Select } from "src/components/Form/Select/Select";
 import { excelDateToJSDate } from "src/utils/formats";
+import { exchangeOptions } from "src/utils/selectsOptions";
 import * as XLSX from "xlsx";
 
 interface IUploadXLSButton {
@@ -288,12 +289,7 @@ export const UploadXLSButton = ({
         <Select
           title="Exchange Utilizada"
           placeholder="Bybit https://www.bybit.com/ SG"
-          options={[
-            "Bybit https://www.bybit.com/ SG",
-            "Binance https://www.binance.com/ CN",
-            "Gate.IO https://www.gate.io/ AE",
-            "Kucoin https://www.kucoin.com/ SC",
-          ]}
+          options={exchangeOptions}
           value={selectedBroker}
           onChange={(e) => setSelectedBroker(e.target.value)}
         />

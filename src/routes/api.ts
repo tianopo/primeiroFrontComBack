@@ -8,4 +8,5 @@ export const apiRoute = {
   transactions: "send/transactions",
 
   compliance: "compliance",
+  operation: "compliance/operation",
 };

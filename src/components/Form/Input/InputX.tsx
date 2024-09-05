@@ -24,6 +24,7 @@ interface IInputX extends IUseForm {
   busca?: boolean;
   error?: string;
   options?: string[];
+  step?: string;
 }
 
 export const BeginInput: ForwardRefRenderFunction<HTMLInputElement, IInputX> = (
@@ -40,6 +41,7 @@ export const BeginInput: ForwardRefRenderFunction<HTMLInputElement, IInputX> = (
     typ = "text",
     onChange,
     options = [],
+    step,
     ...rest
   }: IInputX,
   ref,
@@ -110,6 +112,7 @@ export const BeginInput: ForwardRefRenderFunction<HTMLInputElement, IInputX> = (
         type={typ}
         disabled={disabled}
         placeholder={placeholder}
+        step={step}
         value={buscaVal ? inputValue : value}
         {...inputRegister}
         onChange={
