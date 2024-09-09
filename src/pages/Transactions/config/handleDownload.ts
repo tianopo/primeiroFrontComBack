@@ -1,4 +1,6 @@
 export const handleDownload = (formData: any[]) => {
+  const datesSet = new Set<string>();
+
   const textContent = formData
     .map((item) => {
       const operationCode = item.tipoTransacao === "compras" ? "0110" : "0120";
@@ -17,6 +19,8 @@ export const handleDownload = (formData: any[]) => {
       const exchangeURL = item.exchangeUtilizada.split(" ")[1];
       const siglaPaisOrigemExchange = item.exchangeUtilizada?.split(" ")[2];
 
+      datesSet.add(dataHoraTransacao);
+
       return {
         line: `${operationCode}|${dataHoraTransacao}|I|${valorOperacao.trim()}|0,00|${simboloAtivoDigital}|${quantidade}|${exchange}|${exchangeURL}|${siglaPaisOrigemExchange}`,
         operationCode: parseInt(operationCode, 10),
@@ -26,18 +30,13 @@ export const handleDownload = (formData: any[]) => {
     .map((item) => item.line)
     .join("\r\n");
 
-  const dataAtual = new Date();
-  dataAtual.setDate(dataAtual.getDate() - 1);
-  const dia = String(dataAtual.getDate()).padStart(2, "0");
-  const mes = String(dataAtual.getMonth() + 1).padStart(2, "0");
-  const ano = dataAtual.getFullYear();
-  const dataFormatada = `${dia}${mes}${ano}`;
+  const datesString = Array.from(datesSet).join("-");
 
   const blob = new Blob([textContent], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `Relatorio_IN188_${dataFormatada}.txt`;
+  link.download = `Relatorio_IN188_${datesString}.txt`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

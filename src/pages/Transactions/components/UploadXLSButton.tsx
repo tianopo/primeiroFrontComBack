@@ -118,7 +118,7 @@ export const UploadXLSButton = ({
           return parseFloat(price).toFixed(2).replace(".", ",").toString();
         }
       };
-      console.log(row);
+
       return {
         numeroOrdem: orderNumber.toString(),
         tipoTransacao: orderType === "Buy" ? "compras" : "vendas",

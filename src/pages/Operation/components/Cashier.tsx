@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { InputX } from "src/components/Form/Input/InputX";
+import { Select } from "src/components/Form/Select/Select";
 
 interface Transaction {
   type: string;
   amount: number;
+  exchange: string;
 }
 
 export const Cashier = () => {
@@ -13,6 +15,7 @@ export const Cashier = () => {
   const [totalPurchases, setTotalPurchases] = useState<number>(0);
   const [totalSales, setTotalSales] = useState<number>(0);
   const [inputValue, setInputValue] = useState<number>(0);
+  const [exchange, setExchange] = useState<string>("");
   const [isCashierOpen, setIsCashierOpen] = useState<boolean>(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
@@ -49,21 +52,23 @@ export const Cashier = () => {
   };
 
   const handlePurchase = () => {
-    if (inputValue <= 0) return;
+    if (inputValue <= 0 || !exchange) return;
     const newTotalPurchases = totalPurchases + inputValue;
     setTotalPurchases(newTotalPurchases);
     setCurrentAmount(currentAmount - inputValue);
-    setTransactions([...transactions, { type: "Compra", amount: inputValue }]);
+    setTransactions([...transactions, { type: "Compra", amount: inputValue, exchange }]);
     setInputValue(0);
+    setExchange("");
   };
 
   const handleSale = () => {
-    if (inputValue <= 0) return;
+    if (inputValue <= 0 || !exchange) return;
     const newTotalSales = totalSales + inputValue;
     setTotalSales(newTotalSales);
     setCurrentAmount(currentAmount + inputValue);
-    setTransactions([...transactions, { type: "Venda", amount: inputValue }]);
+    setTransactions([...transactions, { type: "Venda", amount: inputValue, exchange }]);
     setInputValue(0);
+    setExchange("");
   };
 
   const handleCloseCashier = () => {
@@ -85,6 +90,23 @@ export const Cashier = () => {
     setTransactions([]);
     localStorage.clear();
   };
+
+  const categorizedTransactions = (type: string) => {
+    return transactions
+      .filter((transaction) => transaction.type === type)
+      .reduce(
+        (acc, transaction) => {
+          const { exchange } = transaction;
+          if (!acc[exchange]) acc[exchange] = [];
+          acc[exchange].push(transaction);
+          return acc;
+        },
+        {} as Record<string, Transaction[]>,
+      );
+  };
+
+  const purchasesByExchange = categorizedTransactions("Compra");
+  const salesByExchange = categorizedTransactions("Venda");
 
   return (
     <div className="flex h-fit w-full flex-col">
@@ -112,6 +134,14 @@ export const Cashier = () => {
             onChange={(e) => setInputValue(parseFloat(e.target.value))}
             required
           />
+          <Select
+            title="Exchange"
+            placeholder="Digite o nome da exchange"
+            options={["Binance", "Bybit", "Kucoin"]}
+            value={exchange}
+            onChange={(e) => setExchange(e.target.value)}
+            required
+          />
           <Button onClick={handlePurchase}>Compra</Button>
           <Button onClick={handleSale}>Venda</Button>
           <div>
@@ -133,14 +163,34 @@ export const Cashier = () => {
           </div>
           <Button onClick={handleCloseCashier}>Fechar Caixa</Button>
           <div>
-            <h3>Histórico</h3>
-            <ul className="flex flex-row flex-wrap gap-1">
-              {transactions.map((transaction, index) => (
-                <li key={index}>
-                  {index + 1} - {transaction.type}: R$ {transaction.amount.toFixed(2)} |
-                </li>
-              ))}
-            </ul>
+            <h3>Histórico de Compras</h3>
+            {Object.keys(purchasesByExchange).map((exchange) => (
+              <div key={exchange}>
+                <h4>{exchange}</h4>
+                <ul className="flex flex-row flex-wrap gap-1">
+                  {purchasesByExchange[exchange].map((transaction, index) => (
+                    <li key={index}>
+                      {index + 1} - R$ {transaction.amount.toFixed(2)} |
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <div>
+            <h3>Histórico de Vendas</h3>
+            {Object.keys(salesByExchange).map((exchange) => (
+              <div key={exchange}>
+                <h4>{exchange}</h4>
+                <ul className="flex flex-row flex-wrap gap-1">
+                  {salesByExchange[exchange].map((transaction, index) => (
+                    <li key={index}>
+                      {index + 1} - R$ {transaction.amount.toFixed(2)} |
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
       )}
