@@ -21,4 +21,7 @@ export const colors = {
     warning: "#E5C522",
     confirmation: "#22E552",
   },
+  strong: {
+    primary: "#623AFF",
+  },
 };
