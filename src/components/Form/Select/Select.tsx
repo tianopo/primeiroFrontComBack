@@ -76,7 +76,7 @@ const BeginSelect: ForwardRefRenderFunction<HTMLInputElement, ISelect> = (
             onChange && onChange(e);
           }}
           onClick={() => !disabled && setIsOpen(!isOpen)}
-          className={`input cursor-pointer border-edge-primary ${disabled ? "cursor-no-drop opacity-80" : ""} ${errorMessage ? "border-1 border-variation-error" : ""} `}
+          className={`inputx cursor-pointer border-edge-primary ${disabled ? "cursor-no-drop opacity-80" : ""} ${errorMessage ? "border-1 border-variation-error" : ""} `}
           {...selectRegister}
           {...props}
         />

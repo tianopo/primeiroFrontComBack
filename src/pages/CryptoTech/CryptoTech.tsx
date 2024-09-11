@@ -1,3 +1,4 @@
+import { AnimateBlink } from "./components/AnimateBlink";
 import "./cryptoTech.css";
 import { SectionForm } from "./Sections/SectionForm";
 import { SectionInfo } from "./Sections/SectionInfo";
@@ -6,9 +7,36 @@ import { SectionServicesTechnology } from "./Sections/SectionServicesTechnology"
 
 export const CryptoTech = () => {
   const nav = ["Home", "Services", "Projects", "Portfolio", "Support"];
+
   return (
-    <div className="flex w-full flex-col gap-16 bg-background-black px-5">
+    <div className="relative flex w-full flex-col gap-16 overflow-hidden bg-background-black px-5">
       <div className="animate-pulse-heart absolute -left-24 -top-28 h-80 w-80 rounded-full bg-gradient-conic-primary opacity-50 blur-3xl"></div>
+      <AnimateBlink color="#FF0000" ballSize={16} startWidth={100} />
+      <AnimateBlink color="#FF0000" ballSize={16} startWidth={200} />
+      <AnimateBlink color="#FF0000" ballSize={16} startWidth={300} />
+      <AnimateBlink color="#FF0000" ballSize={24} startWidth={400} />
+      <AnimateBlink color="#FF0000" ballSize={24} startWidth={500} />
+      <AnimateBlink color="#FF0000" ballSize={40} startWidth={600} />
+      <AnimateBlink color="#3300FF" ballSize={16} startWidth={700} />
+      <AnimateBlink color="#3300FF" ballSize={16} startWidth={800} />
+      <AnimateBlink color="#3300FF" ballSize={16} startWidth={100} />
+      <AnimateBlink color="#3300FF" ballSize={24} startWidth={200} />
+      <AnimateBlink color="#3300FF" ballSize={24} startWidth={300} />
+      <AnimateBlink color="#3300FF" ballSize={40} startWidth={400} />
+      <AnimateBlink color="#FF00E5" ballSize={16} startWidth={500} />
+      <AnimateBlink color="#FF00E5" ballSize={16} startWidth={600} />
+      <AnimateBlink color="#FF00E5" ballSize={16} startWidth={700} />
+      <AnimateBlink color="#FF00E5" ballSize={24} startWidth={800} />
+      <AnimateBlink color="#FF00E5" ballSize={24} startWidth={100} />
+      <AnimateBlink color="#FF00E5" ballSize={40} startWidth={200} />
+      <AnimateBlink color="#0085FF" ballSize={16} startWidth={300} />
+      <AnimateBlink color="#0085FF" ballSize={16} startWidth={400} />
+      <AnimateBlink color="#0085FF" ballSize={16} startWidth={500} />
+      <AnimateBlink color="#0085FF" ballSize={24} startWidth={600} />
+      <AnimateBlink color="#0085FF" ballSize={24} startWidth={700} />
+      <AnimateBlink color="#0085FF" ballSize={40} startWidth={800} />
+      <AnimateBlink color="#FFF" ballSize={16} startWidth={100} />
+      <AnimateBlink color="#FFF" ballSize={16} startWidth={200} />
       <header className="flex w-full flex-col items-center justify-between p-4 md:flex-row">
         <h3 className="font-extrabold uppercase text-white">cryptotech</h3>
         <div className="flex flex-row justify-between gap-4">
@@ -22,7 +50,6 @@ export const CryptoTech = () => {
       </header>
       <SectionIntroduction />
       <SectionForm />
-      <div className="animate-pulse-heart absolute -bottom-[50rem] -right-24 h-80 w-80 rounded-full bg-gradient-conic-secundary opacity-50 blur-3xl"></div>
       <SectionServicesTechnology />
       <SectionInfo />
       <section className="flex w-full flex-col justify-between gap-6 font-extrabold text-white">

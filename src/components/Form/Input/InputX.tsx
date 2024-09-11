@@ -127,7 +127,7 @@ export const BeginInput: ForwardRefRenderFunction<HTMLInputElement, IInputX> = (
         onFocus={handleFocus}
         onBlur={handleBlur}
         autoComplete="complete"
-        className={`input border-edge-primary ${disabled ? "cursor-not-allowed opacity-80" : ""} ${errorMessage || error ? "border-1 border-variation-error" : ""} `}
+        className={`inputx ${disabled ? "cursor-not-allowed opacity-80" : ""} ${errorMessage || error ? "border-1 border-variation-error" : ""} `}
         {...rest}
       />
       {busca && <MagnifyingGlass size={20} className="absolute bottom-2.5 right-2 text-gray-500" />}

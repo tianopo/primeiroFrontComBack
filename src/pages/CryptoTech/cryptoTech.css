@@ -1,3 +1,21 @@
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-blink {
+  animation: blink 0.5s infinite;
+  transition:
+    top 60s ease-in,
+    left 60s ease-in;
+}
+
 @keyframes pulse-heart {
   0%,
   100% {

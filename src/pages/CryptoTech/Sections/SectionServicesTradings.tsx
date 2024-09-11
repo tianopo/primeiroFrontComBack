@@ -1,8 +1,8 @@
-export const SectionServicesTechnology = () => {
+export const SectionServicesTradings = () => {
   return (
     <section className="flex w-full flex-col justify-between gap-6 font-extrabold text-white">
       <div className="animate-pulse-heart absolute -right-24 h-80 w-80 rounded-full bg-gradient-conic-secundary opacity-50 blur-3xl"></div>
-      <h2>Web Services</h2>
+      <h2>Cryptocurrency Investments</h2>
       <div className="flex w-full flex-col gap-4 md:flex-row">
         <div className="container-services">
           <h5>
