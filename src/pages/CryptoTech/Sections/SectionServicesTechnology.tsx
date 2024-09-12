@@ -3,10 +3,18 @@ import { useEffect, useState } from "react";
 
 export const SectionServicesTechnology = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const message = (message: string) => {
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=5512982435638&text=${encodedMessage}`;
+    window.open(whatsappUrl, "_blank");
+  };
+
   const services = [
     {
       title: "Basic",
       price: "$12,000.00",
+      onClick: () =>
+        message(`Hi! I would like to contract your basic development package, can we talk ?`),
       features: [
         "Free Domain",
         "Free Hosting",
@@ -26,6 +34,10 @@ export const SectionServicesTechnology = () => {
     {
       title: "Intermediate",
       price: "$20,000.00",
+      onClick: () =>
+        message(
+          `Hi! I would like to contract your intermediate development package, can we talk ?`,
+        ),
       features: [
         "Free Domain",
         "Free Hosting",
@@ -45,6 +57,8 @@ export const SectionServicesTechnology = () => {
     {
       title: "Advanced",
       price: "$27,000.00",
+      onClick: () =>
+        message(`Hi! I would like to contract your advanced development package, can we talk ?`),
       features: [
         "Free Domain with Email",
         "Free Hosting",
@@ -102,7 +116,9 @@ export const SectionServicesTechnology = () => {
                   <p key={i}>{feature}</p>
                 ))}
               </div>
-              <button className="button-colorido">Get Now</button>
+              <button className="button-colorido-services" onClick={service.onClick}>
+                Get Now
+              </button>
             </div>
           ))}
         </div>

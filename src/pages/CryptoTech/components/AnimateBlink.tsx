@@ -7,7 +7,7 @@ interface IAnimateBlink {
 
 export const AnimateBlink = ({ color, ballSize }: IAnimateBlink) => {
   const [position, setPosition] = useState<{ top: string; left: string }>({
-    top: `${Math.random() * (2798 - ballSize)}px`,
+    top: `${Math.random() * (3294.72 - ballSize)}px`,
     left: `${Math.random() * (document.documentElement.scrollWidth - ballSize)}px`,
   });
 

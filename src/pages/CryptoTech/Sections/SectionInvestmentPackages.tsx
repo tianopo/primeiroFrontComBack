@@ -3,10 +3,18 @@ import { useEffect, useState } from "react";
 
 export const SectionInvestmentPackages = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const message = (message: string) => {
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=5512982435638&text=${encodedMessage}`;
+    window.open(whatsappUrl, "_blank");
+  };
+
   const packages = [
     {
       title: "Starter",
       investmentRange: "$100 - $1,000 USD",
+      onClick: () =>
+        message(`Hi! I would like to contract your starter investment package, can we talk ?`),
       features: [
         "Minimum Investment: 100 USD",
         "Maximum Investment: 1,000 USD",
@@ -21,6 +29,8 @@ export const SectionInvestmentPackages = () => {
     {
       title: "Intermediate",
       investmentRange: "$1,001 - $20,000 USD",
+      onClick: () =>
+        message(`Hi! I would like to contract your intermediate investment package, can we talk ?`),
       features: [
         "Minimum Investment: 1,001 USD",
         "Maximum Investment: 40,000 USD",
@@ -35,6 +45,8 @@ export const SectionInvestmentPackages = () => {
     {
       title: "Advanced",
       investmentRange: "$20,001 - $500,000 USD",
+      onClick: () =>
+        message(`Hi! I would like to contract your advanced investment package, can we talk ?`),
       features: [
         "Minimum Investment: 40,001 USD",
         "Maximum Investment: 500,000 USD",
@@ -49,6 +61,8 @@ export const SectionInvestmentPackages = () => {
     {
       title: "Custom",
       investmentRange: "Above $500,000 USD",
+      onClick: () =>
+        message(`Hi! I would like to contract your custom investment package, can we talk ?`),
       features: [
         "For investments above 500,000 USD",
         "Custom Terms and Conditions",
@@ -99,7 +113,7 @@ export const SectionInvestmentPackages = () => {
                   <p key={i}>{feature}</p>
                 ))}
               </div>
-              <button className="button-colorido">
+              <button className="button-colorido-services" onClick={pkg.onClick}>
                 {pkg.title === "Custom" ? "Contact Us" : "Invest Now"}
               </button>
             </div>

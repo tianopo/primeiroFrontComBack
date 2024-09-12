@@ -8,10 +8,10 @@ import { SectionInvestmentPackages } from "./Sections/SectionInvestmentPackages"
 import { SectionServicesTechnology } from "./Sections/SectionServicesTechnology";
 
 export const CryptoTech = () => {
-  const nav = ["Home", "Services", "Projects", "Support"];
+  const nav = ["Home", "Services", "Info", "Support"];
 
   return (
-    <div className="relative flex w-full flex-col gap-16 overflow-hidden bg-background-black px-5">
+    <div className="relative flex h-fit w-full flex-col gap-16 overflow-hidden bg-background-black px-5">
       <div className="animate-pulse-heart absolute -left-24 -top-28 h-80 w-80 rounded-full bg-gradient-conic-primary opacity-50 blur-3xl"></div>
       <AnimateBlink color="#FF0000" ballSize={16} />
       <AnimateBlink color="#FF0000" ballSize={16} />
@@ -39,14 +39,17 @@ export const CryptoTech = () => {
       <AnimateBlink color="#0085FF" ballSize={40} />
       <AnimateBlink color="#FFF" ballSize={16} />
       <AnimateBlink color="#FFF" ballSize={16} />
-      <header className="flex w-full flex-col items-center justify-between gap-2 p-4 md:flex-row md:gap-0">
+      <header
+        className="flex w-full flex-col items-center justify-between gap-2 p-4 md:flex-row md:gap-0"
+        id="home"
+      >
         <h3 className="font-extrabold uppercase text-white">cryptotech</h3>
         <Navbar nav={nav} />
         <button className="button-colorido">coming soon</button>
       </header>
       <SectionIntroduction />
       <SectionForm />
-      <div className="flex flex-col gap-2 lg:flex-row lg:gap-0" id="Services">
+      <div className="flex flex-col gap-2 lg:flex-row lg:gap-0" id="services">
         <SectionServicesTechnology />
         <SectionInvestmentPackages />
       </div>

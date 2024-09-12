@@ -43,12 +43,16 @@
   @apply w-full rounded-6 bg-gradient-linear-primary px-5 py-2 font-semibold text-white md:w-40;
 }
 
+.button-colorido-services {
+  @apply w-full rounded-6 bg-gradient-linear-primary px-5 py-2 font-semibold text-white;
+}
+
 .button-colorido-carrossel {
   @apply w-full rounded-full bg-gradient-linear-primary px-5 py-2 text-center font-semibold text-white md:w-16;
 }
 
 .section-1-text {
-  @apply text-80 font-bold uppercase italic;
+  @apply break-words text-80 font-bold uppercase italic;
 }
 
 .container-opacity-light {

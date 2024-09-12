@@ -1,6 +1,16 @@
 export const SectionInfo = () => {
+  const onClick = () => {
+    const message = `Hi! I would like some information about your services and projects`;
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=5512982435638&text=${encodedMessage}`;
+    window.open(whatsappUrl, "_blank");
+  };
+
   return (
-    <section className="flex w-full flex-col justify-between gap-6 text-justify font-extrabold text-white">
+    <section
+      className="flex w-full flex-col justify-between gap-6 text-justify font-extrabold text-white"
+      id="info"
+    >
       <div className="animate-pulse-heart absolute -left-24 h-80 w-80 rounded-full bg-gradient-conic-secundary opacity-50 blur-3xl"></div>
       <h2>How We Deliver High Quality</h2>
       <div className="flex flex-col gap-2">
@@ -31,7 +41,9 @@ export const SectionInfo = () => {
           algorithms and personalized investments with a higher chance of return.
         </p>
       </div>
-      <button className="button-colorido">More Info</button>
+      <button className="button-colorido" onClick={onClick}>
+        More Info
+      </button>
     </section>
   );
 };
