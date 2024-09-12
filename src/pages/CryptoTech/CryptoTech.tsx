@@ -16,6 +16,10 @@ export const CryptoTech = () => {
       <div className="pulse-complete -left-24 -top-28 bg-gradient-conic-primary"></div>
       {/* Cobra ondulando */}
       <AnimateSnake />
+      <AnimateSnake />
+      <AnimateSnake />
+      <AnimateSnake />
+      <AnimateSnake />
       {/* Bolas Brilhando */}
       <AnimateBlink color="#FF0000" ballSize={16} />
       <AnimateBlink color="#FF0000" ballSize={16} />
