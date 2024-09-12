@@ -11,7 +11,7 @@ export const SectionInfo = () => {
       className="flex w-full flex-col justify-between gap-6 text-justify font-extrabold text-white"
       id="info"
     >
-      <div className="animate-pulse-heart absolute -left-24 h-80 w-80 rounded-full bg-gradient-conic-secundary opacity-50 blur-3xl"></div>
+      <div className="pulse-complete -left-24 bg-gradient-conic-secundary"></div>
       <h2>How We Deliver High Quality</h2>
       <div className="flex flex-col gap-2">
         <h4>Client Communication</h4>

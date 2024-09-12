@@ -1,4 +1,5 @@
 import { AnimateBlink } from "./components/AnimateBlink";
+import { AnimateSnake } from "./components/AnimateSnake";
 import { Navbar } from "./components/Navbar";
 import "./cryptoTech.css";
 import { SectionForm } from "./Sections/SectionForm";
@@ -12,7 +13,10 @@ export const CryptoTech = () => {
 
   return (
     <div className="relative flex h-fit w-full flex-col gap-16 overflow-hidden bg-background-black px-5">
-      <div className="animate-pulse-heart absolute -left-24 -top-28 h-80 w-80 rounded-full bg-gradient-conic-primary opacity-50 blur-3xl"></div>
+      <div className="pulse-complete -left-24 -top-28 bg-gradient-conic-primary"></div>
+      {/* Cobra ondulando */}
+      <AnimateSnake />
+      {/* Bolas Brilhando */}
       <AnimateBlink color="#FF0000" ballSize={16} />
       <AnimateBlink color="#FF0000" ballSize={16} />
       <AnimateBlink color="#FF0000" ballSize={16} />
@@ -66,7 +70,7 @@ export const CryptoTech = () => {
         </h6>
       </section>
       <footer className="border-gradient flex h-40 flex-col items-center justify-between gap-2 border-t-1 md:h-28 md:flex-row">
-        <div className="animate-pulse-heart absolute -right-24 h-80 w-80 rounded-full bg-gradient-conic-secundary opacity-50 blur-3xl"></div>
+        <div className="pulse-complete -right-24 bg-gradient-conic-secundary"></div>
         <h3 className="font-extrabold uppercase text-white">cryptotech</h3>
         <Navbar nav={nav} />
         <div>

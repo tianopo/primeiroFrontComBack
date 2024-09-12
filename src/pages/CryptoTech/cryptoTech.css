@@ -1,3 +1,19 @@
+.snake-path {
+  position: absolute;
+  width: 20%;
+  animation: move-snake 2s linear infinite;
+}
+
+@keyframes move-snake {
+  0% {
+    transform: translateX(-20%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 @keyframes blink {
   0%,
   100% {
@@ -37,6 +53,10 @@
 
 .animate-pulse-heart {
   animation: pulse-heart 1.5s infinite;
+}
+
+.pulse-complete {
+  @apply animate-pulse-heart absolute h-80 w-80 rounded-full opacity-50 blur-3xl;
 }
 
 .button-colorido {

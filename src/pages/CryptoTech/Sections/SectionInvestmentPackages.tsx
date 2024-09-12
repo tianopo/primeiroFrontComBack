@@ -92,7 +92,7 @@ export const SectionInvestmentPackages = () => {
   return (
     <section className="relative flex w-full flex-col items-center justify-between gap-6 font-extrabold text-white">
       <h2>Investment Crypto</h2>
-      <div className="animate-pulse-heart absolute -right-24 h-80 w-80 rounded-full bg-gradient-conic-secundary opacity-50 blur-3xl"></div>
+      <div className="pulse-complete -right-24 bg-gradient-conic-secundary"></div>
       <div className="flex w-full overflow-hidden md:w-[400px]">
         <div
           className="flex w-full transform transition-transform duration-500 ease-in-out"
