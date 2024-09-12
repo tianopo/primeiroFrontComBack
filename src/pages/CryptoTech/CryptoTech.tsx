@@ -1,56 +1,55 @@
 import { AnimateBlink } from "./components/AnimateBlink";
+import { Navbar } from "./components/Navbar";
 import "./cryptoTech.css";
 import { SectionForm } from "./Sections/SectionForm";
 import { SectionInfo } from "./Sections/SectionInfo";
 import { SectionIntroduction } from "./Sections/SectionIntroduction";
+import { SectionInvestmentPackages } from "./Sections/SectionInvestmentPackages";
 import { SectionServicesTechnology } from "./Sections/SectionServicesTechnology";
 
 export const CryptoTech = () => {
-  const nav = ["Home", "Services", "Projects", "Portfolio", "Support"];
+  const nav = ["Home", "Services", "Projects", "Support"];
 
   return (
     <div className="relative flex w-full flex-col gap-16 overflow-hidden bg-background-black px-5">
       <div className="animate-pulse-heart absolute -left-24 -top-28 h-80 w-80 rounded-full bg-gradient-conic-primary opacity-50 blur-3xl"></div>
-      <AnimateBlink color="#FF0000" ballSize={16} startWidth={100} />
-      <AnimateBlink color="#FF0000" ballSize={16} startWidth={200} />
-      <AnimateBlink color="#FF0000" ballSize={16} startWidth={300} />
-      <AnimateBlink color="#FF0000" ballSize={24} startWidth={400} />
-      <AnimateBlink color="#FF0000" ballSize={24} startWidth={500} />
-      <AnimateBlink color="#FF0000" ballSize={40} startWidth={600} />
-      <AnimateBlink color="#3300FF" ballSize={16} startWidth={700} />
-      <AnimateBlink color="#3300FF" ballSize={16} startWidth={800} />
-      <AnimateBlink color="#3300FF" ballSize={16} startWidth={100} />
-      <AnimateBlink color="#3300FF" ballSize={24} startWidth={200} />
-      <AnimateBlink color="#3300FF" ballSize={24} startWidth={300} />
-      <AnimateBlink color="#3300FF" ballSize={40} startWidth={400} />
-      <AnimateBlink color="#FF00E5" ballSize={16} startWidth={500} />
-      <AnimateBlink color="#FF00E5" ballSize={16} startWidth={600} />
-      <AnimateBlink color="#FF00E5" ballSize={16} startWidth={700} />
-      <AnimateBlink color="#FF00E5" ballSize={24} startWidth={800} />
-      <AnimateBlink color="#FF00E5" ballSize={24} startWidth={100} />
-      <AnimateBlink color="#FF00E5" ballSize={40} startWidth={200} />
-      <AnimateBlink color="#0085FF" ballSize={16} startWidth={300} />
-      <AnimateBlink color="#0085FF" ballSize={16} startWidth={400} />
-      <AnimateBlink color="#0085FF" ballSize={16} startWidth={500} />
-      <AnimateBlink color="#0085FF" ballSize={24} startWidth={600} />
-      <AnimateBlink color="#0085FF" ballSize={24} startWidth={700} />
-      <AnimateBlink color="#0085FF" ballSize={40} startWidth={800} />
-      <AnimateBlink color="#FFF" ballSize={16} startWidth={100} />
-      <AnimateBlink color="#FFF" ballSize={16} startWidth={200} />
-      <header className="flex w-full flex-col items-center justify-between p-4 md:flex-row">
+      <AnimateBlink color="#FF0000" ballSize={16} />
+      <AnimateBlink color="#FF0000" ballSize={16} />
+      <AnimateBlink color="#FF0000" ballSize={16} />
+      <AnimateBlink color="#FF0000" ballSize={24} />
+      <AnimateBlink color="#FF0000" ballSize={24} />
+      <AnimateBlink color="#FF0000" ballSize={40} />
+      <AnimateBlink color="#3300FF" ballSize={16} />
+      <AnimateBlink color="#3300FF" ballSize={16} />
+      <AnimateBlink color="#3300FF" ballSize={16} />
+      <AnimateBlink color="#3300FF" ballSize={24} />
+      <AnimateBlink color="#3300FF" ballSize={24} />
+      <AnimateBlink color="#3300FF" ballSize={40} />
+      <AnimateBlink color="#FF00E5" ballSize={16} />
+      <AnimateBlink color="#FF00E5" ballSize={16} />
+      <AnimateBlink color="#FF00E5" ballSize={16} />
+      <AnimateBlink color="#FF00E5" ballSize={24} />
+      <AnimateBlink color="#FF00E5" ballSize={24} />
+      <AnimateBlink color="#FF00E5" ballSize={40} />
+      <AnimateBlink color="#0085FF" ballSize={16} />
+      <AnimateBlink color="#0085FF" ballSize={16} />
+      <AnimateBlink color="#0085FF" ballSize={16} />
+      <AnimateBlink color="#0085FF" ballSize={24} />
+      <AnimateBlink color="#0085FF" ballSize={24} />
+      <AnimateBlink color="#0085FF" ballSize={40} />
+      <AnimateBlink color="#FFF" ballSize={16} />
+      <AnimateBlink color="#FFF" ballSize={16} />
+      <header className="flex w-full flex-col items-center justify-between gap-2 p-4 md:flex-row md:gap-0">
         <h3 className="font-extrabold uppercase text-white">cryptotech</h3>
-        <div className="flex flex-row justify-between gap-4">
-          {nav.map((n, i) => (
-            <h6 key={i} className="tracking-wide text-white">
-              {n}
-            </h6>
-          ))}
-        </div>
+        <Navbar nav={nav} />
         <button className="button-colorido">coming soon</button>
       </header>
       <SectionIntroduction />
       <SectionForm />
-      <SectionServicesTechnology />
+      <div className="flex flex-col gap-2 lg:flex-row lg:gap-0" id="Services">
+        <SectionServicesTechnology />
+        <SectionInvestmentPackages />
+      </div>
       <SectionInfo />
       <section className="flex w-full flex-col justify-between gap-6 font-extrabold text-white">
         <h2>About/Info</h2>
@@ -63,16 +62,10 @@ export const CryptoTech = () => {
           the specific needs of each client.
         </h6>
       </section>
-      <footer className="border-gradient flex h-28 flex-row items-center justify-between border-t-1">
+      <footer className="border-gradient flex h-40 flex-col items-center justify-between gap-2 border-t-1 md:h-28 md:flex-row">
         <div className="animate-pulse-heart absolute -right-24 h-80 w-80 rounded-full bg-gradient-conic-secundary opacity-50 blur-3xl"></div>
         <h3 className="font-extrabold uppercase text-white">cryptotech</h3>
-        <div className="flex flex-row justify-between gap-4">
-          {nav.map((n, i) => (
-            <h6 key={i} className="tracking-wide text-white">
-              {n}
-            </h6>
-          ))}
-        </div>
+        <Navbar nav={nav} />
         <div>
           <h6 className="uppercase text-white">social networks coming soon</h6>
         </div>

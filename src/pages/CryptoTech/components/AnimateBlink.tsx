@@ -3,13 +3,12 @@ import { useEffect, useState } from "react";
 interface IAnimateBlink {
   color: string;
   ballSize: number;
-  startWidth: number;
 }
 
-export const AnimateBlink = ({ color, ballSize, startWidth }: IAnimateBlink) => {
+export const AnimateBlink = ({ color, ballSize }: IAnimateBlink) => {
   const [position, setPosition] = useState<{ top: string; left: string }>({
     top: `${Math.random() * (2798 - ballSize)}px`,
-    left: `${Math.random() * (startWidth - ballSize)}px`,
+    left: `${Math.random() * (document.documentElement.scrollWidth - ballSize)}px`,
   });
 
   useEffect(() => {

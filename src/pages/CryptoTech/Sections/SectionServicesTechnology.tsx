@@ -1,81 +1,119 @@
+import { CaretLeft, CaretRight } from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
+
 export const SectionServicesTechnology = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const services = [
+    {
+      title: "Basic",
+      price: "$12,000.00",
+      features: [
+        "Free Domain",
+        "Free Hosting",
+        "Simple Application Development",
+        "Process Automation",
+        "Monitoring with Monthly Reports",
+        "Technical Support via Email within 48 hours",
+        "Basic Performance Analysis",
+        "Basic SEO",
+        "Monthly Security Updates with Patches",
+        "Basic UX/UI Analysis and Improvement",
+        "Basic Content Migration",
+        "Integration with 5 APIs and 2 External Services",
+        "Training and Consultancy Scheduled within 5 Days",
+      ],
+    },
+    {
+      title: "Intermediate",
+      price: "$20,000.00",
+      features: [
+        "Free Domain",
+        "Free Hosting",
+        "Intermediate Application Development",
+        "Process Automation with Employee Assistance",
+        "Monitoring with Weekly Traffic Reports",
+        "Technical Support via Email and WhatsApp within 6 Hours",
+        "Basic Performance Analysis",
+        "Intermediate SEO with Keyword Research",
+        "Biweekly Security Updates with Patches",
+        "Detailed UX/UI Analysis and Improvement",
+        "Basic Content and Database Migrations",
+        "Integration with 20 APIs and 4 External Services",
+        "Training and Consultancy Scheduled within 3 Days",
+      ],
+    },
+    {
+      title: "Advanced",
+      price: "$27,000.00",
+      features: [
+        "Free Domain with Email",
+        "Free Hosting",
+        "Advanced Application Development",
+        "Process Automation with Internal and External Assistance",
+        "Monitoring with Daily Reports",
+        "Immediate Technical Support via Email and WhatsApp",
+        "Advanced Performance Analysis and Optimization",
+        "SEO with Keyword Research and Monthly Reports",
+        "Daily Security Updates",
+        "UX/UI Analysis and Improvement with Redesign and A/B Testing",
+        "Content, Database, and Services Migration",
+        "Unlimited Integrations and External Services",
+        "Personalized Training and Consultancy",
+      ],
+    },
+  ];
+
+  const handlePrevious = () => {
+    setCurrentIndex((prevIndex) => (prevIndex === 0 ? services.length - 1 : prevIndex - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prevIndex) => (prevIndex === services.length - 1 ? 0 : prevIndex + 1));
+  };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      handleNext();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <section className="flex w-full flex-col justify-between gap-6 font-extrabold text-white">
-      <div className="animate-pulse-heart absolute -right-24 h-80 w-80 rounded-full bg-gradient-conic-secundary opacity-50 blur-3xl"></div>
+    <section className="relative flex w-full flex-col items-center justify-between gap-6 font-extrabold text-white">
       <h2>Web Services</h2>
-      <div className="flex w-full flex-col gap-4 md:flex-row">
-        <div className="container-services">
-          <h5>
-            Package
-            <strong className="px-1.5 text-strong-primary">Basic</strong>
-            Monthly
-          </h5>
-          <h5>$12,000.00</h5>
-          <div className="flex flex-col gap-1.5">
-            <p>Free Domain</p>
-            <p>Free Hosting</p>
-            <p>Simple Application Development</p>
-            <p>Process Automation</p>
-            <p>Monitoring with Monthly Reports</p>
-            <p>Technical Support via Email within 48 hours</p>
-            <p>Basic Performance Analysis</p>
-            <p>Basic SEO</p>
-            <p>Monthly Security Updates with Patches</p>
-            <p>Basic UX/UI Analysis and Improvement</p>
-            <p>Basic Content Migration</p>
-            <p>Integration with 5 APIs and 2 External Services</p>
-            <p>Training and Consultancy Scheduled within 5 Days</p>
-          </div>
-          <button className="button-colorido">Get Now</button>
+      <div className="flex w-full overflow-hidden md:w-[400px]">
+        <div
+          className="flex w-full transform transition-transform duration-500 ease-in-out"
+          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        >
+          {services.map((service, index) => (
+            <div
+              key={index}
+              className="container-services flex w-full flex-none flex-col gap-4 px-4 md:flex-row"
+              style={{ minWidth: "100%" }}
+            >
+              <h5 className="break-words">
+                Package <strong className="px-1.5 text-strong-primary">{service.title}</strong>{" "}
+                Monthly
+              </h5>
+              <h5>{service.price}</h5>
+              <div className="flex flex-col gap-1.5">
+                {service.features.map((feature, i) => (
+                  <p key={i}>{feature}</p>
+                ))}
+              </div>
+              <button className="button-colorido">Get Now</button>
+            </div>
+          ))}
         </div>
-        <div className="container-services">
-          <h5>
-            Package
-            <strong className="px-1.5 text-strong-primary">Intermediate</strong>
-            Monthly
-          </h5>
-          <h5>$20,000.00</h5>
-          <div className="flex flex-col gap-1.5">
-            <p>Free Domain</p>
-            <p>Free Hosting</p>
-            <p>Intermediate Application Development</p>
-            <p>Process Automation with Employee Assistance</p>
-            <p>Monitoring with Weekly Traffic Reports</p>
-            <p>Technical Support via Email and WhatsApp within 6 Hours</p>
-            <p>Basic Performance Analysis</p>
-            <p>Intermediate SEO with Keyword Research</p>
-            <p>Biweekly Security Updates with Patches</p>
-            <p>Detailed UX/UI Analysis and Improvement</p>
-            <p>Basic Content and Database Migrations</p>
-            <p>Integration with 20 APIs and 4 External Services</p>
-            <p>Training and Consultancy Scheduled within 3 Days</p>
-          </div>
-          <button className="button-colorido">Get Now</button>
-        </div>
-        <div className="container-services">
-          <h5>
-            Package
-            <strong className="px-1.5 text-strong-primary">Advanced</strong>
-            Monthly
-          </h5>
-          <h5>$27,000.00</h5>
-          <div className="flex flex-col gap-1.5">
-            <p>Free Domain with Email</p>
-            <p>Free Hosting</p>
-            <p>Advanced Application Development</p>
-            <p>Process Automation with Internal and External Assistance</p>
-            <p>Monitoring with Daily Reports</p>
-            <p>Immediate Technical Support via Email and WhatsApp</p>
-            <p>Advanced Performance Analysis and Optimization</p>
-            <p>SEO with Keyword Research and Monthly Reports</p>
-            <p>Daily Security Updates</p>
-            <p>UX/UI Analysis and Improvement with Redesign and A/B Testing</p>
-            <p>Content, Database, and Services Migration</p>
-            <p>Unlimited Integrations and External Services</p>
-            <p>Personalized Training and Consultancy</p>
-          </div>
-          <button className="button-colorido">Get Now</button>
-        </div>
+      </div>
+      <div className="mt-4 flex justify-center gap-4">
+        <button className="button-colorido-carrossel" onClick={handlePrevious}>
+          <CaretLeft size={24} weight="bold" />
+        </button>
+        <button className="button-colorido-carrossel" onClick={handleNext}>
+          <CaretRight size={24} weight="bold" />
+        </button>
       </div>
     </section>
   );
