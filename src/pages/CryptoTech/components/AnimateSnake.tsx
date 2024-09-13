@@ -37,7 +37,7 @@ export const AnimateSnake = () => {
       setPosition({ top: newTop, left: newLeft });
     };
 
-    const interval = setInterval(updatePosition, 150);
+    const interval = setInterval(updatePosition, 200);
     return () => clearInterval(interval);
   }, [position, direction]);
 
