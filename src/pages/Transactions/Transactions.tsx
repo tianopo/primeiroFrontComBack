@@ -1,5 +1,5 @@
 import { ChangeEvent, useState } from "react";
-import { FieldErrors, FormProvider, UseFormReturn } from "react-hook-form";
+import { FormProvider } from "react-hook-form";
 import { toast } from "react-toastify";
 import { Button } from "src/components/Buttons/Button";
 import { FlexCol } from "src/components/Flex/FlexCol";
@@ -11,11 +11,10 @@ import { formatCPFOrCNPJ, formatCurrency, formatDateTime } from "src/utils/forma
 import { HandleListEdit } from "./components/HandleListEdit";
 import { UploadXLSButton } from "./components/UploadXLSButton";
 import { handleDownload } from "./config/handleDownload";
-import { ICompra, ITransactionData, IVenda, useTransaction } from "./useTransactions";
-import { exchangeOptions } from "src/utils/selectsOptions";
+import { ITransactionData, useTransaction } from "./useTransactions";
 
 export const Transactions = () => {
-  const { mutate, isPending, context, contextCompra, contextVenda } = useTransaction();
+  const { mutate, isPending, context } = useTransaction();
   const { reset, getValues } = context;
 
   const [vendas, setVendas] = useState<any[]>([]);
@@ -39,7 +38,6 @@ export const Transactions = () => {
   const [valorTokenDataCompra, setValorTokenDataCompra] = useState<string>("");
   const [valorTokenDataVenda, setValorTokenDataVenda] = useState<string>("");
   const [taxaTransacao, setTaxaTransacao] = useState<string>("");
-  const [isValid, setIsValid] = useState<boolean>(true);
 
   const handleTipoTransacaoChange = (e: { target: { value: string } }) => {
     reset();
@@ -60,74 +58,17 @@ export const Transactions = () => {
     reset();
   };
 
-  const formatErrors = (errors: FieldErrors<any>): string => {
-    return Object.values(errors)
-      .map((error) => {
-        if (typeof error === "object" && "message" in error) {
-          return error.message;
-        }
-        return "Erro desconhecido";
-      })
-      .join(". ");
-  };
-
-  const isFormValid = async (
-    tipoTransacao: string,
-    values: any,
-    contextVenda: UseFormReturn<IVenda>,
-    contextCompra: UseFormReturn<ICompra>,
-  ): Promise<boolean> => {
-    let isValid = true;
-    const contextTipo = tipoTransacao === "vendas" ? contextVenda : contextCompra;
-    await contextTipo.reset(values);
-
-    await contextTipo.trigger();
-    const { errors } = contextTipo.formState;
-    const errorMessages = formatErrors(errors);
-
-    if (errorMessages) {
-      toast.error(`Erros de ${tipoTransacao}: ${errorMessages}`);
-      isValid = false;
-    }
-
-    return isValid;
-  };
-
-  const handleSave = async () => {
+  const handleSave = () => {
     const values = getValues();
-    const updatedValues: any = {
+    const updatedValues = {
       ...values,
-      tipoTransacao,
-      dataHoraTransacao,
-      ativoDigital,
       cpfComprador,
-      valorCompra,
-      valorVenda,
+      tipoTransacao,
     };
-    if (isValid) {
-      setIsValid(false);
-      await isFormValid(tipoTransacao, updatedValues, contextVenda, contextCompra);
-    }
-
-    if (tipoTransacao.length > 0) {
-      const isValidForm = await isFormValid(
-        tipoTransacao,
-        updatedValues,
-        contextVenda,
-        contextCompra,
-      );
-
-      if (!isValidForm) {
-        return;
-      }
-
-      setFormData((prevData) => [...prevData, updatedValues]);
-      if (tipoTransacao === "vendas") setVendas((prevData) => [...prevData, updatedValues]);
-      if (tipoTransacao === "compras") setCompras((prevData) => [...prevData, updatedValues]);
-      toast.success("Adicionado");
-    } else {
-      toast.error("Não há Tipo de Transação");
-    }
+    setFormData((prevData) => [...prevData, updatedValues]);
+    if (tipoTransacao === "vendas") setVendas((prevData) => [...prevData, updatedValues]);
+    if (tipoTransacao === "compras") setCompras((prevData) => [...prevData, updatedValues]);
+    toast.success("Adicionado");
   };
 
   const handleSend = async () => {
@@ -135,7 +76,9 @@ export const Transactions = () => {
       vendas,
       compras,
     };
+
     console.log(formData);
+
     mutate(combinedData, {
       onSuccess: () => {
         handleDownload(formData);
@@ -253,7 +196,12 @@ export const Transactions = () => {
             <Select
               title="Exchange Utilizada"
               placeholder="Bybit https://www.bybit.com/ SG"
-              options={exchangeOptions}
+              options={[
+                "Bybit https://www.bybit.com/ SG",
+                "Binance https://www.binance.com/ CN",
+                "Gate.IO https://www.gate.io/ AE",
+                "Kucoin https://www.kucoin.com/ SC",
+              ]}
               value={exchangeUtilizada}
               onChange={(e) => setExchangeUtilizada(e.target.value)}
               required
