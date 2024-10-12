@@ -136,8 +136,8 @@ export const Cashier = () => {
           />
           <Select
             title="Exchange"
-            placeholder="Digite o nome da exchange"
-            options={["Binance", "Bybit", "Kucoin"]}
+            placeholder="Bybit"
+            options={["Binance", "Bybit", "Kucoin", "Gate.IO", "CoinEx"]}
             value={exchange}
             onChange={(e) => setExchange(e.target.value)}
             required

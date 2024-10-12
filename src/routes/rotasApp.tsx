@@ -8,6 +8,7 @@ import { Test } from "src/pages/Teste/Teste";
 import { Transactions } from "src/pages/Transactions/Transactions";
 import { app } from "./app";
 import { AuthenticatedRoute } from "./context/AuthenticatedRoute";
+import { Record } from "src/pages/Record/Record";
 
 export const browserRouter = createBrowserRouter([
   {
@@ -18,6 +19,7 @@ export const browserRouter = createBrowserRouter([
       { path: "/teste", element: <Test /> },
       { path: "/transactions", element: <Transactions /> },
       { path: "/operation", element: <Operation /> },
+      { path: "/record", element: <Record /> },
     ],
   },
   {

@@ -1,3 +1,5 @@
+import { FilterOrders } from "./FilterOrders";
+
 interface IHandleListEdit {
   formData: any[];
   handleEdit: (index: number) => void;
@@ -88,6 +90,7 @@ export const HandleListEdit = ({ formData, handleEdit }: IHandleListEdit) => {
           </li>
         ))}
       </ul>
+      <FilterOrders />
     </div>
   );
 };
