@@ -90,6 +90,7 @@ Vendas:
 Política de Pagamento com termos e condições:
 - Identificação por CPF.
 - Não aceitamos pagamentos de terceiros. Conta PJ somente com sócio ou titular.
+- Ativos digitais são muito voláteis, então sem reembolso.
 
 Suporte de Dúvidas:
 - Para informações sobre pedidos de compra P2P, consulte a documentação de suporte das plataformas utilizadas.

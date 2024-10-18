@@ -79,6 +79,10 @@ export const UploadXLSButton = ({
         return processExcelGateIO(workbook);
       case "Kucoin https://www.kucoin.com/ SC":
         return processExcelKucoin(workbook);
+      case "CoinEx https://www.coinex.com/ HK":
+        return processExcelCoinEx(workbook);
+      case "Huobi https://www.htx.com/ CN":
+        return processExcelHuobi(workbook);
       default: {
         toast.error("Escolha uma Exchange Válida");
         return [];
@@ -111,6 +115,7 @@ export const UploadXLSButton = ({
         status, // "Status"
         createdTime, // "Created Time"
       ] = row;
+      console.log(row);
       const formatTotalPrice = (price: string): string => {
         if (Number.isInteger(price)) {
           return `${price},00`;
@@ -219,6 +224,8 @@ export const UploadXLSButton = ({
         exchangeUtilizada: selectedBroker,
         ativoDigital: legalCurrency.split("/")[1],
         cpfComprador: side === "SELL" ? "" : "",
+        nomeVendedor: side === "BUY" ? traderName : "",
+        nomeComprador: side === "SELL" ? traderName : "",
         apelidoVendedor: side === "BUY" ? traderName : "",
         apelidoComprador: side === "SELL" ? traderName : "",
         quantidadeComprada: side === "BUY" ? currencyAmount : "",
@@ -279,6 +286,98 @@ export const UploadXLSButton = ({
         valorTokenDataCompra: tipoTransacao === "BUY" ? price : "",
         valorTokenDataVenda: tipoTransacao === "SELL" ? price : "",
         taxaTransacao: transactionFees,
+      };
+    });
+  };
+
+  const processExcelCoinEx = (workbook: XLSX.WorkBook): any[] => {
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+
+    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
+    const [, ...rows] = json; // Ignora a primeira linha de cabeçalhos
+
+    const formatNumber = (value: string): string => {
+      console.log(value);
+      return parseFloat(value.split(" ")[0]).toFixed(2).replace(".", ",");
+    };
+
+    return rows.map((row) => {
+      const [
+        orderId, // "ORDER ID"
+        createdAt, // "CREATED AT"
+        side, // "SIDE"
+        legalCurrency, // "CURRENCY"
+        legalAmount, // "AMOUNT"
+        price, // "PRICE"
+        total, // "TOTAL"
+        traderName, // "TRADER NAME"
+        paymentMethod, // "PAYMENT METHOD"
+        status, // "STATUS"
+      ] = row;
+
+      return {
+        numeroOrdem: orderId,
+        tipoTransacao: side === "BUY" ? "compras" : "vendas",
+        dataHoraTransacao: createdAt,
+        exchangeUtilizada: selectedBroker,
+        ativoDigital: legalCurrency,
+        cpfComprador: side === "SELL" ? "" : "",
+        apelidoComprador: side === "SELL" ? traderName : "",
+        apelidoVendedor: side === "BUY" ? traderName : "",
+        quantidadeComprada: side === "BUY" ? total : "",
+        quantidadeVendida: side === "SELL" ? total : "",
+        valorCompra: side === "BUY" ? formatNumber(price) : "",
+        valorVenda: side === "SELL" ? formatNumber(price) : "",
+        valorTokenDataCompra: side === "BUY" ? legalAmount : "",
+        valorTokenDataVenda: side === "SELL" ? legalAmount : "",
+        taxaTransacao: "0",
+      };
+    });
+  };
+  // ainda em manutenção
+  const processExcelHuobi = (workbook: XLSX.WorkBook): any[] => {
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+
+    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
+    const [, ...rows] = json;
+
+    const formatNumber = (value: string): string => {
+      console.log(value);
+      return parseFloat(value.split(" ")[0]).toFixed(2).replace(".", ",");
+    };
+
+    return rows.map((row) => {
+      const [
+        orderId, // "ORDER ID"
+        createdAt, // "CREATED AT"
+        side, // "SIDE"
+        legalCurrency, // "CURRENCY"
+        legalAmount, // "AMOUNT"
+        price, // "PRICE"
+        total, // "TOTAL"
+        traderName, // "TRADER NAME"
+        paymentMethod, // "PAYMENT METHOD"
+        status, // "STATUS"
+      ] = row;
+
+      return {
+        numeroOrdem: orderId,
+        tipoTransacao: side === "BUY" ? "compras" : "vendas",
+        dataHoraTransacao: createdAt,
+        exchangeUtilizada: selectedBroker,
+        ativoDigital: legalCurrency,
+        cpfComprador: side === "SELL" ? "" : "",
+        apelidoComprador: side === "SELL" ? traderName : "",
+        apelidoVendedor: side === "BUY" ? traderName : "",
+        quantidadeComprada: side === "BUY" ? total : "",
+        quantidadeVendida: side === "SELL" ? total : "",
+        valorCompra: side === "BUY" ? formatNumber(price) : "",
+        valorVenda: side === "SELL" ? formatNumber(price) : "",
+        valorTokenDataCompra: side === "BUY" ? legalAmount : "",
+        valorTokenDataVenda: side === "SELL" ? legalAmount : "",
+        taxaTransacao: "0",
       };
     });
   };
