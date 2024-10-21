@@ -81,6 +81,8 @@ export const UploadXLSButton = ({
         return processExcelKucoin(workbook);
       case "CoinEx https://www.coinex.com/ HK":
         return processExcelCoinEx(workbook);
+      case "Bitget https://www.bitget.com/ SC":
+        return processExcelBitget(workbook);
       case "Huobi https://www.htx.com/ CN":
         return processExcelHuobi(workbook);
       default: {
@@ -171,7 +173,7 @@ export const UploadXLSButton = ({
       const ativoDigital = fundType.split("/")[0];
 
       return {
-        numeroOrdem: no,
+        numeroOrdem: no.toString(),
         tipoTransacao: type === "Compra" ? "compras" : "vendas",
         dataHoraTransacao: excelDateToJSDate(Number(time)),
         exchangeUtilizada: selectedBroker,
@@ -179,8 +181,6 @@ export const UploadXLSButton = ({
         cpfComprador: type === "Venda" ? "" : "",
         apelidoVendedor: type === "Compra" ? name : "",
         apelidoComprador: type === "Venda" ? name : "",
-        nomeVendedor: type === "Compra" ? name : "",
-        nomeComprador: type === "Venda" ? name : "",
         quantidadeComprada: type === "Compra" ? amount : "",
         quantidadeVendida: type === "Venda" ? amount : "",
         valorCompra: type === "Compra" ? formatNumber(total.toString()) : "",
@@ -298,7 +298,6 @@ export const UploadXLSButton = ({
     const [, ...rows] = json; // Ignora a primeira linha de cabeçalhos
 
     const formatNumber = (value: string): string => {
-      console.log(value);
       return parseFloat(value.split(" ")[0]).toFixed(2).replace(".", ",");
     };
 
@@ -335,6 +334,55 @@ export const UploadXLSButton = ({
       };
     });
   };
+
+  const processExcelBitget = (workbook: XLSX.WorkBook): any[] => {
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+
+    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][]; // Lê o Excel como uma matriz de strings
+    const [, ...rows] = json; // Ignora a primeira linha de cabeçalhos
+
+    const formatNumber = (value: string): string => {
+      return parseFloat(value).toFixed(2).replace(".", ","); // Formata o número corretamente
+    };
+
+    return rows.map((row) => {
+      const [
+        empty,
+        orderId, // "Order number"
+        createdAt, // "Time created"
+        side, // "Order type"
+        crypto, // "Crypto"
+        fiat, // "Fiat"
+        totalPrice, // "Total price"
+        price, // "Price"
+        youReceive, // "You receive"
+        counterparty, // "Counterparty"
+        status, // "Status"
+      ] = row;
+      const oneSide = side.replace(/,$/, "");
+      const oneCounterparty = counterparty.replace(/,$/, "");
+      const oneDate = createdAt.replace(/\//g, "-").replace(/,$/, "");
+      return {
+        numeroOrdem: orderId,
+        tipoTransacao: oneSide === "Buy" ? "compras" : "vendas",
+        dataHoraTransacao: oneDate,
+        exchangeUtilizada: selectedBroker,
+        ativoDigital: crypto,
+        cpfComprador: oneSide === "Sell" ? "" : "", // CPF do comprador (deixe vazio por enquanto)
+        apelidoComprador: oneSide === "Sell" ? oneCounterparty : "", // Nome do comprador
+        apelidoVendedor: oneSide === "Buy" ? oneCounterparty : "", // Nome do vendedor
+        quantidadeComprada: oneSide === "Buy" ? youReceive : "", // Quantidade comprada
+        quantidadeVendida: oneSide === "Sell" ? youReceive : "", // Quantidade vendida
+        valorCompra: oneSide === "Buy" ? formatNumber(totalPrice) : "", // Valor da compra
+        valorVenda: oneSide === "Sell" ? formatNumber(totalPrice) : "", // Valor da venda
+        valorTokenDataCompra: oneSide === "Buy" ? formatNumber(price) : "", // Preço no momento da compra
+        valorTokenDataVenda: oneSide === "Sell" ? formatNumber(price) : "", // Preço no momento da venda
+        taxaTransacao: "0", // A Bitget parece não ter taxa especificada neste formato
+      };
+    });
+  };
+
   // ainda em manutenção
   const processExcelHuobi = (workbook: XLSX.WorkBook): any[] => {
     const sheetName = workbook.SheetNames[0];
