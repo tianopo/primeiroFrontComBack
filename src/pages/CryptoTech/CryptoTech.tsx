@@ -77,8 +77,28 @@ export const CryptoTech = () => {
         <div className="pulse-complete -right-24 bg-gradient-conic-secundary"></div>
         <h3 className="font-extrabold uppercase text-white">cryptotech</h3>
         <Navbar nav={nav} />
-        <div>
-          <h6 className="uppercase text-white">social networks coming soon</h6>
+        <div className="flex flex-col items-center">
+          <div className="mt-4 flex space-x-4">
+            {/* Link do YouTube */}
+            <a
+              href="https://www.youtube.com/@tianopo-crypto"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-8 w-8 md:h-10 md:w-10"
+            >
+              <img src="/socialMedias/youtube.png" alt="YouTube" />
+            </a>
+
+            {/* Link do TikTok */}
+            <a
+              href="https://www.tiktok.com/@tianopovideo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-8 w-8 md:h-10 md:w-10"
+            >
+              <img src="/socialMedias/tiktok.png" alt="TikTok" />
+            </a>
+          </div>
         </div>
       </footer>
     </div>
