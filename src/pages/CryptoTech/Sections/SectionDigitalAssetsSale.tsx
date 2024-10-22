@@ -19,7 +19,7 @@ export const SectionDigitalAssetsSale = () => {
         ),
       features: [
         "Amount: 50 - 250 USD",
-        "Accepted cryptocurrencies: USDT | BTC | ETH | DOGE | USDC | BNB",
+        "Accepted cryptocurrencies: USDT | BTC | ETH | DOGE | USDC | BNB | Others",
         "Offer: 20% Rate",
         "Transaction Method: P2P",
         "Fast and secure transactions",
@@ -34,7 +34,7 @@ export const SectionDigitalAssetsSale = () => {
         ),
       features: [
         "Amount: 251 - 6,000 USD",
-        "Accepted cryptocurrencies: USDT | BTC | ETH | DOGE | USDC | BNB",
+        "Accepted cryptocurrencies: USDT | BTC | ETH | DOGE | USDC | BNB | Others",
         "Offer: 15% Rate",
         "Transaction Method: P2P",
         "Safe and efficient transfers",
@@ -49,7 +49,7 @@ export const SectionDigitalAssetsSale = () => {
         ),
       features: [
         "Amount: 6,001 - 50,000 USD",
-        "Accepted cryptocurrencies: USDT | BTC | ETH | DOGE | USDC | BNB",
+        "Accepted cryptocurrencies: USDT | BTC | ETH | DOGE | USDC | BNB | Others",
         "Offer: 10% Rate",
         "Transaction Method: Direct Wallet or P2P",
         "Contract-based transaction",
@@ -64,7 +64,7 @@ export const SectionDigitalAssetsSale = () => {
         ),
       features: [
         "Amount: Above 50,000 USD",
-        "Accepted cryptocurrencies: USDT | BTC | ETH | DOGE | USDC | BNB",
+        "Accepted cryptocurrencies: USDT | BTC | ETH | DOGE | USDC | BNB | Others",
         "Offer: Custom Rate",
         "Transaction Method: Direct Wallet or P2P",
         "Tailored terms and conditions",
