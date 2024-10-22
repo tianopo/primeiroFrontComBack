@@ -2,10 +2,10 @@ import { AnimateBlink } from "./components/AnimateBlink";
 import { AnimateSnake } from "./components/AnimateSnake";
 import { Navbar } from "./components/Navbar";
 import "./cryptoTech.css";
+import { SectionDigitalAssetsSale } from "./Sections/SectionDigitalAssetsSale";
 import { SectionForm } from "./Sections/SectionForm";
 import { SectionInfo } from "./Sections/SectionInfo";
 import { SectionIntroduction } from "./Sections/SectionIntroduction";
-import { SectionInvestmentPackages } from "./Sections/SectionInvestmentPackages";
 import { SectionServicesTechnology } from "./Sections/SectionServicesTechnology";
 
 export const CryptoTech = () => {
@@ -59,7 +59,7 @@ export const CryptoTech = () => {
       <SectionForm />
       <div className="flex flex-col gap-2 lg:flex-row lg:gap-0" id="services">
         <SectionServicesTechnology />
-        <SectionInvestmentPackages />
+        <SectionDigitalAssetsSale />
       </div>
       <SectionInfo />
       <section className="flex w-full flex-col justify-between gap-6 font-extrabold text-white">

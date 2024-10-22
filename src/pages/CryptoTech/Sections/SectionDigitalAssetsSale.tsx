@@ -1,7 +1,7 @@
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 
-export const SectionInvestmentPackages = () => {
+export const SectionDigitalAssetsSale = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const message = (message: string) => {
     const encodedMessage = encodeURIComponent(message);
@@ -11,65 +11,63 @@ export const SectionInvestmentPackages = () => {
 
   const packages = [
     {
-      title: "Starter",
-      investmentRange: "$100 - $1,000 USD",
+      title: "Small Purchase",
+      buy: "$50 - $250 USD",
       onClick: () =>
-        message(`Hi! I would like to contract your starter investment package, can we talk ?`),
+        message(
+          `Hi! I would like to buy digital assets within the range of $50 - $250. Can we proceed?`,
+        ),
       features: [
-        "Minimum Investment: 100 USD",
-        "Maximum Investment: 1,000 USD",
-        "Accepted cryptocurrencies: USDT | USDC",
-        "Estimated Monthly Profit: 5% of Net Profit",
-        "Cryptotech Commission: 50% of Profit",
-        "Example: Invest 100 USDT, Estimated profit: 5 USDT, Comission: 2.5 USDT",
-        "Monthly Payout of Profits in USDT",
-        "Report Monthly",
+        "Amount: 50 - 250 USD",
+        "Accepted cryptocurrencies: USDT | BTC | ETH | DOGE | USDC | BNB",
+        "Offer: 20% Rate",
+        "Transaction Method: P2P",
+        "Fast and secure transactions",
       ],
     },
     {
-      title: "Intermediate",
-      investmentRange: "$1,001 - $20,000 USD",
+      title: "Medium Purchase",
+      buy: "$251 - $6,000 USD",
       onClick: () =>
-        message(`Hi! I would like to contract your intermediate investment package, can we talk ?`),
+        message(
+          `Hi! I would like to buy digital assets within the range of $251 - $6,000. Can we proceed?`,
+        ),
       features: [
-        "Minimum Investment: 1,001 USD",
-        "Maximum Investment: 40,000 USD",
-        "Accepted cryptocurrencies: USDT | BTC | USDC | ETH | BNB",
-        "Estimated Monthly Profit: 10% of Net Profit",
-        "Cryptotech Commission: 40% of Profit",
-        "Example: Invest 1,500 USDC, Estimated profit: 150 USDC, Comission: 600 USDC",
-        "Monthly Payout of Profits in Chosen Cryptocurrency",
-        "Report Quinzenal",
+        "Amount: 251 - 6,000 USD",
+        "Accepted cryptocurrencies: USDT | BTC | ETH | DOGE | USDC | BNB",
+        "Offer: 15% Rate",
+        "Transaction Method: P2P",
+        "Safe and efficient transfers",
       ],
     },
     {
-      title: "Advanced",
-      investmentRange: "$20,001 - $500,000 USD",
+      title: "Large Purchase",
+      buy: "$6,001 - $50,000 USD",
       onClick: () =>
-        message(`Hi! I would like to contract your advanced investment package, can we talk ?`),
+        message(
+          `Hi! I would like to buy digital assets within the range of $6,001 - $50,000. Can we proceed?`,
+        ),
       features: [
-        "Minimum Investment: 40,001 USD",
-        "Maximum Investment: 500,000 USD",
-        "Accepted cryptocurrencies: USDT | BTC | USDC | ETH | BNB | DAI | FDUSD | DOGE",
-        "Estimated Monthly Profit: 15% of Net Profit",
-        "Cryptotech Commission: 30% of Profit",
-        "Example: Invest 1 BTC, Estimated profit: 1.15 BTC, Comission: 0,0225 BTC",
-        "Monthly Payout of Profits in Chosen Cryptocurrency",
-        "Report Weekly",
+        "Amount: 6,001 - 50,000 USD",
+        "Accepted cryptocurrencies: USDT | BTC | ETH | DOGE | USDC | BNB",
+        "Offer: 10% Rate",
+        "Transaction Method: Direct Wallet or P2P",
+        "Contract-based transaction",
       ],
     },
     {
-      title: "Custom",
-      investmentRange: "Above $500,000 USD",
+      title: "Custom Purchase",
+      buy: "Above $50,000 USD",
       onClick: () =>
-        message(`Hi! I would like to contract your custom investment package, can we talk ?`),
+        message(
+          `Hi! I would like to buy digital assets over $50,000. Can we discuss custom terms?`,
+        ),
       features: [
-        "For investments above 500,000 USD",
-        "Custom Terms and Conditions",
-        "Negotiable Commission Rates",
-        "Personalized Monthly Profit Targets",
-        "Tailored Financial Strategies",
-        "Dedicated Support Team",
+        "Amount: Above 50,000 USD",
+        "Accepted cryptocurrencies: USDT | BTC | ETH | DOGE | USDC | BNB",
+        "Offer: Custom Rate",
+        "Transaction Method: Direct Wallet or P2P",
+        "Tailored terms and conditions",
       ],
     },
   ];
@@ -91,7 +89,7 @@ export const SectionInvestmentPackages = () => {
 
   return (
     <section className="relative flex w-full flex-col items-center justify-between gap-6 font-extrabold text-white">
-      <h2>Investment Crypto</h2>
+      <h2>Buy Digital Assets</h2>
       <div className="pulse-complete -right-24 bg-gradient-conic-secundary"></div>
       <div className="flex w-full overflow-hidden md:w-[400px]">
         <div
@@ -105,16 +103,16 @@ export const SectionInvestmentPackages = () => {
               style={{ minWidth: "100%" }}
             >
               <h5 className="break-words">
-                Package <strong className="px-1.5 text-strong-primary">{pkg.title}</strong> Monthly
+                Purchase <strong className="px-1.5 text-strong-primary">{pkg.title}</strong>
               </h5>
-              <h5>Investment: {pkg.investmentRange}</h5>
+              <h5>Buy: {pkg.buy}</h5>
               <div className="flex flex-col gap-1.5">
                 {pkg.features.map((feature, i) => (
                   <p key={i}>{feature}</p>
                 ))}
               </div>
               <button className="button-colorido-services" onClick={pkg.onClick}>
-                {pkg.title === "Custom" ? "Contact Us" : "Invest Now"}
+                {pkg.title === "Custom" ? "Contact Us" : "Buy Now"}
               </button>
             </div>
           ))}
