@@ -71,7 +71,7 @@ export const HandleListEdit = ({ formData, handleEdit }: IHandleListEdit) => {
                   <strong>Apelido Comprador:</strong> {item.apelidoComprador}
                 </p>
                 <p>
-                  <strong>CPF Comprador:</strong> {item.cpfComprador}
+                  <strong>CPF Comprador:</strong> {item.documentoComprador}
                 </p>
                 <p>
                   <strong>Quantidade Vendida:</strong> {item.quantidadeVendida}

@@ -52,6 +52,8 @@ export const FilterOrders = () => {
     });
 
     let fileContent = `
+- Serviços: Intermediação de Compra/Venda de criptomoedas.
+- Comissão: 1%
 - Vendas: ${data.filter((transaction: any) => transaction.tipo === "venda").length}
 - Compras: ${data.filter((transaction: any) => transaction.tipo === "compra").length}
 - Lucro: R$ ${total.toFixed(2)}

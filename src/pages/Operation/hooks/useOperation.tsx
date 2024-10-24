@@ -12,19 +12,19 @@ export interface IOperation {
   nome: string;
   apelido?: string;
   exchange: string;
-  cpf?: string;
+  documento?: string;
 }
 
 const schema = Yup.object({
   nome: Yup.string().required().label("Nome"),
   apelido: Yup.string().optional().label("Apelido"),
   exchange: Yup.string().required().label("Exchange"),
-  cpf: Yup.string()
+  documento: Yup.string()
     .optional()
-    .test("validate-cpf", "CPF inválido, correto: XXX.XXX.XXX-XX", (value) =>
-      value && value.length > 0 ? Regex.cpf_mask.test(value || "") : true,
+    .test("validate-documento", "Documento inválido, correto: XXX.XXX.XXX-XX", (value) =>
+      value && value.length > 0 ? Regex.cpf_cnpj_mask.test(value || "") : true,
     )
-    .label("CPF"),
+    .label("Documento"),
 });
 
 export const useOperation = () => {

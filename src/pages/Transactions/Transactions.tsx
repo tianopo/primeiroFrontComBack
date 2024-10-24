@@ -29,7 +29,7 @@ export const Transactions = () => {
   const [nomeComprador, setNomeComprador] = useState<string>("");
   const [apelidoVendedor, setApelidoVendedor] = useState<string>("");
   const [apelidoComprador, setApelidoComprador] = useState<string>("");
-  const [cpfComprador, setCpfComprador] = useState<string>("");
+  const [documentoComprador, setDocumentoComprador] = useState<string>("");
   const [quantidadeComprada, setQuantidadeComprada] = useState<string>("");
   const [quantidadeVendida, setQuantidadeVendida] = useState<string>("");
   const [valorCompra, setValorCompra] = useState<string>("");
@@ -98,7 +98,7 @@ export const Transactions = () => {
       tipoTransacao,
       dataHoraTransacao,
       ativoDigital,
-      cpfComprador,
+      documentoComprador,
       valorCompra,
       valorVenda,
     };
@@ -168,7 +168,7 @@ export const Transactions = () => {
       setNomeComprador("");
       setApelidoVendedor(item.apelidoVendedor);
       setApelidoComprador("");
-      setCpfComprador("");
+      setDocumentoComprador("");
       setQuantidadeComprada(item.quantidadeComprada);
       setQuantidadeVendida("");
       setValorCompra(item.valorCompra);
@@ -180,7 +180,7 @@ export const Transactions = () => {
       setNomeComprador(item.nomeComprador);
       setApelidoVendedor("");
       setApelidoComprador(item.apelidoComprador);
-      setCpfComprador(item.cpfComprador);
+      setDocumentoComprador(item.documentoComprador);
       setQuantidadeComprada("");
       setQuantidadeVendida(item.quantidadeVendida);
       setValorCompra("");
@@ -198,9 +198,9 @@ export const Transactions = () => {
     setDataHoraTransacao(formattedDate);
   };
 
-  const handleCpfChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const formattedCPF = formatCPFOrCNPJ(e.target.value);
-    setCpfComprador(formattedCPF);
+  const handleDocumentoChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const formattedDocumento = formatCPFOrCNPJ(e.target.value);
+    setDocumentoComprador(formattedDocumento);
   };
 
   const handleValorVendaChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -284,9 +284,9 @@ export const Transactions = () => {
               />
               <InputX
                 title="Cpf Comprador"
-                placeholder="CPF do Comprador"
-                value={cpfComprador}
-                onChange={handleCpfChange}
+                placeholder="CPF/CNPJ do Comprador"
+                value={documentoComprador}
+                onChange={handleDocumentoChange}
                 required
               />
               <InputX

@@ -132,7 +132,7 @@ export const UploadXLSButton = ({
         dataHoraTransacao: excelDateToJSDate(Number(createdTime)),
         exchangeUtilizada: selectedBroker,
         ativoDigital: assetType,
-        cpfComprador: orderType === "Sell" ? "" : "",
+        documentoComprador: orderType === "Sell" ? "" : "",
         apelidoVendedor: orderType === "Buy" ? counterparty : "",
         apelidoComprador: orderType === "Sell" ? counterparty : "",
         quantidadeComprada: orderType === "Buy" ? quantity.toString() : "",
@@ -178,7 +178,7 @@ export const UploadXLSButton = ({
         dataHoraTransacao: excelDateToJSDate(Number(time)),
         exchangeUtilizada: selectedBroker,
         ativoDigital,
-        cpfComprador: type === "Venda" ? "" : "",
+        documentoComprador: type === "Venda" ? "" : "",
         apelidoVendedor: type === "Compra" ? name : "",
         apelidoComprador: type === "Venda" ? name : "",
         quantidadeComprada: type === "Compra" ? amount : "",
@@ -223,7 +223,7 @@ export const UploadXLSButton = ({
         dataHoraTransacao: excelDateToJSDate(Number(time)),
         exchangeUtilizada: selectedBroker,
         ativoDigital: legalCurrency.split("/")[1],
-        cpfComprador: side === "SELL" ? "" : "",
+        documentoComprador: side === "SELL" ? "" : "",
         nomeVendedor: side === "BUY" ? traderName : "",
         nomeComprador: side === "SELL" ? traderName : "",
         apelidoVendedor: side === "BUY" ? traderName : "",
@@ -276,7 +276,7 @@ export const UploadXLSButton = ({
         dataHoraTransacao,
         exchangeUtilizada: selectedBroker,
         ativoDigital: cryptocurrency,
-        cpfComprador: tipoTransacao === "SELL" ? "" : "",
+        documentoComprador: tipoTransacao === "SELL" ? "" : "",
         apelidoVendedor: tipoTransacao === "BUY" ? counterparty : "",
         apelidoComprador: tipoTransacao === "SELL" ? counterparty : "",
         quantidadeComprada: tipoTransacao === "BUY" ? coinAmount : "",
@@ -321,7 +321,7 @@ export const UploadXLSButton = ({
         dataHoraTransacao: createdAt,
         exchangeUtilizada: selectedBroker,
         ativoDigital: legalCurrency,
-        cpfComprador: side === "SELL" ? "" : "",
+        documentoComprador: side === "SELL" ? "" : "",
         apelidoComprador: side === "SELL" ? traderName : "",
         apelidoVendedor: side === "BUY" ? traderName : "",
         quantidadeComprada: side === "BUY" ? total : "",
@@ -369,7 +369,7 @@ export const UploadXLSButton = ({
         dataHoraTransacao: oneDate,
         exchangeUtilizada: selectedBroker,
         ativoDigital: crypto,
-        cpfComprador: oneSide === "Sell" ? "" : "", // CPF do comprador (deixe vazio por enquanto)
+        documentoComprador: oneSide === "Sell" ? "" : "", // CPF do comprador (deixe vazio por enquanto)
         apelidoComprador: oneSide === "Sell" ? oneCounterparty : "", // Nome do comprador
         apelidoVendedor: oneSide === "Buy" ? oneCounterparty : "", // Nome do vendedor
         quantidadeComprada: oneSide === "Buy" ? youReceive : "", // Quantidade comprada
@@ -416,7 +416,7 @@ export const UploadXLSButton = ({
         dataHoraTransacao: createdAt,
         exchangeUtilizada: selectedBroker,
         ativoDigital: legalCurrency,
-        cpfComprador: side === "SELL" ? "" : "",
+        documentoComprador: side === "SELL" ? "" : "",
         apelidoComprador: side === "SELL" ? traderName : "",
         apelidoVendedor: side === "BUY" ? traderName : "",
         quantidadeComprada: side === "BUY" ? total : "",

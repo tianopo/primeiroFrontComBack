@@ -4,12 +4,12 @@ import { Button } from "src/components/Buttons/Button";
 import { FormX } from "src/components/Form/FormX";
 import { InputX } from "src/components/Form/Input/InputX";
 import { Select } from "src/components/Form/Select/Select";
-import { formatCPF } from "src/utils/formats";
+import { formatCPFOrCNPJ } from "src/utils/formats";
 import { exchangeOptions } from "src/utils/selectsOptions";
 import { useOperation } from "../hooks/useOperation";
 
 export const Register = () => {
-  const [cpf, setCpf] = useState<string>("");
+  const [documento, setDocumento] = useState<string>("");
   const [nome, setNome] = useState<string>("");
   const [apelido, setApelido] = useState<string>("");
   const [exchange, setExchange] = useState<string>("");
@@ -34,10 +34,10 @@ export const Register = () => {
     setExchange(e.target.value);
   };
 
-  const handleCpfChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const formattedCPF = formatCPF(e.target.value);
-    setValue("cpf", formattedCPF);
-    setCpf(formattedCPF);
+  const handleDocumentoChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const formattedDocumento = formatCPFOrCNPJ(e.target.value);
+    setValue("documento", formattedDocumento);
+    setDocumento(formattedDocumento);
   };
 
   const handleSubmit = (data: any) => {
@@ -74,10 +74,10 @@ export const Register = () => {
           required
         />
         <InputX
-          title="Cpf"
-          placeholder="XXX.XXX.XXX-XX"
-          value={cpf}
-          onChange={handleCpfChange}
+          title="Documento"
+          placeholder="CPF/CNPJ"
+          value={documento}
+          onChange={handleDocumentoChange}
           required
         />
         <Button disabled={isPending || Object.keys(errors).length > 0}>Salvar</Button>
