@@ -1,5 +1,5 @@
 export const handleDownload = (formData: any[]) => {
-  const datesSet = new Set<string>();
+  const datesArray: string[] = [];
 
   const textContent = formData
     .map((item) => {
@@ -18,7 +18,7 @@ export const handleDownload = (formData: any[]) => {
       const exchangeURL = item.exchange.split(" ")[1];
       const siglaPaisOrigemExchange = item.exchange?.split(" ")[2];
 
-      datesSet.add(dataHoraTransacao);
+      datesArray.push(dataHoraTransacao);
 
       return {
         line: `${operationCode}|${dataHoraTransacao}|I|${valorOperacao.trim()}|0,00|${simboloAtivoDigital}|${quantidade}|${exchange}|${exchangeURL}|${siglaPaisOrigemExchange}`,
@@ -29,13 +29,15 @@ export const handleDownload = (formData: any[]) => {
     .map((item) => item.line)
     .join("\r\n");
 
-  const datesString = Array.from(datesSet).join("-");
+  const sortedDates = datesArray.sort();
+  const dataInicial = sortedDates[0];
+  const dataFinal = sortedDates[sortedDates.length - 1];
 
   const blob = new Blob([textContent], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `Relatorio_IN188_${datesString}.txt`;
+  link.download = `Relatorio_IN188_${dataInicial}-${dataFinal}.txt`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
