@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
+import { Select } from "src/components/Form/Select/Select";
 import { handleDownload } from "../config/handleDownload";
 import { useListTransactions } from "../hooks/useListTransactions";
 
@@ -7,6 +8,8 @@ export const FilterOrders = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [filterDates, setFilterDates] = useState({ startDate: "", endDate: "" });
+  const [buyer, setBuyer] = useState("");
+  const [buyers, setBuyers] = useState<string[]>([]);
   const [visibleExchanges, setVisibleExchanges] = useState<{ [key: string]: boolean }>({});
 
   const { data, error, isLoading } = useListTransactions(
@@ -19,11 +22,11 @@ export const FilterOrders = () => {
     setFilterDates({ startDate, endDate });
   };
 
-  const calculateTotals = () => {
+  const calculateTotals = (filteredData: any[]) => {
     let totalVendas = 0;
     let totalCompras = 0;
 
-    data.forEach((transaction: any) => {
+    filteredData.forEach((transaction: any) => {
       const valor = parseFloat(
         transaction.valor.replace(".", "").replace(",", ".").replace("R$", ""),
       );
@@ -38,44 +41,47 @@ export const FilterOrders = () => {
     return { totalVendas, totalCompras, total: totalVendas - totalCompras };
   };
 
-  const { totalVendas, totalCompras, total } = data
-    ? calculateTotals()
+  // Filtrar as transações com base no comprador selecionado
+  const filteredData =
+    buyer === "" || buyer === "N/A"
+      ? data || []
+      : data?.filter((transaction: any) => transaction.buyer?.name === buyer);
+
+  const { totalVendas, totalCompras, total } = filteredData
+    ? calculateTotals(filteredData)
     : { totalVendas: 0, totalCompras: 0, total: 0 };
 
   const handleGenerate = async () => {
-    handleDownload(data);
+    handleDownload(filteredData);
   };
 
   const handleTransactions = async () => {
-    if (!data) return;
+    if (!filteredData) return;
 
-    const hoje = new Date();
-    const mesAnterior = new Date();
-    mesAnterior.setMonth(hoje.getMonth() - 1);
-    const nomeMesAnterior = mesAnterior.toLocaleDateString("pt-BR", { month: "long" });
+    const startDateObj = new Date(startDate);
+    const month = new Date(startDateObj);
+    month.setMonth(startDateObj.getMonth());
+    const monthName = month.toLocaleDateString("pt-BR", { month: "long" });
 
     let fileContent = `- Serviço: Intermediação de Compra/Venda de criptomoedas.
 - Comissão: 1%
-- Quantidade de Vendas: ${data.filter((transaction: any) => transaction.tipo === "venda").length}
-- Mês/Ano: ${nomeMesAnterior} de 2024
+- Quantidade de Vendas: ${filteredData.filter((transaction: any) => transaction.tipo === "venda").length}
+- Mês/Ano: ${monthName} de 2024
 - Valor Total da Nota: R$ ${(totalVendas * 0.01).toFixed(2)}
-
-A seguir estão as transações realizadas no período de ${startDate} a ${endDate}:
 
 Vendas:
 `;
 
-    data.forEach((transaction: any, index: number) => {
+    filteredData.forEach((transaction: any, index: number) => {
       if (transaction.tipo === "venda") {
-        fileContent += `Transação${index + 1}:\n${transaction.numeroOrdem}\nData: ${transaction.dataTransacao}\nExchange: ${transaction.exchange.split(" ")[0]}\nAtivo: ${transaction.ativoDigital}\nQuantidade: ${transaction.quantidade}\nValor: ${transaction.valor}\n\n`;
+        fileContent += `Transação ${index + 1}:\nOrdem ID: ${transaction.numeroOrdem}\nData: ${transaction.dataTransacao}\nExchange: ${transaction.exchange.split(" ")[0]}\nAtivo: ${transaction.ativoDigital}\nQuantidade: ${transaction.quantidade}\nValor: ${transaction.valor}\n\n`;
       }
     });
 
-    fileContent += `\nCompras:\n`;
-
-    data.forEach((transaction: any, index: number) => {
+    filteredData.forEach((transaction: any, index: number) => {
       if (transaction.tipo === "compra") {
-        fileContent += `${index + 1}:\nNome: ${transaction.seller?.name || "N/A"}\Número da Ordem: ${transaction.numeroOrdem}\nData: ${transaction.dataTransacao}\nExchange: ${transaction.exchange.split(" ")[0]}\n$Ativo: ${transaction.ativoDigital}\nQuantidade: ${transaction.quantidade}\nValor: ${transaction.valor}\n\n`;
+        fileContent += `\nCompras:\n`;
+        fileContent += `${index + 1}:\nNome: ${transaction.seller?.name || "N/A"}\Número da Ordem: ${transaction.numeroOrdem}\nData: ${transaction.dataTransacao}\nExchange: ${transaction.exchange.split(" ")[0]}\nAtivo: ${transaction.ativoDigital}\nQuantidade: ${transaction.quantidade}\nValor: ${transaction.valor}\n\n`;
       }
     });
 
@@ -94,11 +100,21 @@ Suporte de Dúvidas:
     const blob = new Blob([fileContent], { type: "text/plain" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `transacoes_${startDate}_${endDate}.txt`;
+    link.download = `transacoes_${buyer}_${monthName}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
+
+  useEffect(() => {
+    if (data) {
+      const uniqueBuyers = Array.from(
+        new Set(data.map((t: any) => t.buyer?.name || "N/A")),
+      ) as string[];
+
+      setBuyers(uniqueBuyers.sort());
+    }
+  }, [data]);
 
   // Função para agrupar transações por exchange
   const groupByExchange = (transactions: any[]) => {
@@ -120,7 +136,9 @@ Suporte de Dúvidas:
     }));
   };
 
-  const groupedTransactions = data ? groupByExchange(data) : {};
+  const groupedTransactions = filteredData ? groupByExchange(filteredData) : {};
+  const validationDates = filterDates.startDate.length > 0 && filterDates.endDate.length > 0;
+  const validationEmptyBuyers = buyer === "" || buyer === "N/A";
 
   return (
     <>
@@ -138,18 +156,32 @@ Suporte de Dúvidas:
         Data de Fim:
         <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
       </label>
+
       <div className="flex w-full flex-col gap-2">
+        {buyers.length > 0 && (
+          <Select
+            title="Compradores"
+            placeholder="Selecione um comprador"
+            options={buyers}
+            value={buyer === "N/A" ? "" : buyer}
+            onChange={(e) => setBuyer(e.target.value)}
+          />
+        )}
         <Button onClick={handleOrder}>Filtrar</Button>
-        <Button onClick={handleGenerate}>Gerar IN188</Button>
-        <Button onClick={handleTransactions}>Emitir Transacoes</Button>
+        {validationDates && validationEmptyBuyers && (
+          <Button onClick={handleGenerate}>Gerar IN188</Button>
+        )}
+        {validationDates && !validationEmptyBuyers && (
+          <Button onClick={handleTransactions}>Emitir Transacoes</Button>
+        )}
       </div>
 
       {isLoading && <p>Carregando...</p>}
       {error && <p>Erro ao carregar dados</p>}
 
-      {data && (
+      {filteredData && (
         <div>
-          <h6>Quantidade de ordens: {data.length}</h6>
+          <h6>Quantidade de ordens: {filteredData.length}</h6>
           <h6>Vendas: {totalVendas.toFixed(2)} BRL</h6>
           <h6>Compras: {totalCompras.toFixed(2)} BRL</h6>
           <h6>Lucro: {total.toFixed(2)} BRL</h6>
@@ -194,31 +226,6 @@ Suporte de Dúvidas:
                       <p>
                         <strong>Tipo:</strong> {transaction.tipo}
                       </p>
-
-                      {transaction.buyer && (
-                        <div className="mt-2.5">
-                          <h6>
-                            <strong>Comprador:</strong>
-                          </h6>
-                          <p>
-                            <strong>Nome:</strong> {transaction.buyer.name}
-                          </p>
-                          <p>
-                            <strong>CPF:</strong> {transaction.buyer.document}
-                          </p>
-                        </div>
-                      )}
-
-                      {transaction.seller && (
-                        <div className="mt-2.5">
-                          <h6>
-                            <strong>Vendedor:</strong>
-                          </h6>
-                          <p>
-                            <strong>Nome:</strong> {transaction.seller.name}
-                          </p>
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>
