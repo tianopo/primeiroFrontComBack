@@ -184,7 +184,9 @@ Suporte de Dúvidas:
           <h6>Quantidade de ordens: {filteredData.length}</h6>
           <h6>Vendas: {totalVendas.toFixed(2)} BRL</h6>
           <h6>Compras: {totalCompras.toFixed(2)} BRL</h6>
-          <h6>Lucro: {total.toFixed(2)} BRL</h6>
+          <h6>
+            Lucro: {!validationEmptyBuyers ? (total * 0.01).toFixed(2) : total.toFixed(2)} BRL
+          </h6>
 
           {/* Listar as ordens agrupadas por exchange */}
           {Object.keys(groupedTransactions).map((exchange) => (
