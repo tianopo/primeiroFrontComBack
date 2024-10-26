@@ -43,7 +43,7 @@ export const FilterOrders = () => {
 
   // Filtrar as transações com base no comprador selecionado
   const filteredData =
-    buyer === "" || buyer === "N/A"
+    buyer === "" || buyer === " N/A"
       ? data || []
       : data?.filter((transaction: any) => transaction.buyer?.name === buyer);
 
@@ -63,73 +63,138 @@ export const FilterOrders = () => {
     month.setMonth(startDateObj.getMonth());
     const monthName = month.toLocaleDateString("pt-BR", { month: "long" });
 
-    const comissao = 0.01;
-    const valorNfe = (totalVendas * comissao).toFixed(2);
+    //     let fileContent = `- Serviço: Intermediação de Compra/Venda de criptomoedas.
+    // - Comissão: 1%
+    // - Quantidade de Vendas: ${filteredData.filter((transaction: any) => transaction.tipo === "venda").length}
+    // - Mês/Ano: ${monthName} de 2024
+    // - Valor Total da Nota: ${valorNfe}
 
-    let fileContent = `- Serviço: Intermediação de Compra/Venda de criptomoedas.
-- Comissão: 1%
-- Quantidade de Vendas: ${filteredData.filter((transaction: any) => transaction.tipo === "venda").length}
-- Mês/Ano: ${monthName} de 2024
-- Valor Total da Nota: ${valorNfe}
+    // Vendas:
+    // `;
 
-Vendas:
-`;
+    //     filteredData.forEach((transaction: any, index: number) => {
+    //       if (transaction.tipo === "venda") {
+    //         fileContent += `Transação ${index + 1}:\nOrdem ID: ${transaction.numeroOrdem}\nData: ${transaction.dataTransacao}\nExchange: ${transaction.exchange.split(" ")[0]}\nAtivo: ${transaction.ativoDigital}\nQuantidade: ${transaction.quantidade}\nValor: ${transaction.valor}\n\n`;
+    //       }
+    //     });
 
-    filteredData.forEach((transaction: any, index: number) => {
-      if (transaction.tipo === "venda") {
-        fileContent += `Transação ${index + 1}:\nOrdem ID: ${transaction.numeroOrdem}\nData: ${transaction.dataTransacao}\nExchange: ${transaction.exchange.split(" ")[0]}\nAtivo: ${transaction.ativoDigital}\nQuantidade: ${transaction.quantidade}\nValor: ${transaction.valor}\n\n`;
-      }
-    });
+    //     filteredData.forEach((transaction: any, index: number) => {
+    //       if (transaction.tipo === "compra") {
+    //         fileContent += `\nCompras:\n`;
+    //         fileContent += `${index + 1}:\nNome: ${transaction.seller?.name || " N/A"}\Número da Ordem: ${transaction.numeroOrdem}\nData: ${transaction.dataTransacao}\nExchange: ${transaction.exchange.split(" ")[0]}\nAtivo: ${transaction.ativoDigital}\nQuantidade: ${transaction.quantidade}\nValor: ${transaction.valor}\n\n`;
+    //       }
+    //     });
 
-    filteredData.forEach((transaction: any, index: number) => {
-      if (transaction.tipo === "compra") {
-        fileContent += `\nCompras:\n`;
-        fileContent += `${index + 1}:\nNome: ${transaction.seller?.name || "N/A"}\Número da Ordem: ${transaction.numeroOrdem}\nData: ${transaction.dataTransacao}\nExchange: ${transaction.exchange.split(" ")[0]}\nAtivo: ${transaction.ativoDigital}\nQuantidade: ${transaction.quantidade}\nValor: ${transaction.valor}\n\n`;
-      }
-    });
+    //     // Adicione políticas e termos
+    //     fileContent += `
+    // Política de Pagamento com termos e condições:
+    // - Identificação por CPF.
+    // - Não aceitamos pagamentos de terceiros. Conta PJ somente com sócio ou titular.
+    // - Ativos digitais são muito voláteis, então sem reembolso.
 
-    // Adicione políticas e termos
-    fileContent += `
-Política de Pagamento com termos e condições:
-- Identificação por CPF.
-- Não aceitamos pagamentos de terceiros. Conta PJ somente com sócio ou titular.
-- Ativos digitais são muito voláteis, então sem reembolso.
-
-Suporte de Dúvidas:
-- Para informações sobre pedidos de compra P2P, consulte a documentação de suporte das plataformas utilizadas.
-`;
+    // Suporte de Dúvidas:
+    // - Para informações sobre pedidos de compra P2P, consulte a documentação de suporte das plataformas utilizadas.
+    // `;
 
     // Criação do arquivo para download
-    const blob = new Blob([fileContent], { type: "text/plain" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `transacoes_${buyer}_${monthName}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // const blob = new Blob([fileContent], { type: "text/plain" });
+    // const link = document.createElement("a");
+    // link.href = URL.createObjectURL(blob);
+    // link.download = `transacoes_${buyer}_${monthName}.txt`;
+    // document.body.appendChild(link);
+    // link.click();
+    // document.body.removeChild(link);
 
-    const endDateObj = new Date(startDate);
+    const groupedByBuyer = filteredData.reduce((acc: any, transaction: any) => {
+      const buyerDocument = transaction.buyer?.document || " N/A";
+      if (buyerDocument !== " N/A") {
+        if (!acc[buyerDocument]) {
+          acc[buyerDocument] = {
+            buyer: transaction.buyer,
+            totalVendas: 0,
+            totalCompras: 0,
+            transactions: [],
+          };
+        }
+        acc[buyerDocument].transactions.push(transaction);
+
+        const valor = parseFloat(
+          transaction.valor.replace(".", "").replace(",", ".").replace("R$", ""),
+        );
+        if (transaction.tipo === "venda") {
+          acc[buyerDocument].totalVendas += valor;
+        } else if (transaction.tipo === "compra") {
+          acc[buyerDocument].totalCompras += valor;
+        }
+      }
+      return acc;
+    }, {});
+
+    let csvContent = `Indicador de Tipo de Serviço,"Número RPS","Serie RPS","Data Prestação de Serviço","Data Emissão do RPS","RPS Substitutivo","Documento CPF/CNPJ","Inscrição Mobiliária","Razão Social",Endereço,Número,Complemento,Bairro,"Código do Município","Código do País",Cep,Telefone,Email,"ISS Retido no Tomador","Código do Município onde o Serviço foi Prestado","Código da Atividade","Código da Lista de Serviços",Discriminação,"Valor NF","Valor Deduções","Valor Desconto Condicionado","Valor Desconto Incondicionado","Valor INSS","Valor Csll","Valor Outras Retenções","Valor Pis","Valor Cofins","Valor Ir","Valor Iss","Prestador Optante Simples Nacional",Alíquota,"Código da Obra","Código ART","Inscrição Própria","Código do Benefício"\n`;
+
     const hoje = new Date();
-    // Criação do conteúdo do arquivo CSV
-    const csvHeader = `Indicador de Tipo de Serviço,"Número RPS","Serie RPS","Data Prestação de Serviço","Data Emissão do RPS","RPS Substitutivo","Documento CPF/CNPJ","Inscrição Mobiliária","Razão Social",Endereço,Número,Complemento,Bairro,"Código do Município","Código do País",Cep,Telefone,Email,"ISS Retido no Tomador","Código do Município onde o Serviço foi Prestado","Código da Atividade","Código da Lista de Serviços",Discriminação,"Valor NF","Valor Deduções","Valor Desconto Condicionado","Valor Desconto Incondicionado","Valor INSS","Valor Csll","Valor Outras Retenções","Valor Pis","Valor Cofins","Valor Ir","Valor Iss","Prestador Optante Simples Nacional",Alíquota,"Código da Obra","Código ART","Inscrição Própria","Código do Benefício"\n`;
-
-    const cpfCnpj =
-      data[0].buyer.document?.replace(".", "").replace("/", "").replace("-", "") || "";
+    const comissao = 0.01;
     const codMunicipioServicoPrestado = 352440;
     const codAtividade = 6619399;
     const codListaServicos = 10.02;
     const aliquota = 0.0201; // 2,01%
     const inscricaoMunicipal = 90598;
 
-    const csvData = `R,18,RPS,${endDateObj.toLocaleDateString("pt-BR")},${hoje.toLocaleDateString("pt-BR")},,${cpfCnpj},,${buyer},,,,,,48,,,,S,${codMunicipioServicoPrestado},${codAtividade},${codListaServicos},"${fileContent}",${valorNfe},0,0,0,0,0,0,0,0,0,${(totalVendas * comissao * aliquota).toFixed(2)},S,2.01,0,0,${inscricaoMunicipal},1\n`;
+    // Iterar sobre os compradores agrupados e gerar os dados CSV
+    Object.values(groupedByBuyer).forEach((group: any, index: number) => {
+      const buyer = group.buyer;
+      const buyerName = buyer?.name || " N/A";
+      const cpfCnpj = buyer?.document?.replace(".", "").replace("/", "").replace("-", "") || "";
+      const totalVendas = group.totalVendas;
+      const valorNfe = (totalVendas * comissao).toFixed(2);
+      const endDateObj = group.transactions.reduce((latest: Date, transaction: any) => {
+        const transactionDate = new Date(transaction.dataTransacao);
+        return transactionDate > latest ? transactionDate : latest;
+      }, new Date(group.transactions[0].dataTransacao));
 
-    const csvContent = csvHeader + csvData;
+      let fileContent = `- Serviço: Intermediação de Compra/Venda de criptomoedas.
+      - Comissão: 1%
+      - Quantidade de Vendas: ${group.transactions.filter((transaction: any) => transaction.tipo === "venda").length}
+      - Mês/Ano: ${monthName} de 2024
+      - Valor Total da Nota: ${valorNfe}
 
-    // Criação do arquivo .csv para download
+      Vendas:
+      `;
+
+      group.transactions.forEach((transaction: any, transactionIndex: number) => {
+        if (transaction.tipo === "venda") {
+          fileContent += `Transação ${transactionIndex + 1}:\nOrdem ID: ${transaction.numeroOrdem}\nData: ${transaction.dataTransacao}\nExchange: ${transaction.exchange.split(" ")[0]}\nAtivo: ${transaction.ativoDigital}\nQuantidade: ${transaction.quantidade}\nValor: ${transaction.valor}\n\n`;
+        }
+      });
+
+      fileContent += `Compras:\n`;
+
+      group.transactions.forEach((transaction: any, transactionIndex: number) => {
+        if (transaction.tipo === "compra") {
+          fileContent += `${transactionIndex + 1}:\nNome: ${transaction.seller?.name || " N/A"}\nNúmero da Ordem: ${transaction.numeroOrdem}\nData: ${transaction.dataTransacao}\nExchange: ${transaction.exchange.split(" ")[0]}\nAtivo: ${transaction.ativoDigital}\nQuantidade: ${transaction.quantidade}\nValor: ${transaction.valor}\n\n`;
+        }
+      });
+
+      fileContent += `
+      Política de Pagamento com termos e condições:
+      - Identificação por CPF.
+      - Não aceitamos pagamentos de terceiros. Conta PJ somente com sócio ou titular.
+      - Ativos digitais são muito voláteis, então sem reembolso.
+
+      Suporte de Dúvidas:
+      - Para informações sobre pedidos de compra P2P, consulte a documentação de suporte das plataformas utilizadas.
+      `;
+
+      const csvData = `R,18,RPS,${endDateObj.toLocaleDateString("pt-BR")},${hoje.toLocaleDateString("pt-BR")},,${cpfCnpj},,${buyerName},,,,,,48,,,,S,${codMunicipioServicoPrestado},${codAtividade},${codListaServicos},"${fileContent}",${valorNfe},0,0,0,0,0,0,0,0,0,${(totalVendas * comissao * aliquota).toFixed(2)},S,2.01,0,0,${inscricaoMunicipal},1\n`;
+
+      csvContent += csvData;
+    });
+
+    // Criar o arquivo .csv para download
     const blobCsv = new Blob([csvContent], { type: "text/csv" });
     const linkCsv = document.createElement("a");
     linkCsv.href = URL.createObjectURL(blobCsv);
-    linkCsv.download = `nota_fiscal_${buyer}_${monthName}.csv`;
+    linkCsv.download = `nota_fiscal_${validationEmptyBuyers ? monthName : `${buyer}_${monthName}`}.csv`;
     document.body.appendChild(linkCsv);
     linkCsv.click();
     document.body.removeChild(linkCsv);
@@ -138,7 +203,7 @@ Suporte de Dúvidas:
   useEffect(() => {
     if (data) {
       const uniqueBuyers = Array.from(
-        new Set(data.map((t: any) => t.buyer?.name || "N/A")),
+        new Set(data.map((t: any) => t.buyer?.name || " N/A")),
       ) as string[];
 
       setBuyers(uniqueBuyers.sort());
@@ -167,7 +232,7 @@ Suporte de Dúvidas:
 
   const groupedTransactions = filteredData ? groupByExchange(filteredData) : {};
   const validationDates = filterDates.startDate.length > 0 && filterDates.endDate.length > 0;
-  const validationEmptyBuyers = buyer === "" || buyer === "N/A";
+  const validationEmptyBuyers = buyer === "" || buyer === " N/A";
 
   return (
     <>
@@ -192,7 +257,7 @@ Suporte de Dúvidas:
             title="Compradores"
             placeholder="Selecione um comprador"
             options={buyers}
-            value={buyer === "N/A" ? "" : buyer}
+            value={buyer === " N/A" ? "" : buyer}
             onChange={(e) => setBuyer(e.target.value)}
           />
         )}
@@ -200,9 +265,7 @@ Suporte de Dúvidas:
         {validationDates && validationEmptyBuyers && (
           <Button onClick={handleGenerate}>Gerar IN188</Button>
         )}
-        {validationDates && !validationEmptyBuyers && (
-          <Button onClick={handleTransactions}>Emitir Transacoes</Button>
-        )}
+        {validationDates && <Button onClick={handleTransactions}>Emitir NFE</Button>}
       </div>
 
       {isLoading && <p>Carregando...</p>}
