@@ -63,11 +63,14 @@ export const FilterOrders = () => {
     month.setMonth(startDateObj.getMonth());
     const monthName = month.toLocaleDateString("pt-BR", { month: "long" });
 
+    const comissao = 0.01;
+    const valorNfe = (totalVendas * comissao).toFixed(2);
+
     let fileContent = `- Serviço: Intermediação de Compra/Venda de criptomoedas.
 - Comissão: 1%
 - Quantidade de Vendas: ${filteredData.filter((transaction: any) => transaction.tipo === "venda").length}
 - Mês/Ano: ${monthName} de 2024
-- Valor Total da Nota: R$ ${(totalVendas * 0.01).toFixed(2)}
+- Valor Total da Nota: ${valorNfe}
 
 Vendas:
 `;
@@ -104,6 +107,32 @@ Suporte de Dúvidas:
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    const endDateObj = new Date(startDate);
+    const hoje = new Date();
+    // Criação do conteúdo do arquivo CSV
+    const csvHeader = `Indicador de Tipo de Serviço,"Número RPS","Serie RPS","Data Prestação de Serviço","Data Emissão do RPS","RPS Substitutivo","Documento CPF/CNPJ","Inscrição Mobiliária","Razão Social",Endereço,Número,Complemento,Bairro,"Código do Município","Código do País",Cep,Telefone,Email,"ISS Retido no Tomador","Código do Município onde o Serviço foi Prestado","Código da Atividade","Código da Lista de Serviços",Discriminação,"Valor NF","Valor Deduções","Valor Desconto Condicionado","Valor Desconto Incondicionado","Valor INSS","Valor Csll","Valor Outras Retenções","Valor Pis","Valor Cofins","Valor Ir","Valor Iss","Prestador Optante Simples Nacional",Alíquota,"Código da Obra","Código ART","Inscrição Própria","Código do Benefício"\n`;
+
+    const cpfCnpj =
+      data[0].buyer.document?.replace(".", "").replace("/", "").replace("-", "") || "";
+    const codMunicipioServicoPrestado = 352440;
+    const codAtividade = 6619399;
+    const codListaServicos = 10.02;
+    const aliquota = 0.0201; // 2,01%
+    const inscricaoMunicipal = 90598;
+
+    const csvData = `R,18,RPS,${endDateObj.toLocaleDateString("pt-BR")},${hoje.toLocaleDateString("pt-BR")},,${cpfCnpj},,${buyer},,,,,,48,,,,S,${codMunicipioServicoPrestado},${codAtividade},${codListaServicos},"${fileContent}",${valorNfe},0,0,0,0,0,0,0,0,0,${(totalVendas * comissao * aliquota).toFixed(2)},S,2.01,0,0,${inscricaoMunicipal},1\n`;
+
+    const csvContent = csvHeader + csvData;
+
+    // Criação do arquivo .csv para download
+    const blobCsv = new Blob([csvContent], { type: "text/csv" });
+    const linkCsv = document.createElement("a");
+    linkCsv.href = URL.createObjectURL(blobCsv);
+    linkCsv.download = `nota_fiscal_${buyer}_${monthName}.csv`;
+    document.body.appendChild(linkCsv);
+    linkCsv.click();
+    document.body.removeChild(linkCsv);
   };
 
   useEffect(() => {
