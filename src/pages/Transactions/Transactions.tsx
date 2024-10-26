@@ -11,6 +11,7 @@ import { formatCPFOrCNPJ, formatCurrency, formatDateTime } from "src/utils/forma
 import { HandleListEdit } from "./components/HandleListEdit";
 import { UploadXLSButton } from "./components/UploadXLSButton";
 import { ICompra, ITransactionData, IVenda, useTransaction } from "./hooks/useTransactions";
+import "./transactions.css";
 
 export const Transactions = () => {
   const { mutate, isPending, context, contextCompra, contextVenda } = useTransaction();
@@ -215,163 +216,165 @@ export const Transactions = () => {
 
   return (
     <FlexCol className="w-full p-4 pb-2">
-      <FlexRow>
-        <h1 className="text-24 font-bold">Formulário de Compra e Venda de Criptoativos</h1>
-        <Select
-          title="Tipo Transação"
-          options={["compras", "vendas"]}
-          placeholder="compras"
-          value={tipoTransacao}
-          onChange={handleTipoTransacaoChange}
-        />
-      </FlexRow>
-      <FormProvider {...context}>
-        <FormX
-          onSubmit={onSubmit}
-          className="flex flex-col flex-wrap justify-between gap-2 md:flex-row"
-        >
-          <div className="flex w-full flex-col flex-wrap gap-2 md:w-5/12 md:flex-row">
-            <InputX
-              title="Número Ordem"
-              placeholder="Número da Ordem"
-              value={numeroOrdem}
-              onChange={(e) => setNumeroOrdem(e.target.value)}
-              required
-            />
-            <InputX
-              title="Data Hora Transação"
-              placeholder="AAAA-MM-DD HH:MM:SS"
-              value={dataHoraTransacao}
-              onChange={handleDateTimeChange}
-              required
-            />
-            <Select
-              title="Exchange Utilizada"
-              placeholder="Bybit https://www.bybit.com/ SG"
-              options={[
-                "Bybit https://www.bybit.com/ SG",
-                "Binance https://www.binance.com/ CN",
-                "Gate.IO https://www.gate.io/ AE",
-                "Kucoin https://www.kucoin.com/ SC",
-              ]}
-              value={exchangeUtilizada}
-              onChange={(e) => setExchangeUtilizada(e.target.value)}
-              required
-            />
-            <Select
-              title="Ativo Digital"
-              placeholder="USDT"
-              options={["BTC", "USDT", "BNB", "ETH", "USDC", "DOGE", "BRL"]}
-              value={ativoDigital}
-              onChange={(e) => setAtivoDigital(e.target.value)}
-              required
-            />
-          </div>
-          {tipoTransacao === "vendas" && (
-            <div className={`flex w-full flex-col flex-wrap gap-2 md:w-5/12 md:flex-row`}>
-              <InputX
-                title="Nome Comprador"
-                placeholder="Nome do Comprador"
-                value={nomeComprador}
-                onChange={(e) => setNomeComprador(e.target.value)}
-              />
-              <InputX
-                title="Apelido Comprador"
-                placeholder="Apelido do Comprador"
-                value={apelidoComprador}
-                onChange={(e) => setApelidoComprador(e.target.value)}
-                required
-              />
-              <InputX
-                title="Cpf Comprador"
-                placeholder="CPF/CNPJ do Comprador"
-                value={documentoComprador}
-                onChange={handleDocumentoChange}
-                required
-              />
-              <InputX
-                title="Quantidade Vendida"
-                placeholder="Quantidade Vendida"
-                value={quantidadeVendida}
-                onChange={(e) => setQuantidadeVendida(e.target.value)}
-                required
-              />
-              <InputX
-                title="Valor Venda"
-                placeholder="Valor da Venda"
-                value={valorVenda}
-                onChange={handleValorVendaChange}
-                required
-              />
-              <InputX
-                title="Valor Token Data Venda"
-                placeholder="Valor do Token na Data da Venda"
-                value={valorTokenDataVenda}
-                onChange={(e) => setValorTokenDataVenda(e.target.value)}
-                required
-              />
-            </div>
-          )}
-          {tipoTransacao === "compras" && (
-            <div className={`flex w-full flex-col flex-wrap gap-2 md:w-5/12 md:flex-row`}>
-              <InputX
-                title="Nome Vendedor"
-                placeholder="Nome do Vendedor"
-                value={nomeVendedor}
-                onChange={(e) => setNomeVendedor(e.target.value)}
-              />
-              <InputX
-                title="Apelido Vendedor"
-                placeholder="Apelido do Vendedor"
-                value={apelidoVendedor}
-                onChange={(e) => setApelidoVendedor(e.target.value)}
-                required
-              />
-              <InputX
-                title="Quantidade Comprada"
-                placeholder="Quantidade Comprada"
-                value={quantidadeComprada}
-                onChange={(e) => setQuantidadeComprada(e.target.value)}
-                required
-              />
-              <InputX
-                title="Valor Compra"
-                placeholder="Valor da Compra"
-                value={valorCompra}
-                onChange={handleValorCompraChange}
-                required
-              />
-              <InputX
-                title="Valor Token Data Compra"
-                placeholder="Valor do Token na Data da Compra"
-                value={valorTokenDataCompra}
-                onChange={(e) => setValorTokenDataCompra(e.target.value)}
-                required
-              />
-            </div>
-          )}
-          <InputX
-            title="Taxa Transação"
-            placeholder="Taxa da Transação"
-            value={taxaTransacao}
-            onChange={(e) => setTaxaTransacao(e.target.value)}
-            required
+      <div className="card">
+        <FlexRow>
+          <h1 className="text-24 font-bold">Formulário de Compra e Venda de Criptoativos</h1>
+          <Select
+            title="Tipo Transação"
+            options={["compras", "vendas"]}
+            placeholder="compras"
+            value={tipoTransacao}
+            onChange={handleTipoTransacaoChange}
           />
-        </FormX>
-      </FormProvider>
-      <div className="flex w-full flex-col gap-2 pt-2">
-        <Button onClick={handleSave} disabled={isPending}>
-          Salvar
-        </Button>
-        <Button onClick={handleSend} disabled={isPending}>
-          Enviar
-        </Button>
-        <UploadXLSButton
-          setFormData={setFormData}
-          formData={formData}
-          setCompras={setCompras}
-          setVendas={setVendas}
-        />
+        </FlexRow>
+        <FormProvider {...context}>
+          <FormX
+            onSubmit={onSubmit}
+            className="flex flex-col flex-wrap justify-between gap-2 md:flex-row"
+          >
+            <div className="flex w-full flex-col flex-wrap gap-2 md:w-5/12 md:flex-row">
+              <InputX
+                title="Número Ordem"
+                placeholder="Número da Ordem"
+                value={numeroOrdem}
+                onChange={(e) => setNumeroOrdem(e.target.value)}
+                required
+              />
+              <InputX
+                title="Data Hora Transação"
+                placeholder="AAAA-MM-DD HH:MM:SS"
+                value={dataHoraTransacao}
+                onChange={handleDateTimeChange}
+                required
+              />
+              <Select
+                title="Exchange Utilizada"
+                placeholder="Bybit https://www.bybit.com/ SG"
+                options={[
+                  "Bybit https://www.bybit.com/ SG",
+                  "Binance https://www.binance.com/ CN",
+                  "Gate.IO https://www.gate.io/ AE",
+                  "Kucoin https://www.kucoin.com/ SC",
+                ]}
+                value={exchangeUtilizada}
+                onChange={(e) => setExchangeUtilizada(e.target.value)}
+                required
+              />
+              <Select
+                title="Ativo Digital"
+                placeholder="USDT"
+                options={["BTC", "USDT", "BNB", "ETH", "USDC", "DOGE", "BRL"]}
+                value={ativoDigital}
+                onChange={(e) => setAtivoDigital(e.target.value)}
+                required
+              />
+            </div>
+            {tipoTransacao === "vendas" && (
+              <div className={`flex w-full flex-col flex-wrap gap-2 md:w-5/12 md:flex-row`}>
+                <InputX
+                  title="Nome Comprador"
+                  placeholder="Nome do Comprador"
+                  value={nomeComprador}
+                  onChange={(e) => setNomeComprador(e.target.value)}
+                />
+                <InputX
+                  title="Apelido Comprador"
+                  placeholder="Apelido do Comprador"
+                  value={apelidoComprador}
+                  onChange={(e) => setApelidoComprador(e.target.value)}
+                  required
+                />
+                <InputX
+                  title="Cpf Comprador"
+                  placeholder="CPF/CNPJ do Comprador"
+                  value={documentoComprador}
+                  onChange={handleDocumentoChange}
+                  required
+                />
+                <InputX
+                  title="Quantidade Vendida"
+                  placeholder="Quantidade Vendida"
+                  value={quantidadeVendida}
+                  onChange={(e) => setQuantidadeVendida(e.target.value)}
+                  required
+                />
+                <InputX
+                  title="Valor Venda"
+                  placeholder="Valor da Venda"
+                  value={valorVenda}
+                  onChange={handleValorVendaChange}
+                  required
+                />
+                <InputX
+                  title="Valor Token Data Venda"
+                  placeholder="Valor do Token na Data da Venda"
+                  value={valorTokenDataVenda}
+                  onChange={(e) => setValorTokenDataVenda(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+            {tipoTransacao === "compras" && (
+              <div className={`flex w-full flex-col flex-wrap gap-2 md:w-5/12 md:flex-row`}>
+                <InputX
+                  title="Nome Vendedor"
+                  placeholder="Nome do Vendedor"
+                  value={nomeVendedor}
+                  onChange={(e) => setNomeVendedor(e.target.value)}
+                />
+                <InputX
+                  title="Apelido Vendedor"
+                  placeholder="Apelido do Vendedor"
+                  value={apelidoVendedor}
+                  onChange={(e) => setApelidoVendedor(e.target.value)}
+                  required
+                />
+                <InputX
+                  title="Quantidade Comprada"
+                  placeholder="Quantidade Comprada"
+                  value={quantidadeComprada}
+                  onChange={(e) => setQuantidadeComprada(e.target.value)}
+                  required
+                />
+                <InputX
+                  title="Valor Compra"
+                  placeholder="Valor da Compra"
+                  value={valorCompra}
+                  onChange={handleValorCompraChange}
+                  required
+                />
+                <InputX
+                  title="Valor Token Data Compra"
+                  placeholder="Valor do Token na Data da Compra"
+                  value={valorTokenDataCompra}
+                  onChange={(e) => setValorTokenDataCompra(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+            <InputX
+              title="Taxa Transação"
+              placeholder="Taxa da Transação"
+              value={taxaTransacao}
+              onChange={(e) => setTaxaTransacao(e.target.value)}
+              required
+            />
+          </FormX>
+        </FormProvider>
+        <div className="flex w-full flex-col gap-2 pt-2">
+          <Button onClick={handleSave} disabled={isPending}>
+            Salvar
+          </Button>
+          <Button onClick={handleSend} disabled={isPending}>
+            Enviar
+          </Button>
+          <UploadXLSButton
+            setFormData={setFormData}
+            formData={formData}
+            setCompras={setCompras}
+            setVendas={setVendas}
+          />
+        </div>
       </div>
       <HandleListEdit formData={formData} handleEdit={handleEdit} />
     </FlexCol>

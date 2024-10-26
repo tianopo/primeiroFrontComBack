@@ -1,3 +1,4 @@
+import "../transactions.css";
 import { FilterOrders } from "./FilterOrders";
 
 interface IHandleListEdit {
@@ -7,7 +8,7 @@ interface IHandleListEdit {
 
 export const HandleListEdit = ({ formData, handleEdit }: IHandleListEdit) => {
   return (
-    <div className="mt-4">
+    <div className="card mt-4">
       <h2 className="text-20 font-bold">Dados Armazenados:</h2>
       <ul className="flex flex-row flex-wrap gap-2">
         {formData.map((item, index) => (

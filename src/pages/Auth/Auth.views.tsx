@@ -19,10 +19,7 @@ export const Auth = () => {
             <p className="break-all font-semibold text-white">
               {showRegister ? "Already have an account?" : "Don't have an account?"}
             </p>
-            <p
-              className="cursor-pointer font-semibold text-white hover:underline"
-              onClick={() => setShowRegister(!showRegister)}
-            >
+            <p className="cursor-pointer font-semibold text-white hover:underline">
               {showRegister ? "Login" : "Register"}
             </p>
           </FlexCol>

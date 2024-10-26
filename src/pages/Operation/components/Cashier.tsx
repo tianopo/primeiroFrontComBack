@@ -109,7 +109,7 @@ export const Cashier = () => {
   const salesByExchange = categorizedTransactions("Venda");
 
   return (
-    <div className="flex h-fit w-full flex-col">
+    <div className="flex h-fit w-full flex-col rounded-16 bg-white p-4 shadow-2xl">
       <h2>CAIXA</h2>
       {!isCashierOpen ? (
         <div className="flex flex-col gap-2">

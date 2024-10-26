@@ -3,6 +3,7 @@ import { FormProvider } from "react-hook-form";
 import { Button } from "src/components/Buttons/Button";
 import { FormX } from "src/components/Form/FormX";
 import { InputX } from "src/components/Form/Input/InputX";
+import { CardContainer } from "src/components/Layout/CardContainer";
 import { formatCNPJ, formatCPF } from "src/utils/formats";
 import { useCompliance } from "../hooks/useCompliance";
 import { AE } from "./QueryDataTransparencia/AE";
@@ -45,43 +46,45 @@ export const Compliance = () => {
   };
 
   return (
-    <FormProvider {...context}>
-      <div className="flex h-fit w-[calc(50%-1rem)] flex-col">
-        <FormX
-          onSubmit={handleSubmit}
-          className="flex flex-col flex-wrap justify-between gap-2 md:flex-row"
-        >
-          <h2>COMPLIANCE</h2>
-          <InputX
-            title="CPF"
-            placeholder="XXX.XXX.XXX-XX"
-            value={cpf}
-            onChange={handleCpfChange}
-            required
-          />
-          <InputX
-            title="CNPJ"
-            placeholder="XX.XXX.XXX/0001-XX"
-            value={cnpj}
-            onChange={handleCnpjChange}
-          />
-          <Button disabled={isPending || Object.keys(errors).length > 0}>Checar</Button>
-        </FormX>
-        {responseData && (
-          <div>
-            <h3>Dados da Consulta:</h3>
-            <h6>{responseData?.ourData}</h6>
-            {responseData?.pep && <PEP responseData={responseData?.pep} />}
-            {responseData?.cnpj && <CNPJ responseData={responseData?.cnpj} />}
-            {responseData?.sdc && <SDC responseData={responseData?.sdc} />}
-            {responseData?.safra && <Safra responseData={responseData?.safra} />}
-            {responseData?.peti && <PETI responseData={responseData?.peti} />}
-            {responseData?.bpc && <BPC responseData={responseData?.bpc} />}
-            {responseData?.ae && <AE responseData={responseData?.ae} />}
-            {responseData?.cnep && <CNEP responseData={responseData?.cnep} />}
-          </div>
-        )}
-      </div>
-    </FormProvider>
+    <CardContainer>
+      <FormProvider {...context}>
+        <div className="flex h-fit w-full flex-col">
+          <FormX
+            onSubmit={handleSubmit}
+            className="flex flex-col flex-wrap justify-between gap-2 md:flex-row"
+          >
+            <h2>COMPLIANCE</h2>
+            <InputX
+              title="CPF"
+              placeholder="XXX.XXX.XXX-XX"
+              value={cpf}
+              onChange={handleCpfChange}
+              required
+            />
+            <InputX
+              title="CNPJ"
+              placeholder="XX.XXX.XXX/0001-XX"
+              value={cnpj}
+              onChange={handleCnpjChange}
+            />
+            <Button disabled={isPending || Object.keys(errors).length > 0}>Checar</Button>
+          </FormX>
+          {responseData && (
+            <div>
+              <h3>Dados da Consulta:</h3>
+              <h6>{responseData?.ourData}</h6>
+              {responseData?.pep && <PEP responseData={responseData?.pep} />}
+              {responseData?.cnpj && <CNPJ responseData={responseData?.cnpj} />}
+              {responseData?.sdc && <SDC responseData={responseData?.sdc} />}
+              {responseData?.safra && <Safra responseData={responseData?.safra} />}
+              {responseData?.peti && <PETI responseData={responseData?.peti} />}
+              {responseData?.bpc && <BPC responseData={responseData?.bpc} />}
+              {responseData?.ae && <AE responseData={responseData?.ae} />}
+              {responseData?.cnep && <CNEP responseData={responseData?.cnep} />}
+            </div>
+          )}
+        </div>
+      </FormProvider>
+    </CardContainer>
   );
 };

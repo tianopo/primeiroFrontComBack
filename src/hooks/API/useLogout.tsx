@@ -17,7 +17,7 @@ export const useLogout = () => {
       localStorage.removeItem("token");
       queryClient.removeQueries({ queryKey: ["user-data", "token-data"] });
       toast.success("Você saiu com sucesso");
-      navigate(app.login);
+      navigate(app.first);
     },
     onError: (error: AxiosError) => responseError(error),
   });

@@ -45,7 +45,7 @@ export const FormLogin = () => {
           </label>
           <button
             disabled={isPending || Object.keys(errors).length > 0}
-            className="button button-light"
+            className="w-full rounded-4 bg-primary p-2 font-bold text-white"
           >
             {!isPending ? "LOGIN" : "loading..."}
           </button>

@@ -1,9 +1,9 @@
 import { Bell, DoorOpen, Gear } from "@phosphor-icons/react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { IconX } from "src/components/Icons/IconX";
+import { useLogout } from "src/hooks/API/useLogout";
 import { app } from "src/routes/app";
 import "./Sidebar.css";
-import { useLogout } from "src/hooks/API/useLogout";
 
 interface INavbar {
   icon?: JSX.Element;
@@ -50,7 +50,7 @@ export const SidebarX = ({ navbar, menuOpen }: ISidebarX) => {
                     width={19.45}
                     height={20}
                     weight="fill"
-                    onClick={() => navigate(app.management)}
+                    onClick={() => navigate(app.operation)}
                   />
                 }
               />
@@ -68,7 +68,7 @@ export const SidebarX = ({ navbar, menuOpen }: ISidebarX) => {
             </div>
             <div
               className="flex cursor-pointer items-center gap-5 rounded-6 p-2.5 text-write-secundary hover:bg-secundary hover:text-write-primary"
-              onClick={() => navigate(app.management)}
+              onClick={() => navigate(app.operation)}
             >
               <h5>Matheus Henrique</h5>
             </div>

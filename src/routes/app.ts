@@ -1,18 +1,16 @@
 export const app = {
-  // Before Login
+  /* Before Login */
+  first: "/",
   register: "/cadastro",
   login: "/login",
   forgotPassword: "/esqueceu-senha",
   recoverPassword: (token: string) => `/recuperar-senha/${token}`,
   membership: (token: string) => `/formulario-adesao/${token}`,
 
-  // After Login
-  auth: "/",
+  /* After Login */
+  auth: "/auth",
   home: "/inicio",
-  schedule: "/agenda",
-  projects: "/projetos",
-  financial: "/financeiro",
-  management: "/administracao",
-  user: "/usuario",
-  userUpdate: (id: string) => `/usuario/${id}`,
+  //  CryptoTech
+  transactions: "/transactions",
+  operation: "/operation",
 };
