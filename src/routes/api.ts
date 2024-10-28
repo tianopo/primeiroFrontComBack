@@ -10,4 +10,6 @@ export const apiRoute = {
 
   compliance: "compliance",
   operation: "compliance/operation",
+
+  buyer: "buyer",
 };

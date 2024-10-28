@@ -133,7 +133,7 @@ export const BeginInput: ForwardRefRenderFunction<HTMLInputElement, IInputX> = (
       {busca && <MagnifyingGlass size={20} className="absolute bottom-2.5 right-2 text-gray-500" />}
       {buscaVal && (
         <ul
-          className={`options-list absolute left-0 top-full z-10 h-16 max-h-20 w-full overflow-auto rounded-lg border border-gray-300 bg-white`}
+          className={`options-list absolute left-0 top-full z-20 h-36 max-h-40 w-full overflow-auto rounded-lg border border-gray-300 bg-white`}
         >
           {options.length > 0 ? (
             options

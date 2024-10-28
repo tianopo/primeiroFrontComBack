@@ -8,6 +8,6 @@ export const useTitle = () => {
       pathSnippets.length > 0 ? pathSnippets[pathSnippets.length - 1] : "Authentication";
     const formattedTitle = `${pageTitle.charAt(0).toUpperCase()}${pageTitle.slice(1)}`;
 
-    document.title = `${process.env.REACT_APP_PROJETO} - ${formattedTitle}`;
+    document.title = `${process.env.REACT_APP_PROJETO} - ${formattedTitle.replace("/", "")}`;
   }, [location]);
 };

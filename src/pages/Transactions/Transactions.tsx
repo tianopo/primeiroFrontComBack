@@ -10,11 +10,13 @@ import { Select } from "src/components/Form/Select/Select";
 import { formatCPFOrCNPJ, formatCurrency, formatDateTime } from "src/utils/formats";
 import { HandleListEdit } from "./components/HandleListEdit";
 import { UploadXLSButton } from "./components/UploadXLSButton";
+import { useListBuyers } from "./hooks/useListBuyers";
 import { ICompra, ITransactionData, IVenda, useTransaction } from "./hooks/useTransactions";
 import "./transactions.css";
 
 export const Transactions = () => {
   const { mutate, isPending, context, contextCompra, contextVenda } = useTransaction();
+  const { data } = useListBuyers();
   const { reset, getValues } = context;
 
   const [vendas, setVendas] = useState<any[]>([]);
@@ -282,6 +284,10 @@ export const Transactions = () => {
                   placeholder="Apelido do Comprador"
                   value={apelidoComprador}
                   onChange={(e) => setApelidoComprador(e.target.value)}
+                  busca
+                  options={data
+                    ?.filter((counterparty: string) => counterparty.includes(apelidoComprador))
+                    .map((counterparty: string) => counterparty)}
                   required
                 />
                 <InputX
