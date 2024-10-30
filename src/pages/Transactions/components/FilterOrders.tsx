@@ -63,48 +63,6 @@ export const FilterOrders = () => {
     month.setMonth(startDateObj.getMonth());
     const monthName = month.toLocaleDateString("pt-BR", { month: "long" });
 
-    //     let fileContent = `- Serviço: Intermediação de Compra/Venda de criptomoedas.
-    // - Comissão: 1%
-    // - Quantidade de Vendas: ${filteredData.filter((transaction: any) => transaction.tipo === "venda").length}
-    // - Mês/Ano: ${monthName} de 2024
-    // - Valor Total da Nota: ${valorNfe}
-
-    // Vendas:
-    // `;
-
-    //     filteredData.forEach((transaction: any, index: number) => {
-    //       if (transaction.tipo === "venda") {
-    //         fileContent += `Transação ${index + 1}:\nOrdem ID: ${transaction.numeroOrdem}\nData: ${transaction.dataTransacao}\nExchange: ${transaction.exchange.split(" ")[0]}\nAtivo: ${transaction.ativoDigital}\nQuantidade: ${transaction.quantidade}\nValor: ${transaction.valor}\n\n`;
-    //       }
-    //     });
-
-    //     filteredData.forEach((transaction: any, index: number) => {
-    //       if (transaction.tipo === "compra") {
-    //         fileContent += `\nCompras:\n`;
-    //         fileContent += `${index + 1}:\nNome: ${transaction.seller?.name || " N/A"}\Número da Ordem: ${transaction.numeroOrdem}\nData: ${transaction.dataTransacao}\nExchange: ${transaction.exchange.split(" ")[0]}\nAtivo: ${transaction.ativoDigital}\nQuantidade: ${transaction.quantidade}\nValor: ${transaction.valor}\n\n`;
-    //       }
-    //     });
-
-    //     // Adicione políticas e termos
-    //     fileContent += `
-    // Política de Pagamento com termos e condições:
-    // - Identificação por CPF.
-    // - Não aceitamos pagamentos de terceiros. Conta PJ somente com sócio ou titular.
-    // - Ativos digitais são muito voláteis, então sem reembolso.
-
-    // Suporte de Dúvidas:
-    // - Para informações sobre pedidos de compra P2P, consulte a documentação de suporte das plataformas utilizadas.
-    // `;
-
-    // Criação do arquivo para download
-    // const blob = new Blob([fileContent], { type: "text/plain" });
-    // const link = document.createElement("a");
-    // link.href = URL.createObjectURL(blob);
-    // link.download = `transacoes_${buyer}_${monthName}.txt`;
-    // document.body.appendChild(link);
-    // link.click();
-    // document.body.removeChild(link);
-
     const groupedByBuyer = filteredData.reduce((acc: any, transaction: any) => {
       const buyerDocument = transaction.buyer?.document || " N/A";
       if (buyerDocument !== " N/A") {
@@ -137,16 +95,19 @@ export const FilterOrders = () => {
     const codMunicipioServicoPrestado = 352440;
     const codAtividade = 6619399;
     const codListaServicos = 10.02;
-    const aliquota = 0.0201; // 2,01%
+    const aliquota = 201; // 2,01%
     const inscricaoMunicipal = 90598;
+    let numeroRPS = parseInt(localStorage.getItem("numeroRPS") || "0", 10);
 
     // Iterar sobre os compradores agrupados e gerar os dados CSV
     Object.values(groupedByBuyer).forEach((group: any, index: number) => {
       const buyer = group.buyer;
       const buyerName = buyer?.name || " N/A";
-      const cpfCnpj = buyer?.document?.replace(".", "").replace("/", "").replace("-", "") || "";
+      const cpfCnpj = buyer?.document?.replace(/[^0-9]/g, "");
       const totalVendas = group.totalVendas;
-      const valorNfe = (totalVendas * comissao).toFixed(2);
+      const valorNfe = Math.round(totalVendas * comissao * 100);
+      const valorIss = Math.round(valorNfe * (aliquota / 10000));
+
       const endDateObj = group.transactions.reduce((latest: Date, transaction: any) => {
         const transactionDate = new Date(transaction.dataTransacao);
         return transactionDate > latest ? transactionDate : latest;
@@ -156,7 +117,7 @@ export const FilterOrders = () => {
       - Comissão: 1%
       - Quantidade de Vendas: ${group.transactions.filter((transaction: any) => transaction.tipo === "venda").length}
       - Mês/Ano: ${monthName} de 2024
-      - Valor Total da Nota: ${valorNfe}
+      - Valor Total da Nota: ${valorNfe / 100}
 
       Vendas:
       `;
@@ -185,11 +146,12 @@ export const FilterOrders = () => {
       - Para informações sobre pedidos de compra P2P, consulte a documentação de suporte das plataformas utilizadas.
       `;
 
-      const csvData = `R,18,RPS,${endDateObj.toLocaleDateString("pt-BR")},${hoje.toLocaleDateString("pt-BR")},,${cpfCnpj},,${buyerName},,,,,,48,,,,S,${codMunicipioServicoPrestado},${codAtividade},${codListaServicos},"${fileContent}",${valorNfe},0,0,0,0,0,0,0,0,0,${(totalVendas * comissao * aliquota).toFixed(2)},S,2.01,0,0,${inscricaoMunicipal},1\n`;
+      const csvData = `R,${numeroRPS},RPS,${endDateObj.toLocaleDateString("pt-BR")},${hoje.toLocaleDateString("pt-BR")},,${cpfCnpj},,${buyerName},,,,,,48,,,,S,${codMunicipioServicoPrestado},${codAtividade},${codListaServicos},"${fileContent}",${valorNfe},0,0,0,0,0,0,0,0,0,${valorIss},S,${aliquota},0,0,${inscricaoMunicipal},\n`;
 
       csvContent += csvData;
+      numeroRPS += 1;
     });
-
+    localStorage.setItem("numeroRPS", numeroRPS.toString());
     // Criar o arquivo .csv para download
     const blobCsv = new Blob([csvContent], { type: "text/csv" });
     const linkCsv = document.createElement("a");
