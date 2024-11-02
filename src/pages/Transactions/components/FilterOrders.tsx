@@ -119,20 +119,20 @@ export const FilterOrders = () => {
       - Mês/Ano: ${monthName} de 2024
       - Valor Total da Nota: ${valorNfe / 100}
 
+      Ordem dos campos:
+      - Número da transação
+      - Ordem ID
+      - Data
+      - Exchange
+      - Ativo
+      - Quantidade
+      - Valor
       Vendas:
       `;
 
       group.transactions.forEach((transaction: any, transactionIndex: number) => {
         if (transaction.tipo === "venda") {
-          fileContent += `Transação ${transactionIndex + 1}:\nOrdem ID: ${transaction.numeroOrdem}\nData: ${transaction.dataTransacao}\nExchange: ${transaction.exchange.split(" ")[0]}\nAtivo: ${transaction.ativoDigital}\nQuantidade: ${transaction.quantidade}\nValor: ${transaction.valor}\n\n`;
-        }
-      });
-
-      fileContent += `Compras:\n`;
-
-      group.transactions.forEach((transaction: any, transactionIndex: number) => {
-        if (transaction.tipo === "compra") {
-          fileContent += `${transactionIndex + 1}:\nNome: ${transaction.seller?.name || " N/A"}\nNúmero da Ordem: ${transaction.numeroOrdem}\nData: ${transaction.dataTransacao}\nExchange: ${transaction.exchange.split(" ")[0]}\nAtivo: ${transaction.ativoDigital}\nQuantidade: ${transaction.quantidade}\nValor: ${transaction.valor}\n\n`;
+          fileContent += `${transactionIndex + 1}:\n${transaction.numeroOrdem}\n${transaction.dataTransacao}\n${transaction.exchange.split(" ")[0]}\n${transaction.ativoDigital}\n${transaction.quantidade}\n${transaction.valor}\n\n`;
         }
       });
 

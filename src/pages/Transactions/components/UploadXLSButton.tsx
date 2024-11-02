@@ -224,8 +224,6 @@ export const UploadXLSButton = ({
         exchangeUtilizada: selectedBroker,
         ativoDigital: legalCurrency.split("/")[1],
         documentoComprador: side === "SELL" ? "" : "",
-        nomeVendedor: side === "BUY" ? traderName : "",
-        nomeComprador: side === "SELL" ? traderName : "",
         apelidoVendedor: side === "BUY" ? traderName : "",
         apelidoComprador: side === "SELL" ? traderName : "",
         quantidadeComprada: side === "BUY" ? currencyAmount : "",
