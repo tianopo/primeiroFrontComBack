@@ -8,37 +8,41 @@ import { apiRoute } from "src/routes/api";
 import { Regex } from "src/utils/Regex";
 import * as Yup from "yup";
 
-export interface ICompliance {
-  documento: string;
-  cnpj?: string;
+export interface IOperation {
+  nome: string;
+  apelido?: string;
+  exchange: string;
+  documento?: string;
 }
 
 const schema = Yup.object({
+  nome: Yup.string().required().label("Nome"),
+  apelido: Yup.string().optional().label("Apelido"),
+  exchange: Yup.string().required().label("Exchange"),
   documento: Yup.string()
-    .required()
-    .matches(
-      Regex.cpf_cnpj_mask,
-      "Documento inválido, correto: XXX.XXX.XXX-XX ou XX.XXX.XXX/0001-XX",
+    .optional()
+    .test("validate-documento", "Documento inválido, correto: XXX.XXX.XXX-XX", (value) =>
+      value && value.length > 0 ? Regex.cpf_cnpj_mask.test(value || "") : true,
     )
     .label("Documento"),
 });
 
-export const useCompliance = () => {
+export const useOperationEdit = () => {
   const { mutate, isPending } = useMutation({
     mutationFn: path,
     onSuccess: () => {
-      responseSuccess("Transações enviadas com sucesso");
+      responseSuccess("Atualização feita com sucesso");
     },
     onError: (erro: AxiosError) => responseError(erro),
   });
 
-  const context = useForm<ICompliance>({
+  const context = useForm<IOperation>({
     resolver: yupResolver(schema),
     reValidateMode: "onChange",
   });
 
-  async function path(data: ICompliance): Promise<ICompliance> {
-    const result = await api().post(apiRoute.compliance, data);
+  async function path(data: IOperation): Promise<IOperation> {
+    const result = await api().put(apiRoute.operation, data);
     return result.data;
   }
 

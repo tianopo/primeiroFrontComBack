@@ -1,4 +1,4 @@
-import { ChangeEvent, Dispatch, SetStateAction, useState } from "react";
+import { ChangeEvent, Dispatch, SetStateAction, useEffect, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { Button } from "src/components/Buttons/Button";
 import { FormX } from "src/components/Form/FormX";
@@ -7,18 +7,20 @@ import { Select } from "src/components/Form/Select/Select";
 import { CardContainer } from "src/components/Layout/CardContainer";
 import { formatCPFOrCNPJ } from "src/utils/formats";
 import { exchangeOptions } from "src/utils/selectsOptions";
-import { useOperation } from "../hooks/useOperation";
+import { useListUsers } from "../hooks/useListUsers";
+import { useOperationEdit } from "../hooks/useOperationEdit";
 
 interface IRegister {
   setForm: Dispatch<SetStateAction<boolean>>;
 }
 
-export const Register = ({ setForm }: IRegister) => {
+export const Edit = ({ setForm }: IRegister) => {
   const [documento, setDocumento] = useState<string>("");
   const [nome, setNome] = useState<string>("");
   const [apelido, setApelido] = useState<string>("");
   const [exchange, setExchange] = useState<string>("");
-  const { mutate, isPending, context } = useOperation();
+  const { data } = useListUsers();
+  const { mutate, isPending, context } = useOperationEdit();
   const {
     formState: { errors },
     setValue,
@@ -45,6 +47,23 @@ export const Register = ({ setForm }: IRegister) => {
     setDocumento(formattedDocumento);
   };
 
+  useEffect(() => {
+    console.log(apelido, nome, exchange, documento);
+    if (data && apelido) {
+      const selectedUser = data.find((user: any) => user.counterparty === apelido);
+      console.log(selectedUser);
+      if (selectedUser) {
+        setNome(selectedUser.name);
+        setExchange(selectedUser.exchange);
+        setDocumento(selectedUser.documento);
+
+        setValue("nome", selectedUser.name);
+        setValue("exchange", selectedUser.exchange);
+        setValue("documento", selectedUser.document);
+      }
+    }
+  }, [apelido, data, setValue]);
+
   const handleSubmit = (data: any) => {
     mutate(data);
   };
@@ -56,8 +75,8 @@ export const Register = ({ setForm }: IRegister) => {
           onSubmit={handleSubmit}
           className="flex h-fit w-full flex-col flex-wrap justify-between gap-2 md:flex-row"
         >
-          <button onClick={() => setForm(false)} className="hover:cursor-pointer hover:underline">
-            <h2>REGISTER USER</h2>
+          <button onClick={() => setForm(true)} className="hover:cursor-pointer hover:underline">
+            <h2>EDIT USER</h2>
           </button>
           <InputX
             title="Nome"
@@ -71,6 +90,10 @@ export const Register = ({ setForm }: IRegister) => {
             placeholder="User9855-54d4df"
             value={apelido}
             onChange={handleApelidoChange}
+            busca
+            options={data
+              ?.filter((data: any) => data?.counterparty.includes(apelido))
+              .map((data: any) => data?.counterparty)}
             required
           />
           <Select

@@ -4,7 +4,7 @@ import { Button } from "src/components/Buttons/Button";
 import { FormX } from "src/components/Form/FormX";
 import { InputX } from "src/components/Form/Input/InputX";
 import { CardContainer } from "src/components/Layout/CardContainer";
-import { formatCNPJ, formatCPF } from "src/utils/formats";
+import { formatCNPJ, formatCPFOrCNPJ } from "src/utils/formats";
 import { useCompliance } from "../hooks/useCompliance";
 import { AE } from "./QueryDataTransparencia/AE";
 import { BPC } from "./QueryDataTransparencia/BPC";
@@ -16,7 +16,7 @@ import { SDC } from "./QueryDataTransparencia/SDC";
 import { Safra } from "./QueryDataTransparencia/Safra";
 
 export const Compliance = () => {
-  const [cpf, setCpf] = useState<string>("");
+  const [documento, setDocumento] = useState<string>("");
   const [cnpj, setCnpj] = useState<string>("");
   const [responseData, setResponseData] = useState<any>(null);
   const { mutate, isPending, context } = useCompliance();
@@ -25,16 +25,10 @@ export const Compliance = () => {
     setValue,
   } = context;
 
-  const handleCpfChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const formattedCPF = formatCPF(e.target.value);
-    setValue("cpf", formattedCPF);
-    setCpf(formattedCPF);
-  };
-
-  const handleCnpjChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const formattedCNPJ = formatCNPJ(e.target.value);
-    setValue("cnpj", formattedCNPJ);
-    setCnpj(formattedCNPJ);
+  const handleDocumentChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const formattedDocumento = formatCPFOrCNPJ(e.target.value);
+    setValue("documento", formattedDocumento);
+    setDocumento(formattedDocumento);
   };
 
   const handleSubmit = (data: any) => {
@@ -55,17 +49,11 @@ export const Compliance = () => {
           >
             <h2>COMPLIANCE</h2>
             <InputX
-              title="CPF"
-              placeholder="XXX.XXX.XXX-XX"
-              value={cpf}
-              onChange={handleCpfChange}
+              title="Documento"
+              placeholder="CPF ou CNPJ"
+              value={documento}
+              onChange={handleDocumentChange}
               required
-            />
-            <InputX
-              title="CNPJ"
-              placeholder="XX.XXX.XXX/0001-XX"
-              value={cnpj}
-              onChange={handleCnpjChange}
             />
             <Button disabled={isPending || Object.keys(errors).length > 0}>Checar</Button>
           </FormX>
