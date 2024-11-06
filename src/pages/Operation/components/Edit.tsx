@@ -29,7 +29,7 @@ export const Edit = ({ setForm }: IRegister) => {
 
   const handleNomeChange = (e: ChangeEvent<HTMLInputElement>) => {
     const updatedName = isBlocked
-      ? `${e.target.value.replace(" bloqueada", "")} bloqueada`
+      ? `${e.target.value.replace(" Bloqueado", "")} Bloqueado`
       : e.target.value;
     setValue("nome", updatedName);
     setNome(updatedName);
@@ -56,8 +56,8 @@ export const Edit = ({ setForm }: IRegister) => {
     setIsBlocked(checked);
 
     const updatedName = checked
-      ? `${nome.replace(" bloqueada", "")} bloqueada`
-      : nome.replace(" bloqueada", "");
+      ? `${nome.replace(" Bloqueado", "")} Bloqueado`
+      : nome.replace(" Bloqueado", "");
 
     setValue("nome", updatedName);
     setNome(updatedName);
@@ -69,11 +69,11 @@ export const Edit = ({ setForm }: IRegister) => {
       if (selectedUser) {
         const userName = selectedUser.name;
 
-        // Checa se o nome do usuário contém "bloqueada" e ajusta o checkbox
-        const isUserBlocked = userName.includes("bloqueada");
+        // Checa se o nome do usuário contém "Bloqueado" e ajusta o checkbox
+        const isUserBlocked = userName.includes("Bloqueado");
         setIsBlocked(isUserBlocked);
 
-        const updatedName = isUserBlocked ? userName : userName.replace(" bloqueada", "");
+        const updatedName = isUserBlocked ? userName : userName.replace(" Bloqueado", "");
 
         setNome(updatedName);
         setExchange(selectedUser.exchange);
