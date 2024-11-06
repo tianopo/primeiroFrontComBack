@@ -103,10 +103,13 @@ export const FilterOrders = () => {
     Object.values(groupedByBuyer).forEach((group: any, index: number) => {
       const buyer = group.buyer;
       const buyerName = buyer?.name || " N/A";
+      const buyerBlocked = buyer?.name.split(" ")[buyer.name.split(" ").length - 1];
       const cpfCnpj = buyer?.document?.replace(/[^0-9]/g, "");
       const totalVendas = group.totalVendas;
       const valorNfe = Math.round(totalVendas * comissao * 100);
       const valorIss = Math.round(valorNfe * (aliquota / 10000));
+
+      if (validationEmptyBuyers && buyerBlocked === "Bloqueado") return;
 
       const endDateObj = group.transactions.reduce((latest: Date, transaction: any) => {
         const transactionDate = new Date(transaction.dataTransacao);
