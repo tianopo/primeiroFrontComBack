@@ -19,6 +19,7 @@ export const Edit = ({ setForm }: IRegister) => {
   const [nome, setNome] = useState<string>("");
   const [apelido, setApelido] = useState<string>("");
   const [exchange, setExchange] = useState<string>("");
+  const [isBlocked, setIsBlocked] = useState<boolean>(false); // Estado para o checkbox
   const { data } = useListUsers();
   const { mutate, isPending, context } = useOperationEdit();
   const {
@@ -27,8 +28,11 @@ export const Edit = ({ setForm }: IRegister) => {
   } = context;
 
   const handleNomeChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setValue("nome", e.target.value);
-    setNome(e.target.value);
+    const updatedName = isBlocked
+      ? `${e.target.value.replace(" bloqueada", "")} bloqueada`
+      : e.target.value;
+    setValue("nome", updatedName);
+    setNome(updatedName);
   };
 
   const handleApelidoChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -47,17 +51,35 @@ export const Edit = ({ setForm }: IRegister) => {
     setDocumento(formattedDocumento);
   };
 
+  const handleBlockChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    setIsBlocked(checked);
+
+    const updatedName = checked
+      ? `${nome.replace(" bloqueada", "")} bloqueada`
+      : nome.replace(" bloqueada", "");
+
+    setValue("nome", updatedName);
+    setNome(updatedName);
+  };
+
   useEffect(() => {
-    console.log(apelido, nome, exchange, documento);
     if (data && apelido) {
       const selectedUser = data.find((user: any) => user.counterparty === apelido);
-      console.log(selectedUser);
       if (selectedUser) {
-        setNome(selectedUser.name);
+        const userName = selectedUser.name;
+
+        // Checa se o nome do usuário contém "bloqueada" e ajusta o checkbox
+        const isUserBlocked = userName.includes("bloqueada");
+        setIsBlocked(isUserBlocked);
+
+        const updatedName = isUserBlocked ? userName : userName.replace(" bloqueada", "");
+
+        setNome(updatedName);
         setExchange(selectedUser.exchange);
         setDocumento(selectedUser.documento);
 
-        setValue("nome", selectedUser.name);
+        setValue("nome", updatedName);
         setValue("exchange", selectedUser.exchange);
         setValue("documento", selectedUser.document);
       }
@@ -111,6 +133,11 @@ export const Edit = ({ setForm }: IRegister) => {
             onChange={handleDocumentoChange}
             required
           />
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={isBlocked} onChange={handleBlockChange} />
+            <span>Bloquear Usuário</span>
+          </label>
+
           <Button disabled={isPending || Object.keys(errors).length > 0}>Salvar</Button>
         </FormX>
       </FormProvider>
