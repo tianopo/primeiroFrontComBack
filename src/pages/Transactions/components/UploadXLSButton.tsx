@@ -117,7 +117,6 @@ export const UploadXLSButton = ({
         status, // "Status"
         createdTime, // "Created Time"
       ] = row;
-      console.log(row);
       const formatTotalPrice = (price: string): string => {
         if (Number.isInteger(price)) {
           return `${price},00`;
@@ -381,7 +380,6 @@ export const UploadXLSButton = ({
     });
   };
 
-  // ainda em manutenção
   const processExcelHuobi = (workbook: XLSX.WorkBook): any[] => {
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
@@ -390,40 +388,41 @@ export const UploadXLSButton = ({
     const [, ...rows] = json;
 
     const formatNumber = (value: string): string => {
-      console.log(value);
-      return parseFloat(value.split(" ")[0]).toFixed(2).replace(".", ",");
+      return parseFloat(value).toFixed(2).replace(".", ",");
     };
 
     return rows.map((row) => {
       const [
-        orderId, // "ORDER ID"
-        createdAt, // "CREATED AT"
-        side, // "SIDE"
-        legalCurrency, // "CURRENCY"
-        legalAmount, // "AMOUNT"
-        price, // "PRICE"
-        total, // "TOTAL"
-        traderName, // "TRADER NAME"
-        paymentMethod, // "PAYMENT METHOD"
-        status, // "STATUS"
+        orderId, // "No."
+        side, // "Type"
+        orderType, // "Order Type"
+        crypto, // "Coin"
+        amount, // "Amount"
+        price, // "Price"
+        total, // "Total"
+        fee, // "Fee"
+        pointCard, // "Point Card"
+        legalCurrency, // "Currency"
+        time, // "Time"
+        status, // "Status"
+        counterparty, // "Counterparty"
       ] = row;
 
       return {
         numeroOrdem: orderId,
-        tipoTransacao: side === "BUY" ? "compras" : "vendas",
-        dataHoraTransacao: createdAt,
-        exchangeUtilizada: selectedBroker,
-        ativoDigital: legalCurrency,
-        documentoComprador: side === "SELL" ? "" : "",
-        apelidoComprador: side === "SELL" ? traderName : "",
-        apelidoVendedor: side === "BUY" ? traderName : "",
-        quantidadeComprada: side === "BUY" ? total : "",
-        quantidadeVendida: side === "SELL" ? total : "",
-        valorCompra: side === "BUY" ? formatNumber(price) : "",
-        valorVenda: side === "SELL" ? formatNumber(price) : "",
-        valorTokenDataCompra: side === "BUY" ? legalAmount : "",
-        valorTokenDataVenda: side === "SELL" ? legalAmount : "",
-        taxaTransacao: "0",
+        tipoTransacao: side === "Buy" ? "compras" : "vendas",
+        dataHoraTransacao: time,
+        exchangeUtilizada: "Huobi",
+        ativoDigital: crypto,
+        apelidoComprador: side === "Sell" ? counterparty : "",
+        apelidoVendedor: side === "Buy" ? counterparty : "",
+        quantidadeComprada: side === "Buy" ? amount : "",
+        quantidadeVendida: side === "Sell" ? amount : "",
+        valorCompra: side === "Buy" ? formatNumber(total) : "",
+        valorVenda: side === "Sell" ? formatNumber(total) : "",
+        valorTokenDataCompra: side === "Buy" ? formatNumber(price) : "",
+        valorTokenDataVenda: side === "Sell" ? formatNumber(price) : "",
+        taxaTransacao: formatNumber(fee),
       };
     });
   };
