@@ -9,15 +9,15 @@ import { Regex } from "src/utils/Regex";
 import * as Yup from "yup";
 
 export interface IOperation {
-  nome: string;
-  apelido?: string;
+  nome?: string;
+  apelido: string;
   exchange: string;
   documento?: string;
 }
 
 const schema = Yup.object({
-  nome: Yup.string().required().label("Nome"),
-  apelido: Yup.string().optional().label("Apelido"),
+  nome: Yup.string().optional().label("Nome"),
+  apelido: Yup.string().required().label("Apelido"),
   exchange: Yup.string().required().label("Exchange"),
   documento: Yup.string()
     .optional()

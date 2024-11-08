@@ -60,19 +60,21 @@ export const Register = ({ setForm }: IRegister) => {
             <h2>REGISTER USER</h2>
           </button>
           <InputX
-            title="Nome"
-            placeholder="Fulano Ciclano"
-            value={nome}
-            onChange={handleNomeChange}
-            required
-          />
-          <InputX
             title="Apelido"
             placeholder="User9855-54d4df"
             value={apelido}
             onChange={handleApelidoChange}
             required
           />
+          {apelido && (
+            <InputX
+              title="Nome"
+              placeholder="Fulano Ciclano"
+              value={nome}
+              onChange={handleNomeChange}
+              required
+            />
+          )}
           <Select
             title="Exchange"
             placeholder="Bybit https://www.bybit.com/ SG"
