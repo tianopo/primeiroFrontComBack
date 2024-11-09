@@ -85,6 +85,8 @@ export const UploadXLSButton = ({
         return processExcelBitget(workbook);
       case "Huobi https://www.htx.com/ CN":
         return processExcelHuobi(workbook);
+      case "BingX https://www.bingx.com/ AU":
+        return processExcelBingX(workbook);
       default: {
         toast.error("Escolha uma Exchange Válida");
         return [];
@@ -381,6 +383,53 @@ export const UploadXLSButton = ({
   };
 
   const processExcelHuobi = (workbook: XLSX.WorkBook): any[] => {
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+
+    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
+    const [, ...rows] = json;
+
+    const formatNumber = (value: string): string => {
+      return parseFloat(value).toFixed(2).replace(".", ",");
+    };
+
+    return rows.map((row) => {
+      const [
+        orderId, // "No."
+        side, // "Type"
+        orderType, // "Order Type"
+        crypto, // "Coin"
+        amount, // "Amount"
+        price, // "Price"
+        total, // "Total"
+        fee, // "Fee"
+        pointCard, // "Point Card"
+        legalCurrency, // "Currency"
+        time, // "Time"
+        status, // "Status"
+        counterparty, // "Counterparty"
+      ] = row;
+
+      return {
+        numeroOrdem: orderId,
+        tipoTransacao: side === "Buy" ? "compras" : "vendas",
+        dataHoraTransacao: time,
+        exchangeUtilizada: "Huobi",
+        ativoDigital: crypto,
+        apelidoComprador: side === "Sell" ? counterparty : "",
+        apelidoVendedor: side === "Buy" ? counterparty : "",
+        quantidadeComprada: side === "Buy" ? amount : "",
+        quantidadeVendida: side === "Sell" ? amount : "",
+        valorCompra: side === "Buy" ? formatNumber(total) : "",
+        valorVenda: side === "Sell" ? formatNumber(total) : "",
+        valorTokenDataCompra: side === "Buy" ? formatNumber(price) : "",
+        valorTokenDataVenda: side === "Sell" ? formatNumber(price) : "",
+        taxaTransacao: formatNumber(fee),
+      };
+    });
+  };
+  // manutenção
+  const processExcelBingX = (workbook: XLSX.WorkBook): any[] => {
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
 

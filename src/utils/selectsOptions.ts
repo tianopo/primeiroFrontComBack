@@ -6,4 +6,5 @@ export const exchangeOptions = [
   "CoinEx https://www.coinex.com/ HK",
   "Bitget https://www.bitget.com/ SC",
   "Huobi https://www.htx.com/ CN",
+  "BingX https://www.bingx.com/ AU",
 ];
