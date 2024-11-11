@@ -46,7 +46,16 @@ export const Register = ({ setForm }: IRegister) => {
   };
 
   const handleSubmit = (data: any) => {
-    mutate(data);
+    mutate(data, {
+      onSuccess: () => {
+        setValue("apelido", "");
+        setApelido("");
+        setValue("nome", "");
+        setNome("");
+        setValue("documento", "");
+        setDocumento("");
+      },
+    });
   };
 
   return (

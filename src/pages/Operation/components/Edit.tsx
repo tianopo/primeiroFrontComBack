@@ -1,12 +1,16 @@
+import { Trash } from "@phosphor-icons/react";
 import { ChangeEvent, Dispatch, SetStateAction, useEffect, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { Button } from "src/components/Buttons/Button";
 import { FormX } from "src/components/Form/FormX";
 import { InputX } from "src/components/Form/Input/InputX";
 import { Select } from "src/components/Form/Select/Select";
+import { IconX } from "src/components/Icons/IconX";
 import { CardContainer } from "src/components/Layout/CardContainer";
+import { ConfirmationDelete } from "src/components/Modal/ConfirmationDelete";
 import { formatCPFOrCNPJ } from "src/utils/formats";
 import { exchangeOptions } from "src/utils/selectsOptions";
+import { useDelUser } from "../hooks/useDelUser";
 import { useListUsers } from "../hooks/useListUsers";
 import { useOperationEdit } from "../hooks/useOperationEdit";
 
@@ -15,17 +19,20 @@ interface IRegister {
 }
 
 export const Edit = ({ setForm }: IRegister) => {
+  const [id, setId] = useState<string>("");
   const [documento, setDocumento] = useState<string>("");
   const [nome, setNome] = useState<string>("");
   const [apelido, setApelido] = useState<string>("");
   const [exchange, setExchange] = useState<string>("");
-  const [isBlocked, setIsBlocked] = useState<boolean>(false); // Estado para o checkbox
+  const [isBlocked, setIsBlocked] = useState<boolean>(false);
+  const [isConfirming, setIsConfirming] = useState(false);
   const { data } = useListUsers();
   const { mutate, isPending, context } = useOperationEdit();
   const {
     formState: { errors },
     setValue,
   } = context;
+  const { mutate: deletar } = useDelUser(id);
 
   const handleNomeChange = (e: ChangeEvent<HTMLInputElement>) => {
     const updatedName = isBlocked
@@ -69,12 +76,12 @@ export const Edit = ({ setForm }: IRegister) => {
       if (selectedUser) {
         const userName = selectedUser.name;
 
-        // Checa se o nome do usuário contém "Bloqueado" e ajusta o checkbox
         const isUserBlocked = userName.includes("Bloqueado");
         setIsBlocked(isUserBlocked);
 
         const updatedName = isUserBlocked ? userName : userName.replace(" Bloqueado", "");
 
+        setId(selectedUser.id);
         setNome(updatedName);
         setExchange(selectedUser.exchange);
         setDocumento(selectedUser.documento);
@@ -90,6 +97,23 @@ export const Edit = ({ setForm }: IRegister) => {
     mutate(data);
   };
 
+  const handleDelete = () => setIsConfirming(!isConfirming);
+  const handleConfirmDelete = () => {
+    deletar(data, {
+      onSuccess: () => {
+        setIsConfirming(false);
+        setValue("apelido", "");
+        setApelido("");
+        setValue("nome", "");
+        setNome("");
+        setValue("documento", "");
+        setDocumento("");
+        setValue("exchange", "");
+        setExchange("");
+      },
+    });
+  };
+
   return (
     <CardContainer>
       <FormProvider {...context}>
@@ -100,6 +124,20 @@ export const Edit = ({ setForm }: IRegister) => {
           <button onClick={() => setForm(true)} className="hover:cursor-pointer hover:underline">
             <h2>EDIT USER</h2>
           </button>
+          {id && apelido && (
+            <IconX
+              name="Excluir"
+              icon={
+                <Trash
+                  className="cursor-pointer rounded-6 text-variation-error hover:bg-secundary hover:text-write-primary"
+                  width={19.45}
+                  height={20}
+                  weight="regular"
+                  onClick={handleDelete}
+                />
+              }
+            />
+          )}
           <InputX
             title="Nome"
             placeholder="Fulano Ciclano"
@@ -141,6 +179,12 @@ export const Edit = ({ setForm }: IRegister) => {
           <Button disabled={isPending || Object.keys(errors).length > 0}>Salvar</Button>
         </FormX>
       </FormProvider>
+      {isConfirming && (
+        <ConfirmationDelete
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setIsConfirming(false)}
+        />
+      )}
     </CardContainer>
   );
 };

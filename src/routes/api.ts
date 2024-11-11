@@ -10,6 +10,7 @@ export const apiRoute = {
 
   compliance: "compliance",
   operation: "compliance/operation",
+  operationId: (id: string) => `compliance/operation/delete/${id}`,
 
   buyer: "buyer",
 };
