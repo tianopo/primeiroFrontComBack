@@ -2,7 +2,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
-import { api } from "src/config/api";
+import { api, queryClient } from "src/config/api";
 import { responseError, responseSuccess } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
 import { Regex } from "src/utils/Regex";
@@ -32,6 +32,7 @@ export const useOperation = () => {
     mutationFn: path,
     onSuccess: () => {
       responseSuccess("Cadastro efetuado com sucesso");
+      queryClient.invalidateQueries({ queryKey: ["users-data"] });
     },
     onError: (erro: AxiosError) => responseError(erro),
   });
