@@ -123,13 +123,13 @@ export const FilterOrders = () => {
       - Valor Total da Nota: ${valorNfe / 100}
 
       Ordem dos campos:
-      - Número da transação
-      - Ordem ID
-      - Data
-      - Exchange
-      - Ativo
-      - Quantidade
-      - Valor
+      - Número da transação: o Número da transação feita com a pessoa
+      - Ordem ID: Identificador da ordem de transação da exchange
+      - Data: o dia e hora
+      - Exchange: Exchange feita a transação
+      - Ativo: Token ou Criptomoeda trocada
+      - Quantidade: Quantidade de tokens ou criptomoedas trocada
+      - Valor: Valor pago pela pessoa pela quantidade de moedas
       Vendas:
       `;
 
