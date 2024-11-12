@@ -70,28 +70,46 @@ export const Edit = ({ setForm }: IRegister) => {
     setNome(updatedName);
   };
 
+  const updateUserFields = (selectedUser: any) => {
+    const userName = selectedUser.name;
+
+    const isUserBlocked = userName.includes("Bloqueado");
+    setIsBlocked(isUserBlocked);
+
+    const updatedName = isUserBlocked ? userName : userName.replace(" Bloqueado", "");
+
+    setId(selectedUser.id);
+    setNome(updatedName);
+    setApelido(selectedUser.counterparty);
+    setExchange(selectedUser.exchange);
+    setDocumento(selectedUser.document);
+
+    setValue("nome", updatedName);
+    setValue("apelido", selectedUser.counterparty);
+    setValue("exchange", selectedUser.exchange);
+    setValue("documento", selectedUser.document);
+  };
+
   useEffect(() => {
     if (data && apelido) {
       const selectedUser = data.find((user: any) => user.counterparty === apelido);
-      if (selectedUser) {
-        const userName = selectedUser.name;
-
-        const isUserBlocked = userName.includes("Bloqueado");
-        setIsBlocked(isUserBlocked);
-
-        const updatedName = isUserBlocked ? userName : userName.replace(" Bloqueado", "");
-
-        setId(selectedUser.id);
-        setNome(updatedName);
-        setExchange(selectedUser.exchange);
-        setDocumento(selectedUser.documento);
-
-        setValue("nome", updatedName);
-        setValue("exchange", selectedUser.exchange);
-        setValue("documento", selectedUser.document);
-      }
+      if (selectedUser) updateUserFields(selectedUser);
     }
   }, [apelido, data, setValue]);
+
+  useEffect(() => {
+    if (data && nome) {
+      const selectedUser = data.find((user: any) => user.name === nome);
+      if (selectedUser) updateUserFields(selectedUser);
+    }
+  }, [nome, data, setValue]);
+
+  useEffect(() => {
+    if (data && documento) {
+      const selectedUser = data.find((user: any) => user.document === documento);
+      if (selectedUser) updateUserFields(selectedUser);
+    }
+  }, [documento, data, setValue]);
 
   const handleSubmit = (data: any) => {
     mutate(data);
@@ -124,7 +142,7 @@ export const Edit = ({ setForm }: IRegister) => {
           <button onClick={() => setForm(true)} className="hover:cursor-pointer hover:underline">
             <h2>EDIT USER</h2>
           </button>
-          {id && apelido && (
+          {id && apelido && nome && documento && (
             <IconX
               name="Excluir"
               icon={
@@ -143,6 +161,10 @@ export const Edit = ({ setForm }: IRegister) => {
             placeholder="Fulano Ciclano"
             value={nome}
             onChange={handleNomeChange}
+            busca
+            options={data
+              ?.filter((user: any) => user?.name && user.name.includes(nome))
+              .map((user: any) => user?.name)}
             required
           />
           <InputX
@@ -152,8 +174,8 @@ export const Edit = ({ setForm }: IRegister) => {
             onChange={handleApelidoChange}
             busca
             options={data
-              ?.filter((data: any) => data?.counterparty.includes(apelido))
-              .map((data: any) => data?.counterparty)}
+              ?.filter((user: any) => user?.counterparty && user.counterparty.includes(apelido))
+              .map((user: any) => user?.counterparty)}
             required
           />
           <Select
@@ -169,6 +191,10 @@ export const Edit = ({ setForm }: IRegister) => {
             placeholder="CPF/CNPJ"
             value={documento}
             onChange={handleDocumentoChange}
+            busca
+            options={data
+              ?.filter((user: any) => user?.document && user.document.includes(documento))
+              .map((user: any) => user?.document)}
             required
           />
           <label className="flex items-center gap-2">
