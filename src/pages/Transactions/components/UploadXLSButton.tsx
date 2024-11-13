@@ -359,9 +359,10 @@ export const UploadXLSButton = ({
         counterparty, // "Counterparty"
         status, // "Status"
       ] = row;
-      const oneSide = side.replace(/,$/, "");
+      const oneSide = side.replace(/,$/, "").replace(" ", "");
       const oneCounterparty = counterparty.replace(/,$/, "");
       const oneDate = createdAt.replace(/\//g, "-").replace(/,$/, "");
+      console.log(rows);
       return {
         numeroOrdem: orderId,
         tipoTransacao: oneSide === "Buy" ? "compras" : "vendas",
