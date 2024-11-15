@@ -247,8 +247,7 @@ export const RegisterOrders = () => {
         )}
         {view === "manual" && (
           <>
-            <div className="mb-4 flex flex-col gap-2">
-              <h3 className="text-primary">Registro Manual</h3>
+            <div className="mb-4">
               <Select
                 title="Tipo Transação"
                 options={["compras", "vendas"]}

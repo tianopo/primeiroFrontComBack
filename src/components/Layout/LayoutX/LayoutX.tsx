@@ -1,4 +1,4 @@
-import { File, FileDoc, House, MathOperations, TrademarkRegistered } from "@phosphor-icons/react";
+import { File, House, MathOperations, TrademarkRegistered } from "@phosphor-icons/react";
 import { Outlet } from "react-router-dom";
 import { app } from "src/routes/app";
 import { Header } from "../Header/Header";
@@ -29,7 +29,7 @@ export const LayoutX = () => {
       <Header navbar={nav} />
       <div className="flex w-full">
         <SidebarX navbar={nav} />
-        <div className="flex w-full flex-col gap-2 bg-purple-200 p-6 md:gap-4">
+        <div className="flex w-full flex-col gap-2 bg-primary p-6 md:gap-4">
           <Outlet />
         </div>
       </div>

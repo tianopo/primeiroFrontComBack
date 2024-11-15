@@ -480,7 +480,6 @@ export const UploadXLSButton = ({
   return (
     <div className="gap-2py-4 my-4 flex w-full flex-col items-end md:flex-row">
       <div className={`flex w-full flex-col gap-2 ${!selectedBroker ? "md:w-full" : "md:w-1/2"}`}>
-        <h3 className="text-primary">Registro Automático</h3>
         <Select
           title="Exchange Utilizada"
           placeholder="Bybit https://www.bybit.com/ SG"
