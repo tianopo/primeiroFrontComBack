@@ -47,7 +47,7 @@ export const Compliance = () => {
             onSubmit={handleSubmit}
             className="flex flex-col flex-wrap justify-between gap-2 md:flex-row"
           >
-            <h2>COMPLIANCE</h2>
+            <h3 className="text-28 font-bold">COMPLIANCE</h3>
             <InputX
               title="Documento"
               placeholder="CPF ou CNPJ"

@@ -110,7 +110,7 @@ export const Cashier = () => {
 
   return (
     <div className="flex h-fit w-full flex-col rounded-16 bg-white p-4 shadow-2xl">
-      <h2>CAIXA</h2>
+      <h3 className="text-28 font-bold">CAIXA</h3>
       {!isCashierOpen ? (
         <div className="flex flex-col gap-2">
           <InputX

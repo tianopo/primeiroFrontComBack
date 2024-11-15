@@ -199,6 +199,7 @@ export const DocumentsGenerator = () => {
   console.log(startDate, startDate.length, endDate.length);
   return (
     <div className="flex h-fit w-full flex-col gap-3 rounded-16 bg-white p-4 shadow-2xl">
+      <h3 className="text-28 font-bold">Gerador de Documentos</h3>
       <div className="flex flex-col items-center justify-center gap-4 md:flex-row">
         <InputX
           title="Data Início"
