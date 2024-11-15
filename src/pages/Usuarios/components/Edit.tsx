@@ -140,7 +140,7 @@ export const Edit = ({ setForm }: IRegister) => {
           className="flex h-fit w-full flex-col flex-wrap justify-between gap-2 md:flex-row"
         >
           <button onClick={() => setForm(true)} className="hover:cursor-pointer hover:underline">
-            <h3 className="text-28 font-bold">EDIT USER</h3>
+            <h3 className="text-28 font-bold">ATUALIZE O USUÁRIO</h3>
           </button>
           {id && apelido && nome && documento && (
             <IconX

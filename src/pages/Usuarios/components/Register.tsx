@@ -66,7 +66,7 @@ export const Register = ({ setForm }: IRegister) => {
           className="flex h-fit w-full flex-col flex-wrap justify-between gap-2 md:flex-row"
         >
           <button onClick={() => setForm(false)} className="hover:cursor-pointer hover:underline">
-            <h3 className="text-28 font-bold">REGISTER USER</h3>
+            <h3 className="text-28 font-bold">CADASTRE O USUÁRIO</h3>
           </button>
           <InputX
             title="Apelido"
