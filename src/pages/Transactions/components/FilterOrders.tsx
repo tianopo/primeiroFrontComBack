@@ -58,10 +58,9 @@ export const FilterOrders = () => {
   const handleTransactions = async () => {
     if (!filteredData) return;
 
-    const startDateObj = new Date(startDate);
-    const month = new Date(startDateObj);
-    month.setMonth(startDateObj.getMonth());
-    const monthName = month.toLocaleDateString("pt-BR", { month: "long" });
+    const today = new Date();
+    const monthName = today.toLocaleDateString("pt-BR", { month: "long" });
+    console.log(monthName);
 
     const groupedByBuyer = filteredData.reduce((acc: any, transaction: any) => {
       const buyerDocument = transaction.buyer?.document || " N/A";
