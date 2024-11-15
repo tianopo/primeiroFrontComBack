@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
+import { InputX } from "src/components/Form/Input/InputX";
 import { Select } from "src/components/Form/Select/Select";
 import { handleDownload } from "../RegisterOrders/config/handleDownload";
 import { useListTransactions } from "../RegisterOrders/hooks/useListTransactions";
@@ -195,29 +196,24 @@ export const DocumentsGenerator = () => {
   const groupedTransactions = filteredData ? groupByExchange(filteredData) : {};
   const validationDates = filterDates.startDate.length > 0 && filterDates.endDate.length > 0;
   const validationEmptyBuyers = buyer === "" || buyer === " N/A";
-
+  console.log(startDate, startDate.length, endDate.length);
   return (
     <div className="flex h-fit w-full flex-col gap-3 rounded-16 bg-white p-4 shadow-2xl">
       <div className="flex flex-col items-center justify-center gap-4 md:flex-row">
-        <label>
-          Data Início:
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            required
-          />
-        </label>
-
-        <label>
-          Data Final:
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            required
-          />
-        </label>
+        <InputX
+          title="Data Início"
+          typ="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          required
+        />
+        <InputX
+          title="Data Final"
+          typ="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          required
+        />
       </div>
       <div className="flex w-full flex-col gap-2">
         {buyers.length > 0 && (
@@ -229,7 +225,9 @@ export const DocumentsGenerator = () => {
             onChange={(e) => setBuyer(e.target.value)}
           />
         )}
-        <Button onClick={handleOrder}>Filtrar</Button>
+        <Button onClick={handleOrder} disabled={startDate.length !== 10 || endDate.length !== 10}>
+          Filtrar
+        </Button>
         {validationDates && validationEmptyBuyers && (
           <Button onClick={handleGenerate}>Gerar IN188</Button>
         )}
