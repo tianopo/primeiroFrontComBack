@@ -8,7 +8,7 @@ import { apiRoute } from "src/routes/api";
 import { Regex } from "src/utils/Regex";
 import * as Yup from "yup";
 
-export interface IOperation {
+export interface IRegisterUser {
   nome?: string;
   apelido: string;
   exchange: string;
@@ -27,7 +27,7 @@ const schema = Yup.object({
     .label("Documento"),
 });
 
-export const useOperation = () => {
+export const useRegisterUser = () => {
   const { mutate, isPending } = useMutation({
     mutationFn: path,
     onSuccess: () => {
@@ -37,12 +37,12 @@ export const useOperation = () => {
     onError: (erro: AxiosError) => responseError(erro),
   });
 
-  const context = useForm<IOperation>({
+  const context = useForm<IRegisterUser>({
     resolver: yupResolver(schema),
     reValidateMode: "onChange",
   });
 
-  async function path(data: IOperation): Promise<IOperation> {
+  async function path(data: IRegisterUser): Promise<IRegisterUser> {
     const result = await api().post(apiRoute.operation, data);
     return result.data;
   }

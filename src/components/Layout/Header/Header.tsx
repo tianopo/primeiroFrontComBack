@@ -45,7 +45,7 @@ export const Header = ({ navbar }: IHeader) => {
                 width={19.45}
                 height={20}
                 weight="fill"
-                onClick={() => navigate(app.transactions)}
+                onClick={() => navigate(app.registerOrders)}
               />
             }
           />
@@ -62,7 +62,7 @@ export const Header = ({ navbar }: IHeader) => {
           />
           <div
             className="flex cursor-pointer items-center gap-5 rounded-6 p-2.5 text-write-secundary hover:bg-secundary hover:text-write-primary"
-            onClick={() => navigate(app.transactions)}
+            onClick={() => navigate(app.registerOrders)}
           >
             <h5>Matheus Henrique</h5>
           </div>

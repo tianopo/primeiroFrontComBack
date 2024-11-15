@@ -50,7 +50,7 @@ export const SidebarX = ({ navbar, menuOpen }: ISidebarX) => {
                     width={19.45}
                     height={20}
                     weight="fill"
-                    onClick={() => navigate(app.operation)}
+                    onClick={() => navigate(app.users)}
                   />
                 }
               />
@@ -68,7 +68,7 @@ export const SidebarX = ({ navbar, menuOpen }: ISidebarX) => {
             </div>
             <div
               className="flex cursor-pointer items-center gap-5 rounded-6 p-2.5 text-write-secundary hover:bg-secundary hover:text-write-primary"
-              onClick={() => navigate(app.operation)}
+              onClick={() => navigate(app.users)}
             >
               <h5>Matheus Henrique</h5>
             </div>

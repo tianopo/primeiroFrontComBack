@@ -1,4 +1,4 @@
-import { Bank, House, MathOperations, Money } from "@phosphor-icons/react";
+import { File, FileDoc, House, MathOperations, TrademarkRegistered } from "@phosphor-icons/react";
 import { Outlet } from "react-router-dom";
 import { app } from "src/routes/app";
 import { Header } from "../Header/Header";
@@ -6,16 +6,21 @@ import { SidebarX } from "../Sidebar/SidebarX";
 
 export const LayoutX = () => {
   const nav = [
-    { text: "Início", route: app.operation, icon: <House width={20} height={17} weight="fill" /> },
+    { text: "Início", route: app.users, icon: <House width={20} height={17} weight="fill" /> },
     {
-      text: "Operações",
-      route: app.operation,
+      text: "Usuários",
+      route: app.users,
       icon: <MathOperations width={20} height={17} weight="duotone" />,
     },
     {
-      text: "Transações",
-      route: app.transactions,
-      icon: <Bank width={20} height={17} weight="duotone" />,
+      text: "Ordens",
+      route: app.registerOrders,
+      icon: <TrademarkRegistered width={20} height={17} weight="duotone" />,
+    },
+    {
+      text: "Documentos",
+      route: app.documentsGenerator,
+      icon: <File width={20} height={17} weight="duotone" />,
     },
   ];
 

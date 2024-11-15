@@ -3,7 +3,6 @@ import { FieldErrors, FormProvider, UseFormReturn } from "react-hook-form";
 import { toast } from "react-toastify";
 import { Button } from "src/components/Buttons/Button";
 import { FlexCol } from "src/components/Flex/FlexCol";
-import { FlexRow } from "src/components/Flex/FlexRow";
 import { FormX } from "src/components/Form/FormX";
 import { InputX } from "src/components/Form/Input/InputX";
 import { Select } from "src/components/Form/Select/Select";
@@ -12,9 +11,9 @@ import { HandleListEdit } from "./components/HandleListEdit";
 import { UploadXLSButton } from "./components/UploadXLSButton";
 import { useListBuyers } from "./hooks/useListBuyers";
 import { ICompra, ITransactionData, IVenda, useTransaction } from "./hooks/useTransactions";
-import "./transactions.css";
+import "./registerOrders.css";
 
-export const Transactions = () => {
+export const RegisterOrders = () => {
   const { mutate, isPending, context, contextCompra, contextVenda } = useTransaction();
   const { data } = useListBuyers();
   const { reset, getValues } = context;
@@ -219,16 +218,20 @@ export const Transactions = () => {
   return (
     <FlexCol className="w-full p-4 pb-2">
       <div className="card">
-        <FlexRow>
-          <h1 className="text-24 font-bold">Formulário de Compra e Venda de Criptoativos</h1>
-          <Select
-            title="Tipo Transação"
-            options={["compras", "vendas"]}
-            placeholder="compras"
-            value={tipoTransacao}
-            onChange={handleTipoTransacaoChange}
-          />
-        </FlexRow>
+        <h1 className="text-24 font-bold">Formulário de Compra e Venda de Criptoativos</h1>
+        <UploadXLSButton
+          setFormData={setFormData}
+          formData={formData}
+          setCompras={setCompras}
+          setVendas={setVendas}
+        />
+        <Select
+          title="Tipo Transação"
+          options={["compras", "vendas"]}
+          placeholder="compras"
+          value={tipoTransacao}
+          onChange={handleTipoTransacaoChange}
+        />
         <FormProvider {...context}>
           <FormX
             onSubmit={onSubmit}
@@ -374,15 +377,9 @@ export const Transactions = () => {
           <Button onClick={handleSend} disabled={isPending}>
             Enviar
           </Button>
-          <UploadXLSButton
-            setFormData={setFormData}
-            formData={formData}
-            setCompras={setCompras}
-            setVendas={setVendas}
-          />
         </div>
       </div>
-      <HandleListEdit formData={formData} handleEdit={handleEdit} />
+      {formData.length > 0 && <HandleListEdit formData={formData} handleEdit={handleEdit} />}
     </FlexCol>
   );
 };

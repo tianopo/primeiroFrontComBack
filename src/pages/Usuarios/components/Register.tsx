@@ -7,7 +7,7 @@ import { Select } from "src/components/Form/Select/Select";
 import { CardContainer } from "src/components/Layout/CardContainer";
 import { formatCPFOrCNPJ } from "src/utils/formats";
 import { exchangeOptions } from "src/utils/selectsOptions";
-import { useOperation } from "../hooks/useOperation";
+import { useRegisterUser } from "../hooks/useRegisterUser";
 
 interface IRegister {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -18,7 +18,7 @@ export const Register = ({ setForm }: IRegister) => {
   const [nome, setNome] = useState<string>("");
   const [apelido, setApelido] = useState<string>("");
   const [exchange, setExchange] = useState<string>("");
-  const { mutate, isPending, context } = useOperation();
+  const { mutate, isPending, context } = useRegisterUser();
   const {
     formState: { errors },
     setValue,

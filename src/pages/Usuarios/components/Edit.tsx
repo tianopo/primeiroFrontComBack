@@ -12,7 +12,7 @@ import { formatCPFOrCNPJ } from "src/utils/formats";
 import { exchangeOptions } from "src/utils/selectsOptions";
 import { useDelUser } from "../hooks/useDelUser";
 import { useListUsers } from "../hooks/useListUsers";
-import { useOperationEdit } from "../hooks/useOperationEdit";
+import { useUpdateUser } from "../hooks/useUpdateUser";
 
 interface IRegister {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -27,7 +27,7 @@ export const Edit = ({ setForm }: IRegister) => {
   const [isBlocked, setIsBlocked] = useState<boolean>(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const { data } = useListUsers();
-  const { mutate, isPending, context } = useOperationEdit();
+  const { mutate, isPending, context } = useUpdateUser();
   const {
     formState: { errors },
     setValue,

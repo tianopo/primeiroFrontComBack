@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { Select } from "src/components/Form/Select/Select";
-import { handleDownload } from "../config/handleDownload";
-import { useListTransactions } from "../hooks/useListTransactions";
+import { handleDownload } from "../RegisterOrders/config/handleDownload";
+import { useListTransactions } from "../RegisterOrders/hooks/useListTransactions";
 
-export const FilterOrders = () => {
+export const DocumentsGenerator = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [filterDates, setFilterDates] = useState({ startDate: "", endDate: "" });
@@ -41,7 +41,6 @@ export const FilterOrders = () => {
     return { totalVendas, totalCompras, total: totalVendas - totalCompras };
   };
 
-  // Filtrar as transações com base no comprador selecionado
   const filteredData =
     buyer === "" || buyer === " N/A"
       ? data || []
@@ -98,7 +97,6 @@ export const FilterOrders = () => {
     const inscricaoMunicipal = 90598;
     let numeroRPS = parseInt(localStorage.getItem("numeroRPS") || "0", 10);
 
-    // Iterar sobre os compradores agrupados e gerar os dados CSV
     Object.values(groupedByBuyer).forEach((group: any, index: number) => {
       const buyer = group.buyer;
       const buyerName = buyer?.name || " N/A";
@@ -199,22 +197,28 @@ export const FilterOrders = () => {
   const validationEmptyBuyers = buyer === "" || buyer === " N/A";
 
   return (
-    <>
-      <label>
-        Data de Início:
-        <input
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          required
-        />
-      </label>
+    <div className="flex h-fit w-full flex-col gap-3 rounded-16 bg-white p-4 shadow-2xl">
+      <div className="flex flex-col items-center justify-center gap-4 md:flex-row">
+        <label>
+          Data Início:
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            required
+          />
+        </label>
 
-      <label>
-        Data de Fim:
-        <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
-      </label>
-
+        <label>
+          Data Final:
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            required
+          />
+        </label>
+      </div>
       <div className="flex w-full flex-col gap-2">
         {buyers.length > 0 && (
           <Select
@@ -292,6 +296,6 @@ export const FilterOrders = () => {
           ))}
         </div>
       )}
-    </>
+    </div>
   );
 };

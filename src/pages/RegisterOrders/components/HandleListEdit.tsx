@@ -1,5 +1,4 @@
-import "../transactions.css";
-import { FilterOrders } from "./FilterOrders";
+import "../registerOrders.css";
 
 interface IHandleListEdit {
   formData: any[];
@@ -91,7 +90,6 @@ export const HandleListEdit = ({ formData, handleEdit }: IHandleListEdit) => {
           </li>
         ))}
       </ul>
-      <FilterOrders />
     </div>
   );
 };

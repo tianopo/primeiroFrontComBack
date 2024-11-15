@@ -11,6 +11,7 @@ export const app = {
   auth: "/auth",
   home: "/inicio",
   //  CryptoTech
-  transactions: "/transactions",
-  operation: "/operation",
+  registerOrders: "/register-orders",
+  users: "/users",
+  documentsGenerator: "/documents-generator",
 };

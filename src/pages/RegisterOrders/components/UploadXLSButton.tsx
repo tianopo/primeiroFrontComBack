@@ -478,8 +478,8 @@ export const UploadXLSButton = ({
   };
 
   return (
-    <div className="flex w-full flex-col items-end gap-2 md:flex-row">
-      <div className="flex w-full md:w-1/2">
+    <div className="my-4 flex w-full flex-col items-end gap-2 border-y-1 border-edge-primary py-4 md:flex-row">
+      <div className={`flex w-full ${!selectedBroker ? "md:w-full" : "md:w-1/2"}`}>
         <Select
           title="Exchange Utilizada"
           placeholder="Bybit https://www.bybit.com/ SG"
@@ -488,7 +488,7 @@ export const UploadXLSButton = ({
           onChange={(e) => setSelectedBroker(e.target.value)}
         />
       </div>
-      <div className="flex w-full md:w-1/2">
+      <div className={`flex w-full ${!selectedBroker ? "w-0" : "md:w-1/2"}`}>
         <label
           htmlFor="file-upload"
           className={`w-full ${selectedBroker ? "block" : "hidden"} cursor-pointer rounded bg-blue-500 px-4 py-2 text-center font-bold text-white hover:bg-blue-700`}
