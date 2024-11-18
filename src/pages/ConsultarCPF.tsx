@@ -12,7 +12,7 @@ export const ConsultaCPF = () => {
 
   // Callback para quando o hCaptcha é resolvido
   const handleVerify = (token: string) => {
-    toast.success("hCaptcha token:" + token);
+    console.log("hCaptcha token:" + token);
     setCaptchaToken(token);
   };
 
@@ -36,6 +36,7 @@ export const ConsultaCPF = () => {
         dataNascimento,
         captchaResponse: captchaToken,
       });
+      console.log(response);
       setResultado(response.data);
     } catch (error) {
       toast.error("Erro ao consultar CPF:" + error);
@@ -59,13 +60,12 @@ export const ConsultaCPF = () => {
             onChange={(e) => setDataNascimento(e.target.value)}
           />
         </label>
-
-        {/* Adicionando o hCaptcha */}
         <HCaptcha
           sitekey={siteKey}
           onVerify={handleVerify}
           onExpire={handleExpire}
           theme="light" // Pode ser 'light' ou 'dark'
+          reCaptchaCompat={false}
         />
 
         <button type="submit">Consultar</button>

@@ -4,16 +4,21 @@ import { Button } from "src/components/Buttons/Button";
 import { FormX } from "src/components/Form/FormX";
 import { InputX } from "src/components/Form/Input/InputX";
 import { CardContainer } from "src/components/Layout/CardContainer";
-import { formatCNPJ, formatCPFOrCNPJ } from "src/utils/formats";
+import { formatCPFOrCNPJ } from "src/utils/formats";
 import { useCompliance } from "../hooks/useCompliance";
 import { AE } from "./QueryDataTransparencia/AE";
 import { BPC } from "./QueryDataTransparencia/BPC";
+import { CEAF } from "./QueryDataTransparencia/CEAF";
+import { CEIS } from "./QueryDataTransparencia/CEIS";
+import { CEPIM } from "./QueryDataTransparencia/CEPIM";
+import { CF } from "./QueryDataTransparencia/CF";
 import { CNEP } from "./QueryDataTransparencia/CNEP";
 import { CNPJ } from "./QueryDataTransparencia/CNPJ";
 import { PEP } from "./QueryDataTransparencia/PEP";
 import { PETI } from "./QueryDataTransparencia/PETI";
 import { SDC } from "./QueryDataTransparencia/SDC";
 import { Safra } from "./QueryDataTransparencia/Safra";
+import { Viagens } from "./QueryDataTransparencia/Viagens";
 
 export const Compliance = () => {
   const [documento, setDocumento] = useState<string>("");
@@ -61,6 +66,7 @@ export const Compliance = () => {
             <div>
               <h3>Dados da Consulta:</h3>
               <h6>{responseData?.ourData}</h6>
+              {responseData?.viagens && <Viagens responseData={responseData?.viagens} />}
               {responseData?.pep && <PEP responseData={responseData?.pep} />}
               {responseData?.cnpj && <CNPJ responseData={responseData?.cnpj} />}
               {responseData?.sdc && <SDC responseData={responseData?.sdc} />}
@@ -69,6 +75,10 @@ export const Compliance = () => {
               {responseData?.bpc && <BPC responseData={responseData?.bpc} />}
               {responseData?.ae && <AE responseData={responseData?.ae} />}
               {responseData?.cnep && <CNEP responseData={responseData?.cnep} />}
+              {responseData?.cf && <CF responseData={responseData?.cf} />}
+              {responseData?.cepim && <CEPIM responseData={responseData?.cepim} />}
+              {responseData?.ceis && <CEIS responseData={responseData?.ceis} />}
+              {responseData?.ceaf && <CEAF responseData={responseData?.ceaf} />}
             </div>
           )}
         </div>

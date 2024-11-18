@@ -400,7 +400,7 @@ export const RegisterOrders = () => {
           <Button onClick={handleSave} disabled={isPending}>
             Salvar
           </Button>
-          <Button onClick={handleSend} disabled={isPending}>
+          <Button onClick={handleSend} disabled={isPending || formData.length === 0}>
             Enviar
           </Button>
         </div>
