@@ -9,77 +9,77 @@ export const CEIS = ({ responseData }: IResponseData) => {
     <ul className="px-3">
       <h4 className="font-bold">Cadastro Nacional de Empresas Inidôneas e Suspensas - CEIS</h4>
       <li>
-        <strong>Nome:</strong> {responseData.sancionado?.nome || responseData.pessoa?.nome}
+        <strong>Nome:</strong> {responseData?.sancionado?.nome || responseData?.pessoa?.nome}
       </li>
       <li>
         <strong>CNPJ:</strong>{" "}
-        {responseData.sancionado?.codigoFormatado || responseData.pessoa?.cnpjFormatado}
+        {responseData?.sancionado?.codigoFormatado || responseData?.pessoa?.cnpjFormatado}
       </li>
       <li>
-        <strong>Razão Social:</strong> {responseData.pessoa?.razaoSocialReceita}
+        <strong>Razão Social:</strong> {responseData?.pessoa?.razaoSocialReceita}
       </li>
       <li>
         <strong>Nome Fantasia:</strong>{" "}
-        {responseData.pessoa?.nomeFantasiaReceita || "Não informado"}
+        {responseData?.pessoa?.nomeFantasiaReceita || "Não informado"}
       </li>
       <li>
-        <strong>Tipo:</strong> {responseData.pessoa?.tipo}
+        <strong>Tipo:</strong> {responseData?.pessoa?.tipo}
       </li>
       <li>
-        <strong>Data de Referência:</strong> {responseData.dataReferencia}
+        <strong>Data de Referência:</strong> {responseData?.dataReferencia}
       </li>
       <li>
-        <strong>Data de Início da Sanção:</strong> {responseData.dataInicioSancao}
+        <strong>Data de Início da Sanção:</strong> {responseData?.dataInicioSancao}
       </li>
       <li>
-        <strong>Data de Fim da Sanção:</strong> {responseData.dataFimSancao || "Não informado"}
+        <strong>Data de Fim da Sanção:</strong> {responseData?.dataFimSancao || "Não informado"}
       </li>
       <li>
-        <strong>Data de Publicação da Sanção:</strong> {responseData.dataPublicacaoSancao}
+        <strong>Data de Publicação da Sanção:</strong> {responseData?.dataPublicacaoSancao}
       </li>
       <li>
-        <strong>Data Transitada em Julgado:</strong> {responseData.dataTransitadoJulgado}
+        <strong>Data Transitada em Julgado:</strong> {responseData?.dataTransitadoJulgado}
       </li>
       <li>
-        <strong>Tipo de Sanção:</strong> {responseData.tipoSancao?.descricaoResumida}
+        <strong>Tipo de Sanção:</strong> {responseData?.tipoSancao?.descricaoResumida}
       </li>
       <li>
-        <strong>Órgão Sancionador:</strong> {responseData.orgaoSancionador?.nome} -{" "}
-        {responseData.orgaoSancionador?.siglaUf}
+        <strong>Órgão Sancionador:</strong> {responseData?.orgaoSancionador?.nome} -{" "}
+        {responseData?.orgaoSancionador?.siglaUf}
       </li>
       <li>
-        <strong>Poder:</strong> {responseData.orgaoSancionador?.poder}
+        <strong>Poder:</strong> {responseData?.orgaoSancionador?.poder}
       </li>
       <li>
-        <strong>Esfera:</strong> {responseData.orgaoSancionador?.esfera}
+        <strong>Esfera:</strong> {responseData?.orgaoSancionador?.esfera}
       </li>
       <li>
         <strong>Fundamentação:</strong>{" "}
-        {responseData.fundamentacao?.map((fund: any, idx: number) => (
+        {responseData?.fundamentacao?.map((fund: any, idx: number) => (
           <div key={idx}>{fund.descricao}</div>
         ))}
       </li>
       <li>
-        <strong>Fonte da Sanção:</strong> {responseData.fonteSancao?.nomeExibicao}
+        <strong>Fonte da Sanção:</strong> {responseData?.fonteSancao?.nomeExibicao}
       </li>
       <li>
         <strong>Contato da Fonte:</strong>{" "}
-        {responseData.fonteSancao?.telefoneContato || "Não informado"}
+        {responseData?.fonteSancao?.telefoneContato || "Não informado"}
       </li>
       <li>
         <strong>Endereço da Fonte:</strong>{" "}
-        {responseData.fonteSancao?.enderecoContato || "Não informado"}
+        {responseData?.fonteSancao?.enderecoContato || "Não informado"}
       </li>
       <li>
-        <strong>Texto da Publicação:</strong> {responseData.textoPublicacao || "Não informado"}
+        <strong>Texto da Publicação:</strong> {responseData?.textoPublicacao || "Não informado"}
       </li>
       <li>
-        <strong>Número do Processo:</strong> {responseData.numeroProcesso || "Não informado"}
+        <strong>Número do Processo:</strong> {responseData?.numeroProcesso || "Não informado"}
       </li>
       <li>
         <strong>Link da Publicação:</strong>{" "}
-        {responseData.linkPublicacao ? (
-          <a href={responseData.linkPublicacao} target="_blank" rel="noopener noreferrer">
+        {responseData?.linkPublicacao ? (
+          <a href={responseData?.linkPublicacao} target="_blank" rel="noopener noreferrer">
             Acessar
           </a>
         ) : (
@@ -88,7 +88,7 @@ export const CEIS = ({ responseData }: IResponseData) => {
       </li>
       <li>
         <strong>Abrangência da Decisão Judicial:</strong>{" "}
-        {responseData.abrangenciaDefinidaDecisaoJudicial || "Não informado"}
+        {responseData?.abrangenciaDefinidaDecisaoJudicial || "Não informado"}
       </li>
     </ul>
   );
