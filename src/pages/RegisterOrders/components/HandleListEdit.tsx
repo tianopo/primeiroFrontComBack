@@ -2,22 +2,28 @@ import "../registerOrders.css";
 
 interface IHandleListEdit {
   formData: any[];
-  handleEdit: (index: number) => void;
+  handleEdit: (numeroOrdem: string, vendedor: string) => void;
 }
 
 export const HandleListEdit = ({ formData, handleEdit }: IHandleListEdit) => {
+  const compras = formData.filter((item) => item.tipoTransacao === "compras");
+  const vendas = formData.filter((item) => item.tipoTransacao === "vendas");
+
   return (
     <div className="card mt-4">
       <h2 className="text-20 font-bold">Dados Armazenados:</h2>
-      <ul className="flex flex-row flex-wrap gap-2">
-        {formData.map((item, index) => (
-          <li
-            key={index}
-            className="cursor-pointer rounded-lg border bg-gray-100 p-4"
-            onClick={() => handleEdit(index)}
-          >
-            {item.tipoTransacao === "compras" && (
-              <>
+
+      {/* Compras */}
+      {compras.length > 0 && (
+        <div className="mt-4">
+          <h3 className="text-18 font-semibold">Compras</h3>
+          <ul className="flex flex-row flex-wrap gap-2">
+            {compras.map((item, index) => (
+              <li
+                key={index}
+                className="cursor-pointer rounded-lg border bg-gray-100 p-4"
+                onClick={() => handleEdit(item.numeroOrdem, item.vendedor)}
+              >
                 <p>
                   <strong>Número Ordem:</strong> {item.numeroOrdem}
                 </p>
@@ -48,10 +54,23 @@ export const HandleListEdit = ({ formData, handleEdit }: IHandleListEdit) => {
                 <p>
                   <strong>Taxa Transação:</strong> {item.taxaTransacao}
                 </p>
-              </>
-            )}
-            {item.tipoTransacao === "vendas" && (
-              <>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Vendas */}
+      {vendas.length > 0 && (
+        <div className="mt-4">
+          <h3 className="text-18 font-semibold">Vendas</h3>
+          <ul className="flex flex-row flex-wrap gap-2">
+            {vendas.map((item, index) => (
+              <li
+                key={index}
+                className="cursor-pointer rounded-lg border bg-gray-100 p-4"
+                onClick={() => handleEdit(item.numeroOrdem, item.vendedor)}
+              >
                 <p>
                   <strong>Número Ordem:</strong> {item.numeroOrdem}
                 </p>
@@ -85,11 +104,11 @@ export const HandleListEdit = ({ formData, handleEdit }: IHandleListEdit) => {
                 <p>
                   <strong>Taxa Transação:</strong> {item.taxaTransacao}
                 </p>
-              </>
-            )}
-          </li>
-        ))}
-      </ul>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };

@@ -140,24 +140,63 @@ export const RegisterOrders = () => {
     });
   };
 
-  const handleDelete = (index: number) => {
-    const itemToDelete = formData[index];
+  const handleDelete = (numeroOrdem: string, vendedor: string) => {
+    const itemToDelete = formData.find(
+      (item) =>
+        item.numeroOrdem === numeroOrdem &&
+        (item.apelidoVendedor === vendedor || item.nomeVendedor === vendedor),
+    );
 
-    setFormData((prevData) => prevData.filter((_, i) => i !== index));
+    if (!itemToDelete) {
+      toast.error("Item não encontrado para exclusão.");
+      return;
+    }
+
+    setFormData((prevData) =>
+      prevData.filter(
+        (item) =>
+          !(
+            item.numeroOrdem === numeroOrdem &&
+            (item.apelidoVendedor === vendedor || item.nomeVendedor === vendedor)
+          ),
+      ),
+    );
 
     if (itemToDelete.tipoTransacao === "vendas") {
       setVendas((prevVendas) =>
-        prevVendas.filter((_, i) => i !== vendas.findIndex((v) => v === itemToDelete)),
+        prevVendas.filter(
+          (venda) =>
+            !(
+              venda.numeroOrdem === numeroOrdem &&
+              (venda.apelidoVendedor === vendedor || venda.nomeVendedor === vendedor)
+            ),
+        ),
       );
     } else if (itemToDelete.tipoTransacao === "compras") {
       setCompras((prevCompras) =>
-        prevCompras.filter((_, i) => i !== compras.findIndex((c) => c === itemToDelete)),
+        prevCompras.filter(
+          (compra) =>
+            !(
+              compra.numeroOrdem === numeroOrdem &&
+              (compra.apelidoVendedor === vendedor || compra.nomeVendedor === vendedor)
+            ),
+        ),
       );
     }
   };
 
-  const handleEdit = (index: number) => {
-    const item = formData[index];
+  const handleEdit = (numeroOrdem: string, vendedor: string) => {
+    const item = formData.find(
+      (dataItem) =>
+        dataItem.numeroOrdem === numeroOrdem &&
+        (dataItem.apelidoVendedor === vendedor || dataItem.nomeVendedor === vendedor),
+    );
+
+    if (!item) {
+      toast.error("Item não encontrado para edição.");
+      return;
+    }
+
     reset();
     setNumeroOrdem(item.numeroOrdem);
     setTipoTransacao(item.tipoTransacao);
@@ -192,7 +231,9 @@ export const RegisterOrders = () => {
     }
 
     setTaxaTransacao(item.taxaTransacao);
-    handleDelete(index);
+
+    // Excluir o item baseado no número da ordem e no vendedor
+    handleDelete(numeroOrdem, vendedor);
   };
 
   const handleDateTimeChange = (e: ChangeEvent<HTMLInputElement>) => {
