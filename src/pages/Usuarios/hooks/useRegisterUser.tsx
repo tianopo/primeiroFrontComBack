@@ -34,6 +34,7 @@ export const useRegisterUser = () => {
       responseSuccess("Cadastro efetuado com sucesso");
       queryClient.invalidateQueries({ queryKey: ["users-data"] });
       queryClient.invalidateQueries({ queryKey: ["buyer-data"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions-data"] });
     },
     onError: (erro: AxiosError) => responseError(erro),
   });
