@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { InputX } from "src/components/Form/Input/InputX";
-import { Select } from "src/components/Form/Select/Select";
 import { handleDownload } from "../RegisterOrders/config/handleDownload";
 import { useListTransactions } from "../RegisterOrders/hooks/useListTransactions";
 
@@ -60,7 +59,6 @@ export const DocumentsGenerator = () => {
 
     const today = new Date();
     const monthName = today.toLocaleDateString("pt-BR", { month: "long" });
-    console.log(monthName);
 
     const groupedByBuyer = filteredData.reduce((acc: any, transaction: any) => {
       const buyerDocument = transaction.buyer?.document || " N/A";
@@ -196,7 +194,6 @@ export const DocumentsGenerator = () => {
   const groupedTransactions = filteredData ? groupByExchange(filteredData) : {};
   const validationDates = filterDates.startDate.length > 0 && filterDates.endDate.length > 0;
   const validationEmptyBuyers = buyer === "" || buyer === " N/A";
-  console.log(startDate, startDate.length, endDate.length);
   return (
     <div className="flex h-fit w-full flex-col gap-3 rounded-16 bg-white p-4 shadow-2xl">
       <h3 className="text-28 font-bold">Gerador de Documentos</h3>
@@ -218,12 +215,13 @@ export const DocumentsGenerator = () => {
       </div>
       <div className="flex w-full flex-col gap-2">
         {buyers.length > 0 && (
-          <Select
+          <InputX
             title="Compradores"
             placeholder="Selecione um comprador"
-            options={buyers}
             value={buyer === " N/A" ? "" : buyer}
             onChange={(e) => setBuyer(e.target.value)}
+            busca
+            options={buyers}
           />
         )}
         <Button onClick={handleOrder} disabled={startDate.length !== 10 || endDate.length !== 10}>

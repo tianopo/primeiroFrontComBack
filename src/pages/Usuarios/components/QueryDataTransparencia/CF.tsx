@@ -9,7 +9,7 @@ export const CF = ({ responseData }: IContratosProps) => {
     <ul className="px-3">
       <h4 className="font-bold">Contratos do Poder Federal - CF</h4>
       <li>
-        <strong>Número do responseData?:</strong> {responseData?.numero}
+        <strong>Número:</strong> {responseData?.numero}
       </li>
       <li>
         <strong>Objeto:</strong> {responseData?.objeto}
@@ -18,14 +18,14 @@ export const CF = ({ responseData }: IContratosProps) => {
         <strong>Processo:</strong> {responseData?.numeroProcesso || "Não informado"}
       </li>
       <li>
-        <strong>Fornecedor:</strong> {responseData?.fornecedor.nome} -{" "}
-        {responseData?.fornecedor.cnpjFormatado}
+        <strong>Fornecedor:</strong> {responseData?.fornecedor?.nome} -{" "}
+        {responseData?.fornecedor?.cnpjFormatado}
       </li>
       <li>
-        <strong>Valor Inicial:</strong> R$ {responseData?.valorInicialCompra.toFixed(2)}
+        <strong>Valor Inicial:</strong> R$ {responseData?.valorInicialCompra?.toFixed(2)}
       </li>
       <li>
-        <strong>Valor Final:</strong> R$ {responseData?.valorFinalCompra.toFixed(2)}
+        <strong>Valor Final:</strong> R$ {responseData?.valorFinalCompra?.toFixed(2)}
       </li>
       <li>
         <strong>Data de Assinatura:</strong> {responseData?.dataAssinatura}
@@ -35,8 +35,8 @@ export const CF = ({ responseData }: IContratosProps) => {
         {responseData?.dataFimVigencia}
       </li>
       <li>
-        <strong>Unidade Gestora:</strong> {responseData?.unidadeGestora.nome} (
-        {responseData?.unidadeGestora.descricaoPoder})
+        <strong>Unidade Gestora:</strong> {responseData?.unidadeGestora?.nome} (
+        {responseData?.unidadeGestora?.descricaoPoder})
       </li>
     </ul>
   );
