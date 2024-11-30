@@ -12,6 +12,7 @@ import { UploadXLSButton } from "./components/UploadXLSButton";
 import { useListBuyers } from "./hooks/useListBuyers";
 import { ICompra, ITransactionData, IVenda, useTransaction } from "./hooks/useTransactions";
 import "./registerOrders.css";
+import { exchangeOptions } from "src/utils/selectsOptions";
 
 export const RegisterOrders = () => {
   const { mutate, isPending, context, contextCompra, contextVenda } = useTransaction();
@@ -320,12 +321,7 @@ export const RegisterOrders = () => {
                   <Select
                     title="Exchange Utilizada"
                     placeholder="Bybit https://www.bybit.com/ SG"
-                    options={[
-                      "Bybit https://www.bybit.com/ SG",
-                      "Binance https://www.binance.com/ CN",
-                      "Gate.IO https://www.gate.io/ AE",
-                      "Kucoin https://www.kucoin.com/ SC",
-                    ]}
+                    options={exchangeOptions}
                     value={exchangeUtilizada}
                     onChange={(e) => setExchangeUtilizada(e.target.value)}
                     required
