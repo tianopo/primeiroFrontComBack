@@ -411,16 +411,18 @@ export const UploadXLSButton = ({
         counterparty, // "Counterparty"
       ] = row;
 
+      console.log(amount.toString(), amount);
       return {
         numeroOrdem: orderId,
         tipoTransacao: side === "Buy" ? "compras" : "vendas",
         dataHoraTransacao: time,
-        exchangeUtilizada: "Huobi",
+        exchangeUtilizada: selectedBroker,
+        documentoComprador: side === "SELL" ? "" : "",
         ativoDigital: crypto,
         apelidoComprador: side === "Sell" ? counterparty : "",
         apelidoVendedor: side === "Buy" ? counterparty : "",
-        quantidadeComprada: side === "Buy" ? amount : "",
-        quantidadeVendida: side === "Sell" ? amount : "",
+        quantidadeComprada: side === "Buy" ? amount.toString() : "",
+        quantidadeVendida: side === "Sell" ? amount.toString() : "",
         valorCompra: side === "Buy" ? formatNumber(total) : "",
         valorVenda: side === "Sell" ? formatNumber(total) : "",
         valorTokenDataCompra: side === "Buy" ? formatNumber(price) : "",
