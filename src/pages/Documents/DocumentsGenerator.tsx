@@ -112,44 +112,50 @@ export const DocumentsGenerator = () => {
         return transactionDate > latest ? transactionDate : latest;
       }, new Date(group.transactions[0].dataTransacao));
 
-      let fileContent = `- Serviço: Intermediação de Compra/Venda de criptomoedas.
+      // Início do conteúdo do arquivo
+      let fileContent = `- Serviço: Intermediação de Ativos Digitais
       - Comissão: 1%
-      - Quantidade de Vendas: ${group.transactions.filter((transaction: any) => transaction.tipo === "venda").length}
-      - Mês/Ano: ${monthName} de 2024
-      - Valor Total da Nota: ${valorNfe / 100}
-
-      Ordem dos campos:
-      - Número da transação: o Número da transação feita com a pessoa
-      - Ordem ID: Identificador da ordem de transação da exchange
-      - Data: o dia e hora
-      - Exchange: Exchange feita a transação
-      - Ativo: Token ou Criptomoeda trocada
-      - Quantidade: Quantidade de tokens ou criptomoedas trocada
-      - Valor: Valor pago pela pessoa pela quantidade de moedas
-      Vendas:
+      - Quantidade Vendida: ${group.transactions.filter((transaction: any) => transaction.tipo === "venda").length}
+      - Mês/Ano: ${monthName}/2024
+      - Valor da Nota: ${valorNfe / 100}\n
+      Ordem dos Campos:
+      - Identificador da Ordem
+      - Dia e Hora
+      - Ativo Digital
+      - Quantidade de Tokens
+      - Valor Pago
       `;
 
-      group.transactions.forEach((transaction: any, transactionIndex: number) => {
-        if (transaction.tipo === "venda") {
-          fileContent += `${transactionIndex + 1}:\n${transaction.numeroOrdem}\n${transaction.dataTransacao}\n${transaction.exchange.split(" ")[0]}\n${transaction.ativoDigital}\n${transaction.quantidade}\n${transaction.valor}\n\n`;
-        }
+      const vendasPorExchange = group.transactions
+        .filter((transaction: any) => transaction.tipo === "venda")
+        .reduce(
+          (acc: Record<string, any[]>, transaction: any) => {
+            const exchangeName = transaction.exchange.split(" ")[0];
+            if (!acc[exchangeName]) acc[exchangeName] = [];
+            acc[exchangeName].push(transaction);
+            return acc;
+          },
+          {} as Record<string, any[]>,
+        );
+
+      Object.entries(vendasPorExchange).forEach(([exchangeName, transactions]) => {
+        fileContent += `Exchange/Corretora: ${exchangeName}\n`;
+        (transactions as any[]).forEach((transaction: any) => {
+          fileContent += `${transaction.numeroOrdem}\n${transaction.dataTransacao}\n${transaction.ativoDigital}\n${transaction.quantidade}\n${transaction.valor}\n\n`;
+        });
       });
 
       fileContent += `
-      Política de Pagamento com termos e condições:
-      - Identificação por CPF.
-      - Não aceitamos pagamentos de terceiros. Conta PJ somente com sócio ou titular.
-      - Ativos digitais são muito voláteis, então sem reembolso.
-
       Suporte de Dúvidas:
-      - Para informações sobre pedidos de compra P2P, consulte a documentação de suporte das plataformas utilizadas.
-      `;
+      - Para informações do P2P, consulte documentação ou o suporte da corretora\n`;
 
+      // Criar o conteúdo CSV
       const csvData = `R,${numeroRPS},RPS,${endDateObj.toLocaleDateString("pt-BR")},${hoje.toLocaleDateString("pt-BR")},,${cpfCnpj},,${buyerName},,,,,,48,,,,S,${codMunicipioServicoPrestado},${codAtividade},${codListaServicos},"${fileContent}",${valorNfe},0,0,0,0,0,0,0,0,0,${valorIss},S,${aliquota},0,0,${inscricaoMunicipal},\n`;
 
       csvContent += csvData;
       numeroRPS += 1;
     });
+
     localStorage.setItem("numeroRPS", numeroRPS.toString());
     // Criar o arquivo .csv para download
     const blobCsv = new Blob([csvContent], { type: "text/csv" });

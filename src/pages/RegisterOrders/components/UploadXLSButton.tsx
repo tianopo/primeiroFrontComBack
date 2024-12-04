@@ -182,12 +182,12 @@ export const UploadXLSButton = ({
         documentoComprador: type === "Venda" ? "" : "",
         apelidoVendedor: type === "Compra" ? name : "",
         apelidoComprador: type === "Venda" ? name : "",
-        quantidadeComprada: type === "Compra" ? amount : "",
-        quantidadeVendida: type === "Venda" ? amount : "",
+        quantidadeComprada: type === "Compra" ? amount.toString() : "",
+        quantidadeVendida: type === "Venda" ? amount.toString() : "",
         valorCompra: type === "Compra" ? formatNumber(total.toString()) : "",
         valorVenda: type === "Venda" ? formatNumber(total.toString()) : "",
-        valorTokenDataCompra: type === "Compra" ? price : "",
-        valorTokenDataVenda: type === "Venda" ? price : "",
+        valorTokenDataCompra: type === "Compra" ? price.toString() : "",
+        valorTokenDataVenda: type === "Venda" ? price.toString() : "",
         taxaTransacao: "0",
       };
     });
@@ -359,25 +359,25 @@ export const UploadXLSButton = ({
         counterparty, // "Counterparty"
         status, // "Status"
       ] = row;
-      const oneSide = side.replace(/,$/, "").replace(" ", "");
+      const oneSide = side.replace(/,$/, "");
       const oneCounterparty = counterparty.replace(/,$/, "");
       const oneDate = createdAt.replace(/\//g, "-").replace(/,$/, "");
-      console.log(rows);
+      console.log(rows, oneSide);
       return {
         numeroOrdem: orderId,
-        tipoTransacao: oneSide === "Buy" ? "compras" : "vendas",
+        tipoTransacao: oneSide === "Comprar" ? "compras" : "vendas",
         dataHoraTransacao: oneDate,
         exchangeUtilizada: selectedBroker,
         ativoDigital: crypto,
-        documentoComprador: oneSide === "Sell" ? "" : "", // CPF do comprador (deixe vazio por enquanto)
-        apelidoComprador: oneSide === "Sell" ? oneCounterparty : "", // Nome do comprador
-        apelidoVendedor: oneSide === "Buy" ? oneCounterparty : "", // Nome do vendedor
-        quantidadeComprada: oneSide === "Buy" ? youReceive : "", // Quantidade comprada
-        quantidadeVendida: oneSide === "Sell" ? youReceive : "", // Quantidade vendida
-        valorCompra: oneSide === "Buy" ? formatNumber(totalPrice) : "", // Valor da compra
-        valorVenda: oneSide === "Sell" ? formatNumber(totalPrice) : "", // Valor da venda
-        valorTokenDataCompra: oneSide === "Buy" ? formatNumber(price) : "", // Preço no momento da compra
-        valorTokenDataVenda: oneSide === "Sell" ? formatNumber(price) : "", // Preço no momento da venda
+        documentoComprador: "", // CPF do comprador (deixe vazio por enquanto)
+        apelidoComprador: oneSide === "Vender" ? "" : oneCounterparty,
+        apelidoVendedor: oneSide === "Vender" ? oneCounterparty : "",
+        quantidadeComprada: oneSide === "Comprar" ? youReceive : "", // Quantidade comprada
+        quantidadeVendida: oneSide === "Vender" ? youReceive : "", // Quantidade vendida
+        valorCompra: oneSide === "Comprar" ? formatNumber(totalPrice) : "", // Valor da compra
+        valorVenda: oneSide === "Vender" ? formatNumber(totalPrice) : "", // Valor da venda
+        valorTokenDataCompra: oneSide === "Comprar" ? formatNumber(price) : "", // Preço no momento da compra
+        valorTokenDataVenda: oneSide === "Vender" ? formatNumber(price) : "", // Preço no momento da venda
         taxaTransacao: "0", // A Bitget parece não ter taxa especificada neste formato
       };
     });

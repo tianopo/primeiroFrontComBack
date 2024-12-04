@@ -7,7 +7,7 @@ export const CEAF = ({ responseData }: IResponseData) => {
 
   return (
     <ul className="px-3">
-      <h4 className="font-bold">Componente Especializado da Assistência Farmacêutica - CEAF</h4>
+      <h4 className="font-bold">Cadastro de Expulsões da Administração Federal - CEAF</h4>
       <li>
         <strong>Nome:</strong> {responseData.pessoa?.nome || responseData.punicao?.nomePunido}
       </li>
