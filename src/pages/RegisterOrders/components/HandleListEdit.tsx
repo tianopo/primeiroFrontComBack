@@ -12,6 +12,9 @@ export const HandleListEdit = ({ formData, handleEdit }: IHandleListEdit) => {
   return (
     <div className="card mt-4">
       <h2 className="text-20 font-bold">Dados Armazenados:</h2>
+      <h6>Quantidade de Compras: {compras.length}</h6>
+      <h6>Quantidade de Vendas: {vendas.length}</h6>
+      <h6>Quantidade Total: {formData.length}</h6>
 
       {/* Compras */}
       {compras.length > 0 && (

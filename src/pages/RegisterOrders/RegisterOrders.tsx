@@ -7,12 +7,12 @@ import { FormX } from "src/components/Form/FormX";
 import { InputX } from "src/components/Form/Input/InputX";
 import { Select } from "src/components/Form/Select/Select";
 import { formatCPFOrCNPJ, formatCurrency, formatDateTime } from "src/utils/formats";
+import { exchangeOptions } from "src/utils/selectsOptions";
 import { HandleListEdit } from "./components/HandleListEdit";
 import { UploadXLSButton } from "./components/UploadXLSButton";
 import { useListBuyers } from "./hooks/useListBuyers";
 import { ICompra, ITransactionData, IVenda, useTransaction } from "./hooks/useTransactions";
 import "./registerOrders.css";
-import { exchangeOptions } from "src/utils/selectsOptions";
 
 export const RegisterOrders = () => {
   const { mutate, isPending, context, contextCompra, contextVenda } = useTransaction();
