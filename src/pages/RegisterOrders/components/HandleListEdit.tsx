@@ -8,10 +8,33 @@ interface IHandleListEdit {
 export const HandleListEdit = ({ formData, handleEdit }: IHandleListEdit) => {
   const compras = formData.filter((item) => item.tipoTransacao === "compras");
   const vendas = formData.filter((item) => item.tipoTransacao === "vendas");
+  const calculateTotals = (filteredData: any[]) => {
+    const valor = (valorVenda: any) =>
+      valorVenda?.replace(".", "").replace(",", ".").replace("R$", "") || "0";
+    const totalVendas = filteredData
+      .filter((transaction) => transaction.tipoTransacao === "vendas")
+      .reduce((acc, transaction) => {
+        return acc + parseFloat(valor(transaction.valorVenda));
+      }, 0);
+
+    const totalCompras = filteredData
+      .filter((transaction) => transaction.tipoTransacao === "compras")
+      .reduce((acc, transaction) => {
+        const valorCompra = parseFloat(valor(transaction.valorCompra));
+
+        return acc + valorCompra;
+      }, 0);
+
+    return { totalVendas, totalCompras };
+  };
+
+  const { totalVendas, totalCompras } = calculateTotals(formData);
 
   return (
     <div className="card mt-4">
       <h2 className="text-20 font-bold">Dados Armazenados:</h2>
+      <h6>Total Vendas: {totalVendas}</h6>
+      <h6>Total Compras: {totalCompras}</h6>
       <h6>Quantidade de Compras: {compras.length}</h6>
       <h6>Quantidade de Vendas: {vendas.length}</h6>
       <h6>Quantidade Total: {formData.length}</h6>
