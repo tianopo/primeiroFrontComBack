@@ -6,7 +6,6 @@ import * as XLSX from "xlsx";
 import { processExcelBinance } from "./ProcessExcel/Binance";
 import { processExcelBingX } from "./ProcessExcel/BingX";
 import { processExcelBitget } from "./ProcessExcel/Bitget";
-// @typescript-eslint/ban-ts-comment
 import { processExcelBybit } from "./ProcessExcel/Bybit";
 import { processExcelCoinEx } from "./ProcessExcel/CoinEx";
 import { processExcelGateIO } from "./ProcessExcel/Gate.IO";
@@ -41,7 +40,6 @@ export const UploadXLSButton = ({
 
       const combinedData = [...formData, ...allData];
       if (setFormData) setFormData(combinedData);
-
       const newCompras = allData.filter((item) => item.tipoTransacao === "compras");
       const newVendas = allData.filter((item) => item.tipoTransacao === "vendas");
 
@@ -53,7 +51,6 @@ export const UploadXLSButton = ({
   const readFile = (file: File): Promise<any[]> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-
       reader.onload = (e) => {
         const data = e.target?.result;
         if (data) {

@@ -1,3 +1,4 @@
+import { toast } from "react-toastify";
 import { excelDateToJSDate } from "src/utils/formats";
 import * as XLSX from "xlsx";
 
@@ -6,27 +7,49 @@ export const processExcelBinance = (workbook: XLSX.WorkBook, selectedBroker: str
   const worksheet = workbook.Sheets[sheetName];
 
   const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
-  const [, ...rows] = json;
-  console.log(json);
+  const [titles, ...rows] = json;
+  const expectedTitles = [
+    "Order Number",
+    "Order Type",
+    "Asset Type",
+    "Fiat Type",
+    "Total Price",
+    "Price",
+    "Quantity",
+    "Exchange rate",
+    "Maker Fee",
+    "Maker Fee Rate",
+    "Taker Fee",
+    "Taker Fee Rate",
+    "Couterparty",
+    "Status",
+    "Created Time",
+  ];
+  const isValid = expectedTitles.every((title, index) => titles[index] === title);
+  if (!isValid) {
+    toast.error(`Esta planilha não pertence a ${selectedBroker.split(" ")[0]}`);
+    return [];
+  }
+
   return rows
     .map((row) => {
       const [
         orderNumber, // "Order Number"
         orderType, // "Order Type"
         assetType, // "Asset Type"
-        // "Fiat Type"
         ,
+        // "Fiat Type"
         totalPrice, // "Total Price"
         price, // "Price"
         quantity, // "Quantity"
+        ,
         // "Exchange rate"
-        ,
         makerFee, // "Maker Fee"
+        ,
         // "Maker Fee Rate"
-        ,
         takerFee, // "Taker Fee"
-        // "Taker Fee Rate"
         ,
+        // "Taker Fee Rate"
         counterparty, // "Counterparty"
         status, // "Status"
         createdTime, // "Created Time"
@@ -38,7 +61,7 @@ export const processExcelBinance = (workbook: XLSX.WorkBook, selectedBroker: str
           return parseFloat(price).toFixed(2).replace(".", ",").toString();
         }
       };
-      console.log(status);
+
       if (status?.trim().toLowerCase() !== "completed") return false;
       return {
         numeroOrdem: orderNumber.toString(),

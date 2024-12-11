@@ -142,7 +142,7 @@ export const Edit = ({ setForm }: IRegister) => {
           <button onClick={() => setForm(true)} className="hover:cursor-pointer hover:underline">
             <h3 className="text-28 font-bold">ATUALIZE O USUÁRIO</h3>
           </button>
-          {id && apelido && nome && documento && (
+          {id && apelido && nome && (
             <IconX
               name="Excluir"
               icon={

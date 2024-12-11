@@ -242,6 +242,22 @@ export const RegisterOrders = () => {
     setDataHoraTransacao(formattedDate);
   };
 
+  const handleNomeCompradorChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const nome = e.target.value;
+    setNomeComprador(nome);
+
+    if (nome.trim() === "") return;
+
+    const compradorEncontrado = data?.find(
+      (comprador: { name: string; counterparty: string }) => comprador.name === nome,
+    );
+
+    if (compradorEncontrado) {
+      setApelidoComprador(compradorEncontrado.counterparty);
+      contextVenda.setValue("apelidoComprador", compradorEncontrado.counterparty);
+    } else return;
+  };
+
   const handleDocumentoChange = (e: ChangeEvent<HTMLInputElement>) => {
     const formattedDocumento = formatCPFOrCNPJ(e.target.value);
     setDocumentoComprador(formattedDocumento);
@@ -336,12 +352,16 @@ export const RegisterOrders = () => {
                   />
                 </div>
                 {tipoTransacao === "vendas" && (
-                  <div className={`flex w-full flex-col flex-wrap gap-2 md:w-5/12 md:flex-row`}>
+                  <div className={"flex w-full flex-col flex-wrap gap-2 md:w-5/12 md:flex-row"}>
                     <InputX
                       title="Nome Comprador"
                       placeholder="Nome do Comprador"
                       value={nomeComprador}
-                      onChange={(e) => setNomeComprador(e.target.value)}
+                      onChange={handleNomeCompradorChange}
+                      busca
+                      options={data
+                        ?.filter((data: any) => data.name.includes(nomeComprador))
+                        .map((data: any) => data.name)}
                     />
                     <InputX
                       title="Apelido Comprador"
@@ -350,8 +370,8 @@ export const RegisterOrders = () => {
                       onChange={(e) => setApelidoComprador(e.target.value)}
                       busca
                       options={data
-                        ?.filter((counterparty: string) => counterparty.includes(apelidoComprador))
-                        .map((counterparty: string) => counterparty)}
+                        ?.filter((data: any) => data.counterparty.includes(apelidoComprador))
+                        .map((data: any) => data.counterparty)}
                       required
                     />
                     <InputX

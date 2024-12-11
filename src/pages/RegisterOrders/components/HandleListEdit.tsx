@@ -24,7 +24,6 @@ export const HandleListEdit = ({ formData, handleEdit }: IHandleListEdit) => {
 
         return acc + valorCompra;
       }, 0);
-
     return { totalVendas, totalCompras };
   };
 
