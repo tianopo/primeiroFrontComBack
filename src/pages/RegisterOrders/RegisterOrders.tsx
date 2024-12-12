@@ -276,7 +276,6 @@ export const RegisterOrders = () => {
   const [view, setView] = useState<"manual" | "automatic">("automatic");
 
   const toggleView = (selectedView: "manual" | "automatic") => setView(selectedView);
-
   return (
     <FlexCol className="w-full p-4 pb-2">
       <div className="card">
@@ -356,22 +355,30 @@ export const RegisterOrders = () => {
                     <InputX
                       title="Nome Comprador"
                       placeholder="Nome do Comprador"
-                      value={nomeComprador}
+                      value={nomeComprador || ""}
                       onChange={handleNomeCompradorChange}
                       busca
                       options={data
-                        ?.filter((data: any) => data.name.includes(nomeComprador))
-                        .map((data: any) => data.name)}
+                        ?.filter((item: any) =>
+                          (item.name || "")
+                            .toLowerCase()
+                            .includes((nomeComprador || "").toLowerCase()),
+                        )
+                        .map((item: any) => item.name)}
                     />
                     <InputX
                       title="Apelido Comprador"
                       placeholder="Apelido do Comprador"
-                      value={apelidoComprador}
+                      value={apelidoComprador || ""}
                       onChange={(e) => setApelidoComprador(e.target.value)}
                       busca
                       options={data
-                        ?.filter((data: any) => data.counterparty.includes(apelidoComprador))
-                        .map((data: any) => data.counterparty)}
+                        ?.filter((item: any) =>
+                          (item.counterparty || "")
+                            .toLowerCase()
+                            .includes((apelidoComprador || "").toLowerCase()),
+                        )
+                        .map((item: any) => item.counterparty)}
                       required
                     />
                     <InputX

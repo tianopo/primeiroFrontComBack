@@ -2,6 +2,7 @@ import { toast } from "react-toastify";
 import { excelDateToJSDate } from "src/utils/formats";
 import * as XLSX from "xlsx";
 
+//kucoin é péssima em administrar datas, deve conferir as primeiras ordens e as últimas, retirar as que estão a mais e adicionar as que não foram adicionadas
 export const processExcelKucoin = (workbook: XLSX.WorkBook, selectedBroker: string): any[] => {
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
@@ -20,7 +21,6 @@ export const processExcelKucoin = (workbook: XLSX.WorkBook, selectedBroker: stri
     "OP_TRADER_NAME",
     "ORDER_ID",
   ];
-
   const isValid = expectedTitles.every((title, index) => titles[index] === title);
   if (!isValid) {
     toast.error(`Esta planilha não pertence a ${selectedBroker.split(" ")[0]}`);
@@ -55,13 +55,13 @@ export const processExcelKucoin = (workbook: XLSX.WorkBook, selectedBroker: stri
         documentoComprador: side === "SELL" ? "" : "",
         apelidoVendedor: side === "BUY" ? traderName : "",
         apelidoComprador: side === "SELL" ? traderName : "",
-        quantidadeComprada: side === "BUY" ? currencyAmount : "",
-        quantidadeVendida: side === "SELL" ? currencyAmount : "",
+        quantidadeComprada: side === "BUY" ? currencyAmount.toString() : "",
+        quantidadeVendida: side === "SELL" ? currencyAmount.toString() : "",
         valorCompra: side === "BUY" ? formatNumber(legalAmount.toString()) : "",
         valorVenda: side === "SELL" ? formatNumber(legalAmount.toString()) : "",
-        valorTokenDataCompra: side === "BUY" ? price : "",
-        valorTokenDataVenda: side === "SELL" ? price : "",
-        taxaTransacao: rate,
+        valorTokenDataCompra: side === "BUY" ? price.toString() : "",
+        valorTokenDataVenda: side === "SELL" ? price.toString() : "",
+        taxaTransacao: rate.toString(),
       };
     })
     .filter(Boolean);

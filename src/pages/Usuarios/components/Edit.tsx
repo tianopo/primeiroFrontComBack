@@ -157,17 +157,6 @@ export const Edit = ({ setForm }: IRegister) => {
             />
           )}
           <InputX
-            title="Nome"
-            placeholder="Fulano Ciclano"
-            value={nome}
-            onChange={handleNomeChange}
-            busca
-            options={data
-              ?.filter((user: any) => user?.name && user.name.includes(nome))
-              .map((user: any) => user?.name)}
-            required
-          />
-          <InputX
             title="Apelido"
             placeholder="User9855-54d4df"
             value={apelido}
@@ -176,6 +165,17 @@ export const Edit = ({ setForm }: IRegister) => {
             options={data
               ?.filter((user: any) => user?.counterparty && user.counterparty.includes(apelido))
               .map((user: any) => user?.counterparty)}
+            required
+          />
+          <InputX
+            title="Nome"
+            placeholder="Fulano Ciclano"
+            value={nome}
+            onChange={handleNomeChange}
+            busca
+            options={data
+              ?.filter((user: any) => user?.name && user.name.includes(nome))
+              .map((user: any) => user?.name)}
             required
           />
           <Select

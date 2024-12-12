@@ -118,7 +118,7 @@ export const DocumentsGenerator = () => {
       - Quantidade Vendida: ${group.transactions.filter((transaction: any) => transaction.tipo === "venda").length}
       - Mês/Ano: ${monthName}/2024
       - Valor da Nota: ${valorNfe / 100}\n
-      Ordem dos Campos:
+      Ordem dos Campos após nome da corretora:
       - Identificador da Ordem
       - Dia e Hora
       - Ativo Digital

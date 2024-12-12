@@ -28,7 +28,6 @@ export const processExcelGateIO = (workbook: XLSX.WorkBook, selectedBroker: stri
   const formatNumber = (value: string): string => {
     return parseFloat(value).toFixed(2).replace(".", ",").split("/")[0];
   };
-
   return rows
     .map((row) => {
       const [
@@ -53,8 +52,8 @@ export const processExcelGateIO = (workbook: XLSX.WorkBook, selectedBroker: stri
         exchangeUtilizada: selectedBroker,
         ativoDigital,
         documentoComprador: type === "Venda" ? "" : "",
-        apelidoVendedor: type === "Compra" ? name : "",
-        apelidoComprador: type === "Venda" ? name : "",
+        nomeVendedor: type === "Compra" ? name : "",
+        nomeComprador: type === "Venda" ? name : "",
         quantidadeComprada: type === "Compra" ? amount.toString() : "",
         quantidadeVendida: type === "Venda" ? amount.toString() : "",
         valorCompra: type === "Compra" ? formatNumber(total.toString()) : "",
