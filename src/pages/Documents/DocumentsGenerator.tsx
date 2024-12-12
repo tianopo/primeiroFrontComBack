@@ -157,11 +157,15 @@ export const DocumentsGenerator = () => {
     });
 
     localStorage.setItem("numeroRPS", numeroRPS.toString());
+
+    const buyerNames = buyer.split(" ");
+    const formattedBuyer = `${buyerNames[0]} ${buyerNames[buyerNames.length - 1]}`;
+
     // Criar o arquivo .csv para download
     const blobCsv = new Blob([csvContent], { type: "text/csv" });
     const linkCsv = document.createElement("a");
     linkCsv.href = URL.createObjectURL(blobCsv);
-    linkCsv.download = `nota_fiscal_${validationEmptyBuyers ? monthName : `${buyer}_${monthName}`}.csv`;
+    linkCsv.download = `nota_fiscal_${validationEmptyBuyers ? monthName : `${formattedBuyer}_${monthName}`}.csv`;
     document.body.appendChild(linkCsv);
     linkCsv.click();
     document.body.removeChild(linkCsv);

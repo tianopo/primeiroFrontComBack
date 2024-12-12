@@ -2,6 +2,7 @@ import { MagnifyingGlass } from "@phosphor-icons/react";
 import {
   ChangeEventHandler,
   ForwardRefRenderFunction,
+  ReactEventHandler,
   forwardRef,
   useEffect,
   useState,
@@ -20,6 +21,7 @@ interface IInputX extends IUseForm {
   value?: string;
   typ?: "text" | "tel" | "date" | "email" | "number" | "time" | "datetime-local" | "password";
   onChange?: ChangeEventHandler<HTMLInputElement>;
+  onSelect?: ReactEventHandler<HTMLInputElement> | undefined;
   readOnly?: boolean;
   busca?: boolean;
   error?: string;
@@ -40,6 +42,7 @@ export const BeginInput: ForwardRefRenderFunction<HTMLInputElement, IInputX> = (
     error,
     typ = "text",
     onChange,
+    onSelect,
     options = [],
     step,
     ...rest
@@ -113,6 +116,7 @@ export const BeginInput: ForwardRefRenderFunction<HTMLInputElement, IInputX> = (
         disabled={disabled}
         placeholder={placeholder}
         step={step}
+        onSelect={onSelect}
         value={buscaVal ? inputValue : value}
         {...inputRegister}
         onChange={
