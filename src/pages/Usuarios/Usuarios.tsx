@@ -7,7 +7,7 @@ import { Register } from "./components/Register";
 export const Usuarios = () => {
   const [form, setForm] = useState(true);
   return (
-    <div className="flex flex-row flex-wrap justify-between gap-4 px-4">
+    <div className="flex w-full flex-row flex-wrap justify-between gap-4 px-4">
       {form ? <Register setForm={setForm} /> : <Edit setForm={setForm} />}
       <Compliance />
       <Cashier />

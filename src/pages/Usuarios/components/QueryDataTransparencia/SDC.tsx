@@ -8,9 +8,6 @@ export const SDC = ({ responseData }: IResponseData) => {
     <ul className="px-3">
       <h4 className="font-bold">Seguro Defeso Código - SDC</h4>
       <li>
-        <strong>Nome:</strong> {responseData?.pessoaSeguroDefeso.nome.trim()}
-      </li>
-      <li>
         <strong>CPF:</strong> {responseData?.pessoaSeguroDefeso.cpfFormatado}
       </li>
       <li>

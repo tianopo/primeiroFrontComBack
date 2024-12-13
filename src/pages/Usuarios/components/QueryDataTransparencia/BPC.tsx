@@ -8,9 +8,6 @@ export const BPC = ({ responseData }: IResponseData) => {
     <ul className="px-3">
       <h4 className="font-bold">Benefício de Prestação Continuada - BPC</h4>
       <li>
-        <strong>Nome:</strong> {responseData.beneficiario?.nome.trim()}
-      </li>
-      <li>
         <strong>CPF:</strong> {responseData.beneficiario?.cpfFormatado}
       </li>
       <li>

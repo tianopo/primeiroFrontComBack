@@ -8,9 +8,6 @@ export const Safra = ({ responseData }: IResponseData) => {
     <ul className="px-3">
       <h4 className="font-bold">Garantia Safra - Safra</h4>
       <li>
-        <strong>Nome:</strong> {responseData.beneficiarioSafra?.nome.trim()}
-      </li>
-      <li>
         <strong>CPF:</strong> {responseData.beneficiarioSafra?.cpfFormatado}
       </li>
       <li>

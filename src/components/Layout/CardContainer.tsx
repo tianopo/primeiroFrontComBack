@@ -6,6 +6,8 @@ interface ICardContainer {
 
 export const CardContainer = ({ children }: ICardContainer) => {
   return (
-    <div className="h-fit w-[calc(50%-1rem)] rounded-16 bg-white p-4 shadow-2xl">{children}</div>
+    <div className="h-fit w-full rounded-16 bg-white p-4 shadow-2xl lg:w-[calc(50%-1rem)]">
+      {children}
+    </div>
   );
 };

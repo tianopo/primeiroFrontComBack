@@ -22,7 +22,6 @@ import { Viagens } from "./QueryDataTransparencia/Viagens";
 
 export const Compliance = () => {
   const [documento, setDocumento] = useState<string>("");
-  const [cnpj, setCnpj] = useState<string>("");
   const [responseData, setResponseData] = useState<any>(null);
   const { mutate, isPending, context } = useCompliance();
   const {
@@ -64,21 +63,31 @@ export const Compliance = () => {
           </FormX>
           {responseData && (
             <div>
-              <h3>Dados da Consulta:</h3>
+              <h5>
+                <strong>{responseData?.pdt?.cpf?.nome}</strong>
+              </h5>
+              <h5>
+                <strong>NIS: </strong>
+                {responseData?.pdt?.cpf?.nis}
+              </h5>
               <h6>{responseData?.ourData}</h6>
-              {responseData?.viagens && <Viagens responseData={responseData?.viagens} />}
-              {responseData?.pep && <PEP responseData={responseData?.pep} />}
-              {responseData?.cnpj && <CNPJ responseData={responseData?.cnpj} />}
-              {responseData?.sdc && <SDC responseData={responseData?.sdc} />}
-              {responseData?.safra && <Safra responseData={responseData?.safra} />}
-              {responseData?.peti && <PETI responseData={responseData?.peti} />}
-              {responseData?.bpc && <BPC responseData={responseData?.bpc} />}
-              {responseData?.ae && <AE responseData={responseData?.ae} />}
-              {responseData?.cnep && <CNEP responseData={responseData?.cnep} />}
-              {responseData?.cf && <CF responseData={responseData?.cf} />}
-              {responseData?.cepim && <CEPIM responseData={responseData?.cepim} />}
-              {responseData?.ceis && <CEIS responseData={responseData?.ceis} />}
-              {responseData?.ceaf && <CEAF responseData={responseData?.ceaf} />}
+              <div className="flex w-full flex-row flex-wrap">
+                {responseData?.pdt?.viagens && (
+                  <Viagens responseData={responseData?.pdt?.viagens} />
+                )}
+                {responseData?.pdt?.pep && <PEP responseData={responseData?.pdt?.pep} />}
+                {responseData?.pdt?.cnpj && <CNPJ responseData={responseData?.pdt?.cnpj} />}
+                {responseData?.pdt?.sdc && <SDC responseData={responseData?.pdt?.sdc} />}
+                {responseData?.pdt?.safra && <Safra responseData={responseData?.pdt?.safra} />}
+                {responseData?.pdt?.peti && <PETI responseData={responseData?.pdt?.peti} />}
+                {responseData?.pdt?.bpc && <BPC responseData={responseData?.pdt?.bpc} />}
+                {responseData?.pdt?.ae && <AE responseData={responseData?.pdt?.ae} />}
+                {responseData?.pdt?.cnep && <CNEP responseData={responseData?.pdt?.cnep} />}
+                {responseData?.pdt?.cf && <CF responseData={responseData?.pdt?.cf} />}
+                {responseData?.pdt?.cepim && <CEPIM responseData={responseData?.pdt?.cepim} />}
+                {responseData?.pdt?.ceis && <CEIS responseData={responseData?.pdt?.ceis} />}
+                {responseData?.pdt?.ceaf && <CEAF responseData={responseData?.pdt?.ceaf} />}
+              </div>
             </div>
           )}
         </div>

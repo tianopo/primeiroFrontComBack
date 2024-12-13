@@ -8,9 +8,6 @@ export const PETI = ({ responseData }: IResponseData) => {
     <ul className="px-3">
       <h4 className="font-bold">Programa de Erradicação do Trabalho Infantil - PETI</h4>
       <li>
-        <strong>Nome:</strong> {responseData.beneficiarioPeti?.nome.trim()}
-      </li>
-      <li>
         <strong>CPF:</strong> {responseData.beneficiarioPeti?.cpfFormatado}
       </li>
       <li>
