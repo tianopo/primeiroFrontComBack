@@ -126,23 +126,12 @@ export const DocumentsGenerator = () => {
       - Valor Pago
       `;
 
-      const vendasPorExchange = group.transactions
-        .filter((transaction: any) => transaction.tipo === "venda")
-        .reduce(
-          (acc: Record<string, any[]>, transaction: any) => {
-            const exchangeName = transaction.exchange.split(" ")[0];
-            if (!acc[exchangeName]) acc[exchangeName] = [];
-            acc[exchangeName].push(transaction);
-            return acc;
-          },
-          {} as Record<string, any[]>,
-        );
-
-      Object.entries(vendasPorExchange).forEach(([exchangeName, transactions]) => {
-        fileContent += `Exchange/Corretora: ${exchangeName}\n`;
-        (transactions as any[]).forEach((transaction: any) => {
+      const exchangeName = group.transactions[0].exchange.split(" ")[0];
+      fileContent += `Exchange/Corretora: ${exchangeName}\n`;
+      group.transactions.forEach((transaction: any) => {
+        if (transaction.tipo === "venda") {
           fileContent += `${transaction.numeroOrdem}\n${transaction.dataTransacao}\n${transaction.ativoDigital}\n${transaction.quantidade}\n${transaction.valor}\n\n`;
-        });
+        }
       });
 
       fileContent += `
