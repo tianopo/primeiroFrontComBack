@@ -5,8 +5,9 @@ export const apiRoute = {
   token: (token: string) => `/user/${token}`,
 
   multa: "send/multa",
-  transactions: "send/transactions",
-  order: "send/transactions/order",
+
+  transactions: "transactions",
+  order: "transactions/order",
 
   compliance: "compliance",
   operation: "compliance/operation",
