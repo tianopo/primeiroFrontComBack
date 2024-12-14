@@ -18,9 +18,6 @@ export const AE = ({ responseData }: IResponseData) => {
         {responseData.responsavelAuxilioEmergencial?.cpfFormatado}
       </li>
       <li>
-        <strong>NIS:</strong> {responseData.responsavelAuxilioEmergencial?.nis}
-      </li>
-      <li>
         <strong>Representante legal:</strong> {responseData.beneficiario?.nomeRepresentanteLegal}
       </li>
       <li>

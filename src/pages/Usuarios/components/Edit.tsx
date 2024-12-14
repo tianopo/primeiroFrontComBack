@@ -2,6 +2,7 @@ import { Trash } from "@phosphor-icons/react";
 import { ChangeEvent, Dispatch, SetStateAction, useEffect, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { Button } from "src/components/Buttons/Button";
+import { Checkbox } from "src/components/Form/Checkbox";
 import { FormX } from "src/components/Form/FormX";
 import { InputX } from "src/components/Form/Input/InputX";
 import { Select } from "src/components/Form/Select/Select";
@@ -14,11 +15,11 @@ import { useDelUser } from "../hooks/useDelUser";
 import { useListUsers } from "../hooks/useListUsers";
 import { useUpdateUser } from "../hooks/useUpdateUser";
 
-interface IRegister {
+interface IEdit {
   setForm: Dispatch<SetStateAction<boolean>>;
 }
 
-export const Edit = ({ setForm }: IRegister) => {
+export const Edit = ({ setForm }: IEdit) => {
   const [id, setId] = useState<string>("");
   const [documento, setDocumento] = useState<string>("");
   const [nome, setNome] = useState<string>("");
@@ -83,11 +84,13 @@ export const Edit = ({ setForm }: IRegister) => {
     setApelido(selectedUser.counterparty);
     setExchange(selectedUser.exchange);
     setDocumento(selectedUser.document);
+    setIsBlocked(selectedUser.blocked);
 
     setValue("nome", updatedName);
     setValue("apelido", selectedUser.counterparty);
     setValue("exchange", selectedUser.exchange);
     setValue("documento", selectedUser.document);
+    setValue("bloqueado", selectedUser.blocked);
   };
 
   useEffect(() => {
@@ -128,6 +131,7 @@ export const Edit = ({ setForm }: IRegister) => {
         setDocumento("");
         setValue("exchange", "");
         setExchange("");
+        setIsBlocked(false);
       },
     });
   };
@@ -197,11 +201,7 @@ export const Edit = ({ setForm }: IRegister) => {
               .map((user: any) => user?.document)}
             required
           />
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={isBlocked} onChange={handleBlockChange} />
-            <span>Bloquear Usuário</span>
-          </label>
-
+          <Checkbox title="Bloqueado" checked={isBlocked} onChange={handleBlockChange} />
           <Button disabled={isPending || Object.keys(errors).length > 0}>Salvar</Button>
         </FormX>
       </FormProvider>

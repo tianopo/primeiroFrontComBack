@@ -62,16 +62,18 @@ export const Compliance = () => {
             <Button disabled={isPending || Object.keys(errors).length > 0}>Checar</Button>
           </FormX>
           {responseData && (
-            <div>
+            <div className="text-center">
               <h5>
                 <strong>{responseData?.pdt?.cpf?.nome}</strong>
               </h5>
-              <h5>
-                <strong>NIS: </strong>
-                {responseData?.pdt?.cpf?.nis}
-              </h5>
+              {responseData?.pdt?.cpf?.nis && (
+                <h5>
+                  <strong>NIS: </strong>
+                  {responseData?.pdt?.cpf?.nis}
+                </h5>
+              )}
               <h6>{responseData?.ourData}</h6>
-              <div className="flex w-full flex-row flex-wrap">
+              <div className="flex w-full flex-row flex-wrap justify-center">
                 {responseData?.pdt?.viagens && (
                   <Viagens responseData={responseData?.pdt?.viagens} />
                 )}

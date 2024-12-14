@@ -13,6 +13,7 @@ export interface IUpdateUser {
   apelido?: string;
   exchange: string;
   documento?: string;
+  bloqueado?: boolean;
 }
 
 const schema = Yup.object({
@@ -25,6 +26,7 @@ const schema = Yup.object({
       value && value.length > 0 ? Regex.cpf_cnpj_mask.test(value || "") : true,
     )
     .label("Documento"),
+  bloqueado: Yup.boolean().optional().label("Bloqueado"),
 });
 
 export const useUpdateUser = () => {
