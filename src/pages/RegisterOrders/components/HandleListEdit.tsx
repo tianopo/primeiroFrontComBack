@@ -2,7 +2,7 @@ import "../registerOrders.css";
 
 interface IHandleListEdit {
   formData: any[];
-  handleEdit: (numeroOrdem: string, vendedor: string) => void;
+  handleEdit: (numeroOrdem: string) => void;
 }
 
 export const HandleListEdit = ({ formData, handleEdit }: IHandleListEdit) => {
@@ -47,7 +47,7 @@ export const HandleListEdit = ({ formData, handleEdit }: IHandleListEdit) => {
               <li
                 key={index}
                 className="cursor-pointer rounded-lg border bg-gray-100 p-4"
-                onClick={() => handleEdit(item.numeroOrdem, item.vendedor)}
+                onClick={() => handleEdit(item.numeroOrdem)}
               >
                 <p>
                   <strong>Número Ordem:</strong> {item.numeroOrdem}
@@ -94,7 +94,7 @@ export const HandleListEdit = ({ formData, handleEdit }: IHandleListEdit) => {
               <li
                 key={index}
                 className="cursor-pointer rounded-lg border bg-gray-100 p-4"
-                onClick={() => handleEdit(item.numeroOrdem, item.vendedor)}
+                onClick={() => handleEdit(item.numeroOrdem)}
               >
                 <p>
                   <strong>Número Ordem:</strong> {item.numeroOrdem}

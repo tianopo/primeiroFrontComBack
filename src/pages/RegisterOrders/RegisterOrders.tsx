@@ -105,6 +105,15 @@ export const RegisterOrders = () => {
       valorCompra,
       valorVenda,
     };
+
+    const numeroOrdem = updatedValues.numeroOrdem;
+    const isDuplicate = formData.some((order) => order.numeroOrdem === numeroOrdem);
+
+    if (isDuplicate) {
+      toast.error(`Já existe uma ordem com o número ${numeroOrdem}.`);
+      return; // Cancela o salvamento
+    }
+
     if (isValid) {
       setIsValid(false);
       await isFormValid(tipoTransacao, updatedValues, contextVenda, contextCompra);
@@ -125,7 +134,7 @@ export const RegisterOrders = () => {
       setFormData((prevData) => [...prevData, updatedValues]);
       if (tipoTransacao === "vendas") setVendas((prevData) => [...prevData, updatedValues]);
       if (tipoTransacao === "compras") setCompras((prevData) => [...prevData, updatedValues]);
-      toast.success("Adicionado");
+      toast.success("Ordem Adicionada");
     } else {
       toast.error("Não há Tipo de Transação");
     }
@@ -141,57 +150,27 @@ export const RegisterOrders = () => {
     });
   };
 
-  const handleDelete = (numeroOrdem: string, vendedor: string) => {
-    const itemToDelete = formData.find(
-      (item) =>
-        item.numeroOrdem === numeroOrdem &&
-        (item.apelidoVendedor === vendedor || item.nomeVendedor === vendedor),
-    );
+  const handleDelete = (numeroOrdem: string) => {
+    const itemToDelete = formData.find((item) => item.numeroOrdem === numeroOrdem);
 
     if (!itemToDelete) {
       toast.error("Item não encontrado para exclusão.");
       return;
     }
 
-    setFormData((prevData) =>
-      prevData.filter(
-        (item) =>
-          !(
-            item.numeroOrdem === numeroOrdem &&
-            (item.apelidoVendedor === vendedor || item.nomeVendedor === vendedor)
-          ),
-      ),
-    );
+    setFormData((prevData) => prevData.filter((item) => !(item.numeroOrdem === numeroOrdem)));
 
     if (itemToDelete.tipoTransacao === "vendas") {
-      setVendas((prevVendas) =>
-        prevVendas.filter(
-          (venda) =>
-            !(
-              venda.numeroOrdem === numeroOrdem &&
-              (venda.apelidoVendedor === vendedor || venda.nomeVendedor === vendedor)
-            ),
-        ),
-      );
+      setVendas((prevVendas) => prevVendas.filter((venda) => !(venda.numeroOrdem === numeroOrdem)));
     } else if (itemToDelete.tipoTransacao === "compras") {
       setCompras((prevCompras) =>
-        prevCompras.filter(
-          (compra) =>
-            !(
-              compra.numeroOrdem === numeroOrdem &&
-              (compra.apelidoVendedor === vendedor || compra.nomeVendedor === vendedor)
-            ),
-        ),
+        prevCompras.filter((compra) => !(compra.numeroOrdem === numeroOrdem)),
       );
     }
   };
 
-  const handleEdit = (numeroOrdem: string, vendedor: string) => {
-    const item = formData.find(
-      (dataItem) =>
-        dataItem.numeroOrdem === numeroOrdem &&
-        (dataItem.apelidoVendedor === vendedor || dataItem.nomeVendedor === vendedor),
-    );
+  const handleEdit = (numeroOrdem: string) => {
+    const item = formData.find((dataItem) => dataItem.numeroOrdem === numeroOrdem);
 
     if (!item) {
       toast.error("Item não encontrado para edição.");
@@ -234,7 +213,7 @@ export const RegisterOrders = () => {
     setTaxaTransacao(item.taxaTransacao);
 
     // Excluir o item baseado no número da ordem e no vendedor
-    handleDelete(numeroOrdem, vendedor);
+    handleDelete(numeroOrdem);
   };
 
   const handleDateTimeChange = (e: ChangeEvent<HTMLInputElement>) => {
