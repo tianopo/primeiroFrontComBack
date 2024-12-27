@@ -88,7 +88,7 @@ export const DocumentsGenerator = () => {
     let csvContent = `Indicador de Tipo de Serviço,"Número RPS","Serie RPS","Data Prestação de Serviço","Data Emissão do RPS","RPS Substitutivo","Documento CPF/CNPJ","Inscrição Mobiliária","Razão Social",Endereço,Número,Complemento,Bairro,"Código do Município","Código do País",Cep,Telefone,Email,"ISS Retido no Tomador","Código do Município onde o Serviço foi Prestado","Código da Atividade","Código da Lista de Serviços",Discriminação,"Valor NF","Valor Deduções","Valor Desconto Condicionado","Valor Desconto Incondicionado","Valor INSS","Valor Csll","Valor Outras Retenções","Valor Pis","Valor Cofins","Valor Ir","Valor Iss","Prestador Optante Simples Nacional",Alíquota,"Código da Obra","Código ART","Inscrição Própria","Código do Benefício"\n`;
 
     const hoje = new Date();
-    const comissao = 0.01;
+    const comissao = 1;
     const codMunicipioServicoPrestado = 352440;
     const codAtividade = 6619399;
     const codListaServicos = 10.02;
@@ -102,8 +102,9 @@ export const DocumentsGenerator = () => {
       const buyerBlocked = buyer?.name.split(" ")[buyer.name.split(" ").length - 1];
       const cpfCnpj = buyer?.document?.replace(/[^0-9]/g, "");
       const totalVendas = group.totalVendas;
-      const valorNfe = Math.round(totalVendas * comissao * 100);
+      const valorNfe = Math.round(totalVendas * comissao);
       const valorIss = Math.round(valorNfe * (aliquota / 10000));
+      const exchangeName = group.transactions[0].exchange.split(" ")[0];
 
       if (validationEmptyBuyers && buyerBlocked === "Bloqueado") return;
 
@@ -112,9 +113,9 @@ export const DocumentsGenerator = () => {
         return transactionDate > latest ? transactionDate : latest;
       }, new Date(group.transactions[0].dataTransacao));
 
-      // Início do conteúdo do arquivo
+      // Discriminação
       let fileContent = `- Serviço: Intermediação de Ativos Digitais
-      - Comissão: 1%
+      - Comissão: ${comissao}%
       - Quantidade Vendida: ${group.transactions.filter((transaction: any) => transaction.tipo === "venda").length}
       - Mês/Ano: ${monthName}/2024
       - Valor da Nota: ${valorNfe / 100}\n
@@ -126,7 +127,6 @@ export const DocumentsGenerator = () => {
       - Valor Pago
       `;
 
-      const exchangeName = group.transactions[0].exchange.split(" ")[0];
       fileContent += `Exchange/Corretora: ${exchangeName}\n`;
       group.transactions.forEach((transaction: any) => {
         if (transaction.tipo === "venda") {

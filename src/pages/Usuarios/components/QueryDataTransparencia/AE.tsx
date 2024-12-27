@@ -8,6 +8,9 @@ export const AE = ({ responseData }: IResponseData) => {
     <ul className="px-3">
       <h4 className="font-bold">Auxílio Emergencial - AE</h4>
       <li>
+        <strong>Nome:</strong> {responseData.beneficiario?.nome.trim()}
+      </li>
+      <li>
         <strong>CPF:</strong> {responseData.beneficiario?.cpfFormatado}
       </li>
       <li>
