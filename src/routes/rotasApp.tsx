@@ -1,14 +1,15 @@
 import { createBrowserRouter } from "react-router-dom";
 import { LayoutX } from "src/components/Layout/LayoutX/LayoutX";
 import { Auth } from "src/pages/Auth/Auth.views";
+import { Closing } from "src/pages/Closing/Closing";
 import { ConsultaCPF } from "src/pages/ConsultarCPF";
 import { CryptoTech } from "src/pages/CryptoTech/CryptoTech";
-import { Usuarios } from "src/pages/Usuarios/Usuarios";
+import { DocumentsGenerator } from "src/pages/Documents/DocumentsGenerator";
 import { Record } from "src/pages/Record/Record";
 import { RegisterOrders } from "src/pages/RegisterOrders/RegisterOrders";
+import { Usuarios } from "src/pages/Usuarios/Usuarios";
 import { app } from "./app";
 import { AuthenticatedRoute } from "./context/AuthenticatedRoute";
-import { DocumentsGenerator } from "src/pages/Documents/DocumentsGenerator";
 
 export const browserRouter = createBrowserRouter([
   {
@@ -30,6 +31,7 @@ export const browserRouter = createBrowserRouter([
           { path: app.users, element: <Usuarios /> },
           { path: app.registerOrders, element: <RegisterOrders /> },
           { path: app.documentsGenerator, element: <DocumentsGenerator /> },
+          { path: app.closing, element: <Closing /> },
         ],
       },
     ],

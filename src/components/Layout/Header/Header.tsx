@@ -45,7 +45,6 @@ export const Header = ({ navbar }: IHeader) => {
         const response = await axios.get("https://economia.awesomeapi.com.br/last/USD-BRL,BTC-BRL");
         const data: ICurrencies = response.data;
         setCurrencyData(data);
-        console.log(data);
       } catch (error) {
         console.error("Erro ao buscar dados das moedas:", error);
         setCurrencyData(null);

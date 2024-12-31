@@ -14,4 +14,5 @@ export const app = {
   registerOrders: "/register-orders",
   users: "/users",
   documentsGenerator: "/documents-generator",
+  closing: "/closing",
 };

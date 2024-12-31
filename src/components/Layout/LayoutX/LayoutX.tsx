@@ -1,4 +1,11 @@
-import { File, House, MathOperations, TrademarkRegistered } from "@phosphor-icons/react";
+import {
+  CashRegister,
+  File,
+  House,
+  MathOperations,
+  TrademarkRegistered,
+  UserCheck,
+} from "@phosphor-icons/react";
 import { Outlet } from "react-router-dom";
 import { app } from "src/routes/app";
 import { Header } from "../Header/Header";
@@ -10,7 +17,7 @@ export const LayoutX = () => {
     {
       text: "Usuários",
       route: app.users,
-      icon: <MathOperations width={20} height={17} weight="duotone" />,
+      icon: <UserCheck width={20} height={17} weight="duotone" />,
     },
     {
       text: "Ordens",
@@ -21,6 +28,11 @@ export const LayoutX = () => {
       text: "Documentos",
       route: app.documentsGenerator,
       icon: <File width={20} height={17} weight="duotone" />,
+    },
+    {
+      text: "Fechamento",
+      route: app.closing,
+      icon: <CashRegister width={20} height={17} weight="duotone" />,
     },
   ];
 
