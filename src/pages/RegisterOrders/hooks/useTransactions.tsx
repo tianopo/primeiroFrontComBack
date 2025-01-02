@@ -90,6 +90,9 @@ export const useTransaction = () => {
     mutationFn: path,
     onSuccess: () => {
       responseSuccess("Transações enviadas com sucesso");
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
     },
     onError: (erro: AxiosError) => responseError(erro),
   });
