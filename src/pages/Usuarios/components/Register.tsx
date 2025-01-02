@@ -69,7 +69,7 @@ export const Register = ({ setForm }: IRegister) => {
       },
     });
   };
-  console.log(responseData);
+
   return (
     <CardContainer>
       <FormProvider {...context}>

@@ -57,7 +57,14 @@ export const Closing = () => {
       for (const file of fileArray) {
         const { headers, rows } = await handleBankCsv(file);
         combinedHeaders = headers;
-        combinedData.push(...rows);
+
+        // Filtrando as linhas para remover as que começam com "Tarifa"
+        const filteredRows = rows.filter((row) => {
+          const description = row["Descrição"] || "";
+          return !description.startsWith("Tarifa");
+        });
+
+        combinedData.push(...filteredRows);
       }
 
       setHeaders(combinedHeaders);
@@ -69,30 +76,29 @@ export const Closing = () => {
   };
 
   const parseDescription = (description: string) => {
-    // Separando tipo de transação e o restante da descrição
     const teste = description.split("PIX");
-
-    // Agora vamos separar a parte que está dentro dos parênteses
     const regexBanco = /\((\d+)\s*-\s*(.*)\)/;
-    const matchBanco = teste[1]?.match(regexBanco); // Usando match para pegar o conteúdo dentro dos parênteses
+    const matchBanco = teste[1]?.match(regexBanco);
 
-    console.log(matchBanco, description, teste[0], teste[1]); // Para depurar
+    let tipo = teste[0]?.trim() || "";
+    let pessoa = teste[1]?.split("(")[0]?.trim() || "";
+    let banco = matchBanco ? matchBanco[2]?.trim() : "";
+    const codigoBanco = matchBanco ? matchBanco[1] : "";
 
-    if (matchBanco) {
-      const pessoa = teste[1]?.split("(")[0]?.trim(); // Nome da pessoa antes do parênteses
-      const banco = matchBanco[2]?.trim(); // O nome do banco
-      const codigoBanco = matchBanco[1]; // O código do banco
-
-      return {
-        tipo: teste[0]?.trim() || "", // Tipo de transação (antes do "PIX")
-        pessoa: pessoa || "",
-        banco: banco || "",
-        codigoBanco: codigoBanco || "", // O código do banco
-      };
+    // Modificar o tipo de transferência removendo " de"
+    if (tipo.endsWith(" de")) {
+      tipo = tipo.slice(0, -3).trim();
     }
 
-    // Se não corresponder ao padrão esperado, retorne a descrição original
-    return { tipo: description, pessoa: "", banco: "", codigoBanco: "" };
+    // Remover "para origem " da pessoa
+    if (pessoa.startsWith("para origem ")) {
+      pessoa = pessoa.slice(12).trim();
+    }
+
+    // Adicionar o código do banco junto com o nome do banco
+    banco = `${codigoBanco} - ${banco}`;
+
+    return { tipo, pessoa, banco, codigoBanco };
   };
 
   return (
@@ -119,7 +125,7 @@ export const Closing = () => {
             <table className="min-w-full border-collapse border border-gray-300">
               <thead className="bg-gray-200">
                 <tr>
-                  {headers.map((header, index) =>
+                  {headers.slice(0, -1).map((header, index) =>
                     ["Referência", "Lançamento futuro"].includes(header) ? null : (
                       <th
                         key={index}
@@ -148,7 +154,7 @@ export const Closing = () => {
                         isCredito ? "bg-red-100" : "bg-green-100"
                       } ${rowIndex % 2 === 0 ? "bg-opacity-50" : ""}`}
                     >
-                      {headers.map((header, colIndex) =>
+                      {headers.slice(0, -1).map((header, colIndex) =>
                         ["Referência", "Lançamento Futuro"].includes(header) ? null : (
                           <td key={colIndex} className="border border-gray-300 px-4 py-2 text-sm">
                             {header === "Descrição" ? description.tipo : row[header] || ""}
