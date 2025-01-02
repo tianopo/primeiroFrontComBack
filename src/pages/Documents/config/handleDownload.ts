@@ -10,7 +10,7 @@ export const handleDownload = (formData: any[]) => {
       const valorOperacao = `${item.tipo === "compra" ? tipoTransaction(item.valor) : tipoTransaction(item.valor)}`;
       const simboloAtivoDigital = item.ativoDigital || "";
       const quantidadeRaw = item.tipo === "compra" ? item.quantidade : item.quantidade;
-      const quantidade = parseFloat(quantidadeRaw.replace(",", ""))
+      const quantidade = parseFloat(quantidadeRaw.replace(",", "."))
         .toFixed(10)
         .toString()
         .replace(".", ",");

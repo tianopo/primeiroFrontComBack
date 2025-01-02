@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { InputX } from "src/components/Form/Input/InputX";
-import { handleDownload } from "../RegisterOrders/config/handleDownload";
 import { useListTransactions } from "../RegisterOrders/hooks/useListTransactions";
+import { handleDownload } from "./config/handleDownload";
 
 export const DocumentsGenerator = () => {
   const [startDate, setStartDate] = useState("");
