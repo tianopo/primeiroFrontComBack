@@ -31,7 +31,6 @@ export const useRegisterUser = () => {
   const { mutate, isPending } = useMutation({
     mutationFn: path,
     onSuccess: () => {
-      responseSuccess("Cadastro efetuado com sucesso");
       queryClient.invalidateQueries({ queryKey: ["users-data"] });
       queryClient.invalidateQueries({ queryKey: ["buyer-data"] });
       queryClient.invalidateQueries({ queryKey: ["transactions-data"] });

@@ -5,9 +5,11 @@ import { FormX } from "src/components/Form/FormX";
 import { InputX } from "src/components/Form/Input/InputX";
 import { Select } from "src/components/Form/Select/Select";
 import { CardContainer } from "src/components/Layout/CardContainer";
+import { responseSuccess } from "src/config/responseErrors";
 import { formatCPFOrCNPJ } from "src/utils/formats";
 import { exchangeOptions } from "src/utils/selectsOptions";
 import { useRegisterUser } from "../hooks/useRegisterUser";
+import { ResponseCompliance } from "./ResponseCompliance";
 
 interface IRegister {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -23,6 +25,8 @@ export const Register = ({ setForm }: IRegister) => {
     formState: { errors },
     setValue,
   } = context;
+
+  const [responseData, setResponseData] = useState<any>(null);
 
   const handleNomeChange = (e: ChangeEvent<HTMLInputElement>) => {
     setValue("nome", e.target.value);
@@ -47,17 +51,25 @@ export const Register = ({ setForm }: IRegister) => {
 
   const handleSubmit = (data: any) => {
     mutate(data, {
-      onSuccess: () => {
-        setValue("apelido", "");
-        setApelido("");
-        setValue("nome", "");
-        setNome("");
-        setValue("documento", "");
-        setDocumento("");
+      onSuccess: (response) => {
+        console.log("onSuccess", response, response);
+        setResponseData(response);
+        if (nome && apelido) {
+          console.log(typeof response);
+          responseSuccess(
+            `${typeof response === "boolean" ? "vendedor" : "comprador"} ${apelido} cadastrado`,
+          );
+          setValue("apelido", "");
+          setApelido("");
+          setValue("nome", "");
+          setNome("");
+          setValue("documento", "");
+          if (documento !== "") setDocumento("");
+        }
       },
     });
   };
-
+  console.log(responseData);
   return (
     <CardContainer>
       <FormProvider {...context}>
@@ -101,6 +113,7 @@ export const Register = ({ setForm }: IRegister) => {
           />
           <Button disabled={isPending || Object.keys(errors).length > 0}>Salvar</Button>
         </FormX>
+        <ResponseCompliance responseData={responseData} />
       </FormProvider>
     </CardContainer>
   );

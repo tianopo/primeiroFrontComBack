@@ -6,19 +6,7 @@ import { InputX } from "src/components/Form/Input/InputX";
 import { CardContainer } from "src/components/Layout/CardContainer";
 import { formatCPFOrCNPJ } from "src/utils/formats";
 import { useCompliance } from "../hooks/useCompliance";
-import { AE } from "./QueryDataTransparencia/AE";
-import { BPC } from "./QueryDataTransparencia/BPC";
-import { CEAF } from "./QueryDataTransparencia/CEAF";
-import { CEIS } from "./QueryDataTransparencia/CEIS";
-import { CEPIM } from "./QueryDataTransparencia/CEPIM";
-import { CF } from "./QueryDataTransparencia/CF";
-import { CNEP } from "./QueryDataTransparencia/CNEP";
-import { CNPJ } from "./QueryDataTransparencia/CNPJ";
-import { PEP } from "./QueryDataTransparencia/PEP";
-import { PETI } from "./QueryDataTransparencia/PETI";
-import { SDC } from "./QueryDataTransparencia/SDC";
-import { Safra } from "./QueryDataTransparencia/Safra";
-import { Viagens } from "./QueryDataTransparencia/Viagens";
+import { ResponseCompliance } from "./ResponseCompliance";
 
 export const Compliance = () => {
   const [documento, setDocumento] = useState<string>("");
@@ -61,37 +49,7 @@ export const Compliance = () => {
             />
             <Button disabled={isPending || Object.keys(errors).length > 0}>Checar</Button>
           </FormX>
-          {responseData && (
-            <div className="text-center">
-              <h5>
-                <strong>{responseData?.pdt?.cpf?.nome}</strong>
-              </h5>
-              {responseData?.pdt?.cpf?.nis && (
-                <h5>
-                  <strong>NIS: </strong>
-                  {responseData?.pdt?.cpf?.nis}
-                </h5>
-              )}
-              <h6>{responseData?.ourData}</h6>
-              <div className="flex w-full flex-row flex-wrap justify-center">
-                {responseData?.pdt?.viagens && (
-                  <Viagens responseData={responseData?.pdt?.viagens} />
-                )}
-                {responseData?.pdt?.pep && <PEP responseData={responseData?.pdt?.pep} />}
-                {responseData?.pdt?.cnpj && <CNPJ responseData={responseData?.pdt?.cnpj} />}
-                {responseData?.pdt?.sdc && <SDC responseData={responseData?.pdt?.sdc} />}
-                {responseData?.pdt?.safra && <Safra responseData={responseData?.pdt?.safra} />}
-                {responseData?.pdt?.peti && <PETI responseData={responseData?.pdt?.peti} />}
-                {responseData?.pdt?.bpc && <BPC responseData={responseData?.pdt?.bpc} />}
-                {responseData?.pdt?.ae && <AE responseData={responseData?.pdt?.ae} />}
-                {responseData?.pdt?.cnep && <CNEP responseData={responseData?.pdt?.cnep} />}
-                {responseData?.pdt?.cf && <CF responseData={responseData?.pdt?.cf} />}
-                {responseData?.pdt?.cepim && <CEPIM responseData={responseData?.pdt?.cepim} />}
-                {responseData?.pdt?.ceis && <CEIS responseData={responseData?.pdt?.ceis} />}
-                {responseData?.pdt?.ceaf && <CEAF responseData={responseData?.pdt?.ceaf} />}
-              </div>
-            </div>
-          )}
+          <ResponseCompliance responseData={responseData} />
         </div>
       </FormProvider>
     </CardContainer>
