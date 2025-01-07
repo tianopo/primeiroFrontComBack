@@ -8,3 +8,16 @@ export const exchangeOptions = [
   "Huobi https://www.htx.com/ CN",
   "BingX https://www.bingx.com/ AU",
 ];
+
+export const assetsOptions = ["BTC", "USDT", "BNB", "ETH", "USDC", "DOGE", "BRL"];
+
+export const blockchainsOptions = [
+  "Ethereum (ERC20)",
+  "BSC (BEP20)",
+  "Bitcoin (BTC)",
+  "Solana (SOL)",
+  "TON",
+  "TRC20",
+  "Near (NEAR)",
+  "Avalanche (AVAX)",
+];

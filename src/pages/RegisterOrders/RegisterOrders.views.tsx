@@ -7,7 +7,7 @@ import { FormX } from "src/components/Form/FormX";
 import { InputX } from "src/components/Form/Input/InputX";
 import { Select } from "src/components/Form/Select/Select";
 import { formatCPFOrCNPJ, formatCurrency, formatDateTime } from "src/utils/formats";
-import { exchangeOptions } from "src/utils/selectsOptions";
+import { assetsOptions, exchangeOptions } from "src/utils/selectsOptions";
 import { HandleListEdit } from "./components/HandleListEdit";
 import { UploadXLSButton } from "./components/UploadXLSButton";
 import { useListBuyers } from "./hooks/useListBuyers";
@@ -323,7 +323,7 @@ export const RegisterOrders = () => {
                   <Select
                     title="Ativo Digital"
                     placeholder="USDT"
-                    options={["BTC", "USDT", "BNB", "ETH", "USDC", "DOGE", "BRL"]}
+                    options={assetsOptions}
                     value={ativoDigital}
                     onChange={(e) => setAtivoDigital(e.target.value)}
                     required
