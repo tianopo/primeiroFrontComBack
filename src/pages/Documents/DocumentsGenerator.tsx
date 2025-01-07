@@ -61,8 +61,8 @@ export const DocumentsGenerator = () => {
     const monthName = today.toLocaleDateString("pt-BR", { month: "long" });
 
     const groupedByBuyer = filteredData.reduce((acc: any, transaction: any) => {
-      const buyerDocument = transaction.buyer?.document || " N/A";
-      if (buyerDocument !== " N/A") {
+      const buyerDocument = transaction.buyer?.document || "N/A";
+      if (buyerDocument !== "N/A") {
         if (!acc[buyerDocument]) {
           acc[buyerDocument] = {
             buyer: transaction.buyer,
@@ -85,7 +85,7 @@ export const DocumentsGenerator = () => {
       return acc;
     }, {});
 
-    let csvContent = `Indicador de Tipo de Serviço,"Número RPS","Serie RPS","Data Prestação de Serviço","Data Emissão do RPS","RPS Substitutivo","Documento CPF/CNPJ","Inscrição Mobiliária","Razão Social",Endereço,Número,Complemento,Bairro,"Código do Município","Código do País",Cep,Telefone,Email,"ISS Retido no Tomador","Código do Município onde o Serviço foi Prestado","Código da Atividade","Código da Lista de Serviços",Discriminação,"Valor NF","Valor Deduções","Valor Desconto Condicionado","Valor Desconto Incondicionado","Valor INSS","Valor Csll","Valor Outras Retenções","Valor Pis","Valor Cofins","Valor Ir","Valor Iss","Prestador Optante Simples Nacional",Alíquota,"Código da Obra","Código ART","Inscrição Própria","Código do Benefício"\n`;
+    let csvContent = `Indicador de Tipo de Serviço,""Número RPS"",""Serie RPS"",""Data Prestação de Serviço"",""Data Emissão do RPS"",""RPS Substitutivo"",""Documento CPF/CNPJ"",""Inscrição Mobiliária"",""Razão Social"",Endereço,Número,Complemento,Bairro,""Código do Município"",""Código do País"",Cep,Telefone,Email,""ISS Retido no Tomador"",""Código do Município onde o Serviço foi Prestado"",""Código da Atividade"",""Código da Lista de Serviços"",Discriminação,""Valor NF"",""Valor Deduções"",""Valor Desconto Condicionado"",""Valor Desconto Incondicionado"",""Valor INSS"",""Valor Csll"",""Valor Outras Retenções"",""Valor Pis"",""Valor Cofins"",""Valor Ir"",""Valor Iss"",""Prestador Optante Simples Nacional"",Alíquota,""Código da Obra"",""Código ART"",""Inscrição Própria"",""Código do Benefício""\n`;
 
     const hoje = new Date();
     const comissao = 1;
@@ -96,50 +96,33 @@ export const DocumentsGenerator = () => {
     const inscricaoMunicipal = 90598;
     let numeroRPS = parseInt(localStorage.getItem("numeroRPS") || "0", 10);
 
-    Object.values(groupedByBuyer).forEach((group: any, index: number) => {
+    Object.values(groupedByBuyer).forEach((group: any) => {
       const buyer = group.buyer;
-      const buyerName = buyer?.name || " N/A";
-      const buyerBlocked = buyer?.name.split(" ")[buyer.name.split(" ").length - 1];
+      const buyerName = buyer?.name || "N/A";
       const cpfCnpj = buyer?.document?.replace(/[^0-9]/g, "");
       const totalVendas = group.totalVendas;
       const valorNfe = Math.round(totalVendas * comissao);
       const valorIss = Math.round(valorNfe * (aliquota / 10000));
       const exchangeName = group.transactions[0].exchange.split(" ")[0];
 
-      if (validationEmptyBuyers && buyerBlocked === "Bloqueado") return;
-
       const endDateObj = group.transactions.reduce((latest: Date, transaction: any) => {
         const transactionDate = new Date(transaction.dataTransacao);
         return transactionDate > latest ? transactionDate : latest;
       }, new Date(group.transactions[0].dataTransacao));
 
-      // Discriminação
-      let fileContent = `- Serviço: Intermediação de Ativos Digitais
-      - Comissão: ${comissao}%
-      - Quantidade Vendida: ${group.transactions.filter((transaction: any) => transaction.tipo === "venda").length}
-      - Mês/Ano: ${monthName}/2024
-      - Valor da Nota: ${valorNfe / 100}\n
-      Ordem dos Campos após nome da corretora:
-      - Identificador da Ordem
-      - Dia e Hora
-      - Ativo Digital
-      - Quantidade de Tokens
-      - Valor Pago
-      `;
+      // Discriminação formatada corretamente
+      let fileContent = `"- Serviço: Intermediação de Ativos Digitais\n  - Comissão: ${comissao}%\n  - Quantidade Vendida: ${group.transactions.filter((transaction: any) => transaction.tipo === "venda").length}\n  - Mês/Ano: ${monthName}/2024\n  - Valor da Nota: ${(valorNfe / 100).toFixed(2)}\n  Ordem dos Campos após nome da corretora:\n  - Identificador da Ordem\n  - Dia e Hora\n  - Ativo Digital\n  - Quantidade de Tokens\n  - Valor Pago\n  Exchange/Corretora: ${exchangeName}\n`;
 
-      fileContent += `Exchange/Corretora: ${exchangeName}\n`;
       group.transactions.forEach((transaction: any) => {
         if (transaction.tipo === "venda") {
-          fileContent += `${transaction.numeroOrdem}\n${transaction.dataTransacao}\n${transaction.ativoDigital}\n${transaction.quantidade}\n${transaction.valor}\n\n`;
+          fileContent += `  ${transaction.numeroOrdem}\n  ${transaction.dataTransacao}\n  ${transaction.ativoDigital}\n  ${transaction.quantidade}\n  ${transaction.valor}\n\n`;
         }
       });
 
-      fileContent += `
-      Suporte de Dúvidas:
-      - Para informações do P2P, consulte documentação ou o suporte da corretora\n`;
+      fileContent += `  Suporte de Dúvidas:\n  - Para informações do P2P, consulte documentação ou o suporte da corretora"`;
 
       // Criar o conteúdo CSV
-      const csvData = `R,${numeroRPS},RPS,${endDateObj.toLocaleDateString("pt-BR")},${hoje.toLocaleDateString("pt-BR")},,${cpfCnpj},,${buyerName},,,,,,48,,,,S,${codMunicipioServicoPrestado},${codAtividade},${codListaServicos},"${fileContent}",${valorNfe},0,0,0,0,0,0,0,0,0,${valorIss},S,${aliquota},0,0,${inscricaoMunicipal},\n`;
+      const csvData = `R,${numeroRPS},RPS,${endDateObj.toLocaleDateString("pt-BR")},${hoje.toLocaleDateString("pt-BR")},,${cpfCnpj},,${buyerName},,,,,,48,,,,S,${codMunicipioServicoPrestado},${codAtividade},${codListaServicos},${fileContent},${valorNfe},0,0,0,0,0,0,0,0,0,${valorIss},S,${aliquota},0,0,${inscricaoMunicipal},\n`;
 
       csvContent += csvData;
       numeroRPS += 1;
