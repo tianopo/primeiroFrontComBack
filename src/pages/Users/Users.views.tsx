@@ -4,7 +4,7 @@ import { Compliance } from "./components/Compliance";
 import { Edit } from "./components/Edit";
 import { Register } from "./components/Register";
 
-export const Usuarios = () => {
+export const Users = () => {
   const [form, setForm] = useState(true);
   return (
     <div className="flex w-full flex-row flex-wrap justify-between gap-4 px-4">

@@ -7,16 +7,14 @@ export const ConsultaCPF = () => {
   const [cpf, setCpf] = useState("");
   const [dataNascimento, setDataNascimento] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [resultado, setResultado] = useState<null | string>(null);
-  const siteKey = "53be2ee7-5efc-494e-a3ba-c9258649c070"; // meu sitekey: ES_a154f66bdae64f9e9c5076ec41b31501
+  const [htmlResponse, setHtmlResponse] = useState<string>("");
 
-  // Callback para quando o hCaptcha é resolvido
+  const siteKey = "53be2ee7-5efc-494e-a3ba-c9258649c070";
+
   const handleVerify = (token: string) => {
-    console.log("hCaptcha token:" + token);
     setCaptchaToken(token);
   };
 
-  // Callback para quando o hCaptcha expira
   const handleExpire = () => {
     toast.success("hCaptcha expirado. Por favor, resolva novamente.");
     setCaptchaToken(null);
@@ -36,11 +34,12 @@ export const ConsultaCPF = () => {
         dataNascimento,
         captchaResponse: captchaToken,
       });
-      console.log(response);
-      setResultado(response.data);
+      const blob = new Blob([response.data], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
     } catch (error) {
       toast.error("Erro ao consultar CPF:" + error);
-      setResultado("Erro ao consultar CPF");
+      setHtmlResponse("Erro ao consultar CPF");
     }
   };
 
@@ -64,13 +63,11 @@ export const ConsultaCPF = () => {
           sitekey={siteKey}
           onVerify={handleVerify}
           onExpire={handleExpire}
-          theme="light" // Pode ser 'light' ou 'dark'
+          theme="light"
           reCaptchaCompat={false}
         />
-
         <button type="submit">Consultar</button>
       </form>
-      {resultado && <div>Resultado: {resultado}</div>}
     </div>
   );
 };
