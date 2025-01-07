@@ -13,6 +13,7 @@ export const app = {
   //  CryptoTech
   registerOrders: "/register-orders",
   users: "/users",
-  documentsGenerator: "/documents-generator",
+  tax: "/tax",
+  documentsGenerator: "/generator-documents",
   closing: "/closing",
 };

@@ -2,7 +2,7 @@ import {
   CashRegister,
   File,
   House,
-  MathOperations,
+  MoneyWavy,
   TrademarkRegistered,
   UserCheck,
 } from "@phosphor-icons/react";
@@ -25,7 +25,12 @@ export const LayoutX = () => {
       icon: <TrademarkRegistered width={20} height={17} weight="duotone" />,
     },
     {
-      text: "Documentos",
+      text: "Fiscal",
+      route: app.tax,
+      icon: <MoneyWavy width={20} height={17} weight="duotone" />,
+    },
+    {
+      text: "Contratos",
       route: app.documentsGenerator,
       icon: <File width={20} height={17} weight="duotone" />,
     },
