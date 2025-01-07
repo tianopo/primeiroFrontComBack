@@ -67,8 +67,13 @@ export const Closing = () => {
         combinedData.push(...filteredRows);
       }
 
+      const filteredData = combinedData.filter((row) => {
+        const valor = row["Valor"] ? row["Valor"].replace(/\s+/g, "") : "";
+        return valor !== "R$-0,01";
+      });
+
       setHeaders(combinedHeaders);
-      setFileData((prev) => [...prev, ...combinedData]);
+      setFileData((prev) => [...prev, ...filteredData]);
       toast.success("Arquivo(s) processado(s) com sucesso!");
     } catch (error) {
       toast.error(`Erro ao processar o arquivo: ${error}`);
@@ -107,7 +112,7 @@ export const Closing = () => {
         <div className="flex w-full">
           <label
             htmlFor="file-upload"
-            className="w-full cursor-pointer rounded bg-blue-500 px-4 py-2 text-center font-bold text-white hover:bg-blue-700"
+            className="w-full cursor-pointer rounded bg-blue-500 p-1.5 text-center font-bold text-white hover:bg-blue-700"
           >
             Escolher Arquivo(s) CSV
           </label>
@@ -125,20 +130,23 @@ export const Closing = () => {
             <table className="min-w-full border-collapse border border-gray-300">
               <thead className="bg-gray-200">
                 <tr>
-                  {headers.slice(0, -1).map((header, index) =>
-                    ["Referência", "Lançamento futuro"].includes(header) ? null : (
+                  {headers
+                    .filter(
+                      (header) =>
+                        !["Referência", "Lançamento futuro", "Tipo de transação"].includes(header),
+                    )
+                    .map((header, index) => (
                       <th
                         key={index}
-                        className="border border-gray-300 px-4 py-2 text-left text-sm font-bold"
+                        className="border border-gray-300 p-1.5 text-left text-sm font-bold"
                       >
-                        {header === "Descrição" ? "Tipo de Transferência" : header}
+                        {header === "Descrição" ? "Tipo de transação" : header}
                       </th>
-                    ),
-                  )}
-                  <th className="border border-gray-300 px-4 py-2 text-left text-sm font-bold">
+                    ))}
+                  <th className="border border-gray-300 p-1.5 text-left text-sm font-bold">
                     Pessoa
                   </th>
-                  <th className="border border-gray-300 px-4 py-2 text-left text-sm font-bold">
+                  <th className="border border-gray-300 p-1.5 text-left text-sm font-bold">
                     Banco
                   </th>
                 </tr>
@@ -146,27 +154,38 @@ export const Closing = () => {
               <tbody>
                 {fileData.map((row, rowIndex) => {
                   const description = parseDescription(row["Descrição"] || "");
-                  const isCredito = (row["Tipo de Transação"] || "").includes("CRÉDITO");
+
+                  // Verifica o valor e define a cor correspondente
+                  const valor = row["Valor"] || "";
+                  const valorNumerico = parseFloat(
+                    valor.replace("R$", "").replace(".", "").replace(",", ".").trim(),
+                  );
+                  const valorCor = valorNumerico >= 0 ? "text-green-500" : "text-red-500";
+
                   return (
                     <tr
                       key={rowIndex}
-                      className={`${
-                        isCredito ? "bg-red-100" : "bg-green-100"
-                      } ${rowIndex % 2 === 0 ? "bg-opacity-50" : ""}`}
+                      className={`${rowIndex % 2 === 0 ? "bg-gray-100" : "bg-white"}`}
                     >
-                      {headers.slice(0, -1).map((header, colIndex) =>
-                        ["Referência", "Lançamento Futuro"].includes(header) ? null : (
-                          <td key={colIndex} className="border border-gray-300 px-4 py-2 text-sm">
+                      {headers
+                        .filter(
+                          (header) =>
+                            !["Referência", "Lançamento futuro", "Tipo de transação"].includes(
+                              header,
+                            ),
+                        )
+                        .map((header, colIndex) => (
+                          <td
+                            key={colIndex}
+                            className={`border border-gray-300 p-1.5 text-sm ${
+                              header === "Valor" ? valorCor : ""
+                            }`}
+                          >
                             {header === "Descrição" ? description.tipo : row[header] || ""}
                           </td>
-                        ),
-                      )}
-                      <td className="border border-gray-300 px-4 py-2 text-sm">
-                        {description.pessoa}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 text-sm">
-                        {description.banco}
-                      </td>
+                        ))}
+                      <td className="border border-gray-300 p-1.5 text-sm">{description.pessoa}</td>
+                      <td className="border border-gray-300 p-1.5 text-sm">{description.banco}</td>
                     </tr>
                   );
                 })}
