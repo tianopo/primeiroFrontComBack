@@ -1,7 +1,6 @@
 import {
   CashRegister,
   File,
-  House,
   MoneyWavy,
   TrademarkRegistered,
   UserCheck,
@@ -13,7 +12,6 @@ import { SidebarX } from "../Sidebar/SidebarX";
 
 export const LayoutX = () => {
   const nav = [
-    { text: "Início", route: app.users, icon: <House width={20} height={17} weight="fill" /> },
     {
       text: "Usuários",
       route: app.users,
