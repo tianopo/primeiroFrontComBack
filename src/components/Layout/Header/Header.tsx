@@ -2,6 +2,7 @@ import { Bell, Gear, List } from "@phosphor-icons/react";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { IconX } from "src/components/Icons/IconX";
 import { app } from "src/routes/app";
 import "../Sidebar/Sidebar.css";
@@ -35,27 +36,73 @@ interface ICurrencies {
 export const Header = ({ navbar }: IHeader) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [currencyData, setCurrencyData] = useState<ICurrencies | null>(null);
+  const [previousCurrencyData, setPreviousCurrencyData] = useState<ICurrencies | null>(null);
+  const [currencyData10MinAgo, setCurrencyData10MinAgo] = useState<ICurrencies | null>(null);
   const navigate = useNavigate();
-
   const handleMenuToggle = () => setMenuOpen(!menuOpen);
 
+  const checkPriceFluctuation = (
+    current: ICurrencyData,
+    previous: ICurrencyData | undefined,
+    message: string,
+  ) => {
+    if (!previous) return;
+    const currentBid = parseFloat(current.bid || "0");
+    const previousBid = parseFloat(previous.bid || "0");
+    const percentageChange = Math.abs(((currentBid - previousBid) / previousBid) * 100);
+    if (percentageChange > 0.12) {
+      const audio = new Audio(
+        "https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3",
+      );
+      audio.play().catch((error) => {
+        console.error("Erro ao reproduzir o som:", error);
+      });
+      toast.warning(
+        `Atenção! O preço de ${current.code} variou ${percentageChange.toFixed(2)}% ${message}.`,
+      );
+    }
+  };
   useEffect(() => {
     const fetchCurrencyData = async () => {
       try {
         const response = await axios.get("https://economia.awesomeapi.com.br/last/USD-BRL,BTC-BRL");
         const data: ICurrencies = response.data;
+        setPreviousCurrencyData(currencyData);
         setCurrencyData(data);
       } catch (error) {
         console.error("Erro ao buscar dados das moedas:", error);
         setCurrencyData(null);
       }
     };
-
     fetchCurrencyData();
     const interval = setInterval(fetchCurrencyData, 30000); // Atualiza a cada 30 segundos
-
     return () => clearInterval(interval);
-  }, []);
+  }, [currencyData]);
+
+  useEffect(() => {
+    const fetchCurrencyData10Min = async () => {
+      try {
+        const response = await axios.get("https://economia.awesomeapi.com.br/last/USD-BRL,BTC-BRL");
+        const data: ICurrencies = response.data;
+        // Verificar flutuação para intervalo de 10 minutos
+        if (currencyData10MinAgo) {
+          if (data.USDBRL)
+            checkPriceFluctuation(
+              data.USDBRL,
+              currencyData10MinAgo.USDBRL,
+              "nos últimos 10 minutos",
+            );
+        }
+        // Atualizar estado de 10 minutos atrás
+        setCurrencyData10MinAgo(data);
+      } catch (error) {
+        console.error("Erro ao buscar dados das moedas (10 minutos):", error);
+      }
+    };
+    fetchCurrencyData10Min();
+    const interval10Min = setInterval(fetchCurrencyData10Min, 600000); // Atualiza a cada 10 minutos
+    return () => clearInterval(interval10Min);
+  }, [currencyData10MinAgo]);
 
   return (
     <>

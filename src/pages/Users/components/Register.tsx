@@ -52,7 +52,6 @@ export const Register = ({ setForm }: IRegister) => {
   const handleSubmit = (data: any) => {
     mutate(data, {
       onSuccess: (response) => {
-        console.log("onSuccess", response, response);
         setResponseData(response);
         if (nome && apelido) {
           console.log(typeof response);
@@ -65,7 +64,7 @@ export const Register = ({ setForm }: IRegister) => {
           setNome("");
           setValue("documento", "");
           if (documento !== "") setDocumento("");
-        }
+        } else responseSuccess("Usuário encontrado");
       },
     });
   };
@@ -111,7 +110,16 @@ export const Register = ({ setForm }: IRegister) => {
             onChange={handleDocumentoChange}
             required
           />
-          <Button disabled={isPending || Object.keys(errors).length > 0}>Salvar</Button>
+          <Button
+            disabled={
+              apelido.length === 0 ||
+              exchange.length === 0 ||
+              isPending ||
+              Object.keys(errors).length > 0
+            }
+          >
+            {nome.length > 0 ? "Salvar" : "Procurar"}
+          </Button>
         </FormX>
         <ResponseCompliance responseData={responseData} />
       </FormProvider>
