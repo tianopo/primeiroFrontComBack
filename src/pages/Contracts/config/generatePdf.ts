@@ -10,29 +10,25 @@ endobj
 2 0 obj
 <<
 /Type /Pages
-/Count 1
-/Kids [3 0 R]
+/Count 0
+/Kids []
 >>
 endobj
 `;
 
   let pageContent = ""; // Store content for the current page
   let currentPageIndex = 3; // Start from the first page object
-  let totalPages = 1; // Track total number of pages
+  let totalPages = 0; // Track total number of pages
   const pageHeight = 792; // Standard page height in points
   const leftMargin = 50; // Left margin for content
   const lineHeight = 20; // Space between lines
   const maxLineWidth = 80; // Max characters per line
   const startYPosition = 750; // Starting Y position for content
   let yPosition = startYPosition; // Current Y position for content
+  const minYPosition = 50; // Minimum Y position for content
 
   const addText = (text: string, fontSize: number, x: number, y: number) => {
-    return `BT
-/F1 ${fontSize} Tf
-1 0 0 1 ${x} ${y} Tm
-(${text}) Tj
-ET
-`;
+    return `BT\n/F1 ${fontSize} Tf\n1 0 0 1 ${x} ${y} Tm\n(${text}) Tj\nET\n`;
   };
 
   const splitText = (text: string, maxChars: number) => {
@@ -40,7 +36,7 @@ ET
     const lines = [];
     let currentLine = "";
 
-    words.forEach((word) => {
+    words.forEach((word: any) => {
       if ((currentLine + word).length <= maxChars) {
         currentLine += (currentLine ? " " : "") + word;
       } else {
@@ -58,6 +54,12 @@ ET
 
   const addPage = () => {
     if (pageContent) {
+      totalPages++;
+      pdfContent = pdfContent.replace(/\/Count \d+/, `/Count ${totalPages}`);
+      pdfContent = pdfContent.replace(/\/Kids \[.*?\]/, (match) =>
+        match.replace("[", `[${currentPageIndex} 0 R `),
+      );
+
       pdfContent += `${currentPageIndex} 0 obj
 <<
 /Type /Page
@@ -67,14 +69,15 @@ ET
 >>
 endobj
 `;
+
       pdfContent += `${currentPageIndex + 1} 0 obj
 << /Length ${pageContent.length} >>
 stream
 ${pageContent}endstream
 endobj
 `;
+
       currentPageIndex += 2;
-      totalPages++;
       pageContent = "";
       yPosition = startYPosition;
     }
@@ -82,7 +85,7 @@ endobj
 
   const addContent = (text: string, fontSize: number) => {
     splitText(text, maxLineWidth).forEach((line) => {
-      if (yPosition - lineHeight < 50) {
+      if (yPosition - lineHeight < minYPosition) {
         addPage();
       }
       pageContent += addText(line, fontSize, leftMargin, yPosition);
