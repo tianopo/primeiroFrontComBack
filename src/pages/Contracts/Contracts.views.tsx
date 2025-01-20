@@ -37,9 +37,7 @@ export const Contracts = () => {
           Defesa Comercial
         </button>
       </div>
-      <div className="w-full max-w-md rounded-lg border p-4">
-        <TabContent />
-      </div>
+      <TabContent />
     </div>
   );
 };

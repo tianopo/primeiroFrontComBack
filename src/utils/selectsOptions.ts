@@ -21,3 +21,33 @@ export const blockchainsOptions = [
   "Near (NEAR)",
   "Avalanche (AVAX)",
 ];
+
+export const paymentOptions = [
+  "Pix",
+  "Transferência Bancária",
+  "Dinheiro",
+  "Cartão de Crédito",
+  "Cartão de Débito",
+];
+
+export const limitDateOptions = ["1", "2", "4", "8", "12", "18", "24", "48", "72"];
+
+export const walletOptions = [
+  "Metamask",
+  "Trust Wallet",
+  "SafePal",
+  "Exodus",
+  "Electrum",
+  "CoinBase Wallet",
+  "Trezor",
+  "Ledger",
+  "Bitpay",
+  "Bybit",
+  "Binance",
+  "Gate.IO",
+  "Kucoin",
+  "CoinEx",
+  "Bitget",
+  "Huobi",
+  "BingX",
+];
