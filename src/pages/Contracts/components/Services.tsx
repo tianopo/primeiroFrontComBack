@@ -6,7 +6,7 @@ import { InputX } from "src/components/Form/Input/InputX";
 import { Select } from "src/components/Form/Select/Select";
 import { formatCurrency } from "src/utils/formats";
 import { assetsOptions, blockchainsOptions } from "src/utils/selectsOptions";
-import { generatePdfReport } from "../config/generatePdf";
+import { services } from "../config/contractPdfs/services";
 import { useService } from "../hooks/useServices";
 
 export const Services = () => {
@@ -74,7 +74,7 @@ export const Services = () => {
             onChange={(e) => setBlockchain(e.target.value)}
             required
           />
-          <Button disabled={Object.keys(errors).length > 0} onClick={() => generatePdfReport()}>
+          <Button disabled={Object.keys(errors).length > 0} onClick={() => services()}>
             Criar Contrato
           </Button>
         </FormX>

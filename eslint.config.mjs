@@ -89,7 +89,7 @@ export default [
         rules: {
             "@typescript-eslint/no-explicit-any": "off",
         },
-        files: ["src/pages/**/*.tsx", "src/utils/formats.ts"],
+        files: ["src/pages/**/*.tsx", "src/utils/formats.ts", "src/pages/**/*.ts"],
         rules: {
             "max-lines": ["error", {
                 max: 700,
