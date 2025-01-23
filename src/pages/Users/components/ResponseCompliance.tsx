@@ -1,3 +1,5 @@
+import { OFAC } from "./QueryDataList/OFAC";
+import { Slave } from "./QueryDataList/Slave";
 import { AE } from "./QueryDataTransparencia/AE";
 import { BPC } from "./QueryDataTransparencia/BPC";
 import { CEAF } from "./QueryDataTransparencia/CEAF";
@@ -45,6 +47,9 @@ export const ResponseCompliance = ({ responseData }: IResponseCompliance) => {
         {responseData?.pdt?.cepim && <CEPIM responseData={responseData?.pdt?.cepim} />}
         {responseData?.pdt?.ceis && <CEIS responseData={responseData?.pdt?.ceis} />}
         {responseData?.pdt?.ceaf && <CEAF responseData={responseData?.pdt?.ceaf} />}
+        {/*Lists*/}
+        {responseData?.ofac && <OFAC responseData={responseData?.ofac} />}
+        {responseData?.slave && <Slave responseData={responseData?.slave} />}
       </div>
     </div>
   );
