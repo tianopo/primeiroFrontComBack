@@ -49,7 +49,7 @@ export const ResponseCompliance = ({ responseData }: IResponseCompliance) => {
         {responseData?.pdt?.ceaf && <CEAF responseData={responseData?.pdt?.ceaf} />}
         {/*Lists*/}
         {responseData?.ofac && <OFAC responseData={responseData?.ofac} />}
-        {responseData?.slave && <Slave responseData={responseData?.slave} />}
+        <Slave responseData={responseData?.slave} />
       </div>
     </div>
   );
