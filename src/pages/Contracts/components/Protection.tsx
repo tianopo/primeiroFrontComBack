@@ -8,10 +8,12 @@ import { Select } from "src/components/Form/Select/Select";
 import { formatCurrency, formatDateTime } from "src/utils/formats";
 import { assetsOptions, exchangeOptions, walletOptions } from "src/utils/selectsOptions";
 import { protection } from "../config/contractPdfs/comercialProtection";
+import { useListBuyers } from "../hooks/useListBuyers";
 import { useProtection } from "../hooks/useProtection";
 
 export const Protection = () => {
   const [tipoTransferencia, setTipoTransferencia] = useState<string>("exchange");
+  const [comprador, setComprador] = useState<string>("");
   const [instituicao, setInstituicao] = useState<string>("");
   const [dataHora, setDataHora] = useState<string>("");
   const [quantidade, setQuantidade] = useState<string>("");
@@ -21,7 +23,9 @@ export const Protection = () => {
   const [uid, setUid] = useState<string>("");
   const [endereco, setEndereco] = useState<string>("");
   const [wallet, setWallet] = useState<string>("");
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
+  const { data } = useListBuyers();
   const { context } = useProtection();
   const {
     formState: { errors },
@@ -45,9 +49,18 @@ export const Protection = () => {
     setValor(formattedCPF);
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setUploadedFiles([...uploadedFiles, ...Array.from(e.target.files)]);
+    }
+  };
+
   const handleSubmit = () => {
     reset();
-    toast.success("Contrato Criado");
+    setUploadedFiles([]);
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) fileInput.value = "";
+    toast.success("Carta Criada");
   };
 
   return (
@@ -58,12 +71,24 @@ export const Protection = () => {
       >
         <h3 className="text-28 font-bold">Defesa da Contestação</h3>
         <Select
-          title="Tipo de Transferência"
+          title="Tipo Transferência"
           placeholder="Selecione"
           options={["exchange", "wallet"]}
           value={tipoTransferencia}
           onChange={(e) => setTipoTransferencia(e.target.value)}
           required
+        />
+        <InputX
+          title="comprador"
+          placeholder="Nome do Comprador"
+          value={comprador || ""}
+          onChange={(e) => setComprador(e.target.value)}
+          busca
+          options={data
+            ?.filter((item: any) =>
+              (item.name || "").toLowerCase().includes((comprador || "").toLowerCase()),
+            )
+            .map((item: any) => item.name)}
         />
         <InputX
           title="Instituição"
@@ -139,23 +164,38 @@ export const Protection = () => {
             />
           </>
         )}
+        <div className="flex flex-col items-center">
+          <label className="text-sm font-medium">Adicionar Arquivo (PDF/Imagem)</label>
+          <input
+            type="file"
+            accept="image/*,application/pdf"
+            onChange={handleFileUpload}
+            multiple
+            className="mt-2"
+          />
+        </div>
         <Button
           disabled={Object.keys(errors).length > 0}
           onClick={() =>
-            protection({
-              tipoTransferencia,
-              instituicao,
-              dataHora,
-              quantidade,
-              valor,
-              ativo: ativoDigital,
-              exchange: tipoTransferencia === "exchange" ? exchange : undefined,
-              uid: tipoTransferencia === "exchange" ? uid : undefined,
-              wallet: tipoTransferencia === "wallet" ? wallet : undefined,
-            })
+            protection(
+              {
+                tipoTransferencia,
+                comprador,
+                instituicao,
+                dataHora,
+                quantidade,
+                valor,
+                ativo: ativoDigital,
+                exchange: tipoTransferencia === "exchange" ? exchange : undefined,
+                uid: tipoTransferencia === "exchange" ? uid : undefined,
+                wallet: tipoTransferencia === "wallet" ? wallet : undefined,
+                endereco: tipoTransferencia === "wallet" ? endereco : undefined,
+              },
+              uploadedFiles,
+            )
           }
         >
-          Criar Contrato
+          Criar Carta
         </Button>
       </FormX>
     </FormProvider>

@@ -5,6 +5,7 @@ import * as Yup from "yup";
 
 export interface IProtection {
   tipoTransferencia: string;
+  comprador: string;
   instituicao: string;
   dataHora: string;
   quantidade: string;
@@ -19,19 +20,23 @@ export interface IProtection {
 const schema = Yup.object({
   tipoTransferencia: Yup.string()
     .oneOf(["exchange", "wallet"], "Selecione um tipo de transferência válido")
-    .required("O tipo de transferência é obrigatório") as Yup.StringSchema<string>,
-  instituicao: Yup.string().required("Instituição é obrigatória"),
+    .required("O tipo de transferência é obrigatório")
+    .label("Tipo Transferência") as Yup.StringSchema<string>,
+  comprador: Yup.string().required("Instituição é obrigatória").label("Comprador"),
+  instituicao: Yup.string().required("Instituição é obrigatória").label("Instituição"),
   dataHora: Yup.string()
     .required("Data e Hora é obrigatória")
     .matches(
       /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/,
       "Data e Hora da Transação deve estar no formato AAAA-MM-DD HH:MM:SS",
-    ),
-  quantidade: Yup.string().required("Quantidade é obrigatória"),
-  valor: Yup.string().required("Valor é obrigatório"),
+    )
+    .label("Data Hora"),
+  quantidade: Yup.string().required("Quantidade é obrigatória").label("Quantidade"),
+  valor: Yup.string().required("Valor é obrigatório").label("Valor"),
   ativo: Yup.string()
     .oneOf(assetsOptions, "Selecione um ativo válido")
-    .required("Ativo é obrigatório"),
+    .required("Ativo é obrigatório")
+    .label("Ativo"),
   exchange: Yup.string()
     .optional()
     .test(
@@ -40,7 +45,8 @@ const schema = Yup.object({
       function (value) {
         return this.parent.tipoTransferencia !== "exchange" || !!value;
       },
-    ),
+    )
+    .label("Exchange"),
   uid: Yup.string()
     .optional()
     .test(
@@ -58,7 +64,8 @@ const schema = Yup.object({
       function (value) {
         return this.parent.tipoTransferencia !== "endereco" || !!value;
       },
-    ),
+    )
+    .label("Wallet"),
   endereco: Yup.string()
     .optional()
     .test(
@@ -67,7 +74,8 @@ const schema = Yup.object({
       function (value) {
         return this.parent.tipoTransferencia !== "endereco" || !!value;
       },
-    ),
+    )
+    .label("Endereço"),
 });
 
 export const useProtection = () => {
