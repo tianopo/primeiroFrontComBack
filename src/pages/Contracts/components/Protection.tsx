@@ -6,17 +6,22 @@ import { FormX } from "src/components/Form/FormX";
 import { InputX } from "src/components/Form/Input/InputX";
 import { Select } from "src/components/Form/Select/Select";
 import { formatCurrency, formatDateTime } from "src/utils/formats";
-import { assetsOptions, exchangeOptions } from "src/utils/selectsOptions";
+import { assetsOptions, exchangeOptions, walletOptions } from "src/utils/selectsOptions";
 import { protection } from "../config/contractPdfs/comercialProtection";
 import { useProtection } from "../hooks/useProtection";
 
 export const Protection = () => {
+  const [tipoTransferencia, setTipoTransferencia] = useState<string>("exchange");
+  const [instituicao, setInstituicao] = useState<string>("");
   const [dataHora, setDataHora] = useState<string>("");
   const [quantidade, setQuantidade] = useState<string>("");
   const [valor, setValor] = useState<string>("");
   const [ativoDigital, setAtivoDigital] = useState<string>("");
   const [exchange, setExchange] = useState<string>("");
-  const [enderecoComprador, setEnderecoComprador] = useState<string>("");
+  const [uid, setUid] = useState<string>("");
+  const [endereco, setEndereco] = useState<string>("");
+  const [wallet, setWallet] = useState<string>("");
+
   const { context } = useProtection();
   const {
     formState: { errors },
@@ -40,12 +45,6 @@ export const Protection = () => {
     setValor(formattedCPF);
   };
 
-  const handleExchangeChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const choosen = e.target.value;
-    setValue("exchange", choosen);
-    setExchange(choosen);
-  };
-
   const handleSubmit = () => {
     reset();
     toast.success("Contrato Criado");
@@ -58,6 +57,21 @@ export const Protection = () => {
         className="flex max-w-4xl flex-col gap-2 rounded-lg border p-4 text-center"
       >
         <h3 className="text-28 font-bold">Defesa da Contestação</h3>
+        <Select
+          title="Tipo de Transferência"
+          placeholder="Selecione"
+          options={["exchange", "wallet"]}
+          value={tipoTransferencia}
+          onChange={(e) => setTipoTransferencia(e.target.value)}
+          required
+        />
+        <InputX
+          title="Instituição"
+          placeholder="PagSeguro"
+          value={instituicao}
+          onChange={(e) => setInstituicao(e.target.value)}
+          required
+        />
         <InputX
           title="Data Hora"
           placeholder="AAAA-MM-DD HH:MM:SS"
@@ -87,30 +101,57 @@ export const Protection = () => {
           onChange={(e) => setAtivoDigital(e.target.value)}
           required
         />
-        <Select
-          title="Exchange"
-          placeholder="Bybit"
-          options={exchangeOptions.map((a) => a.split(" ")[0])}
-          value={exchange}
-          onChange={handleExchangeChange}
-          required
-        />
-        <InputX
-          title="Endereço Comprador"
-          placeholder="EQ1BIZ8qYmskDzJmkGodYRTf_b9hckj6dZl"
-          value={enderecoComprador}
-          onChange={(e) => setEnderecoComprador(e.target.value)}
-          required
-        />
+        {tipoTransferencia === "exchange" && (
+          <>
+            <Select
+              title="Exchange"
+              placeholder="Bybit"
+              options={exchangeOptions.map((a) => a.split(" ")[0])}
+              value={exchange}
+              onChange={(e) => setExchange(e.target.value)}
+              required
+            />
+            <InputX
+              title="UID"
+              placeholder="UID do comprador"
+              value={uid}
+              onChange={(e) => setUid(e.target.value)}
+              required
+            />
+          </>
+        )}
+        {tipoTransferencia === "wallet" && (
+          <>
+            <Select
+              title="Wallet"
+              placeholder="Metamask"
+              options={walletOptions}
+              value={wallet}
+              onChange={(e) => setWallet(e.target.value)}
+              required
+            />
+            <InputX
+              title="Endereco"
+              placeholder="EQ1BIZ8qYmskDzJmkGodYRTf_b9hckj6dZl"
+              value={endereco}
+              onChange={(e) => setEndereco(e.target.value)}
+              required
+            />
+          </>
+        )}
         <Button
           disabled={Object.keys(errors).length > 0}
           onClick={() =>
             protection({
+              tipoTransferencia,
+              instituicao,
               dataHora,
               quantidade,
               valor,
               ativo: ativoDigital,
-              exchange,
+              exchange: tipoTransferencia === "exchange" ? exchange : undefined,
+              uid: tipoTransferencia === "exchange" ? uid : undefined,
+              wallet: tipoTransferencia === "wallet" ? wallet : undefined,
             })
           }
         >

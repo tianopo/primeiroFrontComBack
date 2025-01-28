@@ -47,7 +47,5 @@ export const walletOptions = [
   "Gate.IO",
   "Kucoin",
   "CoinEx",
-  "Bitget",
   "Huobi",
-  "BingX",
 ];
