@@ -8,6 +8,9 @@ export const PEP = ({ responseData }: IResponseData) => {
     <ul className="px-3">
       <h4 className="font-bold">Pessoa Politicamente Exposta - PEP</h4>
       <li>
+        <strong>Nome:</strong> {responseData?.nome}
+      </li>
+      <li>
         <strong>CPF:</strong> {responseData?.cpf}
       </li>
       <li>
