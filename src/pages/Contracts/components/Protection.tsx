@@ -12,7 +12,7 @@ import { useListBuyers } from "../hooks/useListBuyers";
 import { useProtection } from "../hooks/useProtection";
 
 export const Protection = () => {
-  const [tipoTransferencia, setTipoTransferencia] = useState<string>("exchange");
+  const [tipoTransferencia, setTipoTransferencia] = useState<string>("usuario");
   const [comprador, setComprador] = useState<string>("");
   const [instituicao, setInstituicao] = useState<string>("");
   const [dataHora, setDataHora] = useState<string>("");
@@ -23,6 +23,7 @@ export const Protection = () => {
   const [uid, setUid] = useState<string>("");
   const [endereco, setEndereco] = useState<string>("");
   const [wallet, setWallet] = useState<string>("");
+  const [usuario, setUsuario] = useState<string>("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
   const { data } = useListBuyers();
@@ -73,13 +74,13 @@ export const Protection = () => {
         <Select
           title="Tipo Transferência"
           placeholder="Selecione"
-          options={["exchange", "wallet"]}
+          options={["exchange", "wallet", "usuario"]}
           value={tipoTransferencia}
           onChange={(e) => setTipoTransferencia(e.target.value)}
           required
         />
         <InputX
-          title="comprador"
+          title="Comprador"
           placeholder="Nome do Comprador"
           value={comprador || ""}
           onChange={(e) => setComprador(e.target.value)}
@@ -164,11 +165,33 @@ export const Protection = () => {
             />
           </>
         )}
+        {tipoTransferencia === "usuario" && (
+          <>
+            <Select
+              title="Exchange"
+              placeholder="Bybit"
+              options={exchangeOptions.map((a) => a.split(" ")[0])}
+              value={exchange}
+              onChange={(e) => setExchange(e.target.value)}
+              required
+            />
+            <InputX
+              title="Usuário"
+              placeholder="Registro do usuário na Exchange"
+              value={usuario || ""}
+              onChange={(e) => setUsuario(e.target.value)}
+              busca
+              options={data
+                ?.filter((user: any) => user?.counterparty && user.counterparty.includes(usuario))
+                .map((user: any) => user?.counterparty)}
+            />
+          </>
+        )}
         <div className="flex flex-col items-center">
           <label className="text-sm font-medium">Adicionar Arquivo (PDF/Imagem)</label>
           <input
             type="file"
-            accept="image/*,application/pdf"
+            accept="image/*"
             onChange={handleFileUpload}
             multiple
             className="mt-2"
@@ -186,10 +209,13 @@ export const Protection = () => {
                 quantidade,
                 valor,
                 ativo: ativoDigital,
-                exchange: tipoTransferencia === "exchange" ? exchange : undefined,
+                exchange: ["exchange", "usuario"].includes(tipoTransferencia)
+                  ? exchange
+                  : undefined,
                 uid: tipoTransferencia === "exchange" ? uid : undefined,
                 wallet: tipoTransferencia === "wallet" ? wallet : undefined,
                 endereco: tipoTransferencia === "wallet" ? endereco : undefined,
+                usuario: tipoTransferencia === "usuario" ? usuario : undefined,
               },
               uploadedFiles,
             )

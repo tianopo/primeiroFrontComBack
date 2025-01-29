@@ -15,11 +15,13 @@ export interface IProtection {
   uid?: string;
   wallet?: string;
   endereco?: string;
+  ordem?: string;
+  usuario?: string;
 }
 
 const schema = Yup.object({
   tipoTransferencia: Yup.string()
-    .oneOf(["exchange", "wallet"], "Selecione um tipo de transferência válido")
+    .oneOf(["exchange", "wallet", "usuario"], "Selecione um tipo de transferência válido")
     .required("O tipo de transferência é obrigatório")
     .label("Tipo Transferência") as Yup.StringSchema<string>,
   comprador: Yup.string().required("Instituição é obrigatória").label("Comprador"),
@@ -43,7 +45,11 @@ const schema = Yup.object({
       "is-required-when-exchange",
       "A Exchange é obrigatória para transferências via Exchange",
       function (value) {
-        return this.parent.tipoTransferencia !== "exchange" || !!value;
+        return (
+          this.parent.tipoTransferencia !== "exchange" ||
+          this.parent.tipoTransferencia !== "usuario" ||
+          !!value
+        );
       },
     )
     .label("Exchange"),
@@ -60,7 +66,7 @@ const schema = Yup.object({
     .optional()
     .test(
       "is-required-when-wallet",
-      "A Wallet é obrigatória para transferências via Carteira",
+      "A Wallet é obrigatória para transferências via plataforma",
       function (value) {
         return this.parent.tipoTransferencia !== "endereco" || !!value;
       },
@@ -76,6 +82,16 @@ const schema = Yup.object({
       },
     )
     .label("Endereço"),
+  usuario: Yup.string()
+    .optional()
+    .test(
+      "is-required-when-wallet",
+      "O Usuário é obrigatório para transferências via ordem",
+      function (value) {
+        return this.parent.tipoTransferencia !== "usuario" || !!value;
+      },
+    )
+    .label("Usuário"),
 });
 
 export const useProtection = () => {
