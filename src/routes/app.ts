@@ -10,6 +10,8 @@ export const app = {
   /* After Login */
   auth: "/auth",
   home: "/inicio",
+  kyc: "kyc",
+  pld: "pld",
   //  CryptoTech
   registerOrders: "/register-orders",
   users: "/users",

@@ -73,10 +73,27 @@ export const CryptoTech = () => {
           the specific needs of each client.
         </h6>
       </section>
-      <footer className="border-gradient flex h-40 flex-col items-center justify-between gap-2 border-t-1 md:h-28 md:flex-row">
+      <footer className="border-gradient flex h-fit flex-col items-center justify-between gap-2 border-t-1 md:h-48 md:flex-row">
         <div className="pulse-complete -right-24 bg-gradient-conic-secundary"></div>
-        <h3 className="font-extrabold uppercase text-white">cryptotech</h3>
-        <Navbar nav={nav} />
+        <div className="flex-start flex flex-col text-white">
+          <h3 className="font-extrabold uppercase text-white">cryptotech</h3>
+          <h6>
+            <strong>CNPJ: </strong>55.636.113/0001-70
+          </h6>
+        </div>
+        <div className="md:flex-start flex flex-col text-center text-white">
+          <h3 className="font-extrabold uppercase text-white">documentação</h3>
+          <a href="/kyc" className="hover:cursor-pointer hover:text-primary">
+            <h6>Política de KYC</h6>
+          </a>
+          <a href="/pld" className="hover:cursor-pointer hover:text-primary">
+            <h6>Política de PLD</h6>
+          </a>
+        </div>
+        <div className="flex flex-col text-center">
+          <h3 className="font-extrabold uppercase text-white">navegação</h3>
+          <Navbar nav={nav} footer />
+        </div>
         <div className="flex flex-col items-center">
           <div className="mt-4 flex space-x-4">
             {/* Link do YouTube */}
