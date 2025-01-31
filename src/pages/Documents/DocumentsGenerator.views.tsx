@@ -59,6 +59,7 @@ export const DocumentsGenerator = () => {
 
     const today = new Date();
     const monthName = today.toLocaleDateString("pt-BR", { month: "long" });
+    const yearName = today.toLocaleDateString("pt-BR", { year: "2-digit" });
 
     const groupedByBuyer = filteredData.reduce((acc: any, transaction: any) => {
       const buyerDocument = transaction.buyer?.document || "N/A";
@@ -111,7 +112,7 @@ export const DocumentsGenerator = () => {
       }, new Date(group.transactions[0].dataTransacao));
 
       // Discriminação formatada corretamente
-      let fileContent = `"- Serviço: Intermediação de Ativos Digitais\n  - Comissão: ${comissao}%\n  - Quantidade Vendida: ${group.transactions.filter((transaction: any) => transaction.tipo === "venda").length}\n  - Mês/Ano: ${monthName}/2024\n  - Valor da Nota: ${(valorNfe / 100).toFixed(2)}\n  Ordem dos Campos após nome da corretora:\n  - Identificador da Ordem\n  - Dia e Hora\n  - Ativo Digital\n  - Quantidade de Tokens\n  - Valor Pago\n  Exchange/Corretora: ${exchangeName}\n`;
+      let fileContent = `"- Serviço: Intermediação de Ativos Digitais\n  - Comissão: ${comissao}%\n  - Quantidade Vendida: ${group.transactions.filter((transaction: any) => transaction.tipo === "venda").length}\n  - Mês/Ano: ${monthName}/${yearName}\n  - Valor da Nota: ${(valorNfe / 100).toFixed(2)}\n  Ordem dos Campos após nome da corretora:\n  - Identificador da Ordem\n  - Dia e Hora\n  - Ativo Digital\n  - Quantidade de Tokens\n  - Valor Pago\n  Exchange/Corretora: ${exchangeName}\n`;
 
       group.transactions.forEach((transaction: any) => {
         if (transaction.tipo === "venda") {
