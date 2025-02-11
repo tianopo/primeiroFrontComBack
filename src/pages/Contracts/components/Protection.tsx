@@ -141,6 +141,7 @@ export const Protection = () => {
           value={comprador || ""}
           onChange={(e) => setComprador(e.target.value)}
           busca
+          readOnly={order.length > 0 && tipoTransferencia === "usuario"}
           options={data
             ?.filter((item: any) =>
               (item.name || "").toLowerCase().includes((comprador || "").toLowerCase()),
@@ -159,6 +160,7 @@ export const Protection = () => {
           placeholder="AAAA-MM-DD HH:MM:SS"
           value={dataHora}
           onChange={handleDateTimeChange}
+          readOnly={order.length > 0 && tipoTransferencia === "usuario"}
           required
         />
         <InputX
@@ -166,6 +168,7 @@ export const Protection = () => {
           placeholder="45.55"
           value={quantidade}
           onChange={handleQuantidadeChange}
+          readOnly={order.length > 0 && tipoTransferencia === "usuario"}
           required
         />
         <InputX
@@ -173,6 +176,7 @@ export const Protection = () => {
           placeholder="R$ 5.000,01"
           value={valor}
           onChange={handleValorChange}
+          readOnly={order.length > 0 && tipoTransferencia === "usuario"}
           required
         />
         <Select
@@ -181,6 +185,7 @@ export const Protection = () => {
           options={assetsOptions}
           value={ativoDigital}
           onChange={(e) => setAtivoDigital(e.target.value)}
+          disabled={order.length > 0 && tipoTransferencia === "usuario"}
           required
         />
         {tipoTransferencia === "exchange" && (
@@ -229,6 +234,7 @@ export const Protection = () => {
               options={exchangeOptions.map((a) => a.split(" ")[0])}
               value={exchange}
               onChange={(e) => setExchange(e.target.value)}
+              disabled={order.length > 0 && tipoTransferencia === "usuario"}
               required
             />
             <InputX
@@ -237,6 +243,7 @@ export const Protection = () => {
               value={usuario || ""}
               onChange={(e) => setUsuario(e.target.value)}
               busca
+              readOnly={order.length > 0 && tipoTransferencia === "usuario"}
               options={data
                 ?.filter((user: any) => user?.counterparty && user.counterparty.includes(usuario))
                 .map((user: any) => user?.counterparty)}
