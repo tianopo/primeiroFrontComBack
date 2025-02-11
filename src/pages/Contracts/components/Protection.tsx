@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { toast } from "react-toastify";
 import { Button } from "src/components/Buttons/Button";
@@ -9,10 +9,12 @@ import { formatCurrency, formatDateTime } from "src/utils/formats";
 import { assetsOptions, exchangeOptions, walletOptions } from "src/utils/selectsOptions";
 import { protection } from "../config/contractPdfs/comercialProtection";
 import { useListBuyers } from "../hooks/useListBuyers";
+import { useListOrders } from "../hooks/useListOrders";
 import { useProtection } from "../hooks/useProtection";
 
 export const Protection = () => {
   const [tipoTransferencia, setTipoTransferencia] = useState<string>("usuario");
+  const [order, setOrder] = useState<string>("");
   const [comprador, setComprador] = useState<string>("");
   const [instituicao, setInstituicao] = useState<string>("");
   const [dataHora, setDataHora] = useState<string>("");
@@ -33,6 +35,48 @@ export const Protection = () => {
     setValue,
     reset,
   } = context;
+  const { data: dataOrders, error: errorOrders, isLoading: isLoadingOrders } = useListOrders();
+
+  useEffect(() => {
+    if (order && dataOrders) {
+      const selectedOrder = dataOrders.find((o: any) => o.numeroOrdem === order);
+      if (selectedOrder) {
+        const {
+          dataTransacao,
+          quantidade: amount,
+          valor: value,
+          ativoDigital: asset,
+          exchange: corretora,
+          buyerId,
+        } = selectedOrder;
+        setDataHora(dataTransacao);
+        setValue("dataHora", dataTransacao);
+        setQuantidade(amount);
+        setValue("quantidade", amount);
+        setValor(value);
+        setValue("valor", value);
+        setAtivoDigital(asset);
+        setValue("ativo", asset);
+        setExchange(corretora.split(" ")[0]);
+        setValue("exchange", corretora);
+        // Buscar o nome do comprador pelo buyerId
+        const buyer = data?.find((b: any) => b.id === buyerId);
+        if (buyer) {
+          setComprador(buyer.name);
+          setValue("comprador", buyer.name);
+          setUsuario(buyer.counterparty);
+          setValue("usuario", buyer.counterparty);
+        } else {
+          setComprador("");
+          setUsuario("");
+        }
+      }
+    }
+  }, [order, dataOrders, data]);
+
+  const handleOrderChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setOrder(e.target.value);
+  };
 
   const handleDateTimeChange = (e: ChangeEvent<HTMLInputElement>) => {
     const formattedDate = formatDateTime(e.target.value);
@@ -79,6 +123,18 @@ export const Protection = () => {
           onChange={(e) => setTipoTransferencia(e.target.value)}
           required
         />
+        {isLoadingOrders && <p>Carregando Ordens...</p>}
+        {errorOrders && <p>Erro ao carregar dados das ordens</p>}
+        {tipoTransferencia === "usuario" && (
+          <InputX
+            title="Ordem"
+            placeholder="1889336254869762048"
+            value={order}
+            onChange={handleOrderChange}
+            busca
+            options={dataOrders?.map((o: any) => o.numeroOrdem)}
+          />
+        )}
         <InputX
           title="Comprador"
           placeholder="Nome do Comprador"

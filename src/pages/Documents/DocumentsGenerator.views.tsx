@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { InputX } from "src/components/Form/Input/InputX";
-import { useListTransactions } from "../RegisterOrders/hooks/useListTransactions";
 import { handleDownload } from "./config/handleDownload";
+import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
 
 export const DocumentsGenerator = () => {
   const [startDate, setStartDate] = useState("");
@@ -12,7 +12,7 @@ export const DocumentsGenerator = () => {
   const [buyers, setBuyers] = useState<string[]>([]);
   const [visibleExchanges, setVisibleExchanges] = useState<{ [key: string]: boolean }>({});
 
-  const { data, error, isLoading } = useListTransactions(
+  const { data, error, isLoading } = useListTransactionsInDate(
     filterDates.startDate,
     filterDates.endDate,
   );

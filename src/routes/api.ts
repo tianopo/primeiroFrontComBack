@@ -7,7 +7,8 @@ export const apiRoute = {
   multa: "send/multa",
 
   transactions: "transactions",
-  order: "transactions/order",
+  tax: "transactions/tax",
+  comercial: "transactions/comercial",
 
   compliance: "compliance",
   operation: "compliance/operation",
