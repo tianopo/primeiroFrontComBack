@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { ButtonChangeLanguage } from "src/components/Buttons/ButtonChangeLanguage";
 import { AnimateBlink } from "./components/AnimateBlink";
 import { AnimateSnake } from "./components/AnimateSnake";
@@ -10,7 +11,9 @@ import { SectionIntroduction } from "./Sections/SectionIntroduction";
 import { SectionServicesTechnology } from "./Sections/SectionServicesTechnology";
 
 export const CryptoTech = () => {
-  const nav = ["Home", "Services", "Info", "Support"];
+  const { t: translator } = useTranslation();
+  const t = (t: string) => translator(`header.${t}`);
+  const nav = [t("home"), t("services"), t("info"), t("support")];
 
   return (
     <div className="relative flex h-fit w-full flex-col gap-16 overflow-hidden bg-background-black px-5">

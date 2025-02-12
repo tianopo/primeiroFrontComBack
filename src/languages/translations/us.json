@@ -1,5 +1,11 @@
 {
   "translation": {
+    "header": {
+      "home": "Home",
+      "services": "Services",
+      "info": "Info",
+      "support": "Support"
+    },
     "contact": {
       "buttonEnviar": "Enviar",
       "nome": "nome",

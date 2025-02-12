@@ -1,5 +1,22 @@
 {
   "translation": {
+    "header": {
+      "home": "Início",
+      "services": "Serviços",
+      "info": "Info",
+      "support": "Suporte"
+    },
+    "introduction": {
+      "automate": "automatizar",
+      "develop": "desenvolver",
+      "trading": "negociar",
+      "automateAndGrow": "Automatize e creça o seu negócio",
+      "projectAndServices": "Projetos e Serviços",
+      "search": "Procure",
+      "portfolio": "Portfólio de Matheus",
+      "ambassadorSatoshi": "Embaixador de Satoshi",
+      "contactMyself": "Contate-me para negociarmos"
+    },
     "contact": {
       "buttonEnviar": "Enviar",
       "nome": "nome",
