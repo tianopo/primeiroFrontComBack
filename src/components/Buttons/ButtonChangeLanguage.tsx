@@ -1,7 +1,6 @@
 import { CaretDown, CaretRight } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useTheme } from "src/hooks/useTheme";
 import { setLocaleYup } from "src/utils/yupValidation";
 import "./Button.css";
 
@@ -16,45 +15,16 @@ export const ButtonChangeLanguage = ({ menuBottom }: IButtonChangeLanguage) => {
       flag: "/flags/br.svg",
     },
     {
-      value: "cn",
-      flag: "/flags/cn.svg",
-    },
-    {
-      value: "de",
-      flag: "/flags/de.svg",
-    },
-    {
-      value: "dr",
-      flag: "/flags/dr.svg",
-    },
-    {
-      value: "es",
-      flag: "/flags/es.svg",
-    },
-    {
-      value: "fr",
-      flag: "/flags/fr.svg",
-    },
-    {
-      value: "it",
-      flag: "/flags/it.svg",
-    },
-    {
-      value: "jp",
-      flag: "/flags/jp.svg",
-    },
-    {
       value: "us",
       flag: "/flags/us.svg",
     },
   ];
 
   const getStartLanguage = () => {
-    const languageSave = localStorage.get("language");
+    const languageSave = localStorage.getItem("language");
     return languageSave || options[0].value;
   };
 
-  const { theme } = useTheme();
   const { i18n } = useTranslation();
   const [selectedLanguage, setSelectedLanguage] = useState(getStartLanguage());
   const [menuOpen, setMenuOpen] = useState(false);
@@ -92,7 +62,7 @@ export const ButtonChangeLanguage = ({ menuBottom }: IButtonChangeLanguage) => {
         pl-1.5
         pr-1
         outline-none
-        button_trocar_idioma-${theme}
+        hover:opacity-60
         `}
       >
         <img
@@ -100,13 +70,17 @@ export const ButtonChangeLanguage = ({ menuBottom }: IButtonChangeLanguage) => {
           alt={`Bandeira de ${options.find((opcao) => opcao.value === selectedLanguage)?.value}`}
           className="h-7 w-7"
         />
-        {menuOpen ? <CaretDown className="h-4 w-4" /> : <CaretRight className="h-4 w-4" />}
+        {menuOpen ? (
+          <CaretDown className="h-4 w-4 text-white" />
+        ) : (
+          <CaretRight className="h-4 w-4 text-white" />
+        )}
       </button>
       {menuOpen && (
         <div
           className={`
           absolute
-          mt-4
+          mt-2
           w-16
           rounded-6
           bg-white
@@ -121,7 +95,7 @@ export const ButtonChangeLanguage = ({ menuBottom }: IButtonChangeLanguage) => {
               w-full
               justify-center
               hover:rounded-6
-              button_trocar_idioma-${theme}
+              hover:bg-selected-primary
               `}
               onClick={() => changeLanguage(option.value)}
             >

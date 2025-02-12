@@ -1,0 +1,37 @@
+{
+  "translation": {
+    "contact": {
+      "buttonEnviar": "Enviar",
+      "nome": "nome",
+      "email": "email",
+      "contato": "contato",
+      "mensagem": "mensagem",
+      "mensagemPlaceholder": "Escreva a sua mensagem",
+      "toastSucesso": "Formulário enviado com sucesso",
+      "toastErro": "Erro ao enviar o formulário"
+    },
+    "hooks": {
+      "auth": {
+        "userLogged": "User successfully logged in",
+        "userRegistered": "Successfully registered user",
+        "passwordUpper": "Password must have at least one uppercase character",
+        "passwordLower": "Password must have at least one lowercase character",
+        "passwordNumber": "Password must have at least one number character",
+        "passwordSpecial": "Password must have at least one special character",
+        "passwordMatch": "Passwords don't match",
+        "InvalidEmail": "Invalid email address"
+      }
+    },
+    "validation": {},
+    "others": {
+      "unauthenticatedPerson": "Unauthenticated person, redirecting in",
+      "seconds": "seconds",
+      "second": "second"
+    },
+    "footer": {
+      "redesSociais": "Redes Sociais",
+      "feitoPor": "Feito por",
+      "direitoAutoral": "Direito Autoral"
+    }
+  }
+}

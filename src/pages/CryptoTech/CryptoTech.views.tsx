@@ -1,3 +1,4 @@
+import { ButtonChangeLanguage } from "src/components/Buttons/ButtonChangeLanguage";
 import { AnimateBlink } from "./components/AnimateBlink";
 import { AnimateSnake } from "./components/AnimateSnake";
 import { Navbar } from "./components/Navbar";
@@ -53,7 +54,7 @@ export const CryptoTech = () => {
       >
         <h3 className="font-extrabold uppercase text-white">cryptotech</h3>
         <Navbar nav={nav} />
-        <button className="button-colorido">coming soon</button>
+        <ButtonChangeLanguage />
       </header>
       <SectionIntroduction />
       <SectionForm />
@@ -73,7 +74,7 @@ export const CryptoTech = () => {
           the specific needs of each client.
         </h6>
       </section>
-      <footer className="border-gradient flex h-fit flex-col items-center justify-between gap-2 border-t-1 md:h-48 md:flex-row">
+      <footer className="border-gradient flex h-fit flex-col items-center justify-between gap-2 border-t-1 md:h-48 md:flex-row md:items-start">
         <div className="pulse-complete -right-24 bg-gradient-conic-secundary"></div>
         <div className="flex-start flex flex-col text-white">
           <h3 className="font-extrabold uppercase text-white">cryptotech</h3>
