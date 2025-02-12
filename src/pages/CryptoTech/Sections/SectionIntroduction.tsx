@@ -11,21 +11,21 @@ export const SectionIntroduction = () => {
   return (
     <section className="flex w-full flex-col justify-between gap-2 lg:flex-row lg:items-end">
       <div>
-        <h2 className="section-1-text text-white">{t("automate")}</h2>
+        <h2 className="section-1-text text-white">{t("trading")}</h2>
         <h2
           className="section-1-text text-transparent"
           style={{
             WebkitTextStroke: "1px white",
           }}
         >
-          {t("develop")} @
+          {t("crypto")} @
         </h2>
-        <h2 className="section-1-text text-white">{t("trading")}</h2>
-        <h5 className="z-50 font-extralight tracking-wider text-white">{t("automateAndGrow")}</h5>
+        <h2 className="section-1-text text-white">{t("intermediate")}</h2>
+        <h5 className="z-50 font-extralight tracking-wider text-white">{t("negociateCrypto")}</h5>
       </div>
       <div className="container-opacity-light w-full lg:w-[calc(50%-1rem)]">
         <h4 className="text-36 font-medium text-white text-opacity-75">
-          {t("projectAndServices")}
+          {t("exchangesAndContract")}
         </h4>
         <InputSearch
           title={`${t("search")}`}
@@ -34,11 +34,41 @@ export const SectionIntroduction = () => {
           onChange={(e) => setProject(e.target.value)}
           busca
           options={[
-            { label: t("portfolio"), link: "https://portfolio-ten-weld-61.vercel.app/" },
-            { label: "Santana Cred", link: "https://santanacred.com.br/" },
-            { label: "Reurb", link: "https://reurbfront-tianopos-projects.vercel.app/" },
-            { label: "Mike Token", link: "https://miketoken.io/" },
-            { label: t("ambassadorSatohis"), link: "https://app.satoshiprotocol.org/" },
+            {
+              label: "Bybit Empresarial",
+              link: "https://www.bybit.com/en/fiat/trade/otc/profile/s839905d4dc8d447a8f5ff55859dcd1d0/USDT/BRL/item",
+            },
+            {
+              label: "Bybit Pessoal",
+              link: "https://www.bybit.com/pt-BR/fiat/trade/otc/profile/sa14f0f123e284b0abf336c9bd881a78e/USDT/BRL/item",
+            },
+            {
+              label: "Coinex Empresarial",
+              link: "https://www.coinex.com/pt/p2p/user/info/DDF466CD",
+            },
+            { label: "Coinex Pessoal", link: "https://www.coinex.com/pt/p2p/user/info/E5D70F69" },
+            {
+              label: "Kucoin Empresarial",
+              link: "https://www.kucoin.com/pt/otc/merchant?id=67a0d7b59fd9f300014ea947",
+            },
+            {
+              label: "Kucoin Pessoal",
+              link: "https://www.kucoin.com/pt/otc/merchant?id=6706beb815a9d600015bb5c6",
+            },
+            { label: "BingX", link: "https://bingx.paycat.com/pt-br/p2p/" },
+            { label: "HTX", link: "https://www.htx.com/en-us/fiat-crypto/trader/494495633" },
+            {
+              label: "Gate.io",
+              link: "https://www.gate.io/pt-br/p2p/user/txgGu6sVouzwLtBsDdTPYSQFatrieH",
+            },
+            {
+              label: "Bitget",
+              link: "https://www.bitget.com/pt/p2p-trade/user/beb64a7e8cb13851ad90",
+            },
+            {
+              label: "Binance",
+              link: "https://c2c.binance.com/pt-BR/advertiserDetail?advertiserNo=s0b103a333568300885ab7fbe69609d15",
+            },
             {
               label: t("contactMyself"),
               link: "https://api.whatsapp.com/send?phone=5512982435638",

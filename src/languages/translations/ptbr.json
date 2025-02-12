@@ -7,15 +7,13 @@
       "support": "Suporte"
     },
     "introduction": {
-      "automate": "automatizar",
-      "develop": "desenvolver",
       "trading": "negociar",
-      "automateAndGrow": "Automatize e creça o seu negócio",
-      "projectAndServices": "Projetos e Serviços",
+      "crypto": "crypto",
+      "intermediate": "intermediar",
+      "negociateCrypto": "Negocie e obtenha crypto em sua carteira",
+      "exchangesAndContract": "Negocie via contrato ou P2P nas exchanges",
       "search": "Procure",
-      "portfolio": "Portfólio de Matheus",
-      "ambassadorSatoshi": "Embaixador de Satoshi",
-      "contactMyself": "Contate-me para negociarmos"
+      "contactMyself": "Contate-me para negociação em contrato"
     },
     "contact": {
       "buttonEnviar": "Enviar",
