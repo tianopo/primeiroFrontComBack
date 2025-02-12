@@ -83,10 +83,20 @@ export const CryptoTech = () => {
         </div>
         <div className="md:flex-start flex flex-col text-center text-white">
           <h3 className="font-extrabold uppercase text-white">documentação</h3>
-          <a href="/kyc" className="hover:cursor-pointer hover:text-primary">
+          <a
+            href="/policy/kyc.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:cursor-pointer hover:text-primary"
+          >
             <h6>Política de KYC</h6>
           </a>
-          <a href="/pld" className="hover:cursor-pointer hover:text-primary">
+          <a
+            href="/policy/pld.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:cursor-pointer hover:text-primary"
+          >
             <h6>Política de PLD</h6>
           </a>
         </div>
