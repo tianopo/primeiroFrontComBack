@@ -59,6 +59,26 @@
       "featuresRateCustom": "Custom Rate",
       "featuresSafeCustom": "Contract-based transaction and Tailored terms and conditions"
     },
+    "info": {
+      "message": "Hi! I would like some information about your services and projects",
+      "title": "How We Deliver High Quality",
+      "subtitle1": "Client Communication",
+      "subtitle2": "Trading & Development",
+      "subtitle3": "Digital Asset Intermediation",
+      "text1": "We maintain an open and transparent communication channel with our clients, ensuring that all transactions are conducted privately and securely. Security is our priority, and we use advanced technologies to ensure the confidentiality and integrity of transactions.",
+      "text2": "We combine our expertise in technology development with advanced knowledge in digital asset trading to offer customized solutions. Our team is highly skilled in developing robust brokerage algorithms, as well as structuring customized investments with a high probability of positive returns.",
+      "text3": "We work with digital asset intermediation through several reliable platforms, always seeking the best solution for each client. In addition, we offer the possibility of direct transfer to digital wallets through digital contracts, ensuring legal security and transparency in each transaction.",
+      "button": "More Details"
+    },
+    "cryptotech": {
+      "about": "about/info",
+      "text1": "Our company specializes in digital asset brokerage, offering a safe, transparent, and highly efficient service to clients who wish to buy, sell, or invest in cryptocurrencies and other digital assets. We work with several reliable platforms and also provide digital contracts to ensure that all transactions are conducted with complete security and legal support.",
+      "text2": "In addition to brokerage, we also assist our clients in structuring personalized investments in the crypto world, ensuring agile and efficient operations. Our commitment is to offer solutions that combine cutting-edge technology and in-depth knowledge of the financial market, providing security, privacy, and the best possible experience for each client.",
+      "documentation": "documentation",
+      "kyc": "KYC policy",
+      "pld": "PLD policy",
+      "navigation": "navigation"
+    },
     "hooks": {
       "auth": {
         "userLogged": "User successfully logged in",

@@ -59,6 +59,26 @@
       "featuresRateCustom": "Taxa Personalizada",
       "featuresSafeCustom": "Transação baseada em contrato e Termos e condições personalizados"
     },
+    "info": {
+      "message": "Olá! Gostaria de algumas informações sobre seus serviços e projetos",
+      "title": "Como Entregamos Alta Qualidade",
+      "subtitle1": "Comunicação com o Cliente",
+      "subtitle2": "Negociação & Desenvolvimento",
+      "subtitle3": "Intermediação de Ativos Digitais",
+      "text1": "Mantemos um canal de comunicação aberto e transparente com nossos clientes, garantindo que todas as transações sejam conduzidas de forma privada e segura. A segurança é nossa prioridade, e utilizamos tecnologias avançadas para garantir a confidencialidade e integridade das transações.",
+      "text2": "Combinamos nossa expertise em desenvolvimento de tecnologia com conhecimento avançado em negociação de ativos digitais para oferecer soluções personalizadas. Nossa equipe é altamente qualificada no desenvolvimento de algoritmos robustos para corretagem, além de estruturar investimentos personalizados com alta probabilidade de retorno positivo.",
+      "text3": "Trabalhamos com a intermediação de ativos digitais por meio de diversas plataformas confiáveis, sempre buscando a melhor solução para cada cliente. Além disso, oferecemos a possibilidade de transferência direta para carteiras digitais por meio de contratos digitais, garantindo segurança jurídica e transparência em cada transação.",
+      "button": "Mais Detalhes"
+    },
+    "cryptotech": {
+      "about": "sobre/info",
+      "text1": "Nossa empresa é especializada na intermediação de ativos digitais, oferecendo um serviço seguro, transparente e altamente eficiente para clientes que desejam comprar, vender ou investir em criptomoedas e outros ativos digitais. Trabalhamos com diversas plataformas confiáveis e também disponibilizamos contratos digitais para garantir que todas as transações sejam conduzidas com total segurança e respaldo jurídico.",
+      "text2": "Além da intermediação, também auxiliamos nossos clientes na estruturação de investimentos personalizados no mundo cripto, garantindo operações ágeis e eficientes. Nosso compromisso é oferecer soluções que unem tecnologia de ponta e profundo conhecimento do mercado financeiro, proporcionando segurança, privacidade e a melhor experiência possível para cada cliente.",
+      "documentation": "documentação",
+      "kyc": "Política de KYC",
+      "pld": "Política de PLD",
+      "navigation": "navegação"
+    },
     "hooks": {
       "auth": {
         "userLogged": "Usuário conectado com sucesso",

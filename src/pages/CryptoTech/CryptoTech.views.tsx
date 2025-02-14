@@ -11,8 +11,9 @@ import { SectionIntroduction } from "./Sections/SectionIntroduction";
 
 export const CryptoTech = () => {
   const { t: translator } = useTranslation();
-  const t = (t: string) => translator(`header.${t}`);
-  const nav = [t("home"), t("services"), t("info"), t("support")];
+  const h = (t: string) => translator(`header.${t}`);
+  const t = (t: string) => translator(`cryptotech.${t}`);
+  const nav = [h("home"), h("services"), h("info"), h("support")];
 
   return (
     <div className="relative flex h-fit w-full flex-col gap-16 overflow-hidden bg-background-black px-5">
@@ -65,14 +66,11 @@ export const CryptoTech = () => {
       </div>
       <SectionInfo />
       <section className="flex w-full flex-col justify-between gap-6 font-extrabold text-white">
-        <h2>About/Info</h2>
+        <h2>{t("about")}</h2>
         <h6 className="text-justify font-light leading-7">
-          Our company specializes in software development and business process automation, helping
-          our clients improve their operations and increase efficiency. In addition, we offer
-          third-party P2P investment solutions, with clear and secure contracts, ensuring
-          transparency and security for all parties involved. We combine cutting-edge technology
-          with a deep understanding of the financial market to provide customized services that meet
-          the specific needs of each client.
+          {t("text1")}
+          <br />
+          {t("text2")}
         </h6>
       </section>
       <footer className="border-gradient flex h-fit flex-col items-center justify-between gap-2 border-t-1 md:h-48 md:flex-row md:items-start">
@@ -84,14 +82,14 @@ export const CryptoTech = () => {
           </h6>
         </div>
         <div className="md:flex-start flex flex-col text-center text-white">
-          <h3 className="font-extrabold uppercase text-white">documentação</h3>
+          <h3 className="font-extrabold uppercase text-white">{t("documentation")}</h3>
           <a
             href="/policy/kyc.pdf"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:cursor-pointer hover:text-primary"
           >
-            <h6>Política de KYC</h6>
+            <h6>{t("kyc")}</h6>
           </a>
           <a
             href="/policy/pld.pdf"
@@ -99,11 +97,11 @@ export const CryptoTech = () => {
             rel="noopener noreferrer"
             className="hover:cursor-pointer hover:text-primary"
           >
-            <h6>Política de PLD</h6>
+            <h6>{t("pld")}</h6>
           </a>
         </div>
         <div className="flex flex-col text-center">
-          <h3 className="font-extrabold uppercase text-white">navegação</h3>
+          <h3 className="font-extrabold uppercase text-white">{t("navigation")}</h3>
           <Navbar nav={nav} footer />
         </div>
         <div className="flex flex-col items-center">
