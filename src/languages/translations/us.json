@@ -6,15 +6,58 @@
       "info": "Info",
       "support": "Support"
     },
-    "contact": {
-      "buttonEnviar": "Enviar",
-      "nome": "nome",
-      "email": "email",
-      "contato": "contato",
-      "mensagem": "mensagem",
-      "mensagemPlaceholder": "Escreva a sua mensagem",
-      "toastSucesso": "Formulário enviado com sucesso",
-      "toastErro": "Erro ao enviar o formulário"
+    "introduction": {
+      "trading": "trading",
+      "crypto": "crypto",
+      "intermediate": "intermediate",
+      "negociateCrypto": "Trade and obtain crypto in your wallet",
+      "exchangesAndContract": "Trade via contract or P2P on exchanges",
+      "search": "Search",
+      "contactMyself": "Contact me for contract negotiation"
+    },
+    "form": {
+      "message": "Hello! We have received a new message from the contact form",
+      "name": "Name",
+      "phone": "Phone",
+      "placeholderName": "Full Name",
+      "getInTouch": "Get in touch and check the quote",
+      "contactForm": "Contact Form",
+      "send": "Send",
+      "invalidPhone": "Invalid phone format",
+      "invalidEmail": "Invalid email format"
+    },
+    "assetsSale": {
+      "title": "Buy Digital Assets",
+      "buy": "Buy",
+      "contactUs": "Contact Us",
+      "buyNow": "Buy Now",
+      "titleSmall": "Small Purchase",
+      "buySmall": "$20 - $100 USD",
+      "messageSmall": "Hi! I would like to buy digital assets within the range of $20 - $100. Can we proceed?",
+      "featuresAccepted": "Accepted cryptocurrencies",
+      "featuresAcceptedOthers": "Others",
+      "featuresOffer": "Offer",
+      "featuresRate": "Rate",
+      "featuresMethod": "Transaction Method",
+      "featuresOrWallet": "or wallet",
+      "featuresAmount": "Amount",
+      "featuresPercentageSmall": "20",
+      "featuresSafeSmall": "Fast and secure transactions",
+      "titleMedium": "Medium Purchase",
+      "buyMedium": "$101 - $250 USD",
+      "messageMedium": "Hi! I would like to buy digital assets within the range of $101 - $250 USD. Can we proceed?",
+      "featuresPercentageMedium": "15",
+      "featuresSafeMedium": "Safe and efficient transfers",
+      "titleLarge": "Large Purchase",
+      "buyLarge": "$251 - $5000 USD",
+      "messageLarge": "Hi! I would like to buy digital assets within the range of $251 - $5000 USD. Can we proceed?",
+      "featuresPercentageLarge": "5",
+      "featuresSafeLarge": "Contract-based transaction or P2P Safe",
+      "titleCustom": "Custom Purchase",
+      "buyCustom": "Above $5000 USD",
+      "messageCustom": "Hi! I would like to buy digital assets over $50,000. Can we discuss custom terms?",
+      "featuresRateCustom": "Custom Rate",
+      "featuresSafeCustom": "Contract-based transaction and Tailored terms and conditions"
     },
     "hooks": {
       "auth": {
@@ -35,9 +78,9 @@
       "second": "second"
     },
     "footer": {
-      "redesSociais": "Redes Sociais",
-      "feitoPor": "Feito por",
-      "direitoAutoral": "Direito Autoral"
+      "redesSociais": "Social Media",
+      "feitoPor": "Made By",
+      "direitoAutoral": "Copyright"
     }
   }
 }

@@ -1,8 +1,11 @@
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export const SectionServicesTechnology = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { t: translator } = useTranslation();
+  const t = (t: string) => translator(`introduction.${t}`);
   const message = (message: string) => {
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://api.whatsapp.com/send?phone=5512982435638&text=${encodedMessage}`;

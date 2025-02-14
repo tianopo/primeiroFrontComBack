@@ -1,5 +1,6 @@
 import { ChangeEvent, useState } from "react";
 import { FormProvider } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { FormX } from "src/components/Form/FormX";
 import { formatPhone } from "src/utils/formats";
 import { InputInstitucional } from "../components/InputInstitucional";
@@ -17,9 +18,12 @@ export const SectionForm = () => {
   const [phone, setPhone] = useState<string>("");
   const [email, setEmail] = useState<string>("");
 
+  const { t: translator } = useTranslation();
+  const t = (t: string) => translator(`form.${t}`);
+
   const onSubmit = (data: IContactForm) => {
-    const { name, phone, email } = data;
-    const message = `Hi! We receive a new message from contact form:\n\nName: ${name}\nPhone: ${phone}\nE-mail: ${email}`;
+    const { nome, telefone, email } = data;
+    const message = `${t("message")}:\n\n${t("name")}: ${nome}\n${t("phone")}: ${telefone}\nE-mail: ${email}`;
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://api.whatsapp.com/send?phone=5512982435638&text=${encodedMessage}`;
     window.open(whatsappUrl, "_blank");
@@ -28,13 +32,13 @@ export const SectionForm = () => {
 
   const handleNameOnChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setValue("name", value);
+    setValue("nome", value);
     setName(value);
   };
 
   const handlePhoneOnChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = formatPhone(e.target.value);
-    setValue("phone", value);
+    setValue("telefone", value);
     setPhone(value);
   };
 
@@ -47,20 +51,20 @@ export const SectionForm = () => {
   return (
     <section className="flex w-full flex-col justify-between gap-2 md:flex-row md:items-end md:gap-0">
       <div className="container-opacity-light w-full">
-        <h4 className="font-light text-white text-opacity-75">Get in touch and request a quote</h4>
-        <h2 className="font-medium text-white text-opacity-75">Contact Form</h2>
+        <h4 className="font-light text-white text-opacity-75">{t("getInTouch")}</h4>
+        <h2 className="font-medium text-white text-opacity-75">{t("contactForm")}</h2>
         <FormProvider {...context}>
           <FormX onSubmit={onSubmit}>
             <div className="mb-2 flex flex-col gap-5 md:flex-row">
               <InputInstitucional
-                title="Name"
+                title="Nome"
                 value={name}
-                placeholder="Full Name"
+                placeholder={`${t("placeholderName")}`}
                 onChange={handleNameOnChange}
                 required
               />
               <InputInstitucional
-                title="Phone"
+                title="Telefone"
                 value={phone}
                 placeholder="(XX) XXXXX-XXXX"
                 onChange={handlePhoneOnChange}
@@ -75,7 +79,7 @@ export const SectionForm = () => {
               />
             </div>
             <button disabled={Object.keys(errors).length > 0} className="button-colorido">
-              Send
+              {t("send")}
             </button>
           </FormX>
         </FormProvider>

@@ -1,8 +1,11 @@
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export const SectionDigitalAssetsSale = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { t: translator } = useTranslation();
+  const t = (t: string) => translator(`assetsSale.${t}`);
   const message = (message: string) => {
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://api.whatsapp.com/send?phone=5512982435638&text=${encodedMessage}`;
@@ -11,63 +14,51 @@ export const SectionDigitalAssetsSale = () => {
 
   const packages = [
     {
-      title: "Small Purchase",
-      buy: "$50 - $250 USD",
-      onClick: () =>
-        message(
-          `Hi! I would like to buy digital assets within the range of $50 - $250. Can we proceed?`,
-        ),
+      title: t("titleSmall"),
+      buy: t("buySmall"),
+      onClick: () => message(t("messageSmall")),
       features: [
-        "Amount: 50 - 250 USD",
-        "Accepted cryptocurrencies: USDT | BTC | ETH | DOGE | USDC | BNB | Others",
-        "Offer: 20% Rate",
-        "Transaction Method: P2P",
-        "Fast and secure transactions",
+        `${t("featuresAmount")}: ${t("buySmall")}`,
+        `${t("featuresAccepted")}: USDT | BTC | ETH | DOGE | USDC | BNB | ${t("featuresAcceptedOthers")}`,
+        `${t("featuresOffer")}: ${t("featuresPercentageSmall")}% ${t("featuresRate")}`,
+        `${t("featuresMethod")}: P2P`,
+        t("featuresSafeSmall"),
       ],
     },
     {
-      title: "Medium Purchase",
-      buy: "$251 - $6,000 USD",
-      onClick: () =>
-        message(
-          `Hi! I would like to buy digital assets within the range of $251 - $6,000. Can we proceed?`,
-        ),
+      title: t("titleMedium"),
+      buy: t("buyMedium"),
+      onClick: () => message(t("messageMedium")),
       features: [
-        "Amount: 251 - 6,000 USD",
-        "Accepted cryptocurrencies: USDT | BTC | ETH | DOGE | USDC | BNB | Others",
-        "Offer: 15% Rate",
-        "Transaction Method: P2P",
-        "Safe and efficient transfers",
+        `${t("featuresAmount")}: ${t("buyMedium")}`,
+        `${t("featuresAccepted")}: USDT | BTC | ETH | DOGE | USDC | BNB | ${t("featuresAcceptedOthers")}`,
+        `${t("featuresOffer")}: ${t("featuresPercentageMedium")}% ${t("featuresRate")}`,
+        `${t("featuresMethod")}: P2P`,
+        t("featuresSafeMedium"),
       ],
     },
     {
-      title: "Large Purchase",
-      buy: "$6,001 - $50,000 USD",
-      onClick: () =>
-        message(
-          `Hi! I would like to buy digital assets within the range of $6,001 - $50,000. Can we proceed?`,
-        ),
+      title: t("titleLarge"),
+      buy: t("buyLarge"),
+      onClick: () => message(t("messageLarge")),
       features: [
-        "Amount: 6,001 - 50,000 USD",
-        "Accepted cryptocurrencies: USDT | BTC | ETH | DOGE | USDC | BNB | Others",
-        "Offer: 10% Rate",
-        "Transaction Method: Direct Wallet or P2P",
-        "Contract-based transaction",
+        `${t("featuresAmount")}: ${t("buyLarge")}`,
+        `${t("featuresAccepted")}: USDT | BTC | ETH | DOGE | USDC | BNB | ${t("featuresAcceptedOthers")}`,
+        `${t("featuresOffer")}: ${t("featuresPercentageLarge")}% ${t("featuresRate")}`,
+        `${t("featuresMethod")}: P2P ${t("featuresOrWallet")}`,
+        t("featuresSafeLarge"),
       ],
     },
     {
-      title: "Custom Purchase",
-      buy: "Above $50,000 USD",
-      onClick: () =>
-        message(
-          `Hi! I would like to buy digital assets over $50,000. Can we discuss custom terms?`,
-        ),
+      title: t("titleCustom"),
+      buy: t("buyCustom"),
+      onClick: () => message(t("messageCustom")),
       features: [
-        "Amount: Above 50,000 USD",
-        "Accepted cryptocurrencies: USDT | BTC | ETH | DOGE | USDC | BNB | Others",
-        "Offer: Custom Rate",
-        "Transaction Method: Direct Wallet or P2P",
-        "Tailored terms and conditions",
+        `${t("featuresAmount")}: ${t("buyCustom")}`,
+        `${t("featuresAccepted")}: USDT | BTC | ETH | DOGE | USDC | BNB | ${t("featuresAcceptedOthers")}`,
+        `${t("featuresOffer")}: ${t("featuresRateCustom")}`,
+        `${t("featuresMethod")}: P2P ${t("featuresOrWallet")}`,
+        t("featuresSafeCustom"),
       ],
     },
   ];
@@ -89,9 +80,9 @@ export const SectionDigitalAssetsSale = () => {
 
   return (
     <section className="relative flex w-full flex-col items-center justify-between gap-6 font-extrabold text-white">
-      <h2>Buy Digital Assets</h2>
+      <h2>{t("title")}</h2>
       <div className="pulse-complete -right-24 bg-gradient-conic-secundary"></div>
-      <div className="flex w-full overflow-hidden md:w-[400px]">
+      <div className="flex w-full overflow-hidden md:w-[550px]">
         <div
           className="flex w-full transform transition-transform duration-500 ease-in-out"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
@@ -103,16 +94,18 @@ export const SectionDigitalAssetsSale = () => {
               style={{ minWidth: "100%" }}
             >
               <h5 className="break-words">
-                Purchase <strong className="px-1.5 text-strong-primary">{pkg.title}</strong>
+                <strong className="px-1.5 text-strong-primary">{pkg.title}</strong>
               </h5>
-              <h5>Buy: {pkg.buy}</h5>
+              <h5>
+                {t("buy")}: {pkg.buy}
+              </h5>
               <div className="flex flex-col gap-1.5">
                 {pkg.features.map((feature, i) => (
                   <p key={i}>{feature}</p>
                 ))}
               </div>
               <button className="button-colorido-services" onClick={pkg.onClick}>
-                {pkg.title === "Custom" ? "Contact Us" : "Buy Now"}
+                {pkg.title === t("titleCustom") ? t("contactUs") : t("buyNow")}
               </button>
             </div>
           ))}

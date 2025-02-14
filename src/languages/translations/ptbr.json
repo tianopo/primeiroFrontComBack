@@ -15,33 +15,67 @@
       "search": "Procure",
       "contactMyself": "Contate-me para negociação em contrato"
     },
-    "contact": {
-      "buttonEnviar": "Enviar",
-      "nome": "nome",
-      "email": "email",
-      "contato": "contato",
-      "mensagem": "mensagem",
-      "mensagemPlaceholder": "Escreva a sua mensagem",
-      "toastSucesso": "Formulário enviado com sucesso",
-      "toastErro": "Erro ao enviar o formulário"
+    "form": {
+      "message": "Olá! nós recebemos uma nova menesagem do contato de formulário",
+      "name": "Nome",
+      "phone": "telefone",
+      "placeholderName": "Nome Completo",
+      "getInTouch": "Entre em contato e  veja a cotação",
+      "contactForm": "Formulário de Contato",
+      "send": "Enviar",
+      "invalidPhone": "Formato de Telefone Inválido",
+      "invalidEmail": "Formato de E-mail Inválido"
+    },
+    "assetsSale": {
+      "title": "Comprar Ativos Digitais",
+      "buy": "Comprar",
+      "contactUs": "Entre em Contato",
+      "buyNow": "Comprar Agora",
+      "titleSmall": "Compra Pequena",
+      "buySmall": "R$100,00 - R$499,00",
+      "messageSmall": "Olá! Gostaria de comprar ativos digitais na faixa de R$100,00 - R$499,00. Podemos prosseguir?",
+      "featuresAccepted": "Criptomoedas Aceitas",
+      "featuresAcceptedOthers": "Outras",
+      "featuresOffer": "Oferta",
+      "featuresRate": "Taxa",
+      "featuresMethod": "Método de Transação",
+      "featuresOrWallet": "ou carteira",
+      "featuresAmount": "Quantidade",
+      "featuresPercentageSmall": "20",
+      "featuresSafeSmall": "Transações rápidas e seguras",
+      "titleMedium": "Compra Média",
+      "buyMedium": "R$500,00 - R$999,00",
+      "messageMedium": "Olá! Gostaria de comprar ativos digitais na faixa de R$500,00 - R$999,00. Podemos prosseguir?",
+      "featuresPercentageMedium": "10",
+      "featuresSafeMedium": "Transferências seguras e eficientes",
+      "titleLarge": "Compra Grande",
+      "buyLarge": "R$1.000,00 - R$30.000,00",
+      "messageLarge": "Olá! Gostaria de comprar ativos digitais na faixa de R$1.000,00 - R$30.000,00. Podemos prosseguir?",
+      "featuresPercentageLarge": "5",
+      "featuresSafeLarge": "Transação baseada em contrato ou P2P Seguro",
+      "titleCustom": "Compra Personalizada",
+      "buyCustom": "Acima de R$30.000,00",
+      "messageCustom": "Olá! Gostaria de comprar ativos digitais acima de R$30.000,00. Podemos discutir termos personalizados?",
+      "featuresRateCustom": "Taxa Personalizada",
+      "featuresSafeCustom": "Transação baseada em contrato e Termos e condições personalizados"
     },
     "hooks": {
       "auth": {
-        "userLogged": "User successfully logged in",
-        "userRegistered": "Successfully registered user",
-        "passwordUpper": "Password must have at least one uppercase character",
-        "passwordLower": "Password must have at least one lowercase character",
-        "passwordNumber": "Password must have at least one number character",
-        "passwordSpecial": "Password must have at least one special character",
-        "passwordMatch": "Passwords don't match",
-        "InvalidEmail": "Invalid email address"
+        "userLogged": "Usuário conectado com sucesso",
+        "userRegistered": "Usuário registrado com sucesso",
+        "passwordUpper": "A senha deve conter pelo menos um caractere maiúsculo",
+        "passwordLower": "A senha deve conter pelo menos um caractere minúsculo",
+        "passwordNumber": "A senha deve conter pelo menos um número",
+        "passwordSpecial": "A senha deve conter pelo menos um caractere especial",
+        "passwordMatch": "As senhas não coincidem",
+        "InvalidEmail": "Endereço de e-mail inválido"
       }
     },
     "validation": {},
     "others": {
-      "unauthenticatedPerson": "Unauthenticated person, redirecting in",
-      "seconds": "seconds",
-      "second": "second"
+      "unauthenticatedPerson": "Pessoa não autenticada, redirecionando em",
+      "seconds": "segundos",
+      "second": "segundo"
     },
     "footer": {
       "redesSociais": "Redes Sociais",
