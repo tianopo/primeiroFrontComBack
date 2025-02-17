@@ -14,7 +14,7 @@ export const SDC = ({ responseData }: IResponseData) => {
         <strong>NIS:</strong> {responseData?.pessoaSeguroDefeso.nis}
       </li>
       <li>
-        <strong>Município:</strong> {responseData?.municipio.nomeIBGE} - {responseData?.uf.sigla} (
+        <strong>Município:</strong> {responseData?.municipio.nomeIBGE} - {responseData?.uf?.sigla} (
         {responseData?.municipio.codigoIBGE})
       </li>
       <li>
