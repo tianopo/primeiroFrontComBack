@@ -1,4 +1,5 @@
-import { Bell, DoorOpen, Gear } from "@phosphor-icons/react";
+import { Bell, CopySimple, DoorOpen, Gear } from "@phosphor-icons/react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { IconX } from "src/components/Icons/IconX";
 import { useLogout } from "src/hooks/API/useLogout";
@@ -20,6 +21,44 @@ export const SidebarX = ({ navbar, menuOpen }: ISidebarX) => {
   const { mutate } = useLogout();
   const navigate = useNavigate();
   const location = useLocation();
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+
+  // Textos para copiar
+  const copyTexts = [
+    { label: "PIX CNPJ", text: "55.636.113/0001-70" },
+    { label: "PIX Aleatório", text: "c76c0d4c-00a9-4893-8398-68ebc33afe87" },
+    {
+      label: "Transferência",
+      text: `Nome: CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA
+CPF/CNPJ: 55.636.113/0001-70
+Conta: 280762-0
+Agência: 0534 ou 0001
+Banco: 529 - Pinbank IP
+Conta Corrente
+PIX Celular: 12982435638`,
+    },
+    {
+      label: "Envio Final",
+      text: `Quiser comprar mais só mandar mensagem \n
+Whatsapp: 55+ 12 99254-6355
+Telegram: @Tianopo`,
+    },
+    {
+      label: "Terceiros",
+      text: `Sem terceiros / No third party / Se sua conta na Bybit não bate com a conta bancária,
+não faça a transferência ou terá sua conta suspensa.`,
+    },
+  ];
+  // Função para copiar texto
+  const handleCopy = async (index: number, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 3000);
+    } catch (err) {
+      console.error("Falha ao copiar texto", err);
+    }
+  };
 
   return (
     <div
@@ -29,7 +68,7 @@ export const SidebarX = ({ navbar, menuOpen }: ISidebarX) => {
         <div>
           {navbar?.map((nav: INavbar, index: number) => (
             <div
-              className={`- 10 pl - 2.5 flex h-10 cursor-pointer items-center justify-start gap-2.5 rounded hover:bg-selected-primary hover:text-write-primary ${location.pathname === nav.route ? "bg-selected-primary text-write-primary" : "text-write-secundary"} `}
+              className={`flex h-10 cursor-pointer items-center justify-start gap-2.5 rounded hover:bg-selected-primary hover:text-write-primary ${location.pathname === nav.route ? "bg-selected-primary text-write-primary" : "text-write-secundary"} `}
               key={index}
               onClick={() => navigate(nav.route)}
             >
@@ -73,6 +112,17 @@ export const SidebarX = ({ navbar, menuOpen }: ISidebarX) => {
               <h5>Matheus Henrique</h5>
             </div>
           </div>
+          {/* Botões de cópia */}
+          {copyTexts.map((item, index) => (
+            <div
+              key={index}
+              className="flex h-10 cursor-pointer items-center justify-start gap-2.5 rounded-10 pl-2.5 text-write-secundary hover:bg-selected-primary hover:text-write-primary"
+              onClick={() => handleCopy(index, item.text)}
+            >
+              <CopySimple width={20} height={17} weight="duotone" />
+              <h6>{copiedIndex === index ? "Copiado!" : item.label}</h6>
+            </div>
+          ))}
           <div className="border-edge border-t-1" />
           <div
             className="flex h-10 cursor-pointer items-center justify-start gap-2.5 rounded-10 pl-2.5 text-write-secundary hover:bg-selected-primary hover:text-write-primary"
