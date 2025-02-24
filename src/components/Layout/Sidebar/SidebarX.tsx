@@ -45,8 +45,7 @@ Telegram: @Tianopo`,
     },
     {
       label: "Terceiros",
-      text: `Sem terceiros / No third party / Se sua conta na Bybit não bate com a conta bancária,
-não faça a transferência ou terá sua conta suspensa.`,
+      text: `Sem terceiros / No third party / Proibido terceiros / se for terceiros cancele / cancel now if you are third party / nome banco = bybit nome / holder bank name = bybit name`,
     },
   ];
   // Função para copiar texto
