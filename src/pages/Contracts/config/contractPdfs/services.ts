@@ -10,6 +10,12 @@ export const services = ({
   blockchain,
   enderecoComprador,
   wallet,
+  cep,
+  rua,
+  numero,
+  bairro,
+  complemento,
+  estado,
 }: IService) => {
   let docContent = `
     <h1>CONTRATO DE COMPRA E VENDA</h1>
