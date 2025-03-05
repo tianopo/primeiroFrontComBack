@@ -10,6 +10,7 @@ import { formatCep, formatCurrency, formatState } from "src/utils/formats";
 import {
   assetsOptions,
   blockchainsOptions,
+  estadoCivilOptions,
   limitDateOptions,
   paymentOptions,
   walletOptions,
@@ -28,14 +29,7 @@ export const Services = () => {
   const [blockchain, setBlockchain] = useState<string>("");
   const [enderecoComprador, setEnderecoComprador] = useState<string>("");
   const [wallet, setWallet] = useState<string>("");
-  // endereço
-  const [cep, setCep] = useState("");
-  const [rua, setRua] = useState("");
-  const [estado, setEstado] = useState("");
-  const [bairro, setBairro] = useState("");
-  const [numero, setNumero] = useState("");
-  const [complemento, setComplemento] = useState("");
-
+  // info pessoais
   const { data } = useListBuyers();
   const { context } = useService();
   const {
@@ -44,6 +38,15 @@ export const Services = () => {
     reset,
     clearErrors,
   } = context;
+  const [estadoCivil, setEstadoCivil] = useState("");
+  // endereço
+  const [cep, setCep] = useState("");
+  const [rua, setRua] = useState("");
+  const [cidade, setCidade] = useState("");
+  const [estado, setEstado] = useState("");
+  const [bairro, setBairro] = useState("");
+  const [numero, setNumero] = useState("");
+  const [complemento, setComplemento] = useState("");
 
   const handleQuantidadeChange = (e: ChangeEvent<HTMLInputElement>) => {
     const quantidade = e.target.value;
@@ -68,9 +71,11 @@ export const Services = () => {
       const addressData = await useAddressByCep(cleanCep);
       if (addressData && addressData.erro !== "true") {
         clearErrors();
-        const { logradouro, bairro, uf } = addressData;
+        const { logradouro, bairro, uf, localidade } = addressData;
         setRua(logradouro);
         setValue("rua", logradouro);
+        setCidade(localidade);
+        setValue("cidade", localidade);
         setBairro(bairro);
         setValue("bairro", bairro);
         setEstado(formatState(uf));
@@ -174,6 +179,14 @@ export const Services = () => {
           onChange={(e) => setWallet(e.target.value)}
           required
         />
+        <Select
+          title="Estado Civil"
+          placeholder="Solteiro"
+          options={estadoCivilOptions}
+          value={estadoCivil}
+          onChange={(e) => setEstadoCivil(e.target.value)}
+          required
+        />
         <InputX
           title="CEP"
           placeholder="XX.XXX-XXX"
@@ -186,6 +199,14 @@ export const Services = () => {
           placeholder="Rua Salvador"
           value={rua}
           onChange={(e) => setRua(e.target.value)}
+          readOnly={cep.length > 9}
+          required
+        />
+        <InputX
+          title="Cidade"
+          placeholder="Jacareí"
+          value={cidade}
+          onChange={(e) => setCidade(e.target.value)}
           readOnly={cep.length > 9}
           required
         />
@@ -233,10 +254,12 @@ export const Services = () => {
               wallet,
               cep,
               rua,
+              cidade,
               numero,
               bairro,
               complemento,
               estado,
+              estadoCivil,
             })
           }
         >

@@ -4,6 +4,7 @@ import { Regex } from "src/utils/Regex";
 import {
   assetsOptions,
   blockchainsOptions,
+  estadoCivilOptions,
   limitDateOptions,
   paymentOptions,
   walletOptions,
@@ -27,10 +28,12 @@ export interface IService {
   wallet: string;
   cep: string;
   rua: string;
+  cidade: string;
   numero: string;
   bairro: string;
   complemento?: string;
   estado: string;
+  estadoCivil: string;
 }
 
 const schema = Yup.object({
@@ -58,12 +61,17 @@ const schema = Yup.object({
     .oneOf(walletOptions, "Selecione uma carteira válida")
     .required()
     .label("Wallet"),
+  estadoCivil: Yup.string()
+    .oneOf(estadoCivilOptions, "Selecione um estado civil válido")
+    .required()
+    .label("Estado Civil"),
   cep: Yup.string().required().matches(Regex.cep_mask, "CEP inválido").label("CEP"),
   rua: Yup.string().required().max(255).label("Rua"),
+  cidade: Yup.string().required().max(255).label("Cidade"),
   numero: Yup.string().required().max(25).label("Número"),
   bairro: Yup.string().required().max(100).label("Bairro"),
-  estado: Yup.string().required().label("Estado"),
   complemento: Yup.string().optional().max(100).label("Complemento"),
+  estado: Yup.string().required().label("Estado"),
 });
 
 export const useService = () => {

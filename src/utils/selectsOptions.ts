@@ -49,3 +49,5 @@ export const walletOptions = [
   "CoinEx",
   "Huobi",
 ];
+
+export const estadoCivilOptions = ["Solteiro", "Casado", "Separado", "Divorciado", "Viúvo"];

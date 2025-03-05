@@ -2,6 +2,7 @@ import { IService } from "../../hooks/useServices";
 import { generateDocAsPdf } from "../generateDocAsPdf";
 
 export const services = ({
+  usuario,
   quantidade,
   valor,
   ativo,
@@ -10,8 +11,10 @@ export const services = ({
   blockchain,
   enderecoComprador,
   wallet,
+  estadoCivil,
   cep,
   rua,
+  cidade,
   numero,
   bairro,
   complemento,
@@ -32,8 +35,8 @@ export const services = ({
 
   // Add Parties
   const parties = [
-    `XXXXXXXXXXXXXXXXXXX, brasileiro, casada, contadora, portadora da carteira de Identidade – RG nº XXXXXXXXX SSP/SP, inscrita no CPF/MF sob nº XXXXXXXXXXXXX, residente e domiciliada na Rua XXXXXXXXXXX, Cidade de São Paulo, Estado de São Paulo, neste ato denominada simplesmente COMPRADORA; e de outro lado,`,
-    `XXXXXXXXXXXXXXXXXXX, brasileira, casada, engenheira, portadora da carteira de Identidade – RG nº XXXXXXXXX SSP/SP, inscrita no CPF/MF sob nº XXXXXXXXXXXXX, residente e domiciliada na Rua XXXXXXXXXXXXXXXXXX, Cidade de São Paulo, Estado de São Paulo, na XXXXXXXXXXXXXXX, com conta corrente para pagamento em razão do presente contrato mantida perante o Banco xxxxx, Agência xxxxx, c/c xxxxxxxxxx, doravante denominada simplesmente VENDEDORA, e,`,
+    `${usuario.name}, brasileiro, ${estadoCivil}, inscrita no CPF/MF sob nº ${usuario.document}, residente e domiciliada na ${rua}, ${numero}, ${complemento && `de complemento ${complemento},`} - ${bairro}, ${cidade} - ${estado}, ${cep}, neste ato denominada simplesmente COMPRADORA; e de outro lado,`,
+    `CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA, pessoa jurídica de direito privado com sede localizada na Estrada do Limoeiro, 495 - Jardim California, Jacarei - SP, 12.305-810, inscrita no C.N.P.J/MF sob o número 55.636.113/0001-70, neste ato representada por Matheus Henrique de Abreu brasileiro, casado, inscrito no CPF/MF sob nº 338.624.448-30, residente e domiciliada na Rua Estrada do Limoeiro, 495 - Jardim California, Jacarei - SP, 12.305-810, pagamento será feito via ${pagamento} através dos dados enviados a compradora, doravante denominada simplesmente VENDEDORA, e,`,
     `tem entre si, justo e contratado, o presente CONTRATO DE COMPRA DE ATIVOS, que serão realizados mediante as seguintes cláusulas e condições:`,
   ];
   parties.forEach((paragraph) => {
