@@ -18,14 +18,13 @@ export const processExcelBinance = (workbook: XLSX.WorkBook, selectedBroker: str
     "Quantity",
     "Exchange rate",
     "Maker Fee",
-    "Maker Fee Rate",
     "Taker Fee",
-    "Taker Fee Rate",
     "Couterparty",
     "Status",
     "Created Time",
   ];
   const isValid = expectedTitles.every((title, index) => titles[index] === title);
+
   if (!isValid) {
     toast.error(`Esta planilha não pertence a ${selectedBroker.split(" ")[0]}`);
     return [];
@@ -45,11 +44,7 @@ export const processExcelBinance = (workbook: XLSX.WorkBook, selectedBroker: str
         ,
         // "Exchange rate"
         makerFee, // "Maker Fee"
-        ,
-        // "Maker Fee Rate"
         takerFee, // "Taker Fee"
-        ,
-        // "Taker Fee Rate"
         counterparty, // "Counterparty"
         status, // "Status"
         createdTime, // "Created Time"
@@ -61,7 +56,7 @@ export const processExcelBinance = (workbook: XLSX.WorkBook, selectedBroker: str
           return parseFloat(price).toFixed(2).replace(".", ",").toString();
         }
       };
-
+      console.log(row);
       if (status?.trim().toLowerCase() !== "completed") return false;
       return {
         numeroOrdem: orderNumber.toString(),

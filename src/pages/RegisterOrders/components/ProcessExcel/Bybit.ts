@@ -37,7 +37,7 @@ export const processExcelBybit = (workbook: XLSX.WorkBook, selectedBroker: strin
         ,
         tipoTransacao,
         fiatAmount,
-        ,
+        currency,
         price,
         ,
         coinAmount,
@@ -70,6 +70,7 @@ export const processExcelBybit = (workbook: XLSX.WorkBook, selectedBroker: strin
       };
 
       if (status?.trim().toLowerCase() !== "completed") return false;
+      if (currency?.trim() !== "BRL") return false;
       return {
         numeroOrdem,
         tipoTransacao: tipoTransacao === "BUY" ? "compras" : "vendas",

@@ -25,6 +25,14 @@ export const DocumentsGenerator = () => {
   const calculateTotals = (filteredData: any[]) => {
     let totalVendas = 0;
     let totalCompras = 0;
+    let precoMedioCompra = 0;
+    let precoMedioVenda = 0;
+
+    let somaValorTokenCompra = 0;
+    let quantidadeComprasToken = 0;
+
+    let somaValorTokenVenda = 0;
+    let quantidadeVendasToken = 0;
 
     filteredData.forEach((transaction: any) => {
       const valor = parseFloat(
@@ -36,9 +44,30 @@ export const DocumentsGenerator = () => {
       } else if (transaction.tipo === "compra") {
         totalCompras += valor;
       }
+
+      const isStablecoin = ["USDT", "USDC"].includes(transaction.ativoDigital);
+      const valorToken = parseFloat(transaction.valorToken?.toString().replace(",", "."));
+
+      if (!isNaN(valorToken) && isStablecoin) {
+        if (transaction.tipo === "compra") {
+          somaValorTokenCompra += valorToken;
+          quantidadeComprasToken++;
+        } else if (transaction.tipo === "venda") {
+          somaValorTokenVenda += valorToken;
+          quantidadeVendasToken++;
+        }
+      }
     });
 
-    return { totalVendas, totalCompras, total: totalVendas - totalCompras };
+    if (quantidadeComprasToken > 0) {
+      precoMedioCompra = somaValorTokenCompra / quantidadeComprasToken;
+    }
+
+    if (quantidadeVendasToken > 0) {
+      precoMedioVenda = somaValorTokenVenda / quantidadeVendasToken;
+    }
+
+    return { totalVendas, totalCompras, precoMedioCompra, precoMedioVenda };
   };
 
   const filteredData =
@@ -46,9 +75,9 @@ export const DocumentsGenerator = () => {
       ? data || []
       : data?.filter((transaction: any) => transaction.buyer?.name === buyer);
 
-  const { totalVendas, totalCompras, total } = filteredData
+  const { totalVendas, totalCompras, precoMedioCompra, precoMedioVenda } = filteredData
     ? calculateTotals(filteredData)
-    : { totalVendas: 0, totalCompras: 0, total: 0 };
+    : { totalVendas: 0, totalCompras: 0, precoMedioCompra: 0, precoMedioVenda: 0 };
 
   const handleGenerate = async () => {
     handleDownload(filteredData);
@@ -59,7 +88,6 @@ export const DocumentsGenerator = () => {
 
     const today = new Date();
     const monthName = today.toLocaleDateString("pt-BR", { month: "long" });
-    const yearName = today.toLocaleDateString("pt-BR", { year: "2-digit" });
 
     const groupedByBuyer = filteredData.reduce((acc: any, transaction: any) => {
       const buyerDocument = transaction.buyer?.document || "N/A";
@@ -89,7 +117,8 @@ export const DocumentsGenerator = () => {
     let csvContent = `Indicador de Tipo de Serviço,""Número RPS"",""Serie RPS"",""Data Prestação de Serviço"",""Data Emissão do RPS"",""RPS Substitutivo"",""Documento CPF/CNPJ"",""Inscrição Mobiliária"",""Razão Social"",Endereço,Número,Complemento,Bairro,""Código do Município"",""Código do País"",Cep,Telefone,Email,""ISS Retido no Tomador"",""Código do Município onde o Serviço foi Prestado"",""Código da Atividade"",""Código da Lista de Serviços"",Discriminação,""Valor NF"",""Valor Deduções"",""Valor Desconto Condicionado"",""Valor Desconto Incondicionado"",""Valor INSS"",""Valor Csll"",""Valor Outras Retenções"",""Valor Pis"",""Valor Cofins"",""Valor Ir"",""Valor Iss"",""Prestador Optante Simples Nacional"",Alíquota,""Código da Obra"",""Código ART"",""Inscrição Própria"",""Código do Benefício""\n`;
 
     const hoje = new Date();
-    const comissao = 0.8;
+    const comissaoFixa = 0.5; // comissão padrão para ativos que não são USDT/USDC
+    const comissaoMargemErro = 2;
     const codMunicipioServicoPrestado = 352440;
     const codAtividade = 6619399;
     const codListaServicos = 10.02;
@@ -101,8 +130,60 @@ export const DocumentsGenerator = () => {
       const buyer = group.buyer;
       const buyerName = buyer?.name || "N/A";
       const cpfCnpj = buyer?.document?.replace(/[^0-9]/g, "");
+      // datas
+      const datasOrdenadas = group.transactions
+        .map((t: any) => new Date(t.dataTransacao))
+        .sort((a: Date, b: Date) => a.getTime() - b.getTime());
+
+      const primeiraData = datasOrdenadas[0];
+      const ultimaData = datasOrdenadas[datasOrdenadas.length - 1];
+
+      const formatarData = (data: Date) =>
+        data.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+      const periodoTransacoes = `Primeira e Última Transação: ${formatarData(primeiraData)} - ${formatarData(ultimaData)}`;
+      // valores, comissões e ativos
+      const transacoesStable = group.transactions.filter(
+        (t: any) =>
+          ["USDT", "USDC"].includes(t.ativoDigital) &&
+          !isNaN(parseFloat(t.valorToken?.toString().replace(",", "."))),
+      );
+
+      const somaTokensComprador = transacoesStable.reduce((acc: number, t: any) => {
+        return acc + parseFloat(t.valorToken.toString().replace(",", "."));
+      }, 0);
+
+      const mediaTokensComprador =
+        transacoesStable.length > 0 ? somaTokensComprador / transacoesStable.length : 0;
+
+      const comissaoDinamica =
+        precoMedioCompra > 0
+          ? ((mediaTokensComprador - precoMedioCompra) / precoMedioCompra) * 100
+          : 0;
+
+      const comissaoCalculada = comissaoDinamica - comissaoMargemErro;
+
+      const possuiAtivosStable = transacoesStable.length > 0;
+      const possuiOutrosAtivos = group.transactions.some(
+        (t: any) => !["USDT", "USDC"].includes(t.ativoDigital),
+      );
+
+      let comissao = 0;
+
+      if (possuiAtivosStable && possuiOutrosAtivos) {
+        // Mistura de ativos estáveis e outros => média entre fixa e dinâmica
+        const ajustada = comissaoCalculada < comissaoFixa ? comissaoFixa : comissaoCalculada;
+        comissao = (comissaoFixa + ajustada) / 2;
+      } else if (possuiOutrosAtivos) {
+        // Somente outros ativos => comissão fixa
+        comissao = comissaoFixa;
+      } else {
+        // Somente ativos estáveis => comissão dinâmica ajustada
+        comissao = comissaoCalculada < comissaoFixa ? comissaoFixa : comissaoCalculada;
+      }
+
       const totalVendas = group.totalVendas;
-      const valorNfe = Math.round(totalVendas * comissao);
+      const valorNfe = Number((totalVendas * (comissao / 100)).toFixed(2));
       const valorIss = Math.round(valorNfe * (aliquota / 10000));
       const exchangeName = group.transactions[0].exchange.split(" ")[0];
 
@@ -112,18 +193,20 @@ export const DocumentsGenerator = () => {
       }, new Date(group.transactions[0].dataTransacao));
 
       // Discriminação formatada corretamente
-      let fileContent = `"- Serviço: Intermediação de Ativos Digitais\n  - Comissão: ${comissao}%\n  - Quantidade Vendida: ${group.transactions.filter((transaction: any) => transaction.tipo === "venda").length}\n  - Mês/Ano: ${monthName}/${yearName}\n  - Valor da Nota: ${(valorNfe / 100).toFixed(2)}\n  Ordem dos Campos após nome da corretora:\n  - Identificador da Ordem\n  - Dia e Hora\n  - Ativo Digital\n  - Quantidade de Tokens\n  - Valor Pago\n  Exchange/Corretora: ${exchangeName}\n`;
+      let fileContent = `"- Serviço: Intermediação de Ativos Digitais\n- Comissão média: ${comissao.toFixed(2)}%\n- Quantidade Vendida: ${group.transactions.filter((transaction: any) => transaction.tipo === "venda").length}\n- ${periodoTransacoes}\n- Valor da Nota: ${valorNfe.toFixed(2)}\nOrdem dos Campos após nome da corretora:\n- Identificador da Ordem\n- Dia e Hora\n- Valor do Token\n- Ativo Digital\n- Quantidade de Tokens\n- Valor Pago\nExchange/Corretora: ${exchangeName}\n`;
 
       group.transactions.forEach((transaction: any) => {
-        if (transaction.tipo === "venda") {
-          fileContent += `  ${transaction.numeroOrdem}\n  ${transaction.dataTransacao}\n  ${transaction.ativoDigital}\n  ${transaction.quantidade}\n  ${transaction.valor}\n\n`;
+        if (transaction.tipo === "venda" && fileContent.length < 1800) {
+          fileContent += `${transaction.numeroOrdem}\n${transaction.dataTransacao}\n${transaction.valorToken}\n${transaction.ativoDigital}\n${transaction.quantidade}\n${transaction.valor}\n\n`;
         }
       });
+
+      if (fileContent.length > 1800) fileContent += `Tem mais transações... \n`;
 
       fileContent += `  Suporte de Dúvidas:\n  - Para informações do P2P, consulte documentação ou o suporte da corretora"`;
 
       // Criar o conteúdo CSV
-      const csvData = `R,${numeroRPS},RPS,${endDateObj.toLocaleDateString("pt-BR")},${hoje.toLocaleDateString("pt-BR")},,${cpfCnpj},,${buyerName},,,,,,48,,,,S,${codMunicipioServicoPrestado},${codAtividade},${codListaServicos},${fileContent},${valorNfe},0,0,0,0,0,0,0,0,0,${valorIss},S,${aliquota},0,0,${inscricaoMunicipal},\n`;
+      const csvData = `R,${numeroRPS},RPS,${endDateObj.toLocaleDateString("pt-BR")},${hoje.toLocaleDateString("pt-BR")},,${cpfCnpj},,${buyerName},,,,,,48,,,,S,${codMunicipioServicoPrestado},${codAtividade},${codListaServicos},${fileContent},${(valorNfe * 100).toFixed(2)},0,0,0,0,0,0,0,0,0,${valorIss},S,${aliquota},0,0,${inscricaoMunicipal},\n`;
 
       csvContent += csvData;
       numeroRPS += 1;
@@ -224,10 +307,8 @@ export const DocumentsGenerator = () => {
           <h6>Quantidade de ordens: {filteredData.length}</h6>
           <h6>Vendas: {totalVendas.toFixed(2)} BRL</h6>
           <h6>Compras: {totalCompras.toFixed(2)} BRL</h6>
-          <h6>
-            Lucro: {!validationEmptyBuyers ? (total * 0.01).toFixed(2) : total.toFixed(2)} BRL
-          </h6>
-
+          <h6>Preço Médio de Compra em USDT/USDC: {precoMedioCompra.toFixed(2)} BRL</h6>
+          <h6>Preço Médio de Vendaem USDT/USDC: {precoMedioVenda.toFixed(2)} BRL</h6>
           {/* Listar as ordens agrupadas por exchange */}
           {Object.keys(groupedTransactions).map((exchange) => (
             <div key={exchange} className="mb-4">
