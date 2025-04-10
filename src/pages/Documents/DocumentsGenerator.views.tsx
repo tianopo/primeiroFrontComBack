@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { InputX } from "src/components/Form/Input/InputX";
-import { handleDownload } from "./config/handleDownload";
+import { handleCompraVendaIN1888 } from "./config/handleDownload";
 import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
 
 export const DocumentsGenerator = () => {
@@ -80,7 +80,7 @@ export const DocumentsGenerator = () => {
     : { totalVendas: 0, totalCompras: 0, precoMedioCompra: 0, precoMedioVenda: 0 };
 
   const handleGenerate = async () => {
-    handleDownload(filteredData);
+    handleCompraVendaIN1888(filteredData);
   };
 
   const handleTransactions = async () => {
