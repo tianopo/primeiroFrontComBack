@@ -1,3 +1,6 @@
+const today = new Date();
+const monthName = today.toLocaleDateString("pt-BR", { month: "long" });
+
 export const handleCompraVendaIN1888 = (formData: any[]) => {
   const datesArray: string[] = [];
 
@@ -44,15 +47,8 @@ export const handleCompraVendaIN1888 = (formData: any[]) => {
 };
 
 export const handlePermutaIN1888 = (permutaData: any[]) => {
-  const datesArray: string[] = [];
-
   const textContent = permutaData
     .map((item) => {
-      // Formatação da data (DDMMAAAA)
-      const [ano, mes, dia] = item.data?.split("T")[0].split("-");
-      const dataOperacao = `${dia}${mes}${ano}`;
-      datesArray.push(dataOperacao);
-
       // Conversão de valores numéricos
       const formatarQuantidade = (qtd: string | number) =>
         parseFloat(qtd.toString().replace(",", ".")).toFixed(10).replace(".", ",");
@@ -62,6 +58,7 @@ export const handlePermutaIN1888 = (permutaData: any[]) => {
 
       // Campos obrigatórios
       const registro = "0210";
+      const dataOperacao = item.data || "";
       const operacaoCodigo = "II";
       const taxas = item.taxas ? formatarValor(item.taxas) : "";
 
@@ -79,30 +76,19 @@ export const handlePermutaIN1888 = (permutaData: any[]) => {
     })
     .join("\r\n");
 
-  const sortedDates = datesArray.sort();
-  const dataInicial = sortedDates[0];
-  const dataFinal = sortedDates[sortedDates.length - 1];
-
   const blob = new Blob([textContent], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `Permuta_IN1888_${dataInicial}-${dataFinal}.txt`;
+  link.download = `Permuta_IN1888_${monthName}.txt`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
 };
 
 export const handleTransferenciaIN1888 = (transferencias: any[]) => {
-  const datesArray: string[] = [];
-
   const textContent = transferencias
     .map((item) => {
-      // Formatação da data (DDMMAAAA)
-      const [ano, mes, dia] = item.data?.split("T")[0].split("-");
-      const dataOperacao = `${dia}${mes}${ano}`;
-      datesArray.push(dataOperacao);
-
       // Quantidade formatada com vírgula e 10 casas decimais
       const formatarQuantidade = (qtd: string | number) =>
         parseFloat(qtd.toString().replace(",", ".")).toFixed(10).replace(".", ",");
@@ -114,6 +100,7 @@ export const handleTransferenciaIN1888 = (transferencias: any[]) => {
 
       // Campos do registro 0410
       const registro = "0410";
+      const dataOperacao = item.data || "";
       const operacaoCodigo = "IV";
       const simbolo = item.criptoativo || "";
       const quantidade = formatarQuantidade(item.quantidade);
@@ -124,30 +111,19 @@ export const handleTransferenciaIN1888 = (transferencias: any[]) => {
     })
     .join("\r\n");
 
-  const sortedDates = datesArray.sort();
-  const dataInicial = sortedDates[0];
-  const dataFinal = sortedDates[sortedDates.length - 1];
-
   const blob = new Blob([textContent], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `Transferencia_IN1888_${dataInicial}-${dataFinal}.txt`;
+  link.download = `Transferencia_IN1888_${monthName}.txt`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
 };
 
 export const handleRetiradaIN1888 = (retiradas: any[]) => {
-  const datesArray: string[] = [];
-
   const textContent = retiradas
     .map((item) => {
-      // Formata a data para DDMMAAAA
-      const [ano, mes, dia] = item.data?.split("T")[0].split("-");
-      const dataOperacao = `${dia}${mes}${ano}`;
-      datesArray.push(dataOperacao);
-
       // Quantidade formatada com vírgula e 10 casas decimais
       const formatarQuantidade = (qtd: string | number) =>
         parseFloat(qtd.toString().replace(",", ".")).toFixed(10).replace(".", ",");
@@ -159,6 +135,7 @@ export const handleRetiradaIN1888 = (retiradas: any[]) => {
 
       // Campos conforme layout do Registro 0510
       const registro = "0510";
+      const dataOperacao = item.data || "";
       const operacaoCodigo = "V";
       const simbolo = item.criptoativo || "";
       const quantidade = formatarQuantidade(item.quantidade);
@@ -170,15 +147,11 @@ export const handleRetiradaIN1888 = (retiradas: any[]) => {
     })
     .join("\r\n");
 
-  const sortedDates = datesArray.sort();
-  const dataInicial = sortedDates[0];
-  const dataFinal = sortedDates[sortedDates.length - 1];
-
   const blob = new Blob([textContent], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `Retirada_IN1888_${dataInicial}-${dataFinal}.txt`;
+  link.download = `Retirada_IN1888_${monthName}.txt`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

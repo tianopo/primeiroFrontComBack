@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { InputX } from "src/components/Form/Input/InputX";
+import { IN1888 } from "./components/IN1888";
 import { handleCompraVendaIN1888 } from "./config/handleDownload";
 import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
 
@@ -8,6 +9,7 @@ export const DocumentsGenerator = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [filterDates, setFilterDates] = useState({ startDate: "", endDate: "" });
+  const [showModal, setShowModal] = useState(false);
   const [buyer, setBuyer] = useState("");
   const [buyers, setBuyers] = useState<string[]>([]);
   const [visibleExchanges, setVisibleExchanges] = useState<{ [key: string]: boolean }>({});
@@ -262,7 +264,10 @@ export const DocumentsGenerator = () => {
   const validationEmptyBuyers = buyer === "" || buyer === " N/A";
   return (
     <div className="flex h-fit w-full flex-col gap-3 rounded-16 bg-white p-4 shadow-2xl">
-      <h3 className="text-28 font-bold">Gerador de Documentos</h3>
+      <div className="flex items-center">
+        <h3 className="text-28 font-bold">Gerador de Documentos</h3>
+        <Button onClick={() => setShowModal(true)}>IN1888</Button>
+      </div>
       <div className="flex flex-col items-center justify-center gap-4 md:flex-row">
         <InputX
           title="Data Início"
@@ -357,6 +362,7 @@ export const DocumentsGenerator = () => {
           ))}
         </div>
       )}
+      {showModal && <IN1888 onClose={() => setShowModal(false)} />}
     </div>
   );
 };
