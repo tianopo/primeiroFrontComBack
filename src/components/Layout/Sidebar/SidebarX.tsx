@@ -26,16 +26,15 @@ export const SidebarX = ({ navbar, menuOpen }: ISidebarX) => {
   // Textos para copiar
   const copyTexts = [
     { label: "PIX CNPJ", text: "55.636.113/0001-70" },
-    { label: "PIX Aleatório", text: "c76c0d4c-00a9-4893-8398-68ebc33afe87" },
+    { label: "PIX Aleatório", text: "2596c0b4-b3d3-4790-8d7e-9faea5976925" },
     {
       label: "Transferência",
       text: `Nome: CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA
 CPF/CNPJ: 55.636.113/0001-70
-Conta: 280762-0
-Agência: 0534 ou 0001
-Banco: 529 - Pinbank IP
-Conta Corrente
-PIX Celular: 12982435638`,
+Conta: 77249-1
+Agência: 0001
+Banco: 382 - Fidúcia SCM
+Conta Corrente`,
     },
     {
       label: "Envio Final",

@@ -1,6 +1,6 @@
 import { Bell, Gear, List } from "@phosphor-icons/react";
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { IconX } from "src/components/Icons/IconX";
@@ -20,12 +20,12 @@ interface IHeader {
 
 interface ICurrencyData {
   code: string;
-  bid: string; // Compra
-  ask: string; // Venda
-  high: string; // Máximo
-  low: string; // Mínimo
-  varBid: string; // Variação
-  pctChange: string; // Porcentagem de variação
+  bid: string;
+  ask: string;
+  high: string;
+  low: string;
+  varBid: string;
+  pctChange: string;
 }
 
 interface ICurrencies {
@@ -35,74 +35,52 @@ interface ICurrencies {
 
 export const Header = ({ navbar }: IHeader) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const currencyRef = useRef<ICurrencies | null>(null);
   const [currencyData, setCurrencyData] = useState<ICurrencies | null>(null);
   const [previousCurrencyData, setPreviousCurrencyData] = useState<ICurrencies | null>(null);
-  const [currencyData10MinAgo, setCurrencyData10MinAgo] = useState<ICurrencies | null>(null);
   const navigate = useNavigate();
-  const handleMenuToggle = () => setMenuOpen(!menuOpen);
 
-  const checkPriceFluctuation = (
-    current: ICurrencyData,
+  const toggleMenu = () => setMenuOpen((prev) => !prev);
+
+  const checkFluctuation = (
+    current: ICurrencyData | undefined,
     previous: ICurrencyData | undefined,
-    message: string,
+    label: string,
   ) => {
-    if (!previous) return;
-    const currentBid = parseFloat(current.bid || "0");
-    const previousBid = parseFloat(previous.bid || "0");
-    const percentageChange = Math.abs(((currentBid - previousBid) / previousBid) * 100);
-    if (percentageChange > 0.12) {
-      const audio = new Audio(
-        "https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3",
-      );
-      audio.play().catch((error) => {
-        console.error("Erro ao reproduzir o som:", error);
-      });
-      toast.warning(
-        `Atenção! O preço de ${current.code} variou ${percentageChange.toFixed(2)}% ${message}.`,
-      );
+    if (!current || !previous) return;
+    const currentBid = parseFloat(current.bid);
+    const previousBid = parseFloat(previous.bid);
+    const percent = Math.abs(((currentBid - previousBid) / previousBid) * 100);
+    if (percent > 0.12) {
+      new Audio("https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3")
+        .play()
+        .catch(console.error);
+      toast.warning(`Atenção! O preço de ${current.code} variou ${percent.toFixed(2)}% ${label}.`);
     }
   };
+
   useEffect(() => {
-    const fetchCurrencyData = async () => {
+    const fetchAndCheckCurrency = async () => {
       try {
-        const response = await axios.get("https://economia.awesomeapi.com.br/last/USD-BRL,BTC-BRL");
-        const data: ICurrencies = response.data;
-        setPreviousCurrencyData(currencyData);
-        setCurrencyData(data);
+        const { data } = await axios.get("https://economia.awesomeapi.com.br/last/USD-BRL,BTC-BRL");
+
+        if (currencyRef.current) {
+          checkFluctuation(data.USDBRL, currencyRef.current.USDBRL, "nos últimos 30 segundos");
+          checkFluctuation(data.BTCBRL, currencyRef.current.BTCBRL, "nos últimos 30 segundos");
+        }
+
+        currencyRef.current = data; // Atualiza a ref
+        setCurrencyData(data); // Atualiza o estado para exibição (não afeta o loop)
       } catch (error) {
         console.error("Erro ao buscar dados das moedas:", error);
         setCurrencyData(null);
       }
     };
-    fetchCurrencyData();
-    const interval = setInterval(fetchCurrencyData, 30000); // Atualiza a cada 30 segundos
-    return () => clearInterval(interval);
-  }, [currencyData]);
 
-  useEffect(() => {
-    const fetchCurrencyData10Min = async () => {
-      try {
-        const response = await axios.get("https://economia.awesomeapi.com.br/last/USD-BRL,BTC-BRL");
-        const data: ICurrencies = response.data;
-        // Verificar flutuação para intervalo de 10 minutos
-        if (currencyData10MinAgo) {
-          if (data.USDBRL)
-            checkPriceFluctuation(
-              data.USDBRL,
-              currencyData10MinAgo.USDBRL,
-              "nos últimos 10 minutos",
-            );
-        }
-        // Atualizar estado de 10 minutos atrás
-        setCurrencyData10MinAgo(data);
-      } catch (error) {
-        console.error("Erro ao buscar dados das moedas (10 minutos):", error);
-      }
-    };
-    fetchCurrencyData10Min();
-    const interval10Min = setInterval(fetchCurrencyData10Min, 600000); // Atualiza a cada 10 minutos
-    return () => clearInterval(interval10Min);
-  }, [currencyData10MinAgo]);
+    fetchAndCheckCurrency(); // Executa uma vez no início
+    const interval = setInterval(fetchAndCheckCurrency, 30000); // Executa a cada 30 segundos
+    return () => clearInterval(interval); // Limpa o intervalo ao desmontar
+  }, []);
 
   return (
     <>
@@ -115,11 +93,11 @@ export const Header = ({ navbar }: IHeader) => {
           className="rounded-full border-1 border-edge-primary"
         />
         <div className="w-full md:w-96">
-          <div className="flex flex-col items-start text-sm font-bold text-gray-700">
+          <div className="flex flex-col items-start font-bold">
             {currencyData ? (
               <>
                 <span>Dólar (USD/BRL):</span>
-                <ul className="flex w-full flex-row flex-wrap gap-0.5 text-10 leading-tight tracking-tight text-green-500">
+                <ul className="flex flex-wrap gap-0.5 text-10 text-green-500">
                   <li>Compra R$ {parseFloat(currencyData.USDBRL?.bid || "0")} |</li>
                   <li>Venda R$ {parseFloat(currencyData.USDBRL?.ask || "0")} |</li>
                   <li>Máxima R$ {parseFloat(currencyData.USDBRL?.high || "0")} |</li>
@@ -128,7 +106,7 @@ export const Header = ({ navbar }: IHeader) => {
                   <li>Porcentagem {currencyData.USDBRL?.pctChange}%</li>
                 </ul>
                 <span>Bitcoin (BTC/BRL):</span>
-                <ul className="flex flex-row flex-wrap gap-0.5 text-10 leading-tight tracking-tight text-green-500">
+                <ul className="flex flex-wrap gap-0.5 text-10 text-green-500">
                   <li>Compra R$ {parseFloat(currencyData.BTCBRL?.bid || "0")} |</li>
                   <li>Venda R$ {parseFloat(currencyData.BTCBRL?.ask || "0")} |</li>
                   <li>Máxima R$ {parseFloat(currencyData.BTCBRL?.high || "0")} |</li>
@@ -177,18 +155,14 @@ export const Header = ({ navbar }: IHeader) => {
           <List
             className="cursor-pointer text-write-secundary md:hidden"
             size={24}
-            onClick={handleMenuToggle}
+            onClick={toggleMenu}
           />
         </div>
       </header>
       {menuOpen && (
         <div
           className="fixed inset-0 z-40 bg-black bg-opacity-25"
-          onClick={() =>
-            setTimeout(() => {
-              setMenuOpen(false);
-            }, 100)
-          }
+          onClick={() => setTimeout(() => setMenuOpen(false), 100)}
         >
           <SidebarX navbar={navbar} menuOpen />
         </div>
