@@ -30,7 +30,7 @@ export const SidebarX = ({ navbar, menuOpen }: ISidebarX) => {
     {
       label: "Transferência",
       text: `Nome: CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA
-CPF/CNPJ: 55.636.113/0001-70
+CNPJ: 55.636.113/0001-70
 Conta: 77249-1
 Agência: 0001
 Banco: 382 - Fidúcia SCM

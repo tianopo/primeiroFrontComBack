@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { InputX } from "src/components/Form/Input/InputX";
 import { IN1888 } from "./components/IN1888";
+import { exportToCSV } from "./config/exportToCSV";
 import { handleCompraVendaIN1888 } from "./config/handleDownload";
 import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
 
@@ -299,7 +300,10 @@ export const DocumentsGenerator = () => {
           Filtrar
         </Button>
         {validationDates && validationEmptyBuyers && (
-          <Button onClick={handleGenerate}>Gerar IN188</Button>
+          <>
+            <Button onClick={handleGenerate}>Gerar IN188</Button>
+            <Button onClick={() => exportToCSV(filteredData)}>Tabela Fidúcia</Button>
+          </>
         )}
         {validationDates && <Button onClick={handleTransactions}>Emitir NFE</Button>}
       </div>

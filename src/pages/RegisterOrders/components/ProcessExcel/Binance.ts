@@ -56,7 +56,7 @@ export const processExcelBinance = (workbook: XLSX.WorkBook, selectedBroker: str
           return parseFloat(price).toFixed(2).replace(".", ",").toString();
         }
       };
-      console.log(row);
+
       if (status?.trim().toLowerCase() !== "completed") return false;
       return {
         numeroOrdem: orderNumber.toString(),
