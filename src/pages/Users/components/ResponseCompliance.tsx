@@ -33,6 +33,7 @@ export const ResponseCompliance = ({ responseData }: IResponseCompliance) => {
         </h5>
       )}
       <h6>{responseData?.ourData}</h6>
+      <h6>{responseData?.userAnalysis}</h6>
       <div className="flex w-full flex-row flex-wrap justify-center">
         {responseData?.pdt?.viagens && <Viagens responseData={responseData?.pdt?.viagens} />}
         {responseData?.pdt?.pep && <PEP responseData={responseData?.pdt?.pep} />}
