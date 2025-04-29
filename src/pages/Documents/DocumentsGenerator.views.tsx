@@ -4,6 +4,7 @@ import { InputX } from "src/components/Form/Input/InputX";
 import { IN1888 } from "./components/IN1888";
 import { exportToCSV } from "./config/exportToCSV";
 import { handleCompraVendaIN1888 } from "./config/handleDownload";
+import { handleReceipt } from "./config/handleReceipt";
 import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
 
 export const DocumentsGenerator = () => {
@@ -306,6 +307,7 @@ export const DocumentsGenerator = () => {
           </>
         )}
         {validationDates && <Button onClick={handleTransactions}>Emitir NFE</Button>}
+        <Button onClick={() => handleReceipt()}>Recibo</Button>
       </div>
 
       {isLoading && <p>Carregando...</p>}
