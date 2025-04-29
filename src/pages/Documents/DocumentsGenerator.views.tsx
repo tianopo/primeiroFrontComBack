@@ -170,25 +170,25 @@ export const DocumentsGenerator = () => {
       const possuiOutrosAtivos = group.transactions.some(
         (t: any) => !["USDT", "USDC"].includes(t.ativoDigital),
       );
+      const possuiBtcOuEth = group.transactions.some((t: any) =>
+        ["BTC", "ETH"].includes(t.ativoDigital),
+      );
 
       let comissao = 0;
-
-      if (possuiAtivosStable && possuiOutrosAtivos) {
-        // Mistura de ativos estáveis e outros => média entre fixa e dinâmica
+      if (possuiBtcOuEth) {
+        comissao = 9;
+      } else if (possuiAtivosStable && possuiOutrosAtivos) {
         const ajustada = comissaoCalculada < comissaoFixa ? comissaoFixa : comissaoCalculada;
         comissao = (comissaoFixa + ajustada) / 2;
       } else if (possuiOutrosAtivos) {
-        // Somente outros ativos => comissão fixa
         comissao = comissaoFixa;
       } else {
-        // Somente ativos estáveis => comissão dinâmica ajustada
         comissao = comissaoCalculada < comissaoFixa ? comissaoFixa : comissaoCalculada;
       }
 
       const totalVendas = group.totalVendas;
       const valorNfe = Number((totalVendas * (comissao / 100)).toFixed(2));
       const valorIss = Math.round(valorNfe * (aliquota / 10000));
-      const exchangeName = group.transactions[0].exchange.split(" ")[0];
 
       const endDateObj = group.transactions.reduce((latest: Date, transaction: any) => {
         const transactionDate = new Date(transaction.dataTransacao);
@@ -196,11 +196,11 @@ export const DocumentsGenerator = () => {
       }, new Date(group.transactions[0].dataTransacao));
 
       // Discriminação formatada corretamente
-      let fileContent = `"- Serviço: Intermediação de Ativos Digitais\n- Comissão média: ${comissao.toFixed(2)}%\n- Quantidade Vendida: ${group.transactions.filter((transaction: any) => transaction.tipo === "venda").length}\n- ${periodoTransacoes}\n- Valor da Nota: ${valorNfe.toFixed(2)}\nOrdem dos Campos após nome da corretora:\n- Identificador da Ordem\n- Dia e Hora\n- Valor do Token\n- Ativo Digital\n- Quantidade de Tokens\n- Valor Pago\nExchange/Corretora: ${exchangeName}\n`;
+      let fileContent = `"- Serviço: Intermediação de Ativos Digitais\n- Comissão média: ${comissao.toFixed(2)}%\n- Quantidade Vendida: ${group.transactions.filter((transaction: any) => transaction.tipo === "venda").length}\n- ${periodoTransacoes}\n- Valor da Nota: ${valorNfe.toFixed(2)}\nOrdem dos Campos após nome da corretora:\n- Identificador da Ordem\n- Dia e Hora\n- Valor do Token\n- Ativo Digital\n- Quantidade de Tokens\n- Valor Pago\nExchange/Corretora\n`;
 
       group.transactions.forEach((transaction: any) => {
         if (transaction.tipo === "venda" && fileContent.length < 1800) {
-          fileContent += `${transaction.numeroOrdem}\n${transaction.dataTransacao}\n${transaction.valorToken}\n${transaction.ativoDigital}\n${transaction.quantidade}\n${transaction.valor}\n\n`;
+          fileContent += `${transaction.numeroOrdem}\n${transaction.dataTransacao}\n${transaction.valorToken}\n${transaction.ativoDigital}\n${transaction.quantidade}\n${transaction.valor}\n${transaction.exchange}\n\n`;
         }
       });
 
