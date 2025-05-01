@@ -1,5 +1,101 @@
 import JSZip from "jszip";
 
+export const generateSingleReceipt = (item: any) => {
+  const canvas = document.createElement("canvas");
+  canvas.width = 800;
+  canvas.height = 1000;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const logo = new Image();
+  logo.src = "/logo.png";
+  logo.onload = () => {
+    ctx.drawImage(logo, 300, 20, 180, 180);
+
+    ctx.fillStyle = "#000000";
+    ctx.font = "bold 24px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("RECIBO PÚBLICO DE TRANSAÇÃO", canvas.width / 2, 240);
+
+    ctx.font = "16px Arial";
+    const now = new Date().toLocaleString("pt-BR");
+    const dataRecibo = [
+      `ID do recibo: ${item.numeroOrdem}`,
+      `Data da impressão: ${now}`,
+      `CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA`,
+      `CPF/CNPJ: 55.636.113/0001-70`,
+      `Banco: 382 - Fidúcia SCM`,
+    ];
+
+    ctx.textAlign = "left";
+    let y = 280;
+    dataRecibo.forEach((line) => {
+      ctx.fillText(line, 50, y);
+      y += 30;
+    });
+
+    ctx.fillStyle = "#000000";
+    ctx.font = "bold 24px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("INFORMAÇÕES DA ORDEM", canvas.width / 2, y + 40);
+    y += 70;
+
+    ctx.font = "16px Arial";
+    const precoUnitario = parseFloat(item.price.replace(",", ".")) / parseFloat(item.quantidade);
+    const dataOrdem = [
+      `ID da ordem: ${item.id}`,
+      `Data da Ordem: ${item.createDate}`,
+      `Exchange: Bybit`,
+      `Apelido: ${item.targetNickName || "Não informado"}`,
+      `Nome: ${item.buyerRealName || "Não informado"}`,
+      `Ativo: ${item.tokenId}`,
+      `Tipo: ${item.side === 0 ? "compra" : "venda"}`,
+      `Preço unitário: R$ ${precoUnitario.toFixed(3)}`,
+      `Quantidade: ${item.amount}`,
+      `CPF/CNPJ: ${item.buyer?.document || "Não informado"}`,
+    ];
+
+    ctx.textAlign = "left";
+    dataOrdem.forEach((line) => {
+      ctx.fillText(line, 50, y);
+      y += 30;
+    });
+
+    // Footer - Site
+    ctx.font = "bold 16px Arial";
+    ctx.fillText("www.cryptotechdev.com", 50, canvas.height - 50);
+
+    // Footer - WhatsApp
+    const whatsappIcon = new Image();
+    whatsappIcon.src = "/socialMedias/whatsapp.png";
+    whatsappIcon.onload = () => {
+      const iconSize = 20;
+      const xRight = canvas.width - 50;
+      const text = "WhatsApp: (12) 99254-6355";
+      const textWidth = ctx.measureText(text).width;
+
+      ctx.drawImage(
+        whatsappIcon,
+        xRight - textWidth - iconSize - 10,
+        canvas.height - 50,
+        iconSize,
+        iconSize,
+      );
+
+      ctx.textAlign = "right";
+      ctx.fillText(text, xRight, canvas.height - 35);
+
+      const link = document.createElement("a");
+      link.download = `recibo-${item.buyer?.name || "cliente"}-${item.numeroOrdem}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    };
+  };
+};
+
 export const handleReceipt = (data: any[]) => {
   const zip = new JSZip(); // Cria o zip
 
