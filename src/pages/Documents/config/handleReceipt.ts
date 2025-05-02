@@ -47,14 +47,15 @@ export const generateSingleReceipt = (item: any) => {
     const precoUnitario = parseFloat(item.price.replace(",", ".")) / parseFloat(item.quantidade);
     const dataOrdem = [
       `ID da ordem: ${item.id}`,
-      `Data da Ordem: ${item.createDate}`,
+      `Data da Ordem: ${item.formattedDate}`,
       `Exchange: Bybit`,
       `Apelido: ${item.targetNickName || "Não informado"}`,
       `Nome: ${item.buyerRealName || "Não informado"}`,
       `Ativo: ${item.tokenId}`,
       `Tipo: ${item.side === 0 ? "compra" : "venda"}`,
-      `Preço unitário: R$ ${precoUnitario.toFixed(3)}`,
-      `Quantidade: ${item.amount}`,
+      `Valor: R$ ${item.amount.replace(".", ",")}`,
+      `Preço unitário: R$ ${item.price.replace(".", ",")}`,
+      `Quantidade: ${item.notifyTokenQuantity}`,
       `CPF/CNPJ: ${item.buyer?.document || "Não informado"}`,
     ];
 
@@ -154,6 +155,7 @@ export const handleReceipt = (data: any[]) => {
           `Nome: ${item.buyer?.name || "Não informado"}`,
           `Ativo: ${item.ativoDigital}`,
           `Tipo: ${item.tipo}`,
+          `Valor: ${item.valor}`,
           `Preço unitário: R$ ${precoUnitario.toFixed(3)}`,
           `Quantidade: ${item.quantidade}`,
           `CPF/CNPJ: ${item.buyer?.document || "Não informado"}`,

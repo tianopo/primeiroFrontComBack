@@ -15,4 +15,6 @@ export const apiRoute = {
   operationId: (id: string) => `compliance/operation/delete/${id}`,
 
   buyer: "buyer",
+
+  pendingOrders: "bybit/pending-orders",
 };
