@@ -207,6 +207,7 @@ export const Edit = ({ setForm }: IEdit) => {
       </FormProvider>
       {isConfirming && (
         <ConfirmationDelete
+          text="Você tem certeza que deseja excluir este dado ?"
           onConfirm={handleConfirmDelete}
           onCancel={() => setIsConfirming(false)}
         />

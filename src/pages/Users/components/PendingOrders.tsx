@@ -1,21 +1,64 @@
+import { useState } from "react";
 import { Button } from "src/components/Buttons/Button";
+import { ConfirmationDelete } from "src/components/Modal/ConfirmationDelete";
 import { generateSingleReceipt } from "src/pages/Documents/config/handleReceipt";
 import { useListPendingOrders } from "../hooks/useListPendingOrders";
+import { useReleaseAssets } from "../hooks/useReleaseAssets";
+import { useSendChatMessage } from "../hooks/useSendChatMessage";
 
 export const PendingOrders = () => {
   const { data, isLoading, error } = useListPendingOrders();
+  const { mutate: sendChatMessage, isPending } = useSendChatMessage();
+  const { mutate: releaseAssets } = useReleaseAssets();
+
+  const [showModal, setShowModal] = useState(false);
+  const [orderToRelease, setOrderToRelease] = useState<string | null>(null);
+  const [orderName, setOrderName] = useState<string>("");
+
+  const handleSendReceipt = async (order: any) => {
+    const base64Image = await generateSingleReceipt(order);
+    if (!base64Image) return;
+
+    sendChatMessage(
+      {
+        message: base64Image,
+        contentType: "pic",
+        orderId: order.id,
+      },
+      {
+        onSuccess: () => {
+          setOrderName(order.buyerRealName);
+          setOrderToRelease(order.id);
+          setShowModal(true);
+        },
+      },
+    );
+  };
+
+  const handleConfirmRelease = () => {
+    if (orderToRelease) {
+      releaseAssets({ orderId: orderToRelease });
+    }
+    setShowModal(false);
+    setOrderToRelease(null);
+  };
+
+  const handleCancelRelease = () => {
+    setShowModal(false);
+    setOrderToRelease(null);
+  };
 
   if (isLoading) return <p>Carregando ordens...</p>;
   if (error) return <p>Erro ao carregar ordens.</p>;
   if (!data || data.length === 0) return <p>Sem ordens pendentes.</p>;
-  console.log(data);
+
   return (
-    <div className="flex h-fit w-full flex-col rounded-16 bg-white p-4 shadow-2xl">
-      <h3 className="mb-4 text-28 font-bold">Ordens Pendentes</h3>
+    <div className="flex h-fit w-full flex-col flex-wrap gap-2 rounded-16 bg-white p-4 shadow-2xl md:flex-row">
+      <h3 className="mb-4 w-full text-28 font-bold">Ordens Pendentes</h3>
 
       {data.map((order: any) => {
         return (
-          <div key={order.id} className="mb-4 rounded-xl border border-gray-200 p-4 shadow">
+          <div key={order.id} className="mb-4 w-fit rounded-xl border border-gray-200 p-4 shadow">
             <p>
               <strong>ID da Ordem:</strong> {order.id}
             </p>
@@ -50,15 +93,20 @@ export const PendingOrders = () => {
               <strong>CPF/CNPJ:</strong> {order.document || "Não informado"}
             </p>
 
-            <Button
-              className="mt-3"
-              onClick={() => generateSingleReceipt({ ...order, numeroOrdem: order.id })}
-            >
-              Gerar Comprovante
+            <Button className="mt-3" onClick={() => handleSendReceipt(order)}>
+              Enviar Recibo
             </Button>
           </div>
         );
       })}
+      {/* Modal de confirmação de liberação */}
+      {showModal && (
+        <ConfirmationDelete
+          text={`Você tem certeza que deseja liberar para ${orderName}?`}
+          onConfirm={handleConfirmRelease}
+          onCancel={handleCancelRelease}
+        />
+      )}
     </div>
   );
 };
