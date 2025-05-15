@@ -1,4 +1,4 @@
-export const exportToCSV = (transactions: any[]) => {
+export const fortnigthlyFiduciaTable = (transactions: any[]) => {
   const csvHeader = [
     "PERÍODO",
     "NOME CLIENTE",

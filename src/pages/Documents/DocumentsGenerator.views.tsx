@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { InputX } from "src/components/Form/Input/InputX";
 import { IN1888 } from "./components/IN1888";
-import { exportToCSV } from "./config/exportToCSV";
+import { fortnigthlyFiduciaTable } from "./config/fortnigthlyFiduciaTable";
 import { handleCompraVendaIN1888 } from "./config/handleDownload";
 import { handleReceipt } from "./config/handleReceipt";
+import { mensalFiduciaTable } from "./config/mensalFiduciaTable";
 import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
 
 export const DocumentsGenerator = () => {
@@ -303,7 +304,8 @@ export const DocumentsGenerator = () => {
         {validationDates && validationEmptyBuyers && (
           <>
             <Button onClick={handleGenerate}>Gerar IN188</Button>
-            <Button onClick={() => exportToCSV(filteredData)}>Tabela Fidúcia</Button>
+            <Button onClick={() => fortnigthlyFiduciaTable(filteredData)}>Tabela Quinzenal</Button>
+            <Button onClick={() => mensalFiduciaTable(filteredData)}>Tabela Mensal</Button>
           </>
         )}
         {validationDates && <Button onClick={handleTransactions}>Emitir NFE</Button>}
