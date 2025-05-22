@@ -309,7 +309,7 @@ export const DocumentsGenerator = () => {
           </>
         )}
         {validationDates && <Button onClick={handleTransactions}>Emitir NFE</Button>}
-        {validationDates && <Button onClick={() => handleReceipt(data)}>Recibo</Button>}
+        {validationDates && <Button onClick={() => handleReceipt(filteredData)}>Recibo</Button>}
       </div>
 
       {isLoading && <p>Carregando...</p>}

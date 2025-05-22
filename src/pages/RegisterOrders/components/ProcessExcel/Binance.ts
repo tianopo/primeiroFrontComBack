@@ -23,6 +23,7 @@ export const processExcelBinance = (workbook: XLSX.WorkBook, selectedBroker: str
     "Status",
     "Created Time",
   ];
+
   const isValid = expectedTitles.every((title, index) => titles[index] === title);
 
   if (!isValid) {
@@ -31,49 +32,54 @@ export const processExcelBinance = (workbook: XLSX.WorkBook, selectedBroker: str
   }
 
   return rows
-    .map((row) => {
+    .map((row, rowIndex) => {
       const [
-        orderNumber, // "Order Number"
-        orderType, // "Order Type"
-        assetType, // "Asset Type"
+        orderNumber, // 0
+        orderType, // 1
+        assetType, // 2
+        // 3: Fiat Type (ignorado)
         ,
-        // "Fiat Type"
-        totalPrice, // "Total Price"
-        price, // "Price"
-        quantity, // "Quantity"
+        totalPrice, // 4
+        price, // 5
+        quantity, // 6
+        // 7: Exchange rate (ignorado)
         ,
-        // "Exchange rate"
-        makerFee, // "Maker Fee"
-        takerFee, // "Taker Fee"
-        counterparty, // "Counterparty"
-        status, // "Status"
-        createdTime, // "Created Time"
+        makerFee, // 8
+        takerFee, // 9
+        counterparty, // 10
+        status, // 11
+        createdTime, // 12
       ] = row;
-      const formatTotalPrice = (price: string): string => {
-        if (Number.isInteger(price)) {
-          return `${price},00`;
-        } else {
-          return parseFloat(price).toFixed(2).replace(".", ",").toString();
-        }
+
+      if (!orderNumber || !orderType || !status || status.trim().toLowerCase() !== "completed") {
+        return false;
+      }
+
+      const formatTotalPrice = (val: any): string => {
+        const num = Number(val);
+        if (isNaN(num)) return "";
+        return num.toFixed(2).replace(".", ",");
       };
 
-      if (status?.trim().toLowerCase() !== "completed") return false;
+      const safeString = (value: any) =>
+        value !== undefined && value !== null ? value.toString() : "0";
+
       return {
-        numeroOrdem: orderNumber.toString(),
+        numeroOrdem: safeString(orderNumber),
         tipoTransacao: orderType === "Buy" ? "compras" : "vendas",
         dataHoraTransacao: excelDateToJSDate(Number(createdTime)),
         exchangeUtilizada: selectedBroker,
-        ativoDigital: assetType,
+        ativoDigital: safeString(assetType),
         documentoComprador: orderType === "Sell" ? "" : "",
-        apelidoVendedor: orderType === "Buy" ? counterparty : "",
-        apelidoComprador: orderType === "Sell" ? counterparty : "",
-        quantidadeComprada: orderType === "Buy" ? quantity.toString() : "",
-        quantidadeVendida: orderType === "Sell" ? quantity.toString() : "",
+        apelidoVendedor: orderType === "Buy" ? safeString(counterparty) : "",
+        apelidoComprador: orderType === "Sell" ? safeString(counterparty) : "",
+        quantidadeComprada: orderType === "Buy" ? safeString(quantity) : "",
+        quantidadeVendida: orderType === "Sell" ? safeString(quantity) : "",
         valorCompra: orderType === "Buy" ? formatTotalPrice(totalPrice) : "",
         valorVenda: orderType === "Sell" ? formatTotalPrice(totalPrice) : "",
-        valorTokenDataCompra: orderType === "Buy" ? price.toString() : "",
-        valorTokenDataVenda: orderType === "Sell" ? price.toString() : "",
-        taxaTransacao: orderType === "Buy" ? takerFee.toString() : makerFee.toString(),
+        valorTokenDataCompra: orderType === "Buy" ? safeString(price) : "",
+        valorTokenDataVenda: orderType === "Sell" ? safeString(price) : "",
+        taxaTransacao: orderType === "Buy" ? safeString(takerFee) : safeString(makerFee),
       };
     })
     .filter(Boolean);

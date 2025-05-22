@@ -141,22 +141,23 @@ export const handleReceipt = (data: any[]) => {
         ctx.textAlign = "center";
         ctx.fillText("INFORMAÇÕES DA ORDEM", canvas.width / 2, y + 40);
         y += 70;
-        console.log(1);
+
+        const tipo = item.tipo;
+
         ctx.font = "16px Arial";
-        const precoUnitario =
-          parseFloat(item.valor.replace(",", ".")) / parseFloat(item.quantidade);
+
         const dataOrdem = [
           `ID da ordem: ${item.numeroOrdem}`,
           `Data da Ordem: ${item.dataTransacao.split(" ")[0].split("-").reverse().join("/")}`,
           `Exchange: ${item.exchange.split(" ")[0]}`,
-          `Apelido: ${item.buyer?.counterparty || "Não informado"}`,
-          `Nome: ${item.buyer?.name || "Não informado"}`,
+          `Apelido: ${tipo === "venda" ? item.buyer?.name || "Não informado" : item.seller?.name || "Não informado"}`,
+          `Nome: ${tipo === "venda" ? item.buyer?.name || "Não informado" : item.seller?.name || "Não informado"}`,
           `Ativo: ${item.ativoDigital}`,
           `Tipo: ${item.tipo}`,
           `Valor: ${item.valor}`,
-          `Preço unitário: R$ ${precoUnitario.toFixed(3)}`,
+          `Preço unitário: R$ ${item.valorToken.replace(".", ",")}`,
           `Quantidade: ${item.quantidade}`,
-          `CPF/CNPJ: ${item.buyer?.document || "Não informado"}`,
+          `${item.buyer?.document ? `CPF/CNPJ: ${item.buyer?.document || "Não informado"}` : ""}`,
         ];
 
         ctx.textAlign = "left";
@@ -191,7 +192,7 @@ export const handleReceipt = (data: any[]) => {
 
           canvas.toBlob((blob) => {
             if (blob) {
-              const fileName = `recibo-${item.buyer?.name || "cliente"}-${item.numeroOrdem}.png`;
+              const fileName = `recibo-${item.tipo === "venda" ? item.buyer?.name || "cliente" : item.seller?.name || "cliente"}-${item.numeroOrdem}.png`;
               zip.file(fileName, blob);
             }
             resolve();
