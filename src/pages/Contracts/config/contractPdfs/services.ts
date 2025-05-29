@@ -3,6 +3,7 @@ import { generateDocAsPdf } from "../generateDocAsPdf";
 
 export const services = ({
   usuario,
+  tipo,
   quantidade,
   valor,
   ativo,
@@ -10,6 +11,7 @@ export const services = ({
   tempoLimite,
   blockchain,
   enderecoComprador,
+  uid,
   wallet,
   estadoCivil,
   cep,
@@ -96,8 +98,8 @@ ${pagamento}, conforme combinado entre as partes.`,
     {
       title: `5. DA TRANSFERÊNCIA DE ATIVOS`,
       content: [
-        `5.1 O Vendedor se compromete a transferir para a carteira digital do Comprador, identificada pelo endereço ${enderecoComprador} da blockchain ${blockchain}, a quantidade de ${quantidade} ${ativo} no prazo máximo de ${tempoLimite} ${hoursToAdd > 1 ? "horas" : "hora"} após a confirmação do pagamento pelo Comprador.`,
-        `5.2 A transferência será realizada via ${wallet}`,
+        `5.1 O Vendedor se compromete a transferir para a carteira digital do Comprador, identificada pelo ${tipo === "endereco" ? `endereço ${enderecoComprador} da blockchain ${blockchain}` : `UID ${uid}`}, a quantidade de ${quantidade} ${ativo} no prazo máximo de ${tempoLimite} ${hoursToAdd > 1 ? "horas" : "hora"} após a confirmação do pagamento pelo Comprador.`,
+        `5.2 A transferência será realizada para ${wallet}`,
         `5.3 O Vendedor declara que o ativo que está vendendo é de sua legítima propriedade, não estando sujeito a qualquer ônus ou restrição.`,
       ],
     },
@@ -149,21 +151,18 @@ ${pagamento}, conforme combinado entre as partes.`,
   });
   addLineBreak(3); // Pula 3 linhas
 
-  const vendedor = [
-    `___________________________________________________________`,
-    `Vendedor - XXXXXXXXXXXXXXXXXX`,
-    `CPF/CNPJ: XXXXXXXXXX/XXXXXX`,
-  ];
-
-  vendedor.forEach((paragraph) => {
-    addContent(paragraph, 12);
-  });
-  addLineBreak(3);
+  docContent += `
+  <div style="page-break-before: always; margin-top: 200px; margin-bottom: 120px">
+    <p style="font-size:12pt;">___________________________________________________________</p>
+    <p style="font-size:12pt;">Vendedor - CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA</p>
+    <p style="font-size:12pt;">CPF/CNPJ: 55.636.113/0001-70</p>
+  </div>
+`;
 
   const comprador = [
     `___________________________________________________________`,
-    `Comprador - XXXXXXXXXXXXX`,
-    `CPF/CNPJ: XXXXXXXXXXXXXXXX`,
+    `Comprador - ${usuario.name}`,
+    `CPF/CNPJ: ${usuario.document}`,
   ];
 
   comprador.forEach((paragraph) => {

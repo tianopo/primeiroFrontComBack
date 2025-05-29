@@ -28,7 +28,9 @@ export const Services = () => {
   const [tempoLimite, setTempoLimite] = useState<string>("");
   const [blockchain, setBlockchain] = useState<string>("");
   const [enderecoComprador, setEnderecoComprador] = useState<string>("");
+  const [uid, setUid] = useState<string>("");
   const [wallet, setWallet] = useState<string>("");
+  const [tipo, setTipo] = useState<string>("");
   // info pessoais
   const { data } = useListBuyers();
   const { context } = useService();
@@ -118,6 +120,14 @@ export const Services = () => {
             ?.filter((user: any) => user && user.name.includes(usuario.name))
             .map((user: any) => `${user.name} - ${user.document}`)}
         />
+        <Select
+          title="Tipo"
+          placeholder="UID"
+          options={["UID", "endereco"]}
+          value={tipo}
+          onChange={(e) => setTipo(e.target.value)}
+          required
+        />
         <InputX
           title="Quantidade"
           placeholder="45.55"
@@ -156,21 +166,30 @@ export const Services = () => {
           onChange={(e) => setTempoLimite(e.target.value)}
           required
         />
-        <Select
-          title="Blockchain"
-          placeholder="BSC (BEP20)"
-          options={blockchainsOptions}
-          value={blockchain}
-          onChange={(e) => setBlockchain(e.target.value)}
-          required
-        />
-        <InputX
-          title="Endereço Comprador"
-          placeholder="EQ1BIZ8qYmskDzJmkGodYRTf_b9hckj6dZl"
-          value={enderecoComprador}
-          onChange={(e) => setEnderecoComprador(e.target.value)}
-          required
-        />
+        {tipo === "UID" ? (
+          <InputX
+            title="Uid"
+            placeholder="524865433"
+            value={uid}
+            onChange={(e) => setUid(e.target.value)}
+          />
+        ) : (
+          <>
+            <Select
+              title="Blockchain"
+              placeholder="BSC (BEP20)"
+              options={blockchainsOptions}
+              value={blockchain}
+              onChange={(e) => setBlockchain(e.target.value)}
+            />
+            <InputX
+              title="Endereço Comprador"
+              placeholder="EQ1BIZ8qYmskDzJmkGodYRTf_b9hckj6dZl"
+              value={enderecoComprador}
+              onChange={(e) => setEnderecoComprador(e.target.value)}
+            />
+          </>
+        )}
         <Select
           title="Wallet"
           placeholder="Metamask"
@@ -244,6 +263,7 @@ export const Services = () => {
           onClick={() =>
             services({
               usuario,
+              tipo,
               quantidade,
               valor,
               ativo: ativoDigital,
@@ -251,6 +271,7 @@ export const Services = () => {
               tempoLimite,
               blockchain,
               enderecoComprador,
+              uid,
               wallet,
               cep,
               rua,

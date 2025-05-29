@@ -94,7 +94,10 @@ export const PendingOrders = () => {
             <strong>CPF/CNPJ:</strong> {order.document || "Não informado"}
           </p>
 
-          <Button disabled={order.status === 10} onClick={() => handleSendReceipt(order)}>
+          <Button
+            disabled={order.status === 10 || order.side === 0}
+            onClick={() => handleSendReceipt(order)}
+          >
             Enviar Recibo
           </Button>
         </div>

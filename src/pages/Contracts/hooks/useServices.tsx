@@ -18,13 +18,15 @@ export interface IUsuario {
 
 export interface IService {
   usuario: IUsuario;
+  tipo: string;
   quantidade: string;
   valor: string;
   ativo: string;
   pagamento: string;
   tempoLimite: string;
-  blockchain: string;
-  enderecoComprador: string;
+  blockchain?: string;
+  enderecoComprador?: string;
+  uid?: string;
   wallet: string;
   cep: string;
   rua: string;
@@ -41,6 +43,7 @@ const schema = Yup.object({
     name: Yup.string().required(),
     document: Yup.string().required(),
   }).required(),
+  tipo: Yup.string().required().label("Tipo"),
   quantidade: Yup.string().required().label("Quantidade"),
   valor: Yup.string().required().label("Valor"),
   ativo: Yup.string().oneOf(assetsOptions, "Selecione um ativo válido").required().label("Ativo"),
@@ -54,9 +57,10 @@ const schema = Yup.object({
     .label("Tempo Limite"),
   blockchain: Yup.string()
     .oneOf(blockchainsOptions, "Selecione uma blockchain válida")
-    .required()
+    .optional()
     .label("Blockchain"),
-  enderecoComprador: Yup.string().required().label("Endereço Comprador"),
+  enderecoComprador: Yup.string().optional().label("Endereço Comprador"),
+  uid: Yup.string().optional().label("Uid"),
   wallet: Yup.string()
     .oneOf(walletOptions, "Selecione uma carteira válida")
     .required()
