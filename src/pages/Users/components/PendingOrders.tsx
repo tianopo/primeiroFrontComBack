@@ -50,7 +50,7 @@ export const PendingOrders = () => {
   if (isLoading) return <p>Carregando ordens...</p>;
   if (!data || data.length === 0) return <p>Sem ordens pendentes.</p>;
   if (error) return <p>Erro ao carregar ordens.</p>;
-
+  console.log(data);
   return (
     <div className="flex h-fit w-full flex-col flex-wrap gap-2 rounded-16 bg-white p-4 shadow-2xl md:flex-row">
       <h3 className="mb-4 w-full text-28 font-bold">Ordens Pendentes</h3>
@@ -93,7 +93,31 @@ export const PendingOrders = () => {
           <p>
             <strong>CPF/CNPJ:</strong> {order.document || "Não informado"}
           </p>
-
+          {order.messages && (
+            <div className="mt-2 max-h-64 max-w-64 overflow-y-auto rounded-md border border-gray-300 bg-gray-50 p-2">
+              <p className="mb-1 text-sm font-semibold">Mensagens:</p>
+              <div className="flex flex-col gap-1">
+                {order.messages.map((msg: any, index: number) => {
+                  return (
+                    <div
+                      key={index}
+                      className={`rounded p-2 text-sm shadow-inner ${msg.nickName === "crypto tech dev" ? "bg-gray-100" : "bg-red-100"}`}
+                    >
+                      {msg.contentType === "pic" ? (
+                        <img
+                          src={msg.message}
+                          alt={`Imagem ${index + 1}`}
+                          className="max-w-xs rounded-md"
+                        />
+                      ) : (
+                        <p>{msg.message}</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           <Button
             disabled={order.status === 10 || order.side === 0}
             onClick={() => handleSendReceipt(order)}
