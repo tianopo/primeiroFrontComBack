@@ -10,7 +10,8 @@ export const processExcelGateIO = (workbook: XLSX.WorkBook, selectedBroker: stri
   const [titles, ...rows] = json;
   const expectedTitles = [
     "No",
-    "Time",
+    "Created date",
+    "Updated date",
     "Type",
     "Fund Type",
     "Payment Method",
@@ -20,6 +21,7 @@ export const processExcelGateIO = (workbook: XLSX.WorkBook, selectedBroker: stri
     "Status",
     "Name",
   ];
+
   const isValid = expectedTitles.every((title, index) => titles[index] === title);
   if (!isValid) {
     toast.error(`Esta planilha não pertence a ${selectedBroker.split(" ")[0]}`);
@@ -32,7 +34,9 @@ export const processExcelGateIO = (workbook: XLSX.WorkBook, selectedBroker: stri
     .map((row) => {
       const [
         no, // Ex: "No"
-        time, // Ex: "Time"
+        createdTime, // Ex: "Created date"
+        // Ex: "Updated date"
+        ,
         type, // Ex: "Type"
         fundType, // Ex: "Fund Type"
         ,
@@ -43,22 +47,23 @@ export const processExcelGateIO = (workbook: XLSX.WorkBook, selectedBroker: stri
         status, // Ex: "Status"
         name, // Ex: "Name"
       ] = row;
+
       const ativoDigital = fundType.split("/")[0];
       if (status?.trim().toLowerCase() !== "concluído") return false;
       return {
         numeroOrdem: no.toString(),
-        tipoTransacao: type === "Compra" ? "compras" : "vendas",
-        dataHoraTransacao: excelDateToJSDate(Number(time)),
+        tipoTransacao: type === "Comprar" ? "compras" : "vendas",
+        dataHoraTransacao: excelDateToJSDate(Number(createdTime)),
         exchangeUtilizada: selectedBroker,
         ativoDigital,
         documentoComprador: type === "Venda" ? "" : "",
-        nomeVendedor: type === "Compra" ? name : "",
+        nomeVendedor: type === "Comprar" ? name : "",
         nomeComprador: type === "Venda" ? name : "",
-        quantidadeComprada: type === "Compra" ? amount.toString() : "",
+        quantidadeComprada: type === "Comprar" ? amount.toString() : "",
         quantidadeVendida: type === "Venda" ? amount.toString() : "",
-        valorCompra: type === "Compra" ? formatNumber(total.toString()) : "",
+        valorCompra: type === "Comprar" ? formatNumber(total.toString()) : "",
         valorVenda: type === "Venda" ? formatNumber(total.toString()) : "",
-        valorTokenDataCompra: type === "Compra" ? price.toString() : "",
+        valorTokenDataCompra: type === "Comprar" ? price.toString() : "",
         valorTokenDataVenda: type === "Venda" ? price.toString() : "",
         taxaTransacao: "0",
       };

@@ -94,7 +94,7 @@ export const PendingOrders = () => {
             <strong>CPF/CNPJ:</strong> {order.document || "Não informado"}
           </p>
           {order.messages && (
-            <div className="mt-2 max-h-64 max-w-64 overflow-y-auto rounded-md border border-gray-300 bg-gray-50 p-2">
+            <div className="mt-2 max-h-80 max-w-[600px] overflow-y-auto rounded-md border border-gray-300 bg-gray-50 p-2">
               <p className="mb-1 text-sm font-semibold">Mensagens:</p>
               <div className="flex flex-col gap-1">
                 {order.messages.map((msg: any, index: number) => {

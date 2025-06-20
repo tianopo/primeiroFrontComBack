@@ -16,6 +16,7 @@ export const DocumentsGenerator = () => {
   const [buyer, setBuyer] = useState("");
   const [buyers, setBuyers] = useState<string[]>([]);
   const [visibleExchanges, setVisibleExchanges] = useState<{ [key: string]: boolean }>({});
+  const [valorTotalNFE, setValorTotalNFE] = useState(0);
 
   const { data, error, isLoading } = useListTransactionsInDate(
     filterDates.startDate,
@@ -122,14 +123,15 @@ export const DocumentsGenerator = () => {
     let csvContent = `Indicador de Tipo de Serviço,""Número RPS"",""Serie RPS"",""Data Prestação de Serviço"",""Data Emissão do RPS"",""RPS Substitutivo"",""Documento CPF/CNPJ"",""Inscrição Mobiliária"",""Razão Social"",Endereço,Número,Complemento,Bairro,""Código do Município"",""Código do País"",Cep,Telefone,Email,""ISS Retido no Tomador"",""Código do Município onde o Serviço foi Prestado"",""Código da Atividade"",""Código da Lista de Serviços"",Discriminação,""Valor NF"",""Valor Deduções"",""Valor Desconto Condicionado"",""Valor Desconto Incondicionado"",""Valor INSS"",""Valor Csll"",""Valor Outras Retenções"",""Valor Pis"",""Valor Cofins"",""Valor Ir"",""Valor Iss"",""Prestador Optante Simples Nacional"",Alíquota,""Código da Obra"",""Código ART"",""Inscrição Própria"",""Código do Benefício""\n`;
 
     const hoje = new Date();
-    const comissaoFixa = 0.3; // comissão padrão para ativos que não são USDT/USDC
-    const comissaoMargemErro = 1;
+    const comissaoFixa = 0.1; // comissão padrão para ativos que não são USDT/USDC
+    const comissaoMargemErro = 2.5;
     const codMunicipioServicoPrestado = 352440;
     const codAtividade = 6619399;
     const codListaServicos = 10.02;
     const aliquota = 201; // 2,01%
     const inscricaoMunicipal = 90598;
     let numeroRPS = parseInt(localStorage.getItem("numeroRPS") || "0", 10);
+    let somaTotalNFE = 0;
 
     Object.values(groupedByBuyer).forEach((group: any) => {
       const buyer = group.buyer;
@@ -191,6 +193,8 @@ export const DocumentsGenerator = () => {
       const totalVendas = group.totalVendas;
       const valorNfe = Number((totalVendas * (comissao / 100)).toFixed(2));
       const valorIss = Math.round(valorNfe * (aliquota / 10000));
+      const valorSomaNfe = Number((totalVendas * (comissao / 100)).toFixed(2));
+      somaTotalNFE += valorSomaNfe;
 
       const endDateObj = group.transactions.reduce((latest: Date, transaction: any) => {
         const transactionDate = new Date(transaction.dataTransacao);
@@ -202,13 +206,13 @@ export const DocumentsGenerator = () => {
 
       group.transactions.forEach((transaction: any) => {
         if (transaction.tipo === "venda" && fileContent.length < 1800) {
-          fileContent += `${transaction.numeroOrdem}\n${transaction.dataTransacao}\n${transaction.valorToken}\n${transaction.ativoDigital}\n${transaction.quantidade}\n${transaction.valor}\n${transaction.exchange}\n\n`;
+          fileContent += `${transaction.numeroOrdem}\n${transaction.dataTransacao}\n${transaction.valorToken}\n${transaction.ativoDigital}\n${transaction.quantidade}\n${transaction.valor}\n${transaction.exchange.split(" ")[0]}\n\n`;
         }
       });
 
-      if (fileContent.length > 1800) fileContent += `Tem mais transações... \n`;
+      if (fileContent.length > 1800) fileContent += `Há mais ...\n`;
 
-      fileContent += `  Suporte de Dúvidas:\n  - Para informações do P2P, consulte documentação ou o suporte da corretora"`;
+      fileContent += `Suporte de Dúvidas\n- Para informações do P2P, consulte documentação ou o suporte da corretora"`;
 
       // Criar o conteúdo CSV
       const csvData = `R,${numeroRPS},RPS,${endDateObj.toLocaleDateString("pt-BR")},${hoje.toLocaleDateString("pt-BR")},,${cpfCnpj},,${buyerName},,,,,,48,,,,S,${codMunicipioServicoPrestado},${codAtividade},${codListaServicos},${fileContent},${(valorNfe * 100).toFixed(2)},0,0,0,0,0,0,0,0,0,${valorIss},S,${aliquota},0,0,${inscricaoMunicipal},\n`;
@@ -218,6 +222,7 @@ export const DocumentsGenerator = () => {
     });
 
     localStorage.setItem("numeroRPS", numeroRPS.toString());
+    setValorTotalNFE(somaTotalNFE);
 
     const buyerNames = buyer.split(" ");
     const formattedBuyer = `${buyerNames[0]} ${buyerNames[buyerNames.length - 1]}`;
@@ -322,6 +327,11 @@ export const DocumentsGenerator = () => {
           <h6>Compras: {totalCompras.toFixed(2)} BRL</h6>
           <h6>Preço Médio de Compra em USDT/USDC: {precoMedioCompra.toFixed(2)} BRL</h6>
           <h6>Preço Médio de Vendaem USDT/USDC: {precoMedioVenda.toFixed(2)} BRL</h6>
+          {valorTotalNFE > 0 && (
+            <h6 className="font-semibold text-green-700">
+              Valor Total das NFE Emitidas: R$ {valorTotalNFE.toFixed(2)}
+            </h6>
+          )}
           {/* Listar as ordens agrupadas por exchange */}
           {Object.keys(groupedTransactions).map((exchange) => (
             <div key={exchange} className="mb-4">
