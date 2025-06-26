@@ -8,6 +8,7 @@ import { SectionDigitalAssetsSale } from "./Sections/SectionDigitalAssetsSale";
 import { SectionForm } from "./Sections/SectionForm";
 import { SectionInfo } from "./Sections/SectionInfo";
 import { SectionIntroduction } from "./Sections/SectionIntroduction";
+import { SectionSell } from "./Sections/SectionSell";
 
 export const CryptoTech = () => {
   const { t: translator } = useTranslation();
@@ -64,6 +65,7 @@ export const CryptoTech = () => {
       <div className="flex flex-col gap-2 lg:flex-row lg:gap-0" id="services">
         <SectionDigitalAssetsSale />
       </div>
+      <SectionSell />
       <SectionInfo />
       <section className="flex w-full flex-col justify-between gap-6 font-extrabold text-white">
         <h2>{t("about")}</h2>

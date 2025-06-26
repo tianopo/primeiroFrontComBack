@@ -44,15 +44,23 @@
 }
 
 .button-colorido {
-  @apply w-full rounded-6 bg-gradient-linear-primary px-5 py-2 font-semibold text-white md:w-40;
+  @apply w-full rounded-6 bg-gradient-linear-primary px-5 py-4 font-semibold text-white md:w-40;
+}
+
+.button-colorido-buy {
+  @apply flex w-full items-center gap-2 rounded-6 bg-gradient-linear-primary px-5 py-4 font-semibold text-white md:w-40;
+}
+
+.button-colorido-buy:disabled {
+  @apply cursor-not-allowed opacity-50;
 }
 
 .button-colorido-services {
-  @apply w-full rounded-6 bg-gradient-linear-primary px-5 py-2 font-semibold text-white;
+  @apply w-full rounded-6 bg-gradient-linear-primary px-5 py-4 font-semibold text-white;
 }
 
 .button-colorido-carrossel {
-  @apply w-full rounded-full bg-gradient-linear-primary px-5 py-2 text-center font-semibold text-white md:w-16;
+  @apply w-full rounded-full bg-gradient-linear-primary px-5 py-4 text-center font-semibold text-white md:w-16;
 }
 
 .section-1-text {
@@ -61,6 +69,10 @@
 
 .container-opacity-light {
   @apply flex h-fit flex-col gap-3 rounded-6 bg-white bg-opacity-10 p-10;
+}
+
+.container_warn {
+  @apply flex flex-row flex-wrap justify-between gap-2 rounded-6 border-edge-primary bg-white bg-opacity-15 p-5;
 }
 
 .input_container {
@@ -73,6 +85,10 @@
   @apply hover:border-white;
 
   @apply focus:border-white focus:shadow-primary;
+}
+
+.label-buy {
+  @apply text-white text-opacity-80;
 }
 
 .input::placeholder {

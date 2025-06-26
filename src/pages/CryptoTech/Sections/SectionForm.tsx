@@ -61,6 +61,7 @@ export const SectionForm = () => {
                 value={name}
                 placeholder={`${t("placeholderName")}`}
                 onChange={handleNameOnChange}
+                hidden
                 required
               />
               <InputInstitucional
@@ -68,6 +69,7 @@ export const SectionForm = () => {
                 value={phone}
                 placeholder="(XX) XXXXX-XXXX"
                 onChange={handlePhoneOnChange}
+                hidden
                 required
               />
               <InputInstitucional
@@ -75,6 +77,7 @@ export const SectionForm = () => {
                 value={email}
                 placeholder="E-mail"
                 onChange={handleEmailOnChange}
+                hidden
                 required
               />
             </div>

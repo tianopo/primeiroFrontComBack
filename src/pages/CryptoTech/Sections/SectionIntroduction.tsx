@@ -52,8 +52,8 @@ export const SectionIntroduction = () => {
               link: "https://www.kucoin.com/pt/otc/merchant?id=67a0d7b59fd9f300014ea947",
             },
             {
-              label: "Kucoin Pessoal",
-              link: "https://www.kucoin.com/pt/otc/merchant?id=6706beb815a9d600015bb5c6",
+              label: "MEXC",
+              link: "https://www.mexc.com/buy-crypto/merchant?id=afbcd6761ac247098be08fc13ed95b62",
             },
             { label: "BingX", link: "https://bingx.paycat.com/pt-br/p2p/" },
             { label: "HTX", link: "https://www.htx.com/en-us/fiat-crypto/trader/494495633" },

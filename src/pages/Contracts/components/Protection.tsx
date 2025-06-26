@@ -90,8 +90,8 @@ export const Protection = () => {
   };
 
   const handleValorChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const formattedCPF = formatCurrency(e.target.value);
-    setValor(formattedCPF);
+    const formattedValor = formatCurrency(e.target.value);
+    setValor(formattedValor);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

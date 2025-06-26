@@ -15,6 +15,7 @@ interface IInputInstitucional extends IUseForm {
   readOnly?: boolean;
   error?: string;
   step?: string;
+  hidden?: boolean;
 }
 
 export const BeginInput: ForwardRefRenderFunction<HTMLInputElement, IInputInstitucional> = (
@@ -30,6 +31,7 @@ export const BeginInput: ForwardRefRenderFunction<HTMLInputElement, IInputInstit
     typ = "text",
     onChange,
     step,
+    hidden,
     ...rest
   }: IInputInstitucional,
   ref,
@@ -44,8 +46,8 @@ export const BeginInput: ForwardRefRenderFunction<HTMLInputElement, IInputInstit
 
   return (
     <div className={`input_container`}>
-      <label htmlFor={words} className="hidden">
-        <p className={`text-write-primary`}>{title}</p>
+      <label htmlFor={words} className={`${hidden ? "hidden" : ""}`}>
+        {title}
       </label>
       <input
         id={words}

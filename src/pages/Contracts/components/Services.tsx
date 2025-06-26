@@ -57,8 +57,8 @@ export const Services = () => {
   };
 
   const handleValorChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const formattedCPF = formatCurrency(e.target.value);
-    setValor(formattedCPF);
+    const formattedValor = formatCurrency(e.target.value);
+    setValor(formattedValor);
   };
 
   const handleCepChange = async (e: ChangeEvent<HTMLInputElement>) => {
