@@ -1,12 +1,13 @@
 export const exchangeOptions = [
   "Bybit https://www.bybit.com/ SG",
   "Binance https://www.binance.com/ CN",
-  "Gate.IO https://www.gate.io/ AE",
+  "Huobi https://www.htx.com/ CN",
   "Kucoin https://www.kucoin.com/ SC",
   "CoinEx https://www.coinex.com/ HK",
   "Bitget https://www.bitget.com/ SC",
-  "Huobi https://www.htx.com/ CN",
+  "MEXC https://www.mexc.com/ SC",
   "BingX https://www.bingx.com/ AU",
+  "Gate.IO https://www.gate.io/ AE",
 ];
 
 export const assetsOptions = ["BTC", "USDT", "BNB", "ETH", "USDC", "DOGE", "BRL"];
