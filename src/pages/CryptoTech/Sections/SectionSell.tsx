@@ -5,11 +5,13 @@ import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { formatCPFOrCNPJ } from "src/utils/formats";
 import { blockchainsOptions } from "src/utils/selectsOptions";
 import { InputInstitucional } from "../components/InputInstitucional";
+import { ModalInstitutional } from "../components/ModalInstitutional";
 import { SelectInstitucional } from "../components/SelectInstitucional";
 import "../cryptoTech.css";
 
 export const SectionSell = () => {
-  const [step, setStep] = useState<number>(2);
+  const [step, setStep] = useState<number>(3);
+  // step 1
   const [blockchain, setBlockchain] = useState<string>("BSC (BEP20)");
   const [quantidadeFiat, setQuantidadeFiat] = useState<string>("");
   const [quantidadeAtivo, setQuantidadeAtivo] = useState<string>("");
@@ -17,11 +19,14 @@ export const SectionSell = () => {
   const [ativo, setAtivo] = useState<string>("BTC");
   const [dolar, setDolar] = useState<number>(5);
   const [taxaPercentual, setTaxaPercentual] = useState<number>(3);
-
+  // step 2
   const [nomeCompleto, setNomeCompleto] = useState<string>("");
   const [CPFouCNPJ, setCPFouCNPJ] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [enderecoDaCarteira, setEnderecoDaCarteira] = useState<string>("");
+  // step 3
+  const [confirmado, setConfirmado] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   const isUpdatingFiat = useRef(false);
   const isUpdatingAtivo = useRef(false);
@@ -184,7 +189,7 @@ export const SectionSell = () => {
               title="Email"
               placeholder="seu@email.com"
               value={email}
-              onChange={() => {}}
+              onChange={(e) => setEmail(e.target.value)}
             />
             <InputInstitucional
               title="Endereço da Carteira"
@@ -209,8 +214,57 @@ export const SectionSell = () => {
         )}
         {step === 3 && (
           <>
-            <h4>É isso aí</h4>
-            <InputInstitucional title="Última Confirmação" value="" onChange={() => {}} />
+            <h4>Confirme os detalhes da transação</h4>
+            <div className="container_warn">
+              <div className="flex w-full flex-col gap-4">
+                <div className="flex w-full justify-between">
+                  <h6 className="opacity-90">Carteira de Recebimento:</h6>
+                  <h6 className="font-bold text-white text-opacity-100">
+                    {enderecoDaCarteira.length > 10
+                      ? `${enderecoDaCarteira.slice(0, 5)}...${enderecoDaCarteira.slice(-5)}`
+                      : enderecoDaCarteira}
+                  </h6>
+                </div>
+                <hr />
+                <div className="flex w-full justify-between">
+                  <h6 className="opacity-90">Documento:</h6>
+                  <h6 className="font-bold text-white text-opacity-100">{CPFouCNPJ}</h6>
+                </div>
+                <hr />
+                <div className="flex w-full justify-between">
+                  <h6 className="opacity-90">Pagar com:</h6>
+                  <h6 className="font-bold text-white text-opacity-100">{`${quantidadeFiat} ${moeda}`}</h6>
+                </div>
+                <hr />
+                <div className="flex w-full justify-between">
+                  <h6 className="opacity-90">Receber:</h6>
+                  <h6 className="font-bold text-white text-opacity-100">{`${quantidadeAtivo} ${ativo}`}</h6>
+                </div>
+              </div>
+            </div>
+            <label className="mt-4 flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={confirmado}
+                onChange={(e) => setConfirmado(e.target.checked)}
+                className={`h-5 w-5 rounded transition-colors ${
+                  confirmado ? "bg-primary" : "bg-white opacity-80"
+                } border-gray-300`}
+              />
+              <p>
+                Eu li e concordo com os{" "}
+                <a
+                  href="/policy/pld.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline hover:opacity-80"
+                >
+                  Termos de Uso e Política de Privacidade
+                </a>
+                . Entendo que a transação é irreversível e que o valor recebido pode variar de
+                acordo com a cotação no momento da confirmação.
+              </p>
+            </label>
           </>
         )}
         <div className="flex flex-col justify-between gap-2 md:flex-row">
@@ -223,11 +277,30 @@ export const SectionSell = () => {
             className="button-colorido-buy"
             disabled={
               (step === 1 && ![quantidadeAtivo, quantidadeFiat, ativo, moeda].every(Boolean)) ||
-              (step === 2 && ![nomeCompleto, CPFouCNPJ, email, enderecoDaCarteira].every(Boolean))
+              (step === 2 &&
+                ![nomeCompleto, CPFouCNPJ, email, enderecoDaCarteira].every(Boolean)) ||
+              (step === 3 &&
+                ![
+                  quantidadeAtivo,
+                  quantidadeFiat,
+                  ativo,
+                  moeda,
+                  nomeCompleto,
+                  CPFouCNPJ,
+                  email,
+                  enderecoDaCarteira,
+                  confirmado,
+                ].every(Boolean))
             }
-            onClick={handleNext}
+            onClick={step === 3 ? () => setShowModal(true) : handleNext}
           >
-            Prosseguir <ArrowRight weight="bold" />
+            {step === 3 ? (
+              "Concluir Conversão"
+            ) : (
+              <>
+                Prosseguir <ArrowRight weight="bold" />
+              </>
+            )}
           </button>
         </div>
         {step === 1 && (
@@ -242,6 +315,62 @@ export const SectionSell = () => {
           </div>
         )}
       </div>
+      {showModal && (
+        <ModalInstitutional onClose={() => setShowModal(false)}>
+          <div className="flex flex-col gap-6 text-black">
+            <h4 className="text-xl font-bold text-red-600">Importante!</h4>
+            <h6>
+              Certifique-se de que o endereço da sua carteira ou a chave PIX foram inseridos
+              corretamente. Informações incorretas podem resultar no envio dos valores para
+              terceiros. A Cryptotech não se responsabiliza por perdas decorrentes de dados
+              fornecidos de forma errada.
+            </h6>
+            <h6>
+              Informe um e-mail válido para que possamos entrar em contato, caso necessário. Se
+              preferir, você pode também incluir seu número de WhatsApp ou nos chame no formulário
+              acima.
+            </h6>
+            <h6>
+              Solicitamos essas informações exclusivamente para sua segurança. Seus dados pessoais e
+              os detalhes da transação são mantidos em sigilo absoluto e não serão compartilhados.
+            </h6>
+            <div className="flex flex-col gap-4 rounded-12 border-1 bg-gray-400 p-4">
+              <div className="flex w-full justify-between">
+                <h6 className="opacity-90">Carteira de Recebimento:</h6>
+                <h6 className="font-bold">
+                  {enderecoDaCarteira.length > 10
+                    ? `${enderecoDaCarteira.slice(0, 5)}...${enderecoDaCarteira.slice(-5)}`
+                    : enderecoDaCarteira}
+                </h6>
+              </div>
+              <hr />
+              <div className="flex w-full justify-between">
+                <h6 className="opacity-90">Documento:</h6>
+                <h6 className="font-bold">{CPFouCNPJ}</h6>
+              </div>
+              <hr />
+              <div className="flex w-full justify-between">
+                <h6 className="opacity-90">Pagar com:</h6>
+                <h6 className="font-bold">{`${quantidadeFiat} ${moeda}`}</h6>
+              </div>
+              <hr />
+              <div className="flex w-full justify-between">
+                <h6 className="opacity-90">Receber:</h6>
+                <h6 className="font-bold">{`${quantidadeAtivo} ${ativo}`}</h6>
+              </div>
+            </div>
+            <button className="button-colorido-buy" onClick={() => alert("Finalizado")}>
+              {step === 3 ? (
+                "Concluir Conversão"
+              ) : (
+                <>
+                  Prosseguir <ArrowRight weight="bold" />
+                </>
+              )}
+            </button>
+          </div>
+        </ModalInstitutional>
+      )}
     </section>
   );
 };
