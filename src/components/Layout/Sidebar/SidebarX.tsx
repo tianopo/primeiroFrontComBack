@@ -44,7 +44,7 @@ Telegram: @Tianopo`,
     },
     {
       label: "Terceiros",
-      text: `Sem terceiros / No third party / Proibido terceiros / se for terceiros cancele / cancel now if you are third party / nome banco = bybit nome / holder bank name = bybit name`,
+      text: `Sem terceiros / No third party / Proibido terceiros / se for terceiros cancele / cancel now if you are third party / nome banco = corretora nome / holder bank name = exchange name`,
     },
   ];
   // Função para copiar texto

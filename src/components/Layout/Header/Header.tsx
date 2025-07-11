@@ -37,7 +37,6 @@ export const Header = ({ navbar }: IHeader) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const currencyRef = useRef<ICurrencies | null>(null);
   const [currencyData, setCurrencyData] = useState<ICurrencies | null>(null);
-  const [previousCurrencyData, setPreviousCurrencyData] = useState<ICurrencies | null>(null);
   const navigate = useNavigate();
 
   const toggleMenu = () => setMenuOpen((prev) => !prev);
@@ -66,7 +65,6 @@ export const Header = ({ navbar }: IHeader) => {
 
         if (currencyRef.current) {
           checkFluctuation(data.USDBRL, currencyRef.current.USDBRL, "nos últimos 30 segundos");
-          checkFluctuation(data.BTCBRL, currencyRef.current.BTCBRL, "nos últimos 30 segundos");
         }
 
         currencyRef.current = data; // Atualiza a ref

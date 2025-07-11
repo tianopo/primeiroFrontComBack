@@ -10,13 +10,13 @@ import { SelectInstitucional } from "../components/SelectInstitucional";
 import "../cryptoTech.css";
 
 export const SectionSell = () => {
-  const [step, setStep] = useState<number>(3);
+  const [step, setStep] = useState<number>(1);
   // step 1
   const [blockchain, setBlockchain] = useState<string>("BSC (BEP20)");
   const [quantidadeFiat, setQuantidadeFiat] = useState<string>("");
   const [quantidadeAtivo, setQuantidadeAtivo] = useState<string>("");
   const [moeda, setMoeda] = useState<string>("BRL");
-  const [ativo, setAtivo] = useState<string>("BTC");
+  const [ativo, setAtivo] = useState<string>("USDT");
   const [dolar, setDolar] = useState<number>(5);
   const [taxaPercentual, setTaxaPercentual] = useState<number>(3);
   // step 2
@@ -359,7 +359,7 @@ export const SectionSell = () => {
                 <h6 className="font-bold">{`${quantidadeAtivo} ${ativo}`}</h6>
               </div>
             </div>
-            <button className="button-colorido-buy" onClick={() => alert("Finalizado")}>
+            <button className="button-colorido-buy" onClick={() => alert("Em Manutenção")}>
               {step === 3 ? (
                 "Concluir Conversão"
               ) : (

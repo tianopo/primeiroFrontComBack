@@ -13,7 +13,7 @@ import { Regex } from "src/utils/Regex";
 import Yup from "src/utils/yupValidation";
 
 export interface ILoginDto {
-  email: string;
+  documento: string;
   password: string;
 }
 
@@ -32,7 +32,7 @@ export const useLogin = () => {
         () => {
           localStorage.removeItem("token");
         },
-        24 * 60 * 60 * 1000,
+        24 * 60 * 60 * 30,
       );
 
       navigate(app.home);
@@ -50,7 +50,13 @@ export const useLogin = () => {
       .matches(Regex.number, t("passwordNumber"))
       .matches(Regex.special_character, t("passwordSpecial"))
       .label("password"),
-    email: Yup.string().required().email().matches(Regex.email, t("InvalidEmail")).label("email"),
+    documento: Yup.string()
+      .required()
+      .matches(
+        Regex.cpf_cnpj_mask,
+        "Documento inválido, correto: XXX.XXX.XXX-XX ou XX.XXX.XXX/0001-XX",
+      )
+      .label("documento"),
   });
 
   const context = useForm<ILoginDto>({

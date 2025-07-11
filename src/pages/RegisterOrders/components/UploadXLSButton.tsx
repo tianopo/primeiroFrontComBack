@@ -11,6 +11,7 @@ import { processExcelCoinEx } from "./ProcessExcel/CoinEx";
 import { processExcelGateIO } from "./ProcessExcel/Gate.IO";
 import { processExcelHuobi } from "./ProcessExcel/Huobi";
 import { processExcelKucoin } from "./ProcessExcel/Kucoin";
+import { processExcelMEXC } from "./ProcessExcel/MEXC";
 
 interface IUploadXLSButton {
   setFormData?: Dispatch<SetStateAction<any[]>>;
@@ -50,27 +51,45 @@ export const UploadXLSButton = ({
 
   const readFile = (file: File): Promise<any[]> => {
     return new Promise((resolve, reject) => {
+      const fileExtension = file.name.split(".").pop()?.toLowerCase();
+
       const reader = new FileReader();
       reader.onload = (e) => {
         const data = e.target?.result;
-        if (data) {
-          const workbook = XLSX.read(data, {
-            type: selectedBroker === "Gate.IO https://www.gate.io/ AE" ? "string" : "array",
-          });
-          const result = processExcel(workbook);
-          setSelectedBroker("");
-          resolve(result);
-        } else {
-          reject("No data found");
+        if (!data) {
+          reject("Nenhum dado encontrado no arquivo.");
+          return;
         }
+
+        let workbook: XLSX.WorkBook;
+
+        try {
+          if (fileExtension === "csv") {
+            workbook = XLSX.read(data as string, { type: "string" });
+          } else {
+            workbook = XLSX.read(data as ArrayBuffer, { type: "array" });
+          }
+        } catch (err) {
+          toast.error("Erro ao ler arquivo. Verifique o formato.");
+          reject(err);
+          return;
+        }
+
+        const result = processExcel(workbook);
+        setSelectedBroker("");
+        resolve(result);
       };
+
       reader.onerror = (error) => {
-        toast.error("Error reading file:" + error);
+        toast.error("Erro ao ler o arquivo.");
         reject(error);
       };
-      selectedBroker === "Gate.IO https://www.gate.io/ AE"
-        ? reader.readAsText(file)
-        : reader.readAsArrayBuffer(file);
+
+      if (fileExtension === "csv") {
+        reader.readAsText(file);
+      } else {
+        reader.readAsArrayBuffer(file);
+      }
     });
   };
 
@@ -92,6 +111,8 @@ export const UploadXLSButton = ({
         return processExcelHuobi(workbook, selectedBroker);
       case "BingX https://www.bingx.com/ AU":
         return processExcelBingX(workbook, selectedBroker);
+      case "MEXC https://www.mexc.com/ SC":
+        return processExcelMEXC(workbook, selectedBroker);
       default: {
         toast.error("Escolha uma Exchange Válida");
         return [];

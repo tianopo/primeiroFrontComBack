@@ -50,7 +50,7 @@ export const PendingOrders = () => {
   if (isLoading) return <p>Carregando ordens...</p>;
   if (!data || data.length === 0) return <p>Sem ordens pendentes.</p>;
   if (error) return <p>Erro ao carregar ordens.</p>;
-  console.log(data);
+
   return (
     <div className="flex h-fit w-full flex-col flex-wrap gap-2 rounded-16 bg-white p-4 shadow-2xl md:flex-row">
       <h3 className="mb-4 w-full text-28 font-bold">Ordens Pendentes</h3>
@@ -58,7 +58,7 @@ export const PendingOrders = () => {
       {data.map((order: any) => (
         <div
           key={order.id}
-          className="flex w-fit flex-col gap-1.5 rounded-xl border border-gray-200 p-4 shadow"
+          className="flex w-fit flex-col gap-0.5 rounded-xl border border-gray-200 p-4 shadow"
         >
           <p>
             <strong>ID da Ordem:</strong> {order.id}
@@ -94,7 +94,7 @@ export const PendingOrders = () => {
             <strong>CPF/CNPJ:</strong> {order.document || "Não informado"}
           </p>
           {order.messages && (
-            <div className="mt-2 max-h-80 max-w-[600px] overflow-y-auto rounded-md border border-gray-300 bg-gray-50 p-2">
+            <div className="mt-2 max-h-40 max-w-[600px] overflow-y-auto rounded-md border border-gray-300 bg-gray-50 p-2">
               <p className="mb-1 text-sm font-semibold">Mensagens:</p>
               <div className="flex flex-col gap-1">
                 {order.messages.map((msg: any, index: number) => {

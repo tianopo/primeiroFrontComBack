@@ -22,7 +22,7 @@ export const useListPendingOrders = () => {
   useEffect(() => {
     setIsLoading(true);
     fetchData();
-    const interval = setInterval(fetchData, 20000);
+    const interval = setInterval(fetchData, 10000);
 
     return () => clearInterval(interval);
   }, []);

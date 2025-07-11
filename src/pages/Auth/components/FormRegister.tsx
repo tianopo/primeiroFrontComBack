@@ -1,26 +1,41 @@
-import { useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { FlexCol } from "src/components/Flex/FlexCol";
 import { FormX } from "src/components/Form/FormX";
 import { InputX } from "src/components/Form/Input/InputX";
 import { IRegisterDto, useRegister } from "src/pages/Auth/hooks/useRegister";
+import { formatCPFOrCNPJ } from "src/utils/formats";
 
 export const FormRegister = () => {
   const { mutate, isPending, context } = useRegister();
   const {
     formState: { errors },
+    setValue,
   } = context;
   const onSubmit = (data: IRegisterDto) => {
     mutate(data);
   };
   const [showPassword, setShowPassword] = useState(false);
+  const [documento, setDocumento] = useState<string>("");
+
+  const handleDocumentChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const formattedDocumento = formatCPFOrCNPJ(e.target.value);
+    setValue("documento", formattedDocumento);
+    setDocumento(formattedDocumento);
+  };
 
   return (
     <FormProvider {...context}>
       <FormX onSubmit={onSubmit}>
         <FlexCol className="w-fit items-center gap-1">
           <InputX title="Name" placeholder="John Wick" required />
-          <InputX title="E-mail" placeholder="johnwick@domain.com" typ="email" required />
+          <InputX
+            title="Documento"
+            placeholder="apenas números"
+            value={documento}
+            onChange={handleDocumentChange}
+            required
+          />
           <InputX
             title="Password"
             placeholder="*******"
