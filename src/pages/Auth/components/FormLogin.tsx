@@ -8,7 +8,7 @@ import { formatCPFOrCNPJ } from "src/utils/formats";
 
 export const FormLogin = () => {
   const { mutate, isPending, context } = useLogin();
-  const [documento, setDocumento] = useState<string>("");
+  const [document, setDocument] = useState<string>("");
   const {
     formState: { errors },
     setValue,
@@ -19,9 +19,9 @@ export const FormLogin = () => {
   };
 
   const handleDocumentChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const formattedDocumento = formatCPFOrCNPJ(e.target.value);
-    setValue("documento", formattedDocumento);
-    setDocumento(formattedDocumento);
+    const formattedDocument = formatCPFOrCNPJ(e.target.value);
+    setValue("document", formattedDocument);
+    setDocument(formattedDocument);
   };
 
   return (
@@ -29,9 +29,9 @@ export const FormLogin = () => {
       <FormX onSubmit={onSubmit}>
         <FlexCol className="w-fit items-center gap-1">
           <InputX
-            title="Documento"
+            title="Document"
             placeholder="apenas números"
-            value={documento}
+            value={document}
             onChange={handleDocumentChange}
             required
           />

@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
 import { api, queryClient } from "src/config/api";
-import { responseError, responseSuccess } from "src/config/responseErrors";
+import { responseError } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
 import { Regex } from "src/utils/Regex";
 import * as Yup from "yup";
@@ -32,7 +32,6 @@ export const useRegisterUser = () => {
     mutationFn: path,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users-data"] });
-      queryClient.invalidateQueries({ queryKey: ["buyer-data"] });
       queryClient.invalidateQueries({ queryKey: ["orders-data"] });
     },
     onError: (erro: AxiosError) => responseError(erro),

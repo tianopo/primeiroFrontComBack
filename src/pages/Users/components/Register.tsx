@@ -54,9 +54,7 @@ export const Register = ({ setForm }: IRegister) => {
       onSuccess: (response) => {
         setResponseData(response);
         if (nome && apelido) {
-          responseSuccess(
-            `${typeof response === "boolean" ? "vendedor" : "comprador"} ${apelido} cadastrado`,
-          );
+          responseSuccess(`${nome} / ${documento} foi cadastrado`);
           setValue("apelido", "");
           setApelido("");
           setValue("nome", "");

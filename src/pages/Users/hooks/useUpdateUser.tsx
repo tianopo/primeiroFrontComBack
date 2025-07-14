@@ -36,7 +36,6 @@ export const useUpdateUser = () => {
       responseSuccess("Atualização feita com sucesso");
       queryClient.invalidateQueries({ queryKey: ["users-data"] });
       queryClient.invalidateQueries({ queryKey: ["orders-data"] });
-      queryClient.invalidateQueries({ queryKey: ["buyer-data"] });
     },
     onError: (erro: AxiosError) => responseError(erro),
   });

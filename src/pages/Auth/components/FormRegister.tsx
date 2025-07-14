@@ -16,12 +16,12 @@ export const FormRegister = () => {
     mutate(data);
   };
   const [showPassword, setShowPassword] = useState(false);
-  const [documento, setDocumento] = useState<string>("");
+  const [document, setDocument] = useState<string>("");
 
   const handleDocumentChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const formattedDocumento = formatCPFOrCNPJ(e.target.value);
-    setValue("documento", formattedDocumento);
-    setDocumento(formattedDocumento);
+    const formattedDocument = formatCPFOrCNPJ(e.target.value);
+    setValue("document", formattedDocument);
+    setDocument(formattedDocument);
   };
 
   return (
@@ -30,9 +30,9 @@ export const FormRegister = () => {
         <FlexCol className="w-fit items-center gap-1">
           <InputX title="Name" placeholder="John Wick" required />
           <InputX
-            title="Documento"
+            title="Document"
             placeholder="apenas números"
-            value={documento}
+            value={document}
             onChange={handleDocumentChange}
             required
           />

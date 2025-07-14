@@ -16,7 +16,7 @@ export interface IRegisterDto {
   name: string;
   password: string;
   confirmPassword: string;
-  documento: string;
+  document: string;
 }
 
 export const useRegister = () => {
@@ -57,13 +57,13 @@ export const useRegister = () => {
       .required()
       .oneOf([Yup.ref("password")], t("passwordMatch"))
       .label("Confirm Password"),
-    documento: Yup.string()
+    document: Yup.string()
       .required()
       .matches(
         Regex.cpf_cnpj_mask,
         "Documento inválido, correto: XXX.XXX.XXX-XX ou XX.XXX.XXX/0001-XX",
       )
-      .label("documento"),
+      .label("document"),
   });
 
   const context = useForm<IRegisterDto>({
