@@ -47,20 +47,15 @@ export const processExcelCoinEx = (workbook: XLSX.WorkBook, selectedBroker: stri
       if (status?.trim().toLowerCase() !== "finished") return false;
       return {
         numeroOrdem: orderId,
-        tipoTransacao: side === "BUY" ? "compras" : "vendas",
-        dataHoraTransacao: createdAt,
-        exchangeUtilizada: selectedBroker,
-        ativoDigital: legalCurrency,
-        documentoComprador: side === "SELL" ? "" : "",
-        nomeComprador: side === "SELL" ? traderName : "",
-        nomeVendedor: side === "BUY" ? traderName : "",
-        quantidadeComprada: side === "BUY" ? total : "",
-        quantidadeVendida: side === "SELL" ? total : "",
-        valorCompra: side === "BUY" ? formatNumber(price) : "",
-        valorVenda: side === "SELL" ? formatNumber(price) : "",
-        valorTokenDataCompra: side === "BUY" ? legalAmount : "",
-        valorTokenDataVenda: side === "SELL" ? legalAmount : "",
-        taxaTransacao: "0",
+        tipo: side === "BUY" ? "compras" : "vendas",
+        dataHora: createdAt,
+        exchange: selectedBroker,
+        ativo: legalCurrency,
+        nome: traderName,
+        quantidade: total,
+        valor: formatNumber(price),
+        valorToken: legalAmount,
+        taxa: "0",
       };
     })
     .filter(Boolean);

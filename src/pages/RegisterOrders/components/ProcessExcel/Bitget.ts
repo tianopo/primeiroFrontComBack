@@ -21,10 +21,6 @@ export const processExcelBitget = (workbook: XLSX.WorkBook, selectedBroker: stri
     "Contraparte,",
     "Status",
   ];
-  const formatNumber = (value: string): string => {
-    return parseFloat(value).toFixed(2).replace(".", ",");
-  };
-
   const isValid = expectedTitles.every((title, index) => titles[index] === title);
   if (!isValid) {
     toast.error(`Esta planilha não pertence a ${selectedBroker.split(" ")[0]}`);
@@ -62,20 +58,15 @@ export const processExcelBitget = (workbook: XLSX.WorkBook, selectedBroker: stri
       if (status?.trim().toLowerCase() !== "concluída,") return false;
       return {
         numeroOrdem: v(orderId),
-        tipoTransacao: oneSide === "Vender" ? "vendas" : "compras",
-        dataHoraTransacao: oneDate,
-        exchangeUtilizada: selectedBroker,
-        ativoDigital: v(crypto),
-        documentoComprador: "",
-        nomeComprador: oneSide === "Vender" ? oneCounterparty : "",
-        nomeVendedor: oneSide === "Vender" ? "" : oneCounterparty,
-        quantidadeComprada: oneSide === "Vender" ? "" : v(value), // Quantidade comprada
-        quantidadeVendida: oneSide === "Vender" ? v(value) : "", // Quantidade vendida
-        valorCompra: oneSide === "Vender" ? "" : formatToTwoDecimalPlaces(totalPrice), // Valor da compra
-        valorVenda: oneSide === "Vender" ? formatToTwoDecimalPlaces(totalPrice) : "", // Valor da venda
-        valorTokenDataCompra: oneSide === "Vender" ? "" : v(price), // Preço no momento da compra
-        valorTokenDataVenda: oneSide === "Vender" ? v(price) : "", // Preço no momento da venda
-        taxaTransacao: "0", // A Bitget parece não ter taxa especificada neste formato
+        tipo: oneSide === "Vender" ? "vendas" : "compras",
+        dataHora: oneDate,
+        exchange: selectedBroker,
+        ativo: v(crypto),
+        nome: oneCounterparty,
+        quantidade: v(value),
+        valor: formatToTwoDecimalPlaces(totalPrice),
+        valorToken: v(price),
+        taxa: "0",
       };
     })
     .filter(Boolean);

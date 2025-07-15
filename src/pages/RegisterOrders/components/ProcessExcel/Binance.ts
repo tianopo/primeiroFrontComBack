@@ -37,13 +37,13 @@ export const processExcelBinance = (workbook: XLSX.WorkBook, selectedBroker: str
         orderNumber, // 0
         orderType, // 1
         assetType, // 2
-        // 3: Fiat Type (ignorado)
         ,
+        // 3: Fiat Type (ignorado)
         totalPrice, // 4
         price, // 5
         quantity, // 6
-        // 7: Exchange rate (ignorado)
         ,
+        // 7: Exchange rate (ignorado)
         makerFee, // 8
         takerFee, // 9
         counterparty, // 10
@@ -66,20 +66,15 @@ export const processExcelBinance = (workbook: XLSX.WorkBook, selectedBroker: str
 
       return {
         numeroOrdem: safeString(orderNumber),
-        tipoTransacao: orderType === "Buy" ? "compras" : "vendas",
-        dataHoraTransacao: excelDateToJSDate(Number(createdTime)),
-        exchangeUtilizada: selectedBroker,
-        ativoDigital: safeString(assetType),
-        documentoComprador: orderType === "Sell" ? "" : "",
-        apelidoVendedor: orderType === "Buy" ? safeString(counterparty) : "",
-        apelidoComprador: orderType === "Sell" ? safeString(counterparty) : "",
-        quantidadeComprada: orderType === "Buy" ? safeString(quantity) : "",
-        quantidadeVendida: orderType === "Sell" ? safeString(quantity) : "",
-        valorCompra: orderType === "Buy" ? formatTotalPrice(totalPrice) : "",
-        valorVenda: orderType === "Sell" ? formatTotalPrice(totalPrice) : "",
-        valorTokenDataCompra: orderType === "Buy" ? safeString(price) : "",
-        valorTokenDataVenda: orderType === "Sell" ? safeString(price) : "",
-        taxaTransacao: orderType === "Buy" ? safeString(takerFee) : safeString(makerFee),
+        tipo: orderType === "Buy" ? "compras" : "vendas",
+        dataHora: excelDateToJSDate(Number(createdTime)),
+        exchange: selectedBroker,
+        ativo: safeString(assetType),
+        apelido: safeString(counterparty),
+        quantidade: safeString(quantity),
+        valor: formatTotalPrice(totalPrice),
+        valorToken: safeString(price),
+        taxa: orderType === "Buy" ? safeString(takerFee) : safeString(makerFee),
       };
     })
     .filter(Boolean);

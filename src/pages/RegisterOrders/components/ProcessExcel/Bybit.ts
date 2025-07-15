@@ -35,7 +35,7 @@ export const processExcelBybit = (workbook: XLSX.WorkBook, selectedBroker: strin
       const [
         numeroOrdem,
         ,
-        tipoTransacao,
+        tipo,
         fiatAmount,
         currency,
         price,
@@ -46,7 +46,7 @@ export const processExcelBybit = (workbook: XLSX.WorkBook, selectedBroker: strin
         ,
         counterparty,
         status,
-        dataHoraTransacao,
+        dataHora,
       ] = row;
       const formatToTwoDecimalPlaces = (value: string): string => {
         const numericValue = parseFloat(value);
@@ -73,20 +73,15 @@ export const processExcelBybit = (workbook: XLSX.WorkBook, selectedBroker: strin
       if (currency?.trim() !== "BRL") return false;
       return {
         numeroOrdem,
-        tipoTransacao: tipoTransacao === "BUY" ? "compras" : "vendas",
-        dataHoraTransacao: adjustDateTime(dataHoraTransacao),
-        exchangeUtilizada: selectedBroker,
-        ativoDigital: cryptocurrency,
-        documentoComprador: tipoTransacao === "SELL" ? "" : "",
-        apelidoVendedor: tipoTransacao === "BUY" ? counterparty : "",
-        apelidoComprador: tipoTransacao === "SELL" ? counterparty : "",
-        quantidadeComprada: tipoTransacao === "BUY" ? coinAmount : "",
-        quantidadeVendida: tipoTransacao === "SELL" ? coinAmount : "",
-        valorCompra: tipoTransacao === "BUY" ? formatToTwoDecimalPlaces(fiatAmount) : "",
-        valorVenda: tipoTransacao === "SELL" ? formatToTwoDecimalPlaces(fiatAmount) : "",
-        valorTokenDataCompra: tipoTransacao === "BUY" ? price : "",
-        valorTokenDataVenda: tipoTransacao === "SELL" ? price : "",
-        taxaTransacao: transactionFees,
+        tipo: tipo === "BUY" ? "compras" : "vendas",
+        dataHora: adjustDateTime(dataHora),
+        exchange: selectedBroker,
+        ativo: cryptocurrency,
+        apelido: counterparty,
+        quantidade: coinAmount,
+        valor: formatToTwoDecimalPlaces(fiatAmount),
+        valorToken: price,
+        taxa: transactionFees,
       };
     })
     .filter(Boolean);

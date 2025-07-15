@@ -14,18 +14,11 @@ import { processExcelKucoin } from "./ProcessExcel/Kucoin";
 import { processExcelMEXC } from "./ProcessExcel/MEXC";
 
 interface IUploadXLSButton {
-  setFormData?: Dispatch<SetStateAction<any[]>>;
+  setFormData: Dispatch<SetStateAction<any[]>>;
   formData: any[];
-  setVendas: Dispatch<SetStateAction<any[]>>;
-  setCompras: Dispatch<SetStateAction<any[]>>;
 }
 
-export const UploadXLSButton = ({
-  setFormData,
-  formData,
-  setVendas,
-  setCompras,
-}: IUploadXLSButton) => {
+export const UploadXLSButton = ({ setFormData, formData }: IUploadXLSButton) => {
   const [selectedBroker, setSelectedBroker] = useState<string>("");
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -38,14 +31,8 @@ export const UploadXLSButton = ({
         const fileData = await readFile(file);
         allData.push(...fileData);
       }
-
       const combinedData = [...formData, ...allData];
-      if (setFormData) setFormData(combinedData);
-      const newCompras = allData.filter((item) => item.tipoTransacao === "compras");
-      const newVendas = allData.filter((item) => item.tipoTransacao === "vendas");
-
-      setCompras((prev) => [...prev, ...newCompras]);
-      setVendas((prev) => [...prev, ...newVendas]);
+      setFormData(combinedData);
     }
   };
 
@@ -124,7 +111,7 @@ export const UploadXLSButton = ({
     <div className="gap-2py-4 my-4 flex w-full flex-col items-end md:flex-row">
       <div className={`flex w-full flex-col gap-2 ${!selectedBroker ? "md:w-full" : "md:w-1/2"}`}>
         <Select
-          title="Exchange Utilizada"
+          title="Exchange"
           placeholder="Bybit https://www.bybit.com/ SG"
           options={exchangeOptions}
           value={selectedBroker}

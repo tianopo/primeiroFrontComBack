@@ -6,19 +6,20 @@ interface IHandleListEdit {
 }
 
 export const HandleListEdit = ({ formData, handleEdit }: IHandleListEdit) => {
-  const compras = formData.filter((item) => item.tipoTransacao === "compras");
-  const vendas = formData.filter((item) => item.tipoTransacao === "vendas");
+  const compras = formData.filter((item) => item.tipo === "compras");
+  const vendas = formData.filter((item) => item.tipo === "vendas");
+
   const calculateTotals = (filteredData: any[]) => {
     const valor = (valorVenda: any) =>
       valorVenda?.replace(".", "").replace(",", ".").replace("R$", "") || "0";
     const totalVendas = filteredData
-      .filter((transaction) => transaction.tipoTransacao === "vendas")
+      .filter((transaction) => transaction.tipo === "vendas")
       .reduce((acc, transaction) => {
         return acc + parseFloat(valor(transaction.valorVenda));
       }, 0);
 
     const totalCompras = filteredData
-      .filter((transaction) => transaction.tipoTransacao === "compras")
+      .filter((transaction) => transaction.tipo === "compras")
       .reduce((acc, transaction) => {
         const valorCompra = parseFloat(valor(transaction.valorCompra));
 
@@ -53,31 +54,31 @@ export const HandleListEdit = ({ formData, handleEdit }: IHandleListEdit) => {
                   <strong>Número Ordem:</strong> {item.numeroOrdem}
                 </p>
                 <p>
-                  <strong>Data e Hora Transação:</strong> {item.dataHoraTransacao}
+                  <strong>Data e Hora:</strong> {item.dataHora}
                 </p>
                 <p>
-                  <strong>Exchange Utilizada:</strong> {item.exchangeUtilizada}
+                  <strong>Exchange:</strong> {item.exchange}
                 </p>
                 <p>
-                  <strong>Ativo Digital:</strong> {item.ativoDigital}
+                  <strong>Ativo:</strong> {item.ativo}
                 </p>
                 <p>
-                  <strong>Nome Vendedor:</strong> {item.nomeVendedor}
+                  <strong>Nome:</strong> {item.nome}
                 </p>
                 <p>
-                  <strong>Apelido Vendedor:</strong> {item.apelidoVendedor}
+                  <strong>Apelido:</strong> {item.apelido}
                 </p>
                 <p>
-                  <strong>Quantidade Comprada:</strong> {item.quantidadeComprada}
+                  <strong>Quantidade:</strong> {item.quantidade}
                 </p>
                 <p>
-                  <strong>Valor Compra:</strong> {item.valorCompra}
+                  <strong>Valor:</strong> {item.valor}
                 </p>
                 <p>
-                  <strong>Valor Token Data Compra:</strong> {item.valorTokenDataCompra}
+                  <strong>Valor do Token:</strong> {item.valorToken}
                 </p>
                 <p>
-                  <strong>Taxa Transação:</strong> {item.taxaTransacao}
+                  <strong>Taxa:</strong> {item.taxa}
                 </p>
               </li>
             ))}
@@ -100,34 +101,31 @@ export const HandleListEdit = ({ formData, handleEdit }: IHandleListEdit) => {
                   <strong>Número Ordem:</strong> {item.numeroOrdem}
                 </p>
                 <p>
-                  <strong>Data e Hora Transação:</strong> {item.dataHoraTransacao}
+                  <strong>Data e Hora:</strong> {item.dataHora}
                 </p>
                 <p>
-                  <strong>Exchange Utilizada:</strong> {item.exchangeUtilizada}
+                  <strong>Exchange:</strong> {item.exchange}
                 </p>
                 <p>
-                  <strong>Ativo Digital:</strong> {item.ativoDigital}
+                  <strong>Ativo:</strong> {item.ativo}
                 </p>
                 <p>
-                  <strong>Nome Comprador:</strong> {item.nomeComprador}
+                  <strong>Nome:</strong> {item.nome}
                 </p>
                 <p>
-                  <strong>Apelido Comprador:</strong> {item.apelidoComprador}
+                  <strong>Apelido:</strong> {item.apelido}
                 </p>
                 <p>
-                  <strong>CPF Comprador:</strong> {item.documentoComprador}
+                  <strong>Quantidade:</strong> {item.quantidade}
                 </p>
                 <p>
-                  <strong>Quantidade Vendida:</strong> {item.quantidadeVendida}
+                  <strong>Valor Venda:</strong> {item.valor}
                 </p>
                 <p>
-                  <strong>Valor Venda:</strong> {item.valorVenda}
+                  <strong>Valor do Token:</strong> {item.valorToken}
                 </p>
                 <p>
-                  <strong>Valor Token Data Venda:</strong> {item.valorTokenDataVenda}
-                </p>
-                <p>
-                  <strong>Taxa Transação:</strong> {item.taxaTransacao}
+                  <strong>Taxa:</strong> {item.taxa}
                 </p>
               </li>
             ))}

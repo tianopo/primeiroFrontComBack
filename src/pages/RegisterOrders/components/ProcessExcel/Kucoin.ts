@@ -48,20 +48,15 @@ export const processExcelKucoin = (workbook: XLSX.WorkBook, selectedBroker: stri
       if (status?.trim().toLowerCase() !== "done") return false;
       return {
         numeroOrdem: orderId,
-        tipoTransacao: side === "BUY" ? "compras" : "vendas",
-        dataHoraTransacao: excelDateToJSDate(Number(time)),
-        exchangeUtilizada: selectedBroker,
-        ativoDigital: legalCurrency.split("/")[1],
-        documentoComprador: side === "SELL" ? "" : "",
-        apelidoVendedor: side === "BUY" ? traderName : "",
-        apelidoComprador: side === "SELL" ? traderName : "",
-        quantidadeComprada: side === "BUY" ? currencyAmount.toString() : "",
-        quantidadeVendida: side === "SELL" ? currencyAmount.toString() : "",
-        valorCompra: side === "BUY" ? formatNumber(legalAmount.toString()) : "",
-        valorVenda: side === "SELL" ? formatNumber(legalAmount.toString()) : "",
-        valorTokenDataCompra: side === "BUY" ? price.toString() : "",
-        valorTokenDataVenda: side === "SELL" ? price.toString() : "",
-        taxaTransacao: rate.toString(),
+        tipo: side === "BUY" ? "compras" : "vendas",
+        dataHora: excelDateToJSDate(Number(time)),
+        exchange: selectedBroker,
+        ativo: legalCurrency.split("/")[1],
+        apelido: traderName,
+        quantidade: currencyAmount.toString(),
+        valor: formatNumber(legalAmount.toString()),
+        valorToken: price.toString(),
+        taxa: rate.toString(),
       };
     })
     .filter(Boolean);

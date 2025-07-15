@@ -38,19 +38,15 @@ export const processExcelBingX = (workbook: XLSX.WorkBook, selectedBroker: strin
 
       return {
         numeroOrdem: orderId,
-        tipoTransacao: side === "Buy" ? "compras" : "vendas",
-        dataHoraTransacao: time,
-        exchangeUtilizada: selectedBroker,
-        ativoDigital: crypto,
-        apelidoComprador: side === "Sell" ? counterparty : "",
-        apelidoVendedor: side === "Buy" ? counterparty : "",
-        quantidadeComprada: side === "Buy" ? amount : "",
-        quantidadeVendida: side === "Sell" ? amount : "",
-        valorCompra: side === "Buy" ? formatNumber(total) : "",
-        valorVenda: side === "Sell" ? formatNumber(total) : "",
-        valorTokenDataCompra: side === "Buy" ? formatNumber(price) : "",
-        valorTokenDataVenda: side === "Sell" ? formatNumber(price) : "",
-        taxaTransacao: formatNumber(fee),
+        tipo: side === "Buy" ? "compras" : "vendas",
+        dataHora: time,
+        exchange: selectedBroker,
+        ativo: crypto,
+        apelido: counterparty,
+        quantidade: amount,
+        valor: formatNumber(total),
+        valorToken: formatNumber(price),
+        taxa: formatNumber(fee),
       };
     })
     .filter(Boolean);

@@ -16,7 +16,7 @@ import {
   walletOptions,
 } from "src/utils/selectsOptions";
 import { services } from "../config/contractPdfs/services";
-import { useListBuyers } from "../hooks/useListBuyers";
+import { useListUsers } from "../hooks/useListBuyers";
 import { IUsuario, useService } from "../hooks/useServices";
 
 export const Services = () => {
@@ -32,7 +32,7 @@ export const Services = () => {
   const [wallet, setWallet] = useState<string>("");
   const [tipo, setTipo] = useState<string>("");
   // info pessoais
-  const { data } = useListBuyers();
+  const { data } = useListUsers();
   const { context } = useService();
   const {
     formState: { errors },

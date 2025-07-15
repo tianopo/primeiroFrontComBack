@@ -41,18 +41,18 @@ export const processExcelMEXC = (workbook: XLSX.WorkBook, selectedBroker: string
         ,
         // UID, merchant UID
         numeroOrdem, // order ID
-        // AD ID
         ,
-        tipoTransacao, // AD type
-        dataHoraTransacao, // Create time
+        // AD ID
+        tipo, // AD type
+        dataHora, // Create time
         cryptocurrency, // Coin_name
         currency, // currency
         status, // state
         coinAmount, // quantity
         price, // price
         fiatAmount, // amount
-        // payment method
         ,
+        // payment method
         counterparty, // taker id
       ] = row;
 
@@ -78,20 +78,15 @@ export const processExcelMEXC = (workbook: XLSX.WorkBook, selectedBroker: string
 
       return {
         numeroOrdem,
-        tipoTransacao: tipoTransacao === "BUY" ? "compras" : "vendas",
-        dataHoraTransacao: adjustDateTime(dataHoraTransacao),
-        exchangeUtilizada: selectedBroker,
-        ativoDigital: cryptocurrency,
-        documentoComprador: "", // Não disponível
-        apelidoVendedor: tipoTransacao === "BUY" ? counterparty : "",
-        apelidoComprador: tipoTransacao === "SELL" ? counterparty : "",
-        quantidadeComprada: tipoTransacao === "BUY" ? coinAmount : "",
-        quantidadeVendida: tipoTransacao === "SELL" ? coinAmount : "",
-        valorCompra: tipoTransacao === "BUY" ? formatToTwoDecimalPlaces(fiatAmount) : "",
-        valorVenda: tipoTransacao === "SELL" ? formatToTwoDecimalPlaces(fiatAmount) : "",
-        valorTokenDataCompra: tipoTransacao === "BUY" ? price : "",
-        valorTokenDataVenda: tipoTransacao === "SELL" ? price : "",
-        taxaTransacao: "", // Campo não disponível
+        tipo: tipo === "BUY" ? "compras" : "vendas",
+        dataHora: adjustDateTime(dataHora),
+        exchange: selectedBroker,
+        ativo: cryptocurrency,
+        apelido: counterparty,
+        quantidade: coinAmount,
+        valor: formatToTwoDecimalPlaces(fiatAmount),
+        valorToken: price,
+        taxa: "0",
       };
     })
     .filter(Boolean);

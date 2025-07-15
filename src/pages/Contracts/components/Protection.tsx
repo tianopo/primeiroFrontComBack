@@ -8,7 +8,7 @@ import { Select } from "src/components/Form/Select/Select";
 import { formatCurrency, formatDateTime } from "src/utils/formats";
 import { assetsOptions, exchangeOptions, walletOptions } from "src/utils/selectsOptions";
 import { protection } from "../config/contractPdfs/comercialProtection";
-import { useListBuyers } from "../hooks/useListBuyers";
+import { useListUsers } from "../hooks/useListBuyers";
 import { useListOrders } from "../hooks/useListOrders";
 import { useProtection } from "../hooks/useProtection";
 
@@ -28,7 +28,7 @@ export const Protection = () => {
   const [usuario, setUsuario] = useState<string>("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
-  const { data } = useListBuyers();
+  const { data } = useListUsers();
   const { context } = useProtection();
   const {
     formState: { errors },

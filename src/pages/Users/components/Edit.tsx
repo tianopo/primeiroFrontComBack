@@ -85,7 +85,7 @@ export const Edit = ({ setForm }: IEdit) => {
   };
 
   const updateUserFields = (selectedUser: any) => {
-    const userName = selectedUser.user.name;
+    const userName = selectedUser.User.name;
 
     const isUserBlocked = userName.includes("Bloqueado");
     setIsBlocked(isUserBlocked);
@@ -96,13 +96,13 @@ export const Edit = ({ setForm }: IEdit) => {
     setNome(updatedName);
     setApelido(selectedUser.counterparty);
     setExchange(selectedUser.exchange);
-    setDocumento(selectedUser.user.document);
+    setDocumento(selectedUser.User.document);
     setIsBlocked(selectedUser.blocked);
 
     setValue("nome", updatedName);
     setValue("apelido", selectedUser.counterparty);
     setValue("exchange", selectedUser.exchange);
-    setValue("documento", selectedUser.user.document);
+    setValue("documento", selectedUser.User.document);
     setValue("bloqueado", selectedUser.blocked);
   };
 
@@ -117,7 +117,7 @@ export const Edit = ({ setForm }: IEdit) => {
     if (data && nome && exchange) {
       const selectedUser = data.find(
         (user: any) =>
-          user.user.name.replace(" Bloqueado", "") === nome &&
+          user.User.name.replace(" Bloqueado", "") === nome &&
           user.exchange.split(" ")[0] === exchange.split(" ")[0],
       );
 
@@ -129,7 +129,7 @@ export const Edit = ({ setForm }: IEdit) => {
     if (data && documento && exchange) {
       const selectedUser = data.find(
         (user: any) =>
-          user.user.document === documento &&
+          user.User.document === documento &&
           user.exchange.split(" ")[0] === exchange.split(" ")[0],
       );
 
@@ -207,7 +207,7 @@ export const Edit = ({ setForm }: IEdit) => {
             busca
             options={Array.from(
               new Set(
-                data?.map((user: any) => `${user?.user.name} - ${user?.exchange.split(" ")[0]}`) ||
+                data?.map((user: any) => `${user?.User.name} - ${user?.exchange.split(" ")[0]}`) ||
                   [],
               ),
             )}
@@ -230,7 +230,7 @@ export const Edit = ({ setForm }: IEdit) => {
             options={Array.from(
               new Set(
                 data?.map(
-                  (user: any) => `${user?.user.document} - ${user?.exchange.split(" ")[0]}`,
+                  (user: any) => `${user?.User.document} - ${user?.exchange.split(" ")[0]}`,
                 ) || [],
               ),
             )}

@@ -55,20 +55,15 @@ export const processExcelHuobi = (workbook: XLSX.WorkBook, selectedBroker: strin
       if (status?.trim().toLowerCase() !== "complete") return false;
       return {
         numeroOrdem: orderId,
-        tipoTransacao: side === "Buy" ? "compras" : "vendas",
-        dataHoraTransacao: time,
-        exchangeUtilizada: selectedBroker,
-        documentoComprador: side === "SELL" ? "" : "",
-        ativoDigital: crypto,
-        apelidoComprador: side === "Sell" ? counterparty : "",
-        apelidoVendedor: side === "Buy" ? counterparty : "",
-        quantidadeComprada: side === "Buy" ? amount.toString() : "",
-        quantidadeVendida: side === "Sell" ? amount.toString() : "",
-        valorCompra: side === "Buy" ? formatNumber(total) : "",
-        valorVenda: side === "Sell" ? formatNumber(total) : "",
-        valorTokenDataCompra: side === "Buy" ? formatNumber(price) : "",
-        valorTokenDataVenda: side === "Sell" ? formatNumber(price) : "",
-        taxaTransacao: formatNumber(fee),
+        tipo: side === "Buy" ? "compras" : "vendas",
+        dataHora: time,
+        exchange: selectedBroker,
+        ativo: crypto,
+        apelido: counterparty,
+        quantidade: amount.toString(),
+        valorVenda: formatNumber(total),
+        valorToken: formatNumber(price),
+        taxa: formatNumber(fee),
       };
     })
     .filter(Boolean);

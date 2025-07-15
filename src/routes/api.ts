@@ -6,9 +6,9 @@ export const apiRoute = {
 
   multa: "send/multa",
 
-  transactions: "transactions",
-  tax: "transactions/tax",
-  comercial: "transactions/comercial",
+  orders: "orders",
+  tax: "orders/tax",
+  comercial: "orders/comercial",
 
   compliance: "compliance",
   operation: "compliance/operation",
@@ -17,8 +17,6 @@ export const apiRoute = {
   user: "user",
   account: "user/account",
   userId: (id: string) => `user/account/${id}`,
-
-  buyer: "buyer",
 
   pendingOrders: "bybit/pending-orders",
   sendChatMessage: "bybit/send-chat-message",

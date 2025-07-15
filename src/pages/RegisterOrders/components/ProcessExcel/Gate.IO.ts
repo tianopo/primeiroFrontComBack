@@ -35,8 +35,8 @@ export const processExcelGateIO = (workbook: XLSX.WorkBook, selectedBroker: stri
       const [
         no, // Ex: "No"
         createdTime, // Ex: "Created date"
-        // Ex: "Updated date"
         ,
+        // Ex: "Updated date"
         type, // Ex: "Type"
         fundType, // Ex: "Fund Type"
         ,
@@ -48,24 +48,19 @@ export const processExcelGateIO = (workbook: XLSX.WorkBook, selectedBroker: stri
         name, // Ex: "Name"
       ] = row;
 
-      const ativoDigital = fundType.split("/")[0];
+      const ativo = fundType.split("/")[0];
       if (status?.trim().toLowerCase() !== "concluído") return false;
       return {
         numeroOrdem: no.toString(),
-        tipoTransacao: type === "Comprar" ? "compras" : "vendas",
-        dataHoraTransacao: excelDateToJSDate(Number(createdTime)),
-        exchangeUtilizada: selectedBroker,
-        ativoDigital,
-        documentoComprador: type === "Venda" ? "" : "",
-        nomeVendedor: type === "Comprar" ? name : "",
-        nomeComprador: type === "Venda" ? name : "",
-        quantidadeComprada: type === "Comprar" ? amount.toString() : "",
-        quantidadeVendida: type === "Venda" ? amount.toString() : "",
-        valorCompra: type === "Comprar" ? formatNumber(total.toString()) : "",
-        valorVenda: type === "Venda" ? formatNumber(total.toString()) : "",
-        valorTokenDataCompra: type === "Comprar" ? price.toString() : "",
-        valorTokenDataVenda: type === "Venda" ? price.toString() : "",
-        taxaTransacao: "0",
+        tipo: type === "Comprar" ? "compras" : "vendas",
+        dataHora: excelDateToJSDate(Number(createdTime)),
+        exchange: selectedBroker,
+        ativo,
+        nome: name,
+        quantidade: amount.toString(),
+        valor: formatNumber(total.toString()),
+        valorToken: price.toString(),
+        taxa: "0",
       };
     })
     .filter(Boolean);
