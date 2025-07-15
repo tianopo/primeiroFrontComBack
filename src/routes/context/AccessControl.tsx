@@ -2,19 +2,22 @@ import { jwtDecode } from "jwt-decode";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
 interface TokenPayload {
-  email: string;
+  document: string;
   acesso: string;
 }
 
 interface AccessControlContextType {
-  email: string | null;
+  document: string | null;
   acesso: string | null;
 }
 
-const AccessControlContext = createContext<AccessControlContextType>({ email: null, acesso: null });
+const AccessControlContext = createContext<AccessControlContextType>({
+  document: null,
+  acesso: null,
+});
 
 export const AccessControlProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [email, setEmail] = useState<string | null>(null);
+  const [document, setDocument] = useState<string | null>(null);
   const [acesso, setAcesso] = useState<string | null>(null);
 
   useEffect(() => {
@@ -22,7 +25,7 @@ export const AccessControlProvider: React.FC<{ children: ReactNode }> = ({ child
     if (token) {
       try {
         const decodedToken = jwtDecode<TokenPayload>(token);
-        setEmail(decodedToken.email);
+        setDocument(decodedToken.document);
         setAcesso(decodedToken.acesso);
       } catch (error) {
         console.error("Token inválido:", error);
@@ -31,7 +34,7 @@ export const AccessControlProvider: React.FC<{ children: ReactNode }> = ({ child
   }, []);
 
   return (
-    <AccessControlContext.Provider value={{ email, acesso }}>
+    <AccessControlContext.Provider value={{ document, acesso }}>
       {children}
     </AccessControlContext.Provider>
   );

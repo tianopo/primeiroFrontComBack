@@ -130,7 +130,7 @@ export const PendingOrders = () => {
       {/* Modal de confirmação */}
       {showModal && orderToRelease && (
         <ConfirmationDelete
-          text={`Você tem certeza que deseja liberar para ${orderToRelease.buyerRealName}?`}
+          text={`Você tem certeza que deseja liberar para ${orderToRelease.buyerRealName} o valor de ${orderToRelease.amount}?`}
           onConfirm={handleConfirmRelease}
           onCancel={handleCancelRelease}
         />

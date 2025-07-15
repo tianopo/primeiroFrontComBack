@@ -9,11 +9,12 @@ import { Select } from "src/components/Form/Select/Select";
 import { IconX } from "src/components/Icons/IconX";
 import { CardContainer } from "src/components/Layout/CardContainer";
 import { ConfirmationDelete } from "src/components/Modal/ConfirmationDelete";
+import { responseError } from "src/config/responseErrors";
 import { formatCPFOrCNPJ } from "src/utils/formats";
 import { exchangeOptions } from "src/utils/selectsOptions";
 import { useDelUser } from "../hooks/useDelUser";
 import { useListUsers } from "../hooks/useListUsers";
-import { useUpdateUser } from "../hooks/useUpdateUser";
+import { IUpdateUserPayload, useUpdateUser } from "../hooks/useUpdateUser";
 
 interface IEdit {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -34,13 +35,19 @@ export const Edit = ({ setForm }: IEdit) => {
     setValue,
   } = context;
   const { mutate: deletar } = useDelUser(id);
-
   const handleNomeChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const fullValue = e.target.value;
+    const [rawName, rawExchange] = fullValue.split(" - ");
+
     const updatedName = isBlocked
-      ? `${e.target.value.replace(" Bloqueado", "")} Bloqueado`
-      : e.target.value;
-    setValue("nome", updatedName);
+      ? `${rawName?.trim().replace(" Bloqueado", "")} Bloqueado`
+      : rawName?.trim();
+
     setNome(updatedName);
+    setExchange(rawExchange?.trim());
+
+    setValue("nome", updatedName);
+    setValue("exchange", rawExchange?.trim());
   };
 
   const handleApelidoChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -54,9 +61,15 @@ export const Edit = ({ setForm }: IEdit) => {
   };
 
   const handleDocumentoChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const formattedDocumento = formatCPFOrCNPJ(e.target.value);
-    setValue("documento", formattedDocumento);
+    const fullValue = e.target.value;
+    const [rawDocument, rawExchange] = fullValue.split(" - ");
+    const formattedDocumento = formatCPFOrCNPJ(rawDocument?.trim());
+
     setDocumento(formattedDocumento);
+    setExchange(rawExchange?.trim()); // <-- salva a exchange também
+
+    setValue("documento", formattedDocumento);
+    setValue("exchange", rawExchange?.trim());
   };
 
   const handleBlockChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -72,7 +85,7 @@ export const Edit = ({ setForm }: IEdit) => {
   };
 
   const updateUserFields = (selectedUser: any) => {
-    const userName = selectedUser.name;
+    const userName = selectedUser.user.name;
 
     const isUserBlocked = userName.includes("Bloqueado");
     setIsBlocked(isUserBlocked);
@@ -83,13 +96,13 @@ export const Edit = ({ setForm }: IEdit) => {
     setNome(updatedName);
     setApelido(selectedUser.counterparty);
     setExchange(selectedUser.exchange);
-    setDocumento(selectedUser.document);
+    setDocumento(selectedUser.user.document);
     setIsBlocked(selectedUser.blocked);
 
     setValue("nome", updatedName);
     setValue("apelido", selectedUser.counterparty);
     setValue("exchange", selectedUser.exchange);
-    setValue("documento", selectedUser.document);
+    setValue("documento", selectedUser.user.document);
     setValue("bloqueado", selectedUser.blocked);
   };
 
@@ -101,21 +114,36 @@ export const Edit = ({ setForm }: IEdit) => {
   }, [apelido, data, setValue]);
 
   useEffect(() => {
-    if (data && nome) {
-      const selectedUser = data.find((user: any) => user.name === nome);
+    if (data && nome && exchange) {
+      const selectedUser = data.find(
+        (user: any) =>
+          user.user.name.replace(" Bloqueado", "") === nome &&
+          user.exchange.split(" ")[0] === exchange.split(" ")[0],
+      );
+
       if (selectedUser) updateUserFields(selectedUser);
     }
-  }, [nome, data, setValue]);
+  }, [nome, exchange, data, setValue]);
 
   useEffect(() => {
-    if (data && documento) {
-      const selectedUser = data.find((user: any) => user.document === documento);
+    if (data && documento && exchange) {
+      const selectedUser = data.find(
+        (user: any) =>
+          user.user.document === documento &&
+          user.exchange.split(" ")[0] === exchange.split(" ")[0],
+      );
+
       if (selectedUser) updateUserFields(selectedUser);
     }
-  }, [documento, data, setValue]);
+  }, [documento, exchange, data, setValue]);
 
-  const handleSubmit = (data: any) => {
-    mutate(data);
+  const handleSubmit = (formData: IUpdateUserPayload) => {
+    if (!id) {
+      responseError("Selecione um usuário antes de salvar.");
+      return;
+    }
+
+    mutate({ id, payload: formData });
   };
 
   const handleDelete = () => setIsConfirming(!isConfirming);
@@ -177,9 +205,12 @@ export const Edit = ({ setForm }: IEdit) => {
             value={nome}
             onChange={handleNomeChange}
             busca
-            options={data
-              ?.filter((user: any) => user?.name && user.name.includes(nome))
-              .map((user: any) => user?.name)}
+            options={Array.from(
+              new Set(
+                data?.map((user: any) => `${user?.user.name} - ${user?.exchange.split(" ")[0]}`) ||
+                  [],
+              ),
+            )}
             required
           />
           <Select
@@ -196,9 +227,13 @@ export const Edit = ({ setForm }: IEdit) => {
             value={documento}
             onChange={handleDocumentoChange}
             busca
-            options={data
-              ?.filter((user: any) => user?.document && user.document.includes(documento))
-              .map((user: any) => user?.document)}
+            options={Array.from(
+              new Set(
+                data?.map(
+                  (user: any) => `${user?.user.document} - ${user?.exchange.split(" ")[0]}`,
+                ) || [],
+              ),
+            )}
             required
           />
           <Checkbox title="Bloqueado" checked={isBlocked} onChange={handleBlockChange} />

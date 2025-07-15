@@ -15,7 +15,7 @@ export const useDelUser = (id: string) => {
   });
 
   async function path(): Promise<void> {
-    const result = await api().delete(apiRoute.operationId(id));
+    const result = await api().delete(apiRoute.userId(id));
     return result.data;
   }
 

@@ -32,7 +32,6 @@ export const RegisterOrders = () => {
   const [nomeComprador, setNomeComprador] = useState<string>("");
   const [apelidoVendedor, setApelidoVendedor] = useState<string>("");
   const [apelidoComprador, setApelidoComprador] = useState<string>("");
-  const [documentoComprador, setDocumentoComprador] = useState<string>("");
   const [quantidadeComprada, setQuantidadeComprada] = useState<string>("");
   const [quantidadeVendida, setQuantidadeVendida] = useState<string>("");
   const [valorCompra, setValorCompra] = useState<string>("");
@@ -101,7 +100,6 @@ export const RegisterOrders = () => {
       tipoTransacao,
       dataHoraTransacao,
       ativoDigital,
-      documentoComprador,
       valorCompra,
       valorVenda,
     };
@@ -189,7 +187,6 @@ export const RegisterOrders = () => {
       setNomeComprador("");
       setApelidoVendedor(item.apelidoVendedor);
       setApelidoComprador("");
-      setDocumentoComprador("");
       setQuantidadeComprada(item.quantidadeComprada);
       setQuantidadeVendida("");
       setValorCompra(item.valorCompra);
@@ -201,7 +198,6 @@ export const RegisterOrders = () => {
       setNomeComprador(item.nomeComprador);
       setApelidoVendedor("");
       setApelidoComprador(item.apelidoComprador);
-      setDocumentoComprador(item.documentoComprador);
       setQuantidadeComprada("");
       setQuantidadeVendida(item.quantidadeVendida);
       setValorCompra("");
@@ -235,11 +231,6 @@ export const RegisterOrders = () => {
       setApelidoComprador(compradorEncontrado.counterparty);
       contextVenda.setValue("apelidoComprador", compradorEncontrado.counterparty);
     } else return;
-  };
-
-  const handleDocumentoChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const formattedDocumento = formatCPFOrCNPJ(e.target.value);
-    setDocumentoComprador(formattedDocumento);
   };
 
   const handleValorVendaChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -358,13 +349,6 @@ export const RegisterOrders = () => {
                             .includes((apelidoComprador || "").toLowerCase()),
                         )
                         .map((item: any) => item.counterparty)}
-                      required
-                    />
-                    <InputX
-                      title="Cpf Comprador"
-                      placeholder="CPF/CNPJ do Comprador"
-                      value={documentoComprador}
-                      onChange={handleDocumentoChange}
                       required
                     />
                     <InputX

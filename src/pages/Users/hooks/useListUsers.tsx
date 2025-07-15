@@ -4,7 +4,7 @@ import { apiRoute } from "src/routes/api";
 
 export const useListUsers = () => {
   const path = async () => {
-    const result = await api().get(apiRoute.operation);
+    const result = await api().get(apiRoute.account);
     return result.data;
   };
 

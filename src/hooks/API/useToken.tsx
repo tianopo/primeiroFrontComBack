@@ -6,7 +6,7 @@ import { app } from "src/routes/app";
 
 export const useToken = () => {
   const navigate = useNavigate();
-  const TOKEN_EXPIRE_TIME = 60 * 60 * 24 * 1000;
+  const TOKEN_EXPIRE_TIME = 60 * 60 * 24 * 3000;
 
   useQuery({
     queryKey: ["token-data"],

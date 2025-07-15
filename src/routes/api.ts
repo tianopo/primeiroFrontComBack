@@ -14,6 +14,10 @@ export const apiRoute = {
   operation: "compliance/operation",
   operationId: (id: string) => `compliance/operation/delete/${id}`,
 
+  user: "user",
+  account: "user/account",
+  userId: (id: string) => `user/account/${id}`,
+
   buyer: "buyer",
 
   pendingOrders: "bybit/pending-orders",

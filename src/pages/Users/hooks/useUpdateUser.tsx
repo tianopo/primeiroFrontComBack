@@ -8,12 +8,17 @@ import { apiRoute } from "src/routes/api";
 import { Regex } from "src/utils/Regex";
 import * as Yup from "yup";
 
-export interface IUpdateUser {
+export interface IUpdateUserPayload {
   nome: string;
   apelido?: string;
   exchange: string;
   documento?: string;
   bloqueado?: boolean;
+}
+
+interface IUpdateUserVariables {
+  id: string;
+  payload: IUpdateUserPayload;
 }
 
 const schema = Yup.object({
@@ -31,7 +36,10 @@ const schema = Yup.object({
 
 export const useUpdateUser = () => {
   const { mutate, isPending } = useMutation({
-    mutationFn: path,
+    mutationFn: async ({ id, payload }: IUpdateUserVariables) => {
+      const { data } = await api().put(`${apiRoute.user}/${id}`, payload);
+      return data;
+    },
     onSuccess: () => {
       responseSuccess("Atualização feita com sucesso");
       queryClient.invalidateQueries({ queryKey: ["users-data"] });
@@ -40,15 +48,10 @@ export const useUpdateUser = () => {
     onError: (erro: AxiosError) => responseError(erro),
   });
 
-  const context = useForm<IUpdateUser>({
+  const context = useForm<IUpdateUserPayload>({
     resolver: yupResolver(schema),
     reValidateMode: "onChange",
   });
-
-  async function path(data: IUpdateUser): Promise<IUpdateUser> {
-    const result = await api().put(apiRoute.operation, data);
-    return result.data;
-  }
 
   return { mutate, isPending, context };
 };
