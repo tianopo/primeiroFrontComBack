@@ -16,7 +16,7 @@ export const IN1888 = ({ onClose }: IN1888Props) => {
 
   const [data, setData] = useState<string>("");
   const [taxa, setTaxa] = useState<string>("");
-  const [ativoDigital, setAtivoDigital] = useState<string>("");
+  const [ativo, setativo] = useState<string>("");
   const [quantidade, setQuantidade] = useState<string>("");
   const [exchange, setExchange] = useState<string>("");
   const [wallet, setWallet] = useState<string>("");
@@ -35,7 +35,7 @@ export const IN1888 = ({ onClose }: IN1888Props) => {
     const novaEntrada = {
       data,
       taxas: taxa,
-      criptoativo: ativoDigital,
+      criptoativo: ativo,
       quantidade,
       exchange,
       origemWallet: wallet,
@@ -100,8 +100,8 @@ export const IN1888 = ({ onClose }: IN1888Props) => {
           title="Ativo Digital"
           placeholder="USDT"
           options={assetsOptions}
-          value={ativoDigital}
-          onChange={(e) => setAtivoDigital(e.target.value)}
+          value={ativo}
+          onChange={(e) => setativo(e.target.value)}
           required
         />
         <InputX

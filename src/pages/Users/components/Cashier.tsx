@@ -56,7 +56,7 @@ export const Cashier = () => {
     const newTotalPurchases = totalPurchases + inputValue;
     setTotalPurchases(newTotalPurchases);
     setCurrentAmount(currentAmount - inputValue);
-    setTransactions([...transactions, { type: "Compra", amount: inputValue, exchange }]);
+    setTransactions([...transactions, { type: "compras", amount: inputValue, exchange }]);
     setInputValue(0);
     setExchange("");
   };
@@ -66,7 +66,7 @@ export const Cashier = () => {
     const newTotalSales = totalSales + inputValue;
     setTotalSales(newTotalSales);
     setCurrentAmount(currentAmount + inputValue);
-    setTransactions([...transactions, { type: "Venda", amount: inputValue, exchange }]);
+    setTransactions([...transactions, { type: "Vendas", amount: inputValue, exchange }]);
     setInputValue(0);
     setExchange("");
   };
@@ -105,8 +105,8 @@ export const Cashier = () => {
       );
   };
 
-  const purchasesByExchange = categorizedTransactions("Compra");
-  const salesByExchange = categorizedTransactions("Venda");
+  const purchasesByExchange = categorizedTransactions("compras");
+  const salesByExchange = categorizedTransactions("Vendas");
 
   return (
     <div className="flex h-fit w-full flex-col rounded-16 bg-white p-4 shadow-2xl">

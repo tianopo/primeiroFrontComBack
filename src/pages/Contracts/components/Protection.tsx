@@ -20,7 +20,7 @@ export const Protection = () => {
   const [dataHora, setDataHora] = useState<string>("");
   const [quantidade, setQuantidade] = useState<string>("");
   const [valor, setValor] = useState<string>("");
-  const [ativoDigital, setAtivoDigital] = useState<string>("");
+  const [ativo, setativo] = useState<string>("");
   const [exchange, setExchange] = useState<string>("");
   const [uid, setUid] = useState<string>("");
   const [endereco, setEndereco] = useState<string>("");
@@ -42,20 +42,20 @@ export const Protection = () => {
       const selectedOrder = dataOrders.find((o: any) => o.numeroOrdem === order);
       if (selectedOrder) {
         const {
-          dataTransacao,
+          dataHora,
           quantidade: amount,
           valor: value,
-          ativoDigital: asset,
+          ativo: asset,
           exchange: corretora,
           buyerId,
         } = selectedOrder;
-        setDataHora(dataTransacao);
-        setValue("dataHora", dataTransacao);
+        setDataHora(dataHora);
+        setValue("dataHora", dataHora);
         setQuantidade(amount);
         setValue("quantidade", amount);
         setValor(value);
         setValue("valor", value);
-        setAtivoDigital(asset);
+        setativo(asset);
         setValue("ativo", asset);
         setExchange(corretora.split(" ")[0]);
         setValue("exchange", corretora);
@@ -183,8 +183,8 @@ export const Protection = () => {
           title="Ativo"
           placeholder="USDT"
           options={assetsOptions}
-          value={ativoDigital}
-          onChange={(e) => setAtivoDigital(e.target.value)}
+          value={ativo}
+          onChange={(e) => setativo(e.target.value)}
           disabled={order.length > 0 && tipoTransferencia === "usuario"}
           required
         />
@@ -271,7 +271,7 @@ export const Protection = () => {
                 dataHora,
                 quantidade,
                 valor,
-                ativo: ativoDigital,
+                ativo: ativo,
                 exchange: ["exchange", "usuario"].includes(tipoTransferencia)
                   ? exchange
                   : undefined,

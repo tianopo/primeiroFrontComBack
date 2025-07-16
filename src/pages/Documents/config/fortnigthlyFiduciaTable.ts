@@ -28,15 +28,12 @@ export const fortnigthlyFiduciaTable = (transactions: any[]) => {
       return value.includes(",") ? `"${value}"` : value;
     };
 
-    const nomeCliente =
-      transaction.tipo === "venda"
-        ? deleteComma(transaction.buyer?.name)
-        : deleteComma(transaction.seller?.name);
-    const walletCliente =
-      transaction.tipo === "venda"
-        ? transaction.buyer?.counterparty
-        : transaction.seller?.counterparty;
-    const [ano, mes, dia] = transaction.dataTransacao.split(" ")[0].split("-");
+    const nomeCliente = deleteComma(transaction.User?.name);
+    const walletCliente = transaction.User?.Accounts?.find(
+      (acc: any) => acc.exchange === transaction.exchange,
+    ).counterparty;
+
+    const [ano, mes, dia] = transaction.dataHora.split(" ")[0].split("-");
     const dataFormatada = `${dia}/${mes}/${ano}`;
     const quantidade = wrapIfNeeded(formatNumber(transaction.quantidade));
     const valorToken = wrapIfNeeded(formatNumber(transaction.valorToken));
@@ -48,7 +45,7 @@ export const fortnigthlyFiduciaTable = (transactions: any[]) => {
       transaction.tipo,
       transaction.exchange.split(" ")[0],
       "Usuário de Exchange",
-      transaction.ativoDigital,
+      transaction.ativo,
       quantidade,
       valorToken,
     ];
@@ -93,15 +90,11 @@ export const exportToXLS = (transactions: any[]) => {
   };
 
   const rows = transactions.map((transaction) => {
-    const nomeCliente =
-      transaction.tipo === "venda"
-        ? deleteComma(transaction.buyer?.name)
-        : deleteComma(transaction.seller?.name);
-    const walletCliente =
-      transaction.tipo === "venda"
-        ? transaction.buyer?.counterparty
-        : transaction.seller?.counterparty;
-    const [ano, mes, dia] = transaction.dataTransacao.split(" ")[0].split("-");
+    const nomeCliente = deleteComma(transaction.User?.name);
+    const walletCliente = transaction.User?.Accounts?.find(
+      (acc: any) => acc.exchange === transaction.exchange,
+    ).counterparty;
+    const [ano, mes, dia] = transaction.dataHora.split(" ")[0].split("-");
     const dataFormatada = `${dia}/${mes}/${ano}`;
     const quantidade = formatNumber(transaction.quantidade);
     const valorToken = formatNumber(transaction.valorToken);
@@ -113,7 +106,7 @@ export const exportToXLS = (transactions: any[]) => {
       transaction.tipo,
       transaction.exchange.split(" ")[0],
       "Usuário de Exchange",
-      transaction.ativoDigital,
+      transaction.ativo,
       quantidade,
       valorToken,
     ];

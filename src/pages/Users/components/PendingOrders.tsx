@@ -79,7 +79,7 @@ export const PendingOrders = () => {
             <strong>Ativo:</strong> {order.tokenId}
           </p>
           <p>
-            <strong>Tipo:</strong> {order.side === 0 ? "Compra" : "Venda"}
+            <strong>Tipo:</strong> {order.side === 0 ? "compras" : "vendas"}
           </p>
           <p>
             <strong>Quantidade:</strong> {order.notifyTokenQuantity}

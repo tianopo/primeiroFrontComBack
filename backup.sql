@@ -81,9 +81,9 @@ CREATE TABLE public."order" (
     "createdIn" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "numeroOrdem" text NOT NULL,
-    "dataTransacao" text NOT NULL,
+    "dataHora" text NOT NULL,
     exchange text NOT NULL,
-    "ativoDigital" text NOT NULL,
+    "ativo" text NOT NULL,
     quantidade text NOT NULL,
     valor text NOT NULL,
     "valorToken" text NOT NULL,
@@ -822,7 +822,7 @@ e8ad034e-0cbb-4209-803c-019389f39992	2024-12-03 15:30:57.836	2024-12-14 17:44:41
 -- Data for Name: order; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."order" (id, "createdIn", updated, "numeroOrdem", "dataTransacao", exchange, "ativoDigital", quantidade, valor, "valorToken", "taxaTransacao", tipo, "buyerId", "sellerId") FROM stdin;
+COPY public."order" (id, "createdIn", updated, "numeroOrdem", "dataHora", exchange, "ativo", quantidade, valor, "valorToken", "taxaTransacao", tipo, "buyerId", "sellerId") FROM stdin;
 370221cb-d178-484a-9a1f-0e2bd008db7f	2024-12-11 23:08:32	2024-12-14 18:12:43.548	1866938131191205888	2024-12-11 20:08:32	Bybit https://www.bybit.com/ SG	BTC	0.00025490	200,00	784625.188	0	venda	8f41f9a9-a1a1-4628-b6de-41eaf5b7b7e8	\N
 2b6f32ee-dc7f-420f-ab19-2f36a4af1cdc	2024-12-11 22:49:35	2024-12-14 18:12:43.548	1866933361597820928	2024-12-11 19:49:35	Bybit https://www.bybit.com/ SG	USDT	324.9918	2000,00	6.154	0	venda	05049e78-57c1-4707-86b4-8b4e5f00d66c	\N
 52adb6bc-4258-4e25-8d13-0fdd73e755c1	2024-12-11 22:46:57	2024-12-14 18:12:43.548	1866932698953887744	2024-12-11 19:46:57	Bybit https://www.bybit.com/ SG	USDT	97.4976	600,00	6.154	0	venda	056b8ba4-f6ba-47b0-a0c2-9e551934cb6a	\N

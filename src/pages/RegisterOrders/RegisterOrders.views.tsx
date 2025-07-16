@@ -1,149 +1,123 @@
 import { ChangeEvent, useState } from "react";
-import { FieldErrors, FormProvider, UseFormReturn } from "react-hook-form";
+import { FormProvider } from "react-hook-form";
 import { toast } from "react-toastify";
 import { Button } from "src/components/Buttons/Button";
 import { FlexCol } from "src/components/Flex/FlexCol";
 import { FormX } from "src/components/Form/FormX";
 import { InputX } from "src/components/Form/Input/InputX";
 import { Select } from "src/components/Form/Select/Select";
-import { formatCPFOrCNPJ, formatCurrency, formatDateTime } from "src/utils/formats";
+import { formatCurrency, formatDateTime } from "src/utils/formats";
 import { assetsOptions, exchangeOptions } from "src/utils/selectsOptions";
 import { HandleListEdit } from "./components/HandleListEdit";
 import { UploadXLSButton } from "./components/UploadXLSButton";
-import { useListBuyers } from "./hooks/useListBuyers";
-import { ICompra, ITransactionData, IVenda, useTransaction } from "./hooks/useTransactions";
+import { useListUsers } from "./hooks/useListUsers";
+import { IOrder, useOrders } from "./hooks/useOrders";
 import "./registerOrders.css";
 
 export const RegisterOrders = () => {
-  const { mutate, isPending, context, contextCompra, contextVenda } = useTransaction();
-  const { data } = useListBuyers();
+  const { mutate, isPending, context } = useOrders();
+  const { data } = useListUsers();
   const { reset, getValues } = context;
 
-  const [vendas, setVendas] = useState<any[]>([]);
-  const [compras, setCompras] = useState<any[]>([]);
-  const [tipoTransacao, setTipoTransacao] = useState<string>("");
+  const [tipo, setTipo] = useState<string>("");
   const [formData, setFormData] = useState<any[]>([]);
 
   const [numeroOrdem, setNumeroOrdem] = useState<string>("");
-  const [dataHoraTransacao, setDataHoraTransacao] = useState<string>("");
-  const [exchangeUtilizada, setExchangeUtilizada] = useState<string>("");
-  const [ativoDigital, setAtivoDigital] = useState<string>("");
-  const [nomeVendedor, setNomeVendedor] = useState<string>("");
-  const [nomeComprador, setNomeComprador] = useState<string>("");
-  const [apelidoVendedor, setApelidoVendedor] = useState<string>("");
-  const [apelidoComprador, setApelidoComprador] = useState<string>("");
-  const [quantidadeComprada, setQuantidadeComprada] = useState<string>("");
-  const [quantidadeVendida, setQuantidadeVendida] = useState<string>("");
-  const [valorCompra, setValorCompra] = useState<string>("");
-  const [valorVenda, setValorVenda] = useState<string>("");
-  const [valorTokenDataCompra, setValorTokenDataCompra] = useState<string>("");
-  const [valorTokenDataVenda, setValorTokenDataVenda] = useState<string>("");
-  const [taxaTransacao, setTaxaTransacao] = useState<string>("");
-  const [isValid, setIsValid] = useState<boolean>(true);
+  const [dataHora, setDataHora] = useState<string>("");
+  const [exchange, setExchange] = useState<string>("");
+  const [ativo, setAtivo] = useState<string>("");
+  const [nome, setNome] = useState<string>("");
+  const [apelido, setApelido] = useState<string>("");
+  const [quantidade, setQuantidade] = useState<string>("");
+  const [valor, setValor] = useState<string>("");
+  const [valorToken, setValorToken] = useState<string>("");
+  const [taxa, setTaxa] = useState<string>("");
 
-  const handleTipoTransacaoChange = (e: { target: { value: string } }) => {
-    reset();
-    setTipoTransacao(e.target.value);
+  const [view, setView] = useState<"manual" | "automatic">("automatic");
+  const toggleView = (selectedView: "manual" | "automatic") => setView(selectedView);
+
+  const handleTipoChange = (e: { target: { value: string } }) => {
+    setTipo(e.target.value);
   };
 
-  const onSubmit = (data: ITransactionData) => {
+  const onSubmit = (data: IOrder) => {
     const newData = {
       ...data,
-      tipoTransacao,
+      tipo: tipo,
     };
 
     setFormData((prevData) => [...prevData, newData]);
 
-    data.vendas.forEach((venda) => setVendas((prevVendas) => [...prevVendas, venda]));
-    data.compras.forEach((compra) => setCompras((prevCompras) => [...prevCompras, compra]));
-
     reset();
-  };
-
-  const formatErrors = (errors: FieldErrors<any>): string => {
-    return Object.values(errors)
-      .map((error) => {
-        if (typeof error === "object" && "message" in error) {
-          return error.message;
-        }
-        return "Erro desconhecido";
-      })
-      .join(". ");
-  };
-
-  const isFormValid = async (
-    tipoTransacao: string,
-    values: any,
-    contextVenda: UseFormReturn<IVenda>,
-    contextCompra: UseFormReturn<ICompra>,
-  ): Promise<boolean> => {
-    let isValid = true;
-    const contextTipo = tipoTransacao === "vendas" ? contextVenda : contextCompra;
-    await contextTipo.reset(values);
-
-    await contextTipo.trigger();
-    const { errors } = contextTipo.formState;
-    const errorMessages = formatErrors(errors);
-
-    if (errorMessages) {
-      toast.error(`Erros de ${tipoTransacao}: ${errorMessages}`);
-      isValid = false;
-    }
-
-    return isValid;
   };
 
   const handleSave = async () => {
     const values = getValues();
     const updatedValues: any = {
       ...values,
-      tipoTransacao,
-      dataHoraTransacao,
-      ativoDigital,
-      valorCompra,
-      valorVenda,
+      tipo,
     };
 
-    const numeroOrdem = updatedValues.numeroOrdem;
-    const isDuplicate = formData.some((order) => order.numeroOrdem === numeroOrdem);
+    const numeroOrdemVazio = !numeroOrdem || numeroOrdem.trim() === "";
+    const dataHoraVazio = !dataHora || dataHora.trim() === "";
+    const exchangeVazio = !exchange || exchange.trim() === "";
+    const ativoVazio = !ativo || ativo.trim() === "";
+    const quantidadeVazio = !quantidade || quantidade.trim() === "";
+    const valorVazio = !valor || valor.trim() === "";
+    const valorTokenVazio = !valorToken || valorToken.trim() === "";
+    const taxaVazio = !taxa || taxa.trim() === "";
+
+    // Lista de validações com rótulo legível
+    const camposObrigatorios = [
+      { vazio: numeroOrdemVazio, nome: "Número da Ordem" },
+      { vazio: dataHoraVazio, nome: "Data/Hora" },
+      { vazio: exchangeVazio, nome: "Exchange" },
+      { vazio: ativoVazio, nome: "Ativo" },
+      { vazio: quantidadeVazio, nome: "Quantidade" },
+      { vazio: valorVazio, nome: "Valor" },
+      { vazio: valorTokenVazio, nome: "Valor do Token" },
+      { vazio: taxaVazio, nome: "Taxa" },
+    ];
+
+    // Verifica e exibe erro para o primeiro campo vazio encontrado
+    for (const campo of camposObrigatorios) {
+      if (campo.vazio) {
+        toast.error(`O campo "${campo.nome}" está vazio.`);
+        return;
+      }
+    }
+    // Validação específica entre nome e apelido
+    const nomeVazio = !nome || nome.trim() === "";
+    const apelidoVazio = !apelido || apelido.trim() === "";
+
+    if (nomeVazio && apelidoVazio) {
+      toast.error("Preencha pelo menos o nome ou o apelido.");
+      return;
+    }
+
+    if (!nomeVazio && !apelidoVazio) {
+      toast.error("Preencha apenas o nome ou apenas o apelido, não ambos.");
+      return;
+    }
+
+    const nOrdem = updatedValues.numeroOrdem;
+    const isDuplicate = formData.some((order) => order.numeroOrdem === nOrdem);
 
     if (isDuplicate) {
-      toast.error(`Já existe uma ordem com o número ${numeroOrdem}.`);
+      toast.error(`Já existe uma ordem com o número ${nOrdem}.`);
       return; // Cancela o salvamento
     }
 
-    if (isValid) {
-      setIsValid(false);
-      await isFormValid(tipoTransacao, updatedValues, contextVenda, contextCompra);
-    }
-
-    if (tipoTransacao.length > 0) {
-      const isValidForm = await isFormValid(
-        tipoTransacao,
-        updatedValues,
-        contextVenda,
-        contextCompra,
-      );
-
-      if (!isValidForm) {
-        return;
-      }
-
+    if (tipo.length > 0) {
       setFormData((prevData) => [...prevData, updatedValues]);
-      if (tipoTransacao === "vendas") setVendas((prevData) => [...prevData, updatedValues]);
-      if (tipoTransacao === "compras") setCompras((prevData) => [...prevData, updatedValues]);
       toast.success("Ordem Adicionada");
     } else {
-      toast.error("Não há Tipo de Transação");
+      toast.error("Não há ordem adicionada");
     }
   };
 
   const handleSend = async () => {
-    const combinedData = {
-      vendas,
-      compras,
-    };
-    mutate(combinedData, {
+    mutate(formData, {
       onSuccess: () => {},
     });
   };
@@ -157,14 +131,6 @@ export const RegisterOrders = () => {
     }
 
     setFormData((prevData) => prevData.filter((item) => !(item.numeroOrdem === numeroOrdem)));
-
-    if (itemToDelete.tipoTransacao === "vendas") {
-      setVendas((prevVendas) => prevVendas.filter((venda) => !(venda.numeroOrdem === numeroOrdem)));
-    } else if (itemToDelete.tipoTransacao === "compras") {
-      setCompras((prevCompras) =>
-        prevCompras.filter((compra) => !(compra.numeroOrdem === numeroOrdem)),
-      );
-    }
   };
 
   const handleEdit = (numeroOrdem: string) => {
@@ -177,75 +143,46 @@ export const RegisterOrders = () => {
 
     reset();
     setNumeroOrdem(item.numeroOrdem);
-    setTipoTransacao(item.tipoTransacao);
-    setDataHoraTransacao(item.dataHoraTransacao);
-    setExchangeUtilizada(item.exchangeUtilizada);
-    setAtivoDigital(item.ativoDigital);
+    setTipo(item.tipo);
+    setDataHora(item.dataHora);
+    setExchange(item.exchange);
+    setAtivo(item.ativo);
+    setNome(item.nome);
+    setApelido(item.apelido);
+    setQuantidade(item.quantidade);
+    setValor(item.valor);
+    setValorToken(item.valorToken);
+    setTaxa(item.taxa);
 
-    if (item.tipoTransacao === "compras") {
-      setNomeVendedor(item.nomeVendedor);
-      setNomeComprador("");
-      setApelidoVendedor(item.apelidoVendedor);
-      setApelidoComprador("");
-      setQuantidadeComprada(item.quantidadeComprada);
-      setQuantidadeVendida("");
-      setValorCompra(item.valorCompra);
-      setValorVenda("");
-      setValorTokenDataCompra(item.valorTokenDataCompra);
-      setValorTokenDataVenda("");
-    } else if (item.tipoTransacao === "vendas") {
-      setNomeVendedor("");
-      setNomeComprador(item.nomeComprador);
-      setApelidoVendedor("");
-      setApelidoComprador(item.apelidoComprador);
-      setQuantidadeComprada("");
-      setQuantidadeVendida(item.quantidadeVendida);
-      setValorCompra("");
-      setValorVenda(item.valorVenda);
-      setValorTokenDataCompra("");
-      setValorTokenDataVenda(item.valorTokenDataVenda);
-    }
-
-    setTaxaTransacao(item.taxaTransacao);
-
-    // Excluir o item baseado no número da ordem e no vendedor
     handleDelete(numeroOrdem);
   };
 
   const handleDateTimeChange = (e: ChangeEvent<HTMLInputElement>) => {
     const formattedDate = formatDateTime(e.target.value);
-    setDataHoraTransacao(formattedDate);
+    setDataHora(formattedDate);
   };
 
-  const handleNomeCompradorChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleNomeChange = (e: ChangeEvent<HTMLInputElement>) => {
     const nome = e.target.value;
-    setNomeComprador(nome);
+    setNome(nome);
 
     if (nome.trim() === "") return;
 
-    const compradorEncontrado = data?.find(
-      (comprador: { name: string; counterparty: string }) => comprador.name === nome,
+    const userEncontrado = data?.find(
+      (user: { name: string; counterparty: string }) => user?.name === nome,
     );
 
-    if (compradorEncontrado) {
-      setApelidoComprador(compradorEncontrado.counterparty);
-      contextVenda.setValue("apelidoComprador", compradorEncontrado.counterparty);
+    if (userEncontrado) {
+      setApelido(userEncontrado.counterparty);
+      context.setValue("apelido", userEncontrado.counterparty);
     } else return;
   };
 
-  const handleValorVendaChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const formattedCPF = formatCurrency(e.target.value);
-    setValorVenda(formattedCPF);
+  const handleValorChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const formattedValor: any = formatCurrency(e.target.value);
+    setValor(formattedValor);
   };
 
-  const handleValorCompraChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const formattedCPF = formatCurrency(e.target.value);
-    setValorCompra(formattedCPF);
-  };
-
-  const [view, setView] = useState<"manual" | "automatic">("automatic");
-
-  const toggleView = (selectedView: "manual" | "automatic") => setView(selectedView);
   return (
     <FlexCol className="w-full p-4 pb-2">
       <div className="card">
@@ -264,23 +201,16 @@ export const RegisterOrders = () => {
             Registro Manual
           </Button>
         </div>
-        {view === "automatic" && (
-          <UploadXLSButton
-            setFormData={setFormData}
-            formData={formData}
-            setCompras={setCompras}
-            setVendas={setVendas}
-          />
-        )}
+        {view === "automatic" && <UploadXLSButton setFormData={setFormData} formData={formData} />}
         {view === "manual" && (
           <>
             <div className="mb-4">
               <Select
-                title="Tipo Transação"
+                title="Tipo"
                 options={["compras", "vendas"]}
                 placeholder="compras"
-                value={tipoTransacao}
-                onChange={handleTipoTransacaoChange}
+                value={tipo}
+                onChange={handleTipoChange}
               />
             </div>
             <FormProvider {...context}>
@@ -297,126 +227,84 @@ export const RegisterOrders = () => {
                     required
                   />
                   <InputX
-                    title="Data Hora Transação"
+                    title="Data Hora"
                     placeholder="AAAA-MM-DD HH:MM:SS"
-                    value={dataHoraTransacao}
+                    value={dataHora}
                     onChange={handleDateTimeChange}
                     required
                   />
                   <Select
-                    title="Exchange Utilizada"
+                    title="Exchange"
                     placeholder="Bybit https://www.bybit.com/ SG"
                     options={exchangeOptions}
-                    value={exchangeUtilizada}
-                    onChange={(e) => setExchangeUtilizada(e.target.value)}
+                    value={exchange}
+                    onChange={(e) => setExchange(e.target.value)}
                     required
                   />
                   <Select
-                    title="Ativo Digital"
+                    title="Ativo"
                     placeholder="USDT"
                     options={assetsOptions}
-                    value={ativoDigital}
-                    onChange={(e) => setAtivoDigital(e.target.value)}
+                    value={ativo}
+                    onChange={(e) => setAtivo(e.target.value)}
                     required
                   />
                 </div>
-                {tipoTransacao === "vendas" && (
-                  <div className={"flex w-full flex-col flex-wrap gap-2 md:w-5/12 md:flex-row"}>
-                    <InputX
-                      title="Nome Comprador"
-                      placeholder="Nome do Comprador"
-                      value={nomeComprador || ""}
-                      onChange={handleNomeCompradorChange}
-                      busca
-                      options={data
-                        ?.filter((item: any) =>
-                          (item.name || "")
-                            .toLowerCase()
-                            .includes((nomeComprador || "").toLowerCase()),
-                        )
-                        .map((item: any) => item.name)}
-                    />
-                    <InputX
-                      title="Apelido Comprador"
-                      placeholder="Apelido do Comprador"
-                      value={apelidoComprador || ""}
-                      onChange={(e) => setApelidoComprador(e.target.value)}
-                      busca
-                      options={data
-                        ?.filter((item: any) =>
-                          (item.counterparty || "")
-                            .toLowerCase()
-                            .includes((apelidoComprador || "").toLowerCase()),
-                        )
-                        .map((item: any) => item.counterparty)}
-                      required
-                    />
-                    <InputX
-                      title="Quantidade Vendida"
-                      placeholder="Quantidade Vendida"
-                      value={quantidadeVendida}
-                      onChange={(e) => setQuantidadeVendida(e.target.value)}
-                      required
-                    />
-                    <InputX
-                      title="Valor Venda"
-                      placeholder="Valor da Venda"
-                      value={valorVenda}
-                      onChange={handleValorVendaChange}
-                      required
-                    />
-                    <InputX
-                      title="Valor Token Data Venda"
-                      placeholder="Valor do Token na Data da Venda"
-                      value={valorTokenDataVenda}
-                      onChange={(e) => setValorTokenDataVenda(e.target.value)}
-                      required
-                    />
-                  </div>
-                )}
-                {tipoTransacao === "compras" && (
-                  <div className={`flex w-full flex-col flex-wrap gap-2 md:w-5/12 md:flex-row`}>
-                    <InputX
-                      title="Nome Vendedor"
-                      placeholder="Nome do Vendedor"
-                      value={nomeVendedor}
-                      onChange={(e) => setNomeVendedor(e.target.value)}
-                    />
-                    <InputX
-                      title="Apelido Vendedor"
-                      placeholder="Apelido do Vendedor"
-                      value={apelidoVendedor}
-                      onChange={(e) => setApelidoVendedor(e.target.value)}
-                      required
-                    />
-                    <InputX
-                      title="Quantidade Comprada"
-                      placeholder="Quantidade Comprada"
-                      value={quantidadeComprada}
-                      onChange={(e) => setQuantidadeComprada(e.target.value)}
-                      required
-                    />
-                    <InputX
-                      title="Valor Compra"
-                      placeholder="Valor da Compra"
-                      value={valorCompra}
-                      onChange={handleValorCompraChange}
-                      required
-                    />
-                    <InputX
-                      title="Valor Token Data Compra"
-                      placeholder="Valor do Token na Data da Compra"
-                      value={valorTokenDataCompra}
-                      onChange={(e) => setValorTokenDataCompra(e.target.value)}
-                      required
-                    />
-                  </div>
-                )}
+                <div className={"flex w-full flex-col flex-wrap gap-2 md:w-5/12 md:flex-row"}>
+                  <InputX
+                    title="Nome"
+                    placeholder="Fulano Ciclano Banano"
+                    value={nome || ""}
+                    onChange={handleNomeChange}
+                    busca
+                    options={data
+                      ?.filter((item: any) =>
+                        (item?.User?.name || "").toLowerCase().includes((nome || "").toLowerCase()),
+                      )
+                      .map((item: any) => item?.User?.name)}
+                  />
+                  <InputX
+                    title="Apelido"
+                    placeholder="User9079vYwmKU"
+                    value={apelido || ""}
+                    onChange={(e) => setApelido(e.target.value)}
+                    busca
+                    options={data
+                      ?.filter((item: any) =>
+                        (item.counterparty || "")
+                          .toLowerCase()
+                          .includes((apelido || "").toLowerCase()),
+                      )
+                      .map((item: any) => item.counterparty)}
+                    required
+                  />
+                  <InputX
+                    title="Quantidade"
+                    placeholder="50"
+                    value={quantidade}
+                    onChange={(e) => setQuantidade(e.target.value)}
+                    required
+                  />
+                  <InputX
+                    title="Valor"
+                    placeholder="R$ 500,00"
+                    value={valor}
+                    onChange={handleValorChange}
+                    required
+                  />
+                  <InputX
+                    title="Valor Token"
+                    placeholder="5.80"
+                    value={valorToken}
+                    onChange={(e) => setValorToken(e.target.value)}
+                    required
+                  />
+                </div>
                 <InputX
-                  title="Taxa Transação"
-                  placeholder="Taxa da Transação"
-                  value={taxaTransacao}
-                  onChange={(e) => setTaxaTransacao(e.target.value)}
+                  title="Taxa"
+                  placeholder="0"
+                  value={taxa}
+                  onChange={(e) => setTaxa(e.target.value)}
                   required
                 />
               </FormX>
@@ -424,9 +312,11 @@ export const RegisterOrders = () => {
           </>
         )}
         <div className="flex w-full flex-col gap-2 pt-2">
-          <Button onClick={handleSave} disabled={isPending}>
-            Salvar
-          </Button>
+          {view === "manual" && (
+            <Button onClick={handleSave} disabled={isPending}>
+              Salvar
+            </Button>
+          )}
           <Button onClick={handleSend} disabled={isPending || formData.length === 0}>
             Enviar
           </Button>

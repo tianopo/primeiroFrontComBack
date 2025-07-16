@@ -14,7 +14,7 @@ export const DocumentsGenerator = () => {
   const [filterDates, setFilterDates] = useState({ startDate: "", endDate: "" });
   const [showModal, setShowModal] = useState(false);
   const [buyer, setBuyer] = useState("");
-  const [buyers, setBuyers] = useState<string[]>([]);
+  const [users, setUsers] = useState<string[]>([]);
   const [visibleExchanges, setVisibleExchanges] = useState<{ [key: string]: boolean }>({});
   const [valorTotalNFE, setValorTotalNFE] = useState(0);
 
@@ -45,20 +45,20 @@ export const DocumentsGenerator = () => {
         transaction.valor.replace(".", "").replace(",", ".").replace("R$", ""),
       );
 
-      if (transaction.tipo === "venda") {
+      if (transaction.tipo === "vendas") {
         totalVendas += valor;
-      } else if (transaction.tipo === "compra") {
+      } else if (transaction.tipo === "compras") {
         totalCompras += valor;
       }
 
-      const isStablecoin = ["USDT", "USDC"].includes(transaction.ativoDigital);
+      const isStablecoin = ["USDT", "USDC"].includes(transaction.ativo);
       const valorToken = parseFloat(transaction.valorToken?.toString().replace(",", "."));
 
       if (!isNaN(valorToken) && isStablecoin) {
-        if (transaction.tipo === "compra") {
+        if (transaction.tipo === "compras") {
           somaValorTokenCompra += valorToken;
           quantidadeComprasToken++;
-        } else if (transaction.tipo === "venda") {
+        } else if (transaction.tipo === "vendas") {
           somaValorTokenVenda += valorToken;
           quantidadeVendasToken++;
         }
@@ -79,7 +79,9 @@ export const DocumentsGenerator = () => {
   const filteredData =
     buyer === "" || buyer === " N/A"
       ? data || []
-      : data?.filter((transaction: any) => transaction.buyer?.name === buyer);
+      : data?.filter(
+          (transaction: any) => transaction.User?.name === buyer && transaction.tipo === "vendas",
+        );
 
   const { totalVendas, totalCompras, precoMedioCompra, precoMedioVenda } = filteredData
     ? calculateTotals(filteredData)
@@ -96,11 +98,11 @@ export const DocumentsGenerator = () => {
     const monthName = today.toLocaleDateString("pt-BR", { month: "long" });
 
     const groupedByBuyer = filteredData.reduce((acc: any, transaction: any) => {
-      const buyerDocument = transaction.buyer?.document || "N/A";
+      const buyerDocument = transaction.tipo === "vendas" ? transaction.User?.document : "N/A";
       if (buyerDocument !== "N/A") {
         if (!acc[buyerDocument]) {
           acc[buyerDocument] = {
-            buyer: transaction.buyer,
+            buyer: transaction.tipo && transaction.User,
             totalVendas: 0,
             totalCompras: 0,
             transactions: [],
@@ -111,9 +113,9 @@ export const DocumentsGenerator = () => {
         const valor = parseFloat(
           transaction.valor.replace(".", "").replace(",", ".").replace("R$", ""),
         );
-        if (transaction.tipo === "venda") {
+        if (transaction.tipo === "vendas") {
           acc[buyerDocument].totalVendas += valor;
-        } else if (transaction.tipo === "compra") {
+        } else if (transaction.tipo === "compras") {
           acc[buyerDocument].totalCompras += valor;
         }
       }
@@ -139,7 +141,7 @@ export const DocumentsGenerator = () => {
       const cpfCnpj = buyer?.document?.replace(/[^0-9]/g, "");
       // datas
       const datasOrdenadas = group.transactions
-        .map((t: any) => new Date(t.dataTransacao))
+        .map((t: any) => new Date(t.dataHora))
         .sort((a: Date, b: Date) => a.getTime() - b.getTime());
 
       const primeiraData = datasOrdenadas[0];
@@ -152,7 +154,7 @@ export const DocumentsGenerator = () => {
       // valores, comissões e ativos
       const transacoesStable = group.transactions.filter(
         (t: any) =>
-          ["USDT", "USDC"].includes(t.ativoDigital) &&
+          ["USDT", "USDC"].includes(t.ativo) &&
           !isNaN(parseFloat(t.valorToken?.toString().replace(",", "."))),
       );
 
@@ -172,11 +174,9 @@ export const DocumentsGenerator = () => {
 
       const possuiAtivosStable = transacoesStable.length > 0;
       const possuiOutrosAtivos = group.transactions.some(
-        (t: any) => !["USDT", "USDC"].includes(t.ativoDigital),
+        (t: any) => !["USDT", "USDC"].includes(t.ativo),
       );
-      const possuiBtcOuEth = group.transactions.some((t: any) =>
-        ["BTC", "ETH"].includes(t.ativoDigital),
-      );
+      const possuiBtcOuEth = group.transactions.some((t: any) => ["BTC", "ETH"].includes(t.ativo));
 
       let comissao = 0;
       if (possuiBtcOuEth) {
@@ -197,16 +197,16 @@ export const DocumentsGenerator = () => {
       somaTotalNFE += valorSomaNfe;
 
       const endDateObj = group.transactions.reduce((latest: Date, transaction: any) => {
-        const transactionDate = new Date(transaction.dataTransacao);
+        const transactionDate = new Date(transaction.dataHora);
         return transactionDate > latest ? transactionDate : latest;
-      }, new Date(group.transactions[0].dataTransacao));
+      }, new Date(group.transactions[0].dataHora));
 
       // Discriminação formatada corretamente
-      let fileContent = `"- Serviço: Intermediação de Ativos Digitais\n- Comissão média: ${comissao.toFixed(2)}%\n- Quantidade Vendida: ${group.transactions.filter((transaction: any) => transaction.tipo === "venda").length}\n- ${periodoTransacoes}\n- Valor da Nota: ${valorNfe.toFixed(2)}\nOrdem dos Campos após nome da corretora:\n- Identificador da Ordem\n- Dia e Hora\n- Valor do Token\n- Ativo Digital\n- Quantidade de Tokens\n- Valor Pago\nExchange/Corretora\n`;
+      let fileContent = `"- Serviço: Intermediação de Ativos Digitais\n- Comissão média: ${comissao.toFixed(2)}%\n- Quantidade Vendida: ${group.transactions.filter((transaction: any) => transaction.tipo === "vendas").length}\n- ${periodoTransacoes}\n- Valor da Nota: ${valorNfe.toFixed(2)}\nOrdem dos Campos após nome da corretora:\n- Identificador da Ordem\n- Dia e Hora\n- Valor do Token\n- Ativo Digital\n- Quantidade de Tokens\n- Valor Pago\nExchange/Corretora\n`;
 
       group.transactions.forEach((transaction: any) => {
-        if (transaction.tipo === "venda" && fileContent.length < 1800) {
-          fileContent += `${transaction.numeroOrdem}\n${transaction.dataTransacao}\n${transaction.valorToken}\n${transaction.ativoDigital}\n${transaction.quantidade}\n${transaction.valor}\n${transaction.exchange.split(" ")[0]}\n\n`;
+        if (transaction.tipo === "vendas" && fileContent.length < 1800) {
+          fileContent += `${transaction.numeroOrdem}\n${transaction.dataHora}\n${transaction.valorToken}\n${transaction.ativo}\n${transaction.quantidade}\n${transaction.valor}\n${transaction.exchange.split(" ")[0]}\n\n`;
         }
       });
 
@@ -240,10 +240,10 @@ export const DocumentsGenerator = () => {
   useEffect(() => {
     if (data) {
       const uniqueBuyers = Array.from(
-        new Set(data.map((t: any) => t.buyer?.name || " N/A")),
+        new Set(data.map((t: any) => t.User?.name || " N/A")),
       ) as string[];
 
-      setBuyers(uniqueBuyers.sort());
+      setUsers(uniqueBuyers.sort());
     }
   }, [data]);
 
@@ -266,7 +266,7 @@ export const DocumentsGenerator = () => {
       [exchange]: !prev[exchange],
     }));
   };
-
+  console.log(filteredData);
   const groupedTransactions = filteredData ? groupByExchange(filteredData) : {};
   const validationDates = filterDates.startDate.length > 0 && filterDates.endDate.length > 0;
   const validationEmptyBuyers = buyer === "" || buyer === " N/A";
@@ -293,14 +293,14 @@ export const DocumentsGenerator = () => {
         />
       </div>
       <div className="flex w-full flex-col gap-2">
-        {buyers.length > 0 && (
+        {users.length > 0 && (
           <InputX
             title="Compradores"
             placeholder="Selecione um comprador"
             value={buyer === " N/A" ? "" : buyer}
             onChange={(e) => setBuyer(e.target.value)}
             busca
-            options={buyers}
+            options={users}
           />
         )}
         <Button onClick={handleOrder} disabled={startDate.length !== 10 || endDate.length !== 10}>
@@ -326,7 +326,7 @@ export const DocumentsGenerator = () => {
           <h6>Vendas: {totalVendas.toFixed(2)} BRL</h6>
           <h6>Compras: {totalCompras.toFixed(2)} BRL</h6>
           <h6>Preço Médio de Compra em USDT/USDC: {precoMedioCompra.toFixed(2)} BRL</h6>
-          <h6>Preço Médio de Vendaem USDT/USDC: {precoMedioVenda.toFixed(2)} BRL</h6>
+          <h6>Preço Médio de Venda em USDT/USDC: {precoMedioVenda.toFixed(2)} BRL</h6>
           {valorTotalNFE > 0 && (
             <h6 className="font-semibold text-green-700">
               Valor Total das NFE Emitidas: R$ {valorTotalNFE.toFixed(2)}
@@ -346,16 +346,19 @@ export const DocumentsGenerator = () => {
                   {groupedTransactions[exchange].map((transaction: any) => (
                     <div
                       key={transaction.numeroOrdem}
-                      className="my-2.5 w-full rounded-8 border-1 border-edge-primary p-5 sm:w-80"
+                      className="my-1.5 w-full rounded-8 border-1 border-edge-primary p-4 sm:w-72"
                     >
-                      <h6>
+                      <p className="max-w-[200px] truncate">
                         <strong>Ordem:</strong> {transaction.numeroOrdem}
-                      </h6>
-                      <p>
-                        <strong>Data Transação:</strong> {transaction.dataTransacao}
                       </p>
                       <p>
-                        <strong>Ativo Digital:</strong> {transaction.ativoDigital}
+                        <strong>Data/Hora:</strong> {transaction.dataHora}
+                      </p>
+                      <p>
+                        <p className="max-w-[200px] truncate">
+                          <strong>Usuário:</strong> {transaction.User?.name}
+                        </p>
+                        <strong>Ativo:</strong> {transaction.ativo}
                       </p>
                       <p>
                         <strong>Quantidade:</strong> {transaction.quantidade}
@@ -367,7 +370,7 @@ export const DocumentsGenerator = () => {
                         <strong>Valor Token:</strong> {transaction.valorToken}
                       </p>
                       <p>
-                        <strong>Taxa de Transação:</strong> {transaction.taxaTransacao}
+                        <strong>Taxa:</strong> {transaction.taxa === "" ? 0 : transaction.taxa}
                       </p>
                       <p>
                         <strong>Tipo:</strong> {transaction.tipo}

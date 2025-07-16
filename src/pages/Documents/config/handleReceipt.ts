@@ -52,7 +52,7 @@ export const generateSingleReceipt = (item: any): Promise<string> => {
         `Apelido: ${item.targetNickName || "Não informado"}`,
         `Nome: ${item.buyerRealName || "Não informado"}`,
         `Ativo: ${item.tokenId}`,
-        `Tipo: ${item.side === 0 ? "compra" : "venda"}`,
+        `Tipo: ${item.side === 0 ? "compras" : "vendas"}`,
         `Valor: R$ ${item.amount.replace(".", ",")}`,
         `Preço unitário: R$ ${item.price.replace(".", ",")}`,
         `Quantidade: ${item.notifyTokenQuantity}`,
@@ -142,22 +142,20 @@ export const handleReceipt = (data: any[]) => {
         ctx.fillText("INFORMAÇÕES DA ORDEM", canvas.width / 2, y + 40);
         y += 70;
 
-        const tipo = item.tipo;
-
         ctx.font = "16px Arial";
 
         const dataOrdem = [
           `ID da ordem: ${item.numeroOrdem}`,
-          `Data da Ordem: ${item.dataTransacao.split(" ")[0].split("-").reverse().join("/")}`,
+          `Data da Ordem: ${item.dataHora.split(" ")[0].split("-").reverse().join("/")}`,
           `Exchange: ${item.exchange.split(" ")[0]}`,
-          `Apelido: ${tipo === "venda" ? item.buyer?.name || "Não informado" : item.seller?.name || "Não informado"}`,
-          `Nome: ${tipo === "venda" ? item.buyer?.name || "Não informado" : item.seller?.name || "Não informado"}`,
-          `Ativo: ${item.ativoDigital}`,
+          `Apelido: ${item.User?.Accounts?.find((acc: any) => acc.exchange === item.exchange).counterparty || "Não informado"}`,
+          `Nome: ${item.User?.name || "Não informado"}`,
+          `Ativo: ${item.ativo}`,
           `Tipo: ${item.tipo}`,
           `Valor: ${item.valor}`,
           `Preço unitário: R$ ${item.valorToken.replace(".", ",")}`,
           `Quantidade: ${item.quantidade}`,
-          `${item.buyer?.document ? `CPF/CNPJ: ${item.buyer?.document || "Não informado"}` : ""}`,
+          `Documento: ${item.User?.document || "Não informado"}`,
         ];
 
         ctx.textAlign = "left";
@@ -192,7 +190,7 @@ export const handleReceipt = (data: any[]) => {
 
           canvas.toBlob((blob) => {
             if (blob) {
-              const fileName = `recibo-${item.tipo === "venda" ? item.buyer?.name || "cliente" : item.seller?.name || "cliente"}-${item.numeroOrdem}.png`;
+              const fileName = `recibo-${item.User?.name || "cliente"}-${item.numeroOrdem}.png`;
               zip.file(fileName, blob);
             }
             resolve();

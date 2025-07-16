@@ -6,13 +6,13 @@ export const handleCompraVendaIN1888 = (formData: any[]) => {
 
   const textContent = formData
     .map((item) => {
-      const operationCode = item.tipo === "compra" ? "0110" : "0120";
-      const dataSeparada = item.dataTransacao?.split(" ")[0].split("-");
-      const dataHoraTransacao = `${dataSeparada[2]}${dataSeparada[1]}${dataSeparada[0]}`;
+      const operationCode = item.tipo === "compras" ? "0110" : "0120";
+      const dataSeparada = item.dataHora?.split(" ")[0].split("-");
+      const dataHora = `${dataSeparada[2]}${dataSeparada[1]}${dataSeparada[0]}`;
       const tipoTransaction = (item: string) => item?.replace("R$", "").replace(/\./g, "");
-      const valorOperacao = `${item.tipo === "compra" ? tipoTransaction(item.valor) : tipoTransaction(item.valor)}`;
-      const simboloAtivoDigital = item.ativoDigital || "";
-      const quantidadeRaw = item.tipo === "compra" ? item.quantidade : item.quantidade;
+      const valorOperacao = `${item.tipo === "compras" ? tipoTransaction(item.valor) : tipoTransaction(item.valor)}`;
+      const simboloAtivo = item.ativo || "";
+      const quantidadeRaw = item.tipo === "compras" ? item.quantidade : item.quantidade;
       const quantidade = parseFloat(quantidadeRaw.replace(",", "."))
         .toFixed(10)
         .toString()
@@ -21,10 +21,10 @@ export const handleCompraVendaIN1888 = (formData: any[]) => {
       const exchangeURL = item.exchange.split(" ")[1];
       const siglaPaisOrigemExchange = item.exchange?.split(" ")[2];
 
-      datesArray.push(dataHoraTransacao);
+      datesArray.push(dataHora);
 
       return {
-        line: `${operationCode}|${dataHoraTransacao}|I|${valorOperacao.trim()}|0,00|${simboloAtivoDigital}|${quantidade}|${exchange}|${exchangeURL}|${siglaPaisOrigemExchange}`,
+        line: `${operationCode}|${dataHora}|I|${valorOperacao.trim()}|0,00|${simboloAtivo}|${quantidade}|${exchange}|${exchangeURL}|${siglaPaisOrigemExchange}`,
         operationCode: parseInt(operationCode, 10),
       };
     })

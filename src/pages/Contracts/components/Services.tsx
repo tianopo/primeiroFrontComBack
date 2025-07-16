@@ -23,7 +23,7 @@ export const Services = () => {
   const [usuario, setUsuario] = useState<IUsuario>({ name: "", document: "" });
   const [quantidade, setQuantidade] = useState<string>("");
   const [valor, setValor] = useState<string>("");
-  const [ativoDigital, setAtivoDigital] = useState<string>("");
+  const [ativo, setativo] = useState<string>("");
   const [pagamento, setPagamento] = useState<string>("");
   const [tempoLimite, setTempoLimite] = useState<string>("");
   const [blockchain, setBlockchain] = useState<string>("");
@@ -146,8 +146,8 @@ export const Services = () => {
           title="Ativo"
           placeholder="USDT"
           options={assetsOptions}
-          value={ativoDigital}
-          onChange={(e) => setAtivoDigital(e.target.value)}
+          value={ativo}
+          onChange={(e) => setativo(e.target.value)}
           required
         />
         <Select
@@ -266,7 +266,7 @@ export const Services = () => {
               tipo,
               quantidade,
               valor,
-              ativo: ativoDigital,
+              ativo: ativo,
               pagamento,
               tempoLimite,
               blockchain,

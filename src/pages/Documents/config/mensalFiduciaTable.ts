@@ -27,26 +27,29 @@ export const mensalFiduciaTable = (transactions: any[]) => {
   };
 
   const csvRows = transactions.map((transaction, index) => {
-    const [ano, mes, dia] = transaction.dataTransacao.split(" ")[0].split("-");
+    const [ano, mes, dia] = transaction.dataHora.split(" ")[0].split("-");
     const dataFormatada = `${dia}/${mes}/${ano}`;
     const quantidade = wrapIfNeeded(formatNumber(transaction.quantidade));
     const valorOperacao = wrapIfNeeded(formatNumber(transaction.valor));
 
-    const sellerName = deleteComma(transaction.seller?.name?.trim()) || "CRYPTO TECH";
+    const sellerName =
+      transaction.tipo === "compras" ? deleteComma(transaction.User?.name?.trim()) : "CRYPTO TECH";
     const sellerDocument =
-      transaction.tipo === "compra"
-        ? transaction.seller?.document?.trim()
+      transaction.tipo === "compras"
+        ? transaction.User?.document?.trim()
         : sellerName === "CRYPTO TECH"
           ? "55.636.113/0001-70"
           : "";
-    const buyerName = deleteComma(transaction.buyer?.name?.trim()) || "CRYPTO TECH";
-    const buyerDocument = transaction.buyer?.document?.trim() || "55.636.113/0001-70";
+    const buyerName =
+      transaction.tipo === "vendas" ? deleteComma(transaction.User?.name?.trim()) : "CRYPTO TECH";
+    const buyerDocument =
+      transaction.tipo === "vendas" ? transaction.User?.document?.trim() : "55.636.113/0001-70";
 
     return [
       transaction.tipo,
       index + 1,
       dataFormatada,
-      transaction.ativoDigital,
+      transaction.ativo,
       quantidade,
       sellerDocument,
       sellerName,
