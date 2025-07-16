@@ -17,7 +17,7 @@ import "./registerOrders.css";
 export const RegisterOrders = () => {
   const { mutate, isPending, context } = useOrders();
   const { data } = useListUsers();
-  const { reset, getValues } = context;
+  const { reset, getValues, setValue } = context;
 
   const [tipo, setTipo] = useState<string>("");
   const [formData, setFormData] = useState<any[]>([]);
@@ -143,16 +143,26 @@ export const RegisterOrders = () => {
 
     reset();
     setNumeroOrdem(item.numeroOrdem);
+    setValue("apelido", item.apelido);
     setTipo(item.tipo);
+    setValue("apelido", item.apelido);
     setDataHora(item.dataHora);
+    setValue("apelido", item.apelido);
     setExchange(item.exchange);
     setAtivo(item.ativo);
+    setValue("ativo", item.ativo);
     setNome(item.nome);
+    setValue("nome", item.nome);
     setApelido(item.apelido);
+    setValue("apelido", item.apelido);
     setQuantidade(item.quantidade);
+    setValue("quantidade", item.quantidade);
     setValor(item.valor);
+    setValue("valor", item.valor);
     setValorToken(item.valorToken);
+    setValue("valorToken", item.valorToken);
     setTaxa(item.taxa);
+    setValue("taxa", item.taxa);
 
     handleDelete(numeroOrdem);
   };
@@ -181,6 +191,7 @@ export const RegisterOrders = () => {
   const handleValorChange = (e: ChangeEvent<HTMLInputElement>) => {
     const formattedValor: any = formatCurrency(e.target.value);
     setValor(formattedValor);
+    setValue("valor", formattedValor);
   };
 
   return (

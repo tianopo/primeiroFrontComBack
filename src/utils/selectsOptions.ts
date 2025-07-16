@@ -9,6 +9,7 @@ export const exchangeOptions = [
   "BingX https://www.bingx.com/ AU",
   "Gate.IO https://www.gate.io/ AE",
   "Bitmart http://bitmart.com/ KY",
+  "Paxful http://paxful.com/ US",
 ];
 
 export const assetsOptions = ["BTC", "USDT", "BNB", "ETH", "USDC", "DOGE", "BRL"];
