@@ -37,17 +37,32 @@ export const Edit = ({ setForm }: IEdit) => {
   const { mutate: deletar } = useDelUser(id);
   const handleNomeChange = (e: ChangeEvent<HTMLInputElement>) => {
     const fullValue = e.target.value;
-    const [rawName, rawExchange] = fullValue.split(" - ");
 
-    const updatedName = isBlocked
-      ? `${rawName?.trim().replace(" Bloqueado", "")} Bloqueado`
-      : rawName?.trim();
+    // Apenas atualiza se o valor for um item completo da lista
+    const match = data?.find((user: any) => {
+      const nomeComExchange = `${user?.User.name} - ${user?.exchange.split(" ")[0]}`;
+      return nomeComExchange === fullValue;
+    });
 
-    setNome(updatedName);
-    setExchange(rawExchange?.trim());
+    if (match) {
+      const userName = match.User.name;
+      const userExchange = match.exchange;
 
-    setValue("nome", updatedName);
-    setValue("exchange", rawExchange?.trim());
+      const isUserBlocked = userName.includes("Bloqueado");
+      const updatedName = isUserBlocked ? userName : userName.replace(" Bloqueado", "");
+
+      const finalName = isBlocked ? `${updatedName} Bloqueado` : updatedName;
+
+      setNome(finalName);
+      setExchange(userExchange);
+
+      setValue("nome", finalName);
+      setValue("exchange", userExchange);
+    } else {
+      // Apenas atualiza o nome, não altera a exchange se o valor for parcial
+      setNome(fullValue);
+      setValue("nome", fullValue);
+    }
   };
 
   const handleApelidoChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -66,10 +81,18 @@ export const Edit = ({ setForm }: IEdit) => {
     const formattedDocumento = formatCPFOrCNPJ(rawDocument?.trim());
 
     setDocumento(formattedDocumento);
-    setExchange(rawExchange?.trim()); // <-- salva a exchange também
-
     setValue("documento", formattedDocumento);
-    setValue("exchange", rawExchange?.trim());
+
+    // Só atualiza a exchange se o valor for uma opção válida da lista
+    const isFromOptions = data?.some(
+      (user: any) =>
+        `${user?.User.document} - ${user?.exchange.split(" ")[0]}` === fullValue.trim(),
+    );
+
+    if (isFromOptions) {
+      setExchange(rawExchange?.trim());
+      setValue("exchange", rawExchange?.trim());
+    }
   };
 
   const handleBlockChange = (e: ChangeEvent<HTMLInputElement>) => {

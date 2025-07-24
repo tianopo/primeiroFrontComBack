@@ -61,7 +61,7 @@ export const processExcelHuobi = (workbook: XLSX.WorkBook, selectedBroker: strin
         ativo: crypto,
         apelido: counterparty,
         quantidade: amount.toString(),
-        valorVenda: formatNumber(total),
+        valor: formatNumber(total),
         valorToken: formatNumber(price),
         taxa: formatNumber(fee),
       };

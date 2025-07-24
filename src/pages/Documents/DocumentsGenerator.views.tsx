@@ -266,10 +266,18 @@ export const DocumentsGenerator = () => {
       [exchange]: !prev[exchange],
     }));
   };
-  console.log(filteredData);
+
   const groupedTransactions = filteredData ? groupByExchange(filteredData) : {};
   const validationDates = filterDates.startDate.length > 0 && filterDates.endDate.length > 0;
   const validationEmptyBuyers = buyer === "" || buyer === " N/A";
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const diffDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+
+  const showFortnightButton = diffDays >= 13 && diffDays <= 16;
+  const showMonthlyButton = diffDays >= 28;
+
   return (
     <div className="flex h-fit w-full flex-col gap-3 rounded-16 bg-white p-4 shadow-2xl">
       <div className="flex items-center">
@@ -309,10 +317,17 @@ export const DocumentsGenerator = () => {
         {validationDates && validationEmptyBuyers && (
           <>
             <Button onClick={handleGenerate}>Gerar IN188</Button>
-            <Button onClick={() => fortnigthlyFiduciaTable(filteredData)}>Tabela Quinzenal</Button>
-            <Button onClick={() => mensalFiduciaTable(filteredData)}>Tabela Mensal</Button>
+            {showFortnightButton && (
+              <Button onClick={() => fortnigthlyFiduciaTable(filteredData)}>
+                Tabela Quinzenal
+              </Button>
+            )}
+            {showMonthlyButton && (
+              <Button onClick={() => mensalFiduciaTable(filteredData)}>Tabela Mensal</Button>
+            )}
           </>
         )}
+
         {validationDates && <Button onClick={handleTransactions}>Emitir NFE</Button>}
         {validationDates && <Button onClick={() => handleReceipt(filteredData)}>Recibo</Button>}
       </div>
