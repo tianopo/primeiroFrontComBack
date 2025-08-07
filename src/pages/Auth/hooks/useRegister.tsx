@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { api, queryClient } from "src/config/api";
 import { responseError, responseSuccess } from "src/config/responseErrors";
+import { TOKEN_EXPIRE_TIME } from "src/hooks/API/useToken";
 import { IAuthModel } from "src/interfaces/models";
 import { apiRoute } from "src/routes/api";
 import { app } from "src/routes/app";
@@ -30,12 +31,9 @@ export const useRegister = () => {
       responseSuccess(t("userRegistered"));
       queryClient.setQueryData(["token-data"], data.token);
       localStorage.setItem("token", data.token);
-      setTimeout(
-        () => {
-          localStorage.removeItem("token");
-        },
-        24 * 60 * 60 * 1000,
-      );
+      setTimeout(() => {
+        localStorage.removeItem("token");
+      }, TOKEN_EXPIRE_TIME);
 
       navigate(app.home);
     },

@@ -5,6 +5,7 @@ import { IconX } from "src/components/Icons/IconX";
 import { useLogout } from "src/hooks/API/useLogout";
 import { app } from "src/routes/app";
 import "./Sidebar.css";
+import { useAccessControl } from "src/routes/context/AccessControl";
 
 interface INavbar {
   icon?: JSX.Element;
@@ -18,12 +19,12 @@ interface ISidebarX {
 }
 
 export const SidebarX = ({ navbar, menuOpen }: ISidebarX) => {
+  const { acesso } = useAccessControl();
   const { mutate } = useLogout();
   const navigate = useNavigate();
   const location = useLocation();
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
-  // Textos para copiar
   const copyTexts = [
     { label: "PIX CNPJ", text: "55.636.113/0001-70" },
     { label: "PIX Aleatório", text: "2596c0b4-b3d3-4790-8d7e-9faea5976925" },
@@ -47,7 +48,7 @@ Telegram: @Tianopo`,
       text: `Sem terceiros / No third party / Proibido terceiros / se for terceiros cancele / cancel now if you are third party / nome banco = corretora nome / holder bank name = exchange name`,
     },
   ];
-  // Função para copiar texto
+
   const handleCopy = async (index: number, text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -110,17 +111,20 @@ Telegram: @Tianopo`,
               <h5>Matheus Henrique</h5>
             </div>
           </div>
-          {/* Botões de cópia */}
-          {copyTexts.map((item, index) => (
-            <div
-              key={index}
-              className="flex h-10 cursor-pointer items-center justify-start gap-2.5 rounded-10 pl-2.5 text-write-secundary hover:bg-selected-primary hover:text-write-primary"
-              onClick={() => handleCopy(index, item.text)}
-            >
-              <CopySimple width={20} height={17} weight="duotone" />
-              <h6>{copiedIndex === index ? "Copiado!" : item.label}</h6>
-            </div>
-          ))}
+
+          {/* Botões de cópia visíveis apenas para Master */}
+          {acesso === "Master" &&
+            copyTexts.map((item, index) => (
+              <div
+                key={index}
+                className="flex h-10 cursor-pointer items-center justify-start gap-2.5 rounded-10 pl-2.5 text-write-secundary hover:bg-selected-primary hover:text-write-primary"
+                onClick={() => handleCopy(index, item.text)}
+              >
+                <CopySimple width={20} height={17} weight="duotone" />
+                <h6>{copiedIndex === index ? "Copiado!" : item.label}</h6>
+              </div>
+            ))}
+
           <div className="border-edge border-t-1" />
           <div
             className="flex h-10 cursor-pointer items-center justify-start gap-2.5 rounded-10 pl-2.5 text-write-secundary hover:bg-selected-primary hover:text-write-primary"

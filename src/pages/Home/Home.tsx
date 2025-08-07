@@ -8,7 +8,7 @@ import { handleReceipt } from "./config/handleReceipt";
 import { mensalFiduciaTable } from "./config/mensalFiduciaTable";
 import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
 
-export const DocumentsGenerator = () => {
+export const Home = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [filterDates, setFilterDates] = useState({ startDate: "", endDate: "" });
@@ -91,6 +91,47 @@ export const DocumentsGenerator = () => {
     handleCompraVendaIN1888(filteredData);
   };
 
+  useEffect(() => {
+    if (data) {
+      const uniqueBuyers = Array.from(
+        new Set(data.map((t: any) => t.User?.name || " N/A")),
+      ) as string[];
+
+      setUsers(uniqueBuyers.sort());
+    }
+  }, [data]);
+
+  // Função para agrupar transações por exchange
+  const groupByExchange = (transactions: any[]) => {
+    return transactions.reduce((acc: any, transaction: any) => {
+      const exchange = transaction.exchange.split(" ")[0];
+      if (!acc[exchange]) {
+        acc[exchange] = [];
+      }
+      acc[exchange].push(transaction);
+      return acc;
+    }, {});
+  };
+
+  // Alternar visibilidade das ordens de uma exchange
+  const toggleExchangeVisibility = (exchange: string) => {
+    setVisibleExchanges((prev) => ({
+      ...prev,
+      [exchange]: !prev[exchange],
+    }));
+  };
+
+  const groupedTransactions = filteredData ? groupByExchange(filteredData) : {};
+  const validationDates = filterDates.startDate.length > 0 && filterDates.endDate.length > 0;
+  const validationEmptyBuyers = buyer === "" || buyer === " N/A";
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const diffDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+
+  const showFortnightButton = diffDays >= 13 && diffDays <= 16;
+  const showMonthlyButton = diffDays >= 28;
+
   const handleTransactions = async () => {
     if (!filteredData) return;
 
@@ -125,8 +166,8 @@ export const DocumentsGenerator = () => {
     let csvContent = `Indicador de Tipo de Serviço,""Número RPS"",""Serie RPS"",""Data Prestação de Serviço"",""Data Emissão do RPS"",""RPS Substitutivo"",""Documento CPF/CNPJ"",""Inscrição Mobiliária"",""Razão Social"",Endereço,Número,Complemento,Bairro,""Código do Município"",""Código do País"",Cep,Telefone,Email,""ISS Retido no Tomador"",""Código do Município onde o Serviço foi Prestado"",""Código da Atividade"",""Código da Lista de Serviços"",Discriminação,""Valor NF"",""Valor Deduções"",""Valor Desconto Condicionado"",""Valor Desconto Incondicionado"",""Valor INSS"",""Valor Csll"",""Valor Outras Retenções"",""Valor Pis"",""Valor Cofins"",""Valor Ir"",""Valor Iss"",""Prestador Optante Simples Nacional"",Alíquota,""Código da Obra"",""Código ART"",""Inscrição Própria"",""Código do Benefício""\n`;
 
     const hoje = new Date();
-    const comissaoFixa = 0.3; // comissão padrão para ativos que não são USDT/USDC
-    const comissaoMargemErro = 2.5;
+    const comissaoFixa = 0.1; // comissão padrão para ativos que não são USDT/USDC
+    const comissaoMargemErro = 13;
     const codMunicipioServicoPrestado = 352440;
     const codAtividade = 6619399;
     const codListaServicos = 10.02;
@@ -180,7 +221,7 @@ export const DocumentsGenerator = () => {
 
       let comissao = 0;
       if (possuiBtcOuEth) {
-        comissao = 9;
+        comissao = 2;
       } else if (possuiAtivosStable && possuiOutrosAtivos) {
         const ajustada = comissaoCalculada < comissaoFixa ? comissaoFixa : comissaoCalculada;
         comissao = (comissaoFixa + ajustada) / 2;
@@ -200,6 +241,17 @@ export const DocumentsGenerator = () => {
         const transactionDate = new Date(transaction.dataHora);
         return transactionDate > latest ? transactionDate : latest;
       }, new Date(group.transactions[0].dataHora));
+      const isValidDate = (d: any) => d instanceof Date && !isNaN(d.getTime());
+
+      let dataPrestacaoServico: string;
+
+      if (isValidDate(endDateObj)) {
+        dataPrestacaoServico = endDateObj.toLocaleDateString("pt-BR");
+      } else {
+        const today = new Date();
+        const firstDayPreviousMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        dataPrestacaoServico = firstDayPreviousMonth.toLocaleDateString("pt-BR");
+      }
 
       // Discriminação formatada corretamente
       let fileContent = `"- Serviço: Intermediação de Ativos Digitais\n- Comissão média: ${comissao.toFixed(2)}%\n- Quantidade Vendida: ${group.transactions.filter((transaction: any) => transaction.tipo === "vendas").length}\n- ${periodoTransacoes}\n- Valor da Nota: ${valorNfe.toFixed(2)}\nOrdem dos Campos após nome da corretora:\n- Identificador da Ordem\n- Dia e Hora\n- Valor do Token\n- Ativo Digital\n- Quantidade de Tokens\n- Valor Pago\nExchange/Corretora\n`;
@@ -215,7 +267,7 @@ export const DocumentsGenerator = () => {
       fileContent += `Suporte de Dúvidas\n- Para informações do P2P, consulte documentação ou o suporte da corretora"`;
 
       // Criar o conteúdo CSV
-      const csvData = `R,${numeroRPS},RPS,${endDateObj.toLocaleDateString("pt-BR")},${hoje.toLocaleDateString("pt-BR")},,${cpfCnpj},,${buyerName},,,,,,48,,,,S,${codMunicipioServicoPrestado},${codAtividade},${codListaServicos},${fileContent},${(valorNfe * 100).toFixed(2)},0,0,0,0,0,0,0,0,0,${valorIss},S,${aliquota},0,0,${inscricaoMunicipal},\n`;
+      const csvData = `R,${numeroRPS},RPS,${dataPrestacaoServico},${hoje.toLocaleDateString("pt-BR")},,${cpfCnpj},,${buyerName},,,,,,48,,,,S,${codMunicipioServicoPrestado},${codAtividade},${codListaServicos},${fileContent},${(valorNfe * 100).toFixed(2)},0,0,0,0,0,0,0,0,0,${valorIss},S,${aliquota},0,0,${inscricaoMunicipal},\n`;
 
       csvContent += csvData;
       numeroRPS += 1;
@@ -237,51 +289,10 @@ export const DocumentsGenerator = () => {
     document.body.removeChild(linkCsv);
   };
 
-  useEffect(() => {
-    if (data) {
-      const uniqueBuyers = Array.from(
-        new Set(data.map((t: any) => t.User?.name || " N/A")),
-      ) as string[];
-
-      setUsers(uniqueBuyers.sort());
-    }
-  }, [data]);
-
-  // Função para agrupar transações por exchange
-  const groupByExchange = (transactions: any[]) => {
-    return transactions.reduce((acc: any, transaction: any) => {
-      const exchange = transaction.exchange.split(" ")[0];
-      if (!acc[exchange]) {
-        acc[exchange] = [];
-      }
-      acc[exchange].push(transaction);
-      return acc;
-    }, {});
-  };
-
-  // Alternar visibilidade das ordens de uma exchange
-  const toggleExchangeVisibility = (exchange: string) => {
-    setVisibleExchanges((prev) => ({
-      ...prev,
-      [exchange]: !prev[exchange],
-    }));
-  };
-
-  const groupedTransactions = filteredData ? groupByExchange(filteredData) : {};
-  const validationDates = filterDates.startDate.length > 0 && filterDates.endDate.length > 0;
-  const validationEmptyBuyers = buyer === "" || buyer === " N/A";
-
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  const diffDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
-
-  const showFortnightButton = diffDays >= 13 && diffDays <= 16;
-  const showMonthlyButton = diffDays >= 28;
-
   return (
     <div className="flex h-fit w-full flex-col gap-3 rounded-16 bg-white p-4 shadow-2xl">
-      <div className="flex items-center">
-        <h3 className="text-28 font-bold">Gerador de Documentos</h3>
+      <div className="flex items-center gap-5">
+        <h3 className="text-28 font-bold">Ordens</h3>
         <Button onClick={() => setShowModal(true)}>IN1888</Button>
       </div>
       <div className="flex flex-col items-center justify-center gap-4 md:flex-row">

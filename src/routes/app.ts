@@ -6,6 +6,7 @@ export const app = {
   forgotPassword: "/esqueceu-senha",
   recoverPassword: (token: string) => `/recuperar-senha/${token}`,
   membership: (token: string) => `/formulario-adesao/${token}`,
+  unauthorized: "/unauthorized",
 
   /* After Login */
   auth: "/auth",
@@ -15,7 +16,6 @@ export const app = {
   //  CryptoTech
   registerOrders: "/register-orders",
   users: "/users",
-  tax: "/tax",
   documentsGenerator: "/generator-documents",
   closing: "/closing",
 };

@@ -6,9 +6,11 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { api, queryClient } from "src/config/api";
 import { responseError, responseSuccess } from "src/config/responseErrors";
+import { TOKEN_EXPIRE_TIME } from "src/hooks/API/useToken";
 import { IAuthModel } from "src/interfaces/models";
 import { apiRoute } from "src/routes/api";
 import { app } from "src/routes/app";
+import { useAccessControl } from "src/routes/context/AccessControl";
 import { Regex } from "src/utils/Regex";
 import Yup from "src/utils/yupValidation";
 
@@ -20,6 +22,8 @@ export interface ILoginDto {
 export const useLogin = () => {
   const navigate = useNavigate();
   const { t: translator } = useTranslation();
+  const { setAccessFromToken } = useAccessControl();
+
   const t = (t: string) => translator(`hooks.auth.${t}`);
 
   const { mutate, isPending } = useMutation({
@@ -28,12 +32,10 @@ export const useLogin = () => {
       responseSuccess(t("userLogged"));
       queryClient.setQueryData(["token-data"], data.token);
       localStorage.setItem("token", data.token);
-      setTimeout(
-        () => {
-          localStorage.removeItem("token");
-        },
-        24 * 60 * 60 * 30,
-      );
+      setAccessFromToken(data.token); // <-- atualiza o contexto diretamente
+      setTimeout(() => {
+        localStorage.removeItem("token");
+      }, TOKEN_EXPIRE_TIME);
 
       navigate(app.home);
     },
@@ -41,15 +43,7 @@ export const useLogin = () => {
   });
 
   const schema = Yup.object().shape({
-    password: Yup.string()
-      .required()
-      .min(8)
-      .max(30)
-      .matches(Regex.uppercase, t("passwordUpper"))
-      .matches(Regex.lowcase, t("passwordLower"))
-      .matches(Regex.number, t("passwordNumber"))
-      .matches(Regex.special_character, t("passwordSpecial"))
-      .label("password"),
+    password: Yup.string().required().min(5).max(30).label("password"),
     document: Yup.string()
       .required()
       .matches(

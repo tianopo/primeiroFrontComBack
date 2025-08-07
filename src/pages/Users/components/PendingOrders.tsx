@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { ConfirmationDelete } from "src/components/Modal/ConfirmationDelete";
-import { generateSingleReceipt } from "src/pages/Documents/config/handleReceipt";
+import { generateSingleReceipt } from "src/pages/Home/config/handleReceipt";
 import { useListPendingOrders } from "../hooks/useListPendingOrders";
 import { useReleaseAssets } from "../hooks/useReleaseAssets";
 import { useSendChatMessage } from "../hooks/useSendChatMessage";

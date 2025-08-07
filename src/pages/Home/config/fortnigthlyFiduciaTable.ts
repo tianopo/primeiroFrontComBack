@@ -31,7 +31,7 @@ export const fortnigthlyFiduciaTable = (transactions: any[]) => {
     const nomeCliente = deleteComma(transaction.User?.name);
     const walletCliente = transaction.User?.Accounts?.find(
       (acc: any) => acc.exchange === transaction.exchange,
-    ).counterparty;
+    )?.counterparty;
 
     const [ano, mes, dia] = transaction.dataHora.split(" ")[0].split("-");
     const dataFormatada = `${dia}/${mes}/${ano}`;

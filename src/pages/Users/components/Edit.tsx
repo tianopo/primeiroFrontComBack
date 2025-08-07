@@ -48,15 +48,9 @@ export const Edit = ({ setForm }: IEdit) => {
       const userName = match.User.name;
       const userExchange = match.exchange;
 
-      const isUserBlocked = userName.includes("Bloqueado");
-      const updatedName = isUserBlocked ? userName : userName.replace(" Bloqueado", "");
-
-      const finalName = isBlocked ? `${updatedName} Bloqueado` : updatedName;
-
-      setNome(finalName);
+      setNome(userName);
+      setValue("nome", userName);
       setExchange(userExchange);
-
-      setValue("nome", finalName);
       setValue("exchange", userExchange);
     } else {
       // Apenas atualiza o nome, não altera a exchange se o valor for parcial
@@ -99,34 +93,23 @@ export const Edit = ({ setForm }: IEdit) => {
     const checked = e.target.checked;
     setIsBlocked(checked);
 
-    const updatedName = checked
-      ? `${nome.replace(" Bloqueado", "")} Bloqueado`
-      : nome.replace(" Bloqueado", "");
-
-    setValue("nome", updatedName);
-    setNome(updatedName);
+    setValue("nome", nome);
+    setNome(nome);
   };
 
   const updateUserFields = (selectedUser: any) => {
-    const userName = selectedUser.User.name;
-
-    const isUserBlocked = userName.includes("Bloqueado");
-    setIsBlocked(isUserBlocked);
-
-    const updatedName = isUserBlocked ? userName : userName.replace(" Bloqueado", "");
-
     setId(selectedUser.id);
-    setNome(updatedName);
+    setNome(selectedUser.User.name);
     setApelido(selectedUser.counterparty);
     setExchange(selectedUser.exchange);
     setDocumento(selectedUser.User.document);
-    setIsBlocked(selectedUser.blocked);
+    setIsBlocked(selectedUser.User.blocked);
 
-    setValue("nome", updatedName);
+    setValue("nome", selectedUser.User.name);
     setValue("apelido", selectedUser.counterparty);
     setValue("exchange", selectedUser.exchange);
     setValue("documento", selectedUser.User.document);
-    setValue("bloqueado", selectedUser.blocked);
+    setValue("bloqueado", selectedUser.User.blocked);
   };
 
   useEffect(() => {
@@ -140,8 +123,7 @@ export const Edit = ({ setForm }: IEdit) => {
     if (data && nome && exchange) {
       const selectedUser = data.find(
         (user: any) =>
-          user.User.name.replace(" Bloqueado", "") === nome &&
-          user.exchange.split(" ")[0] === exchange.split(" ")[0],
+          user.User.name === nome && user.exchange.split(" ")[0] === exchange.split(" ")[0],
       );
 
       if (selectedUser) updateUserFields(selectedUser);

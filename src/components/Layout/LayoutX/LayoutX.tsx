@@ -1,42 +1,51 @@
 import {
   CashRegister,
   File,
+  House,
   MoneyWavy,
   TrademarkRegistered,
   UserCheck,
 } from "@phosphor-icons/react";
 import { Outlet } from "react-router-dom";
 import { app } from "src/routes/app";
+import { useAccessControl } from "src/routes/context/AccessControl";
 import { Header } from "../Header/Header";
 import { SidebarX } from "../Sidebar/SidebarX";
 
 export const LayoutX = () => {
+  const { acesso } = useAccessControl();
+
   const nav = [
     {
-      text: "Usuários",
-      route: app.users,
-      icon: <UserCheck width={20} height={17} weight="duotone" />,
+      text: "Início",
+      route: app.home,
+      icon: <House width={20} height={17} weight="duotone" />,
     },
-    {
-      text: "Ordens",
-      route: app.registerOrders,
-      icon: <TrademarkRegistered width={20} height={17} weight="duotone" />,
-    },
-    {
-      text: "Fiscal",
-      route: app.tax,
-      icon: <MoneyWavy width={20} height={17} weight="duotone" />,
-    },
-    {
-      text: "Contratos",
-      route: app.documentsGenerator,
-      icon: <File width={20} height={17} weight="duotone" />,
-    },
-    {
-      text: "Fechamento",
-      route: app.closing,
-      icon: <CashRegister width={20} height={17} weight="duotone" />,
-    },
+    // Itens visíveis apenas se acesso !== 'User'
+    ...(acesso !== "User"
+      ? [
+          {
+            text: "Usuários",
+            route: app.users,
+            icon: <UserCheck width={20} height={17} weight="duotone" />,
+          },
+          {
+            text: "Ordens",
+            route: app.registerOrders,
+            icon: <TrademarkRegistered width={20} height={17} weight="duotone" />,
+          },
+          {
+            text: "Contratos",
+            route: app.documentsGenerator,
+            icon: <File width={20} height={17} weight="duotone" />,
+          },
+          {
+            text: "Fechamento",
+            route: app.closing,
+            icon: <CashRegister width={20} height={17} weight="duotone" />,
+          },
+        ]
+      : []),
   ];
 
   return (

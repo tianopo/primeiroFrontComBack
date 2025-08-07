@@ -1,71 +1,85 @@
 import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
 
-// costuma cometer erros em quantidade vendida e valor de venda, checar e corrigir isso
 export const processExcelBitget = (workbook: XLSX.WorkBook, selectedBroker: string): any[] => {
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
 
   const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
   const [titles, ...rows] = json;
+
   const expectedTitles = [
-    ,
-    "Número da ordem,",
-    "Horário de criação,",
-    "Tipo da ordem,",
-    "Criptomoeda,",
-    "Moeda fiduciária,",
-    "Preço total,",
-    "Preço,",
-    "Valor,",
-    "Contraparte,",
-    "Status",
+    "Order number",
+    "Time created",
+    "Order type",
+    "Crypto",
+    "Flat",
+    "Amount",
+    "Price",
+    "Quantity",
+    "Counterparty",
+    "status",
   ];
-  const isValid = expectedTitles.every((title, index) => titles[index] === title);
+
+  const isValid = expectedTitles.every(
+    (title, index) => titles[index]?.toLowerCase().trim() === title.toLowerCase().trim(),
+  );
+
   if (!isValid) {
-    toast.error(`Esta planilha não pertence a ${selectedBroker.split(" ")[0]}`);
+    toast.error(`Esta planilha não pertence à corretora ${selectedBroker.split(" ")[0]}`);
     return [];
   }
+
   return rows
     .map((row) => {
       const [
+        orderId, // 0: "Order number"
+        createdAt, // 1: "Time created"
+        side, // 2: "Order type"
+        crypto, // 3: "Crypto"
+        // 4: "Flat"
         ,
-        orderId, // "Order number"
-        createdAt, // "Time created"
-        side, // "Order type"
-        crypto, // "Crypto"
-        ,
-        // "Fiat"
-        totalPrice, // "Total price"
-        price, // "Price"
-        value, // "Value"
-        counterparty, // "Counterparty"
-        status, // "Status"
+        totalPrice, // 5: "Amount"
+        price, // 6: "Price"
+        value, // 7: "Quantity"
+        counterparty, // 8: "Counterparty"
+        status, // 9: "status"
       ] = row;
-      const v = (a: string | number): string =>
-        typeof a === "string" ? a.replace(/,$/, "") : a.toString();
-      const oneSide = v(side);
-      const oneCounterparty = v(counterparty);
-      const oneDate = v(createdAt).replace(/\//g, "-");
 
-      const formatToTwoDecimalPlaces = (value: string): string => {
-        const numericValue = parseFloat(value);
-        const roundedValue = numericValue.toFixed(2);
+      if (!orderId || status.toLowerCase().trim() !== "completed") return false;
 
-        return roundedValue.replace(".", ",");
+      const formatToTwoDecimalPlaces = (value: string | number): string => {
+        const numericValue = parseFloat(String(value));
+        return isNaN(numericValue) ? "" : numericValue.toFixed(2).replace(".", ",");
       };
 
-      if (status?.trim().toLowerCase() !== "concluída,") return false;
+      const formatExcelDateToDateTime = (serial: number | string): string => {
+        const excelDate = parseFloat(String(serial));
+        if (isNaN(excelDate)) return "";
+
+        const utcDays = Math.floor(excelDate - 25569); // Dias desde 1970-01-01
+        const utcValue = utcDays * 86400; // Segundos
+        const fractionalDay = excelDate - Math.floor(excelDate);
+        const totalSeconds = Math.floor(utcValue + fractionalDay * 86400);
+
+        const date = new Date(totalSeconds * 1000);
+        date.setHours(date.getHours() + 3); // ✅ Adiciona 3 horas para compensar o fuso
+
+        const pad = (n: number): string => n.toString().padStart(2, "0");
+
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+      };
+
       return {
-        numeroOrdem: v(orderId),
-        tipo: oneSide === "Vender" ? "vendas" : "compras",
-        dataHora: oneDate,
+        numeroOrdem: String(orderId),
+        tipo: String(side).toLowerCase() === "sell" ? "vendas" : "compras",
+        dataHora: formatExcelDateToDateTime(createdAt),
         exchange: selectedBroker,
-        ativo: v(crypto),
-        nome: oneCounterparty,
-        quantidade: v(value),
+        ativo: String(crypto),
+        nome: String(counterparty),
+        quantidade: String(value),
         valor: formatToTwoDecimalPlaces(totalPrice),
-        valorToken: v(price),
+        valorToken: String(price),
         taxa: "0",
       };
     })

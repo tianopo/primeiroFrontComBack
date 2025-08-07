@@ -4,9 +4,10 @@ import { toast } from "react-toastify";
 import { queryClient } from "src/config/api";
 import { app } from "src/routes/app";
 
+export const TOKEN_EXPIRE_TIME = 60 * 60 * 24 * 30;
 export const useToken = () => {
   const navigate = useNavigate();
-  const TOKEN_EXPIRE_TIME = 60 * 60 * 24 * 3000;
+  const TOKEN_EXPIRE = 60 * 60 * 24 * 3000;
 
   useQuery({
     queryKey: ["token-data"],
@@ -15,7 +16,7 @@ export const useToken = () => {
         "token-data",
       ]);
 
-      if (tokenData && Date.now() - tokenData.timestamp > TOKEN_EXPIRE_TIME) {
+      if (tokenData && Date.now() - tokenData.timestamp > TOKEN_EXPIRE) {
         localStorage.removeItem("token");
         queryClient.removeQueries({ queryKey: ["token-data"] });
         toast.warning("Tempo de login expirado");
@@ -25,7 +26,7 @@ export const useToken = () => {
 
       return tokenData || { token: null, timestamp: Date.now() };
     },
-    staleTime: TOKEN_EXPIRE_TIME,
-    refetchInterval: TOKEN_EXPIRE_TIME,
+    staleTime: TOKEN_EXPIRE,
+    refetchInterval: TOKEN_EXPIRE,
   });
 };

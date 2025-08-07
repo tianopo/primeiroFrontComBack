@@ -1,3 +1,4 @@
+import { Fiducia } from "./QueryDataList/Fiducia";
 import { OFAC } from "./QueryDataList/OFAC";
 import { Slave } from "./QueryDataList/Slave";
 import { AE } from "./QueryDataTransparencia/AE";
@@ -35,6 +36,13 @@ export const ResponseCompliance = ({ responseData }: IResponseCompliance) => {
       <h6>{responseData?.ourData}</h6>
       <h6>{responseData?.userAnalysis}</h6>
       <div className="flex w-full flex-row flex-wrap justify-center">
+        {/*Lists*/}
+        {typeof responseData?.slave === "boolean" && <Slave responseData={responseData?.slave} />}
+        {typeof responseData?.fiducia === "boolean" && (
+          <Fiducia responseData={responseData?.fiducia} />
+        )}
+        {responseData?.ofac && <OFAC responseData={responseData?.ofac} />}
+        {/*Portal da transparência*/}
         {responseData?.pdt?.viagens && <Viagens responseData={responseData?.pdt?.viagens} />}
         {responseData?.pdt?.pep && <PEP responseData={responseData?.pdt?.pep} />}
         {responseData?.pdt?.cnpj && <CNPJ responseData={responseData?.pdt?.cnpj} />}
@@ -48,9 +56,6 @@ export const ResponseCompliance = ({ responseData }: IResponseCompliance) => {
         {responseData?.pdt?.cepim && <CEPIM responseData={responseData?.pdt?.cepim} />}
         {responseData?.pdt?.ceis && <CEIS responseData={responseData?.pdt?.ceis} />}
         {responseData?.pdt?.ceaf && <CEAF responseData={responseData?.pdt?.ceaf} />}
-        {/*Lists*/}
-        {responseData?.ofac && <OFAC responseData={responseData?.ofac} />}
-        {typeof responseData?.slave === "boolean" && <Slave responseData={responseData?.slave} />}
       </div>
     </div>
   );

@@ -6,28 +6,24 @@ export const processExcelMEXC = (workbook: XLSX.WorkBook, selectedBroker: string
   const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
 
   return json
+    .slice(1)
     .map((row) => {
-      if (row.length < 13) return false; // Linha inválida ou vazia
+      if (row.length < 12) return false;
 
       const [
+        uid, // uidComerciante
         ,
+        idOrdem, // idAnuncio
         ,
-        // Comerciante
-        // UID do usuário
-        uidOponente, // UID do oponente (apelido)
-        dataHora, // Horário de início (UTC-03:00)
-        // Horário de término
+        tipoAnuncio,
+        dataHora,
+        nomeMoeda, // moeda
         ,
-        cryptocurrency, // Token de negociação
-        tipo, // Direção de negociação (Comprar/Vender)
-        status, // Status (Concluído, etc.)
-        coinAmount, // Quantidade da ordem
-        price, // Preço
-        // Taxa
-        // Token de liquidação
+        estado,
+        quantidade,
+        preco,
+        montante, // formaPagamento
         ,
-        ,
-        fiatAmount, // Montante da ordem
       ] = row;
 
       const normalize = (value: string) =>
@@ -45,7 +41,6 @@ export const processExcelMEXC = (workbook: XLSX.WorkBook, selectedBroker: string
 
       const adjustDateTime = (dateTime: string): string => {
         const date = new Date(dateTime);
-        date.setTime(date.getTime() - 3 * 60 * 60 * 1000);
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, "0");
         const day = String(date.getDate()).padStart(2, "0");
@@ -55,19 +50,19 @@ export const processExcelMEXC = (workbook: XLSX.WorkBook, selectedBroker: string
         return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
       };
 
-      if (normalize(status) !== "concluido") return false;
-      if (!fiatAmount || fiatAmount === "") return false;
+      if (normalize(estado) !== "pronto") return false;
+      if (!montante || montante === "") return false;
 
       return {
-        numeroOrdem: adjustDateTime(dataHora),
-        tipo: normalize(tipo) === "vender" ? "compras" : "vendas",
+        numeroOrdem: idOrdem,
+        tipo: normalize(tipoAnuncio) === "vender" ? "compras" : "vendas",
         dataHora: adjustDateTime(dataHora),
         exchange: selectedBroker,
-        ativo: cryptocurrency,
-        apelido: uidOponente,
-        quantidade: coinAmount,
-        valor: formatToTwoDecimalPlaces(fiatAmount),
-        valorToken: price,
+        ativo: nomeMoeda,
+        apelido: uid,
+        quantidade,
+        valor: formatToTwoDecimalPlaces(montante),
+        valorToken: preco,
         taxa: "0",
       };
     })
