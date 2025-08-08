@@ -68,7 +68,9 @@ NEWFILEUID:NONE
       .map((row) => {
         const rawDate = row[dataIndex].replace(/[^0-9]/g, ""); // formato yyyymmdd
         const date = rawDate.padEnd(8, "0");
-        const amount = row[amountIndex].replace(",", ".").replace(/[^\d.-]/g, "");
+        const amount = parseFloat(row[amountIndex].replace(",", ".").replace(/[^\d.-]/g, ""))
+          .toFixed(2)
+          .replace(".", ",");
         const memo = row[memoIndex];
 
         if (!date || !amount || !memo) return "";
