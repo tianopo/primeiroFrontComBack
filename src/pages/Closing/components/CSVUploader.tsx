@@ -38,42 +38,14 @@ export const CSVUploader = () => {
       return;
     }
 
-    const now = new Date();
-    const dateTimeStr = now
-      .toISOString()
-      .replace(/[-:T.Z]/g, "")
-      .slice(0, 14);
-
-    const ofxHeader = `
-OFXHEADER:100
-DATA:OFXSGML
-VERSION:102
-SECURITY:NONE
-ENCODING:USASCII
-CHARSET:1252
-COMPRESSION:NONE
-OLDFILEUID:NONE
-NEWFILEUID:NONE
-
-<OFX>
-  <BANKMSGSRSV1>
-    <STMTTRNRS>
-      <TRNUID>1
-      <STATUS>
-        <CODE>0
-        <SEVERITY>INFO
-      </STATUS>
-      <STMTRS>
-        <BANKTRANLIST>
-`;
-
-    const transactions = rows
-      .map((row) => {
+    // Processa as transações para calcular datas e construir o array
+    const processedTransactions = rows
+      .map((row, index) => {
         const rawDate = row[dataIndex].replace(/[^0-9]/g, "");
 
         let date = rawDate;
         if (rawDate.length === 8) {
-          // Converte de ddmmyyyy para yyyymmdd
+          // converte ddmmyyyy -> yyyymmdd
           const day = rawDate.substring(0, 2);
           const month = rawDate.substring(2, 4);
           const year = rawDate.substring(4, 8);
@@ -81,31 +53,99 @@ NEWFILEUID:NONE
         }
 
         let amount = parseFloat(row[amountIndex].replace(",", ".").replace(/[^\d.-]/g, ""));
-
         const type = row[typeIndex]?.trim().toLowerCase();
         if (type === "débito" || type === "debito") {
-          amount = -Math.abs(amount); // sempre negativo
+          amount = -Math.abs(amount);
         } else if (type === "crédito" || type === "credito") {
-          amount = Math.abs(amount); // sempre positivo
+          amount = Math.abs(amount);
         }
 
         const memo = row[memoIndex];
+        if (!date || isNaN(amount) || !memo) return null;
 
-        if (!date || isNaN(amount) || !memo) return "";
+        // Gera FITID único: use índice e data
+        const fitid = `${date}-${index}`;
 
-        return `
-          <STMTTRN>
-            <TRNTYPE>OTHER
-            <DTPOSTED>${date}
-            <TRNAMT>${amount.toFixed(2).replace(".", ",")}
-            <NAME>${memo}
-          </STMTTRN>
-        `;
+        return { date, amount, memo, fitid };
       })
+      .filter(Boolean) as { date: string; amount: number; memo: string; fitid: string }[];
+
+    if (processedTransactions.length === 0) {
+      alert("Nenhuma transação válida encontrada.");
+      return;
+    }
+
+    // Calcula datas para DTSTART e DTEND
+    const dates = processedTransactions.map((t) => t.date);
+    const dtStart = dates.reduce((a, b) => (a < b ? a : b));
+    const dtEnd = dates.reduce((a, b) => (a > b ? a : b));
+
+    const now = new Date();
+    const dateTimeStr = now
+      .toISOString()
+      .replace(/[-:T.Z]/g, "")
+      .slice(0, 8);
+
+    const ofxHeader = `OFXHEADER:100
+DATA:OFXSGML
+VERSION:102
+SECURITY:NONE
+ENCODING:UTF-8
+CHARSET:NONE
+COMPRESSION:NONE
+OLDFILEUID:NONE
+NEWFILEUID:NONE
+
+<OFX>
+  <SIGNONMSGSRSV1>
+    <SONRS>
+      <STATUS>
+        <CODE>0</CODE>
+        <SEVERITY>INFO</SEVERITY>
+      </STATUS>
+      <DTSERVER>${dateTimeStr}</DTSERVER>
+      <LANGUAGE>ENG</LANGUAGE>
+    </SONRS>
+  </SIGNONMSGSRSV1>
+  <BANKMSGSRSV1>
+    <STMTTRNRS>
+      <TRNUID>1</TRNUID>
+      <STATUS>
+        <CODE>0</CODE>
+        <SEVERITY>INFO</SEVERITY>
+      </STATUS>
+      <STMTRS>
+        <CURDEF>BRL</CURDEF>
+        <BANKACCTFROM>
+          <BANKID>28077646</BANKID>
+          <ACCTID>28077641</ACCTID>
+          <ACCTTYPE>CHECKING</ACCTTYPE>
+        </BANKACCTFROM>
+        <BANKTRANLIST>
+          <DTSTART>${dtStart}</DTSTART>
+          <DTEND>${dtEnd}</DTEND>
+`;
+
+    const transactions = processedTransactions
+      .map(
+        (t) => `
+          <STMTTRN>
+            <TRNTYPE>OTHER</TRNTYPE>
+            <DTPOSTED>${t.date}</DTPOSTED>
+            <TRNAMT>${t.amount.toFixed(2).replace(".", ",")}</TRNAMT>
+            <FITID>${t.fitid}</FITID>
+            <NAME>${t.memo}</NAME>
+          </STMTTRN>`,
+      )
       .join("\n");
 
     const ofxFooter = `
         </BANKTRANLIST>
+
+        <LEDGERBAL>
+          <BALAMT>0,00</BALAMT>
+          <DTASOF>${dtEnd}</DTASOF>
+        </LEDGERBAL>
       </STMTRS>
     </STMTTRNRS>
   </BANKMSGSRSV1>
