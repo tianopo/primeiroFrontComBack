@@ -17,5 +17,5 @@ export const app = {
   registerOrders: "/register-orders",
   users: "/users",
   documentsGenerator: "/generator-documents",
-  closing: "/closing",
+  convert: "/convert",
 };

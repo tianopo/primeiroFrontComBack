@@ -2,9 +2,9 @@ import { createBrowserRouter } from "react-router-dom";
 import { Unauthorized } from "src/components/Feedback/Unathorized.views";
 import { LayoutX } from "src/components/Layout/LayoutX/LayoutX";
 import { Auth } from "src/pages/Auth/Auth.views";
-import { Closing } from "src/pages/Closing/Closing.views";
 import { ConsultaCPF } from "src/pages/ConsultarCPF.views";
 import { Contracts } from "src/pages/Contracts/Contracts.views";
+import { Convert } from "src/pages/Convert/Convert.views";
 import { CryptoTech } from "src/pages/CryptoTech/CryptoTech.views";
 import { Home } from "src/pages/Home/Home";
 import { Record } from "src/pages/Record/Record";
@@ -38,7 +38,7 @@ export const browserRouter = createBrowserRouter([
               { path: app.users, element: <Users /> },
               { path: app.registerOrders, element: <RegisterOrders /> },
               { path: app.documentsGenerator, element: <Contracts /> },
-              { path: app.closing, element: <Closing /> },
+              { path: app.convert, element: <Convert /> },
             ],
           },
         ],

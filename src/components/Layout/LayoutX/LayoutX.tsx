@@ -1,11 +1,4 @@
-import {
-  CashRegister,
-  File,
-  House,
-  MoneyWavy,
-  TrademarkRegistered,
-  UserCheck,
-} from "@phosphor-icons/react";
+import { FileArchive, File, House, TrademarkRegistered, UserCheck } from "@phosphor-icons/react";
 import { Outlet } from "react-router-dom";
 import { app } from "src/routes/app";
 import { useAccessControl } from "src/routes/context/AccessControl";
@@ -40,9 +33,9 @@ export const LayoutX = () => {
             icon: <File width={20} height={17} weight="duotone" />,
           },
           {
-            text: "Fechamento",
-            route: app.closing,
-            icon: <CashRegister width={20} height={17} weight="duotone" />,
+            text: "Conversão",
+            route: app.convert,
+            icon: <FileArchive width={20} height={17} weight="duotone" />,
           },
         ]
       : []),
