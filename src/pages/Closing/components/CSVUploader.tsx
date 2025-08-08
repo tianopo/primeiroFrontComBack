@@ -29,7 +29,7 @@ export const CSVUploader = () => {
     const dataIndex = headers.findIndex((h) => h.toLowerCase().includes("data"));
     const amountIndex = headers.findIndex((h) => h.toLowerCase().includes("valor"));
     const memoIndex = headers.findIndex((h) => h.toLowerCase().includes("transa"));
-    const typeIndex = headers.findIndex((h) => h.toLowerCase().includes("tipo")); // Novo índice
+    const typeIndex = headers.findIndex((h) => h.toLowerCase().includes("tipo"));
 
     if (dataIndex === -1 || amountIndex === -1 || memoIndex === -1 || typeIndex === -1) {
       alert(
@@ -69,8 +69,16 @@ NEWFILEUID:NONE
 
     const transactions = rows
       .map((row) => {
-        const rawDate = row[dataIndex].replace(/[^0-9]/g, ""); // formato yyyymmdd
-        const date = rawDate.padEnd(8, "0");
+        const rawDate = row[dataIndex].replace(/[^0-9]/g, "");
+
+        let date = rawDate;
+        if (rawDate.length === 8) {
+          // Converte de ddmmyyyy para yyyymmdd
+          const day = rawDate.substring(0, 2);
+          const month = rawDate.substring(2, 4);
+          const year = rawDate.substring(4, 8);
+          date = `${year}${month}${day}`;
+        }
 
         let amount = parseFloat(row[amountIndex].replace(",", ".").replace(/[^\d.-]/g, ""));
 
