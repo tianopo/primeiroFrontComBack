@@ -29,9 +29,12 @@ export const CSVUploader = () => {
     const dataIndex = headers.findIndex((h) => h.toLowerCase().includes("data"));
     const amountIndex = headers.findIndex((h) => h.toLowerCase().includes("valor"));
     const memoIndex = headers.findIndex((h) => h.toLowerCase().includes("transa"));
+    const typeIndex = headers.findIndex((h) => h.toLowerCase().includes("tipo")); // Novo índice
 
-    if (dataIndex === -1 || amountIndex === -1 || memoIndex === -1) {
-      alert("Certifique-se de que os cabeçalhos são: data, valor (R$), transações.");
+    if (dataIndex === -1 || amountIndex === -1 || memoIndex === -1 || typeIndex === -1) {
+      alert(
+        "Certifique-se de que os cabeçalhos são: data, valor (R$), transações, tipo de transação.",
+      );
       return;
     }
 
@@ -68,18 +71,25 @@ NEWFILEUID:NONE
       .map((row) => {
         const rawDate = row[dataIndex].replace(/[^0-9]/g, ""); // formato yyyymmdd
         const date = rawDate.padEnd(8, "0");
-        const amount = parseFloat(row[amountIndex].replace(",", ".").replace(/[^\d.-]/g, ""))
-          .toFixed(2)
-          .replace(".", ",");
+
+        let amount = parseFloat(row[amountIndex].replace(",", ".").replace(/[^\d.-]/g, ""));
+
+        const type = row[typeIndex]?.trim().toLowerCase();
+        if (type === "débito" || type === "debito") {
+          amount = -Math.abs(amount); // sempre negativo
+        } else if (type === "crédito" || type === "credito") {
+          amount = Math.abs(amount); // sempre positivo
+        }
+
         const memo = row[memoIndex];
 
-        if (!date || !amount || !memo) return "";
+        if (!date || isNaN(amount) || !memo) return "";
 
         return `
           <STMTTRN>
             <TRNTYPE>OTHER
             <DTPOSTED>${date}
-            <TRNAMT>${amount}
+            <TRNAMT>${amount.toFixed(2).replace(".", ",")}
             <NAME>${memo}
           </STMTTRN>
         `;
