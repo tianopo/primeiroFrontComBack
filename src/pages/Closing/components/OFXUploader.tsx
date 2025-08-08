@@ -15,7 +15,6 @@ export const OFXUploader = () => {
     if (!file) return;
 
     const text = await file.text();
-
     const transactionRegex = /<STMTTRN>([\s\S]*?)<\/STMTTRN>/g;
     const matches = [...text.matchAll(transactionRegex)];
 

@@ -12,10 +12,14 @@ export const CSVUploader = () => {
     const text = await file.text();
     const lines = text.split("\n").filter((line) => line.trim() !== "");
 
-    const parsedHeaders = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
+    // Regex que divide apenas por vírgulas fora de aspas
+    const csvSplitRegex = /,(?=(?:[^"]*"[^"]*")*[^"]*$)/;
+
+    const parsedHeaders = lines[0].split(csvSplitRegex).map((h) => h.trim().replace(/^"|"$/g, ""));
+
     const parsedRows = lines
       .slice(1)
-      .map((line) => line.split(",").map((cell) => cell.trim().replace(/^"|"$/g, "")));
+      .map((line) => line.split(csvSplitRegex).map((cell) => cell.trim().replace(/^"|"$/g, "")));
 
     setHeaders(parsedHeaders);
     setRows(parsedRows);
@@ -52,7 +56,11 @@ export const CSVUploader = () => {
           date = `${year}${month}${day}`;
         }
 
-        let amount = parseFloat(row[amountIndex].replace(",", ".").replace(/[^\d.-]/g, ""));
+        let rawAmount = row[amountIndex];
+        rawAmount = rawAmount.replace(/\./g, "");
+        rawAmount = rawAmount.replace(",", ".");
+        let amount = parseFloat(rawAmount);
+
         const type = row[typeIndex]?.trim().toLowerCase();
         if (type === "débito" || type === "debito") {
           amount = -Math.abs(amount);
