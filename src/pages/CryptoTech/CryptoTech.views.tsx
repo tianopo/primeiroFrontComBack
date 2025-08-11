@@ -1,5 +1,7 @@
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { ButtonChangeLanguage } from "src/components/Buttons/ButtonChangeLanguage";
+import { app } from "src/routes/app";
 import { AnimateBlink } from "./components/AnimateBlink";
 import { AnimateSnake } from "./components/AnimateSnake";
 import { Navbar } from "./components/Navbar";
@@ -9,9 +11,11 @@ import { SectionForm } from "./Sections/SectionForm";
 import { SectionInfo } from "./Sections/SectionInfo";
 import { SectionIntroduction } from "./Sections/SectionIntroduction";
 import { SectionSell } from "./Sections/SectionSell";
+import { useAccessControl } from "src/routes/context/AccessControl";
 
 export const CryptoTech = () => {
   const { t: translator } = useTranslation();
+  const navigate = useNavigate();
   const h = (t: string) => translator(`header.${t}`);
   const t = (t: string) => translator(`cryptotech.${t}`);
   const nav = [h("home"), h("services"), h("info"), h("support")];
@@ -58,7 +62,15 @@ export const CryptoTech = () => {
       >
         <h3 className="font-extrabold uppercase text-white">cryptotech</h3>
         <Navbar nav={nav} />
-        <ButtonChangeLanguage />
+        <div className="flex gap-2">
+          <ButtonChangeLanguage />
+          <button
+            className="w-full rounded-6 bg-gradient-linear-primary px-3 py-1 font-semibold text-white"
+            onClick={() => navigate(app.auth)}
+          >
+            Login
+          </button>
+        </div>
       </header>
       <SectionIntroduction />
       <SectionForm />

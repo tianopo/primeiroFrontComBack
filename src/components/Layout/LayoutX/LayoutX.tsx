@@ -1,4 +1,4 @@
-import { FileArchive, File, House, TrademarkRegistered, UserCheck } from "@phosphor-icons/react";
+import { File, FileArchive, House, TrademarkRegistered, UserCheck } from "@phosphor-icons/react";
 import { Outlet } from "react-router-dom";
 import { app } from "src/routes/app";
 import { useAccessControl } from "src/routes/context/AccessControl";

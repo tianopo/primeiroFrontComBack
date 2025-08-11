@@ -4,8 +4,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { IconX } from "src/components/Icons/IconX";
 import { useLogout } from "src/hooks/API/useLogout";
 import { app } from "src/routes/app";
-import "./Sidebar.css";
 import { useAccessControl } from "src/routes/context/AccessControl";
+import "./Sidebar.css";
 
 interface INavbar {
   icon?: JSX.Element;
@@ -19,7 +19,7 @@ interface ISidebarX {
 }
 
 export const SidebarX = ({ navbar, menuOpen }: ISidebarX) => {
-  const { acesso } = useAccessControl();
+  const { acesso, name } = useAccessControl();
   const { mutate } = useLogout();
   const navigate = useNavigate();
   const location = useLocation();
@@ -79,36 +79,14 @@ Telegram: @Tianopo`,
         <div className="flex flex-col gap-2">
           <div className="border-edge block border-t-1 md:hidden" />
           <div className="flex flex-col items-center gap-5 md:hidden">
-            <div className="flex w-full flex-row gap-1 pl-2.5 text-start">
-              <IconX
-                name="Acessos"
-                icon={
-                  <Gear
-                    className="cursor-pointer rounded-6 text-write-secundary hover:bg-secundary hover:text-write-primary"
-                    width={19.45}
-                    height={20}
-                    weight="fill"
-                    onClick={() => navigate(app.users)}
-                  />
-                }
-              />
-              <IconX
-                name="Notificações"
-                icon={
-                  <Bell
-                    className="cursor-pointer rounded-6 text-write-secundary hover:bg-secundary hover:text-write-primary"
-                    width={19.45}
-                    height={20}
-                    weight="fill"
-                  />
-                }
-              />
-            </div>
             <div
               className="flex cursor-pointer items-center gap-5 rounded-6 p-2.5 text-write-secundary hover:bg-secundary hover:text-write-primary"
               onClick={() => navigate(app.users)}
             >
-              <h5>Matheus Henrique</h5>
+              <h5>
+                <Gear width={19.45} height={20} weight="fill" onClick={() => navigate(app.users)} />
+                {name}
+              </h5>
             </div>
           </div>
 

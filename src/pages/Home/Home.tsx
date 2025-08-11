@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { InputX } from "src/components/Form/Input/InputX";
+import { useAccessControl } from "src/routes/context/AccessControl";
 import { IN1888 } from "./components/IN1888";
 import { fortnigthlyFiduciaTable } from "./config/fortnigthlyFiduciaTable";
 import { handleCompraVendaIN1888 } from "./config/handleDownload";
@@ -9,9 +10,15 @@ import { mensalFiduciaTable } from "./config/mensalFiduciaTable";
 import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
 
 export const Home = () => {
+  const { acesso } = useAccessControl();
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [filterDates, setFilterDates] = useState({ startDate: "", endDate: "" });
+  const [filterDates, setFilterDates] = useState(() => {
+    if (acesso === "User") {
+      return { startDate: "2024-06-21", endDate: "3000-12-31" };
+    }
+    return { startDate: "", endDate: "" };
+  });
   const [showModal, setShowModal] = useState(false);
   const [buyer, setBuyer] = useState("");
   const [users, setUsers] = useState<string[]>([]);
@@ -79,16 +86,14 @@ export const Home = () => {
   const filteredData =
     buyer === "" || buyer === " N/A"
       ? data || []
-      : data?.filter(
-          (transaction: any) => transaction.User?.name === buyer && transaction.tipo === "vendas",
-        );
+      : data?.filter((transaction: any) => transaction.User?.name === buyer);
 
   const { totalVendas, totalCompras, precoMedioCompra, precoMedioVenda } = filteredData
     ? calculateTotals(filteredData)
     : { totalVendas: 0, totalCompras: 0, precoMedioCompra: 0, precoMedioVenda: 0 };
 
   const handleGenerate = async () => {
-    handleCompraVendaIN1888(filteredData);
+    handleCompraVendaIN1888(filteredData, acesso);
   };
 
   useEffect(() => {
@@ -293,7 +298,7 @@ export const Home = () => {
     <div className="flex h-fit w-full flex-col gap-3 rounded-16 bg-white p-4 shadow-2xl">
       <div className="flex items-center gap-5">
         <h3 className="text-28 font-bold">Ordens</h3>
-        <Button onClick={() => setShowModal(true)}>IN1888</Button>
+        {acesso === "Master" && <Button onClick={() => setShowModal(true)}>IN1888</Button>}
       </div>
       <div className="flex flex-col items-center justify-center gap-4 md:flex-row">
         <InputX
@@ -312,7 +317,7 @@ export const Home = () => {
         />
       </div>
       <div className="flex w-full flex-col gap-2">
-        {users.length > 0 && (
+        {users.length > 0 && acesso !== "User" && (
           <InputX
             title="Compradores"
             placeholder="Selecione um comprador"
@@ -325,21 +330,26 @@ export const Home = () => {
         <Button onClick={handleOrder} disabled={startDate.length !== 10 || endDate.length !== 10}>
           Filtrar
         </Button>
-        {validationDates && validationEmptyBuyers && (
+        {validationDates && (
           <>
             <Button onClick={handleGenerate}>Gerar IN188</Button>
-            {showFortnightButton && (
-              <Button onClick={() => fortnigthlyFiduciaTable(filteredData)}>
-                Tabela Quinzenal
-              </Button>
-            )}
-            {showMonthlyButton && (
-              <Button onClick={() => mensalFiduciaTable(filteredData)}>Tabela Mensal</Button>
+            {acesso === "Master" && validationEmptyBuyers && (
+              <>
+                {showFortnightButton && (
+                  <Button onClick={() => fortnigthlyFiduciaTable(filteredData)}>
+                    Tabela Quinzenal
+                  </Button>
+                )}
+                {showMonthlyButton && (
+                  <Button onClick={() => mensalFiduciaTable(filteredData)}>Tabela Mensal</Button>
+                )}
+              </>
             )}
           </>
         )}
-
-        {validationDates && <Button onClick={handleTransactions}>Emitir NFE</Button>}
+        {validationDates && acesso === "Master" && (
+          <Button onClick={handleTransactions}>Emitir NFE</Button>
+        )}
         {validationDates && <Button onClick={() => handleReceipt(filteredData)}>Recibo</Button>}
       </div>
 
@@ -351,8 +361,12 @@ export const Home = () => {
           <h6>Quantidade de ordens: {filteredData.length}</h6>
           <h6>Vendas: {totalVendas.toFixed(2)} BRL</h6>
           <h6>Compras: {totalCompras.toFixed(2)} BRL</h6>
-          <h6>Preço Médio de Compra em USDT/USDC: {precoMedioCompra.toFixed(2)} BRL</h6>
-          <h6>Preço Médio de Venda em USDT/USDC: {precoMedioVenda.toFixed(2)} BRL</h6>
+          {acesso !== "User" && (
+            <>
+              <h6>Preço Médio de Compra em USDT/USDC: {precoMedioCompra.toFixed(2)} BRL</h6>
+              <h6>Preço Médio de Venda em USDT/USDC: {precoMedioVenda.toFixed(2)} BRL</h6>
+            </>
+          )}
           {valorTotalNFE > 0 && (
             <h6 className="font-semibold text-green-700">
               Valor Total das NFE Emitidas: R$ {valorTotalNFE.toFixed(2)}

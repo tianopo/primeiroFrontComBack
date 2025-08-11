@@ -1,10 +1,10 @@
-import { Bell, Gear, List } from "@phosphor-icons/react";
+import { Gear, List } from "@phosphor-icons/react";
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { IconX } from "src/components/Icons/IconX";
 import { app } from "src/routes/app";
+import { useAccessControl } from "src/routes/context/AccessControl";
 import "../Sidebar/Sidebar.css";
 import { SidebarX } from "../Sidebar/SidebarX";
 
@@ -38,6 +38,7 @@ export const Header = ({ navbar }: IHeader) => {
   const currencyRef = useRef<ICurrencies | null>(null);
   const [currencyData, setCurrencyData] = useState<ICurrencies | null>(null);
   const navigate = useNavigate();
+  const { name } = useAccessControl();
 
   const toggleMenu = () => setMenuOpen((prev) => !prev);
 
@@ -118,36 +119,9 @@ export const Header = ({ navbar }: IHeader) => {
             )}
           </div>
         </div>
-        <div className="hidden items-center gap-2 md:flex">
-          <IconX
-            name="Acessos"
-            icon={
-              <Gear
-                className="cursor-pointer rounded-6 text-write-secundary hover:bg-secundary hover:text-write-primary"
-                width={19.45}
-                height={20}
-                weight="fill"
-                onClick={() => navigate(app.registerOrders)}
-              />
-            }
-          />
-          <IconX
-            name="Notificações"
-            icon={
-              <Bell
-                className="cursor-pointer rounded-6 text-write-secundary hover:bg-secundary hover:text-write-primary"
-                width={19.45}
-                height={20}
-                weight="fill"
-              />
-            }
-          />
-          <div
-            className="flex cursor-pointer items-center gap-5 rounded-6 p-2.5 text-write-secundary hover:bg-secundary hover:text-write-primary"
-            onClick={() => navigate(app.registerOrders)}
-          >
-            <h5>Matheus Henrique</h5>
-          </div>
+        <div className="hidden cursor-pointer items-center gap-2 rounded-6 p-2.5 text-write-secundary hover:bg-secundary hover:text-write-primary md:flex">
+          <Gear width={19.45} height={20} weight="fill" onClick={() => navigate(app.users)} />
+          <h5>{name}</h5>
         </div>
         <div className="mr-2 w-fit">
           <List

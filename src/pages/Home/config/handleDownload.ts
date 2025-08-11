@@ -1,18 +1,25 @@
 const today = new Date();
 const monthName = today.toLocaleDateString("pt-BR", { month: "long" });
 
-export const handleCompraVendaIN1888 = (formData: any[]) => {
+export const handleCompraVendaIN1888 = (formData: any[], acesso?: string | null) => {
   const datesArray: string[] = [];
 
   const textContent = formData
     .map((item) => {
-      const operationCode = item.tipo === "compras" ? "0110" : "0120";
+      const operationCode =
+        acesso === "User"
+          ? item.tipo === "compras"
+            ? "0120"
+            : "0110"
+          : item.tipo === "compras"
+            ? "0110"
+            : "0120";
       const dataSeparada = item.dataHora?.split(" ")[0].split("-");
       const dataHora = `${dataSeparada[2]}${dataSeparada[1]}${dataSeparada[0]}`;
       const tipoTransaction = (item: string) => item?.replace("R$", "").replace(/\./g, "");
-      const valorOperacao = `${item.tipo === "compras" ? tipoTransaction(item.valor) : tipoTransaction(item.valor)}`;
+      const valorOperacao = tipoTransaction(item.valor);
       const simboloAtivo = item.ativo || "";
-      const quantidadeRaw = item.tipo === "compras" ? item.quantidade : item.quantidade;
+      const quantidadeRaw = item.quantidade;
       const quantidade = parseFloat(quantidadeRaw.replace(",", "."))
         .toFixed(10)
         .toString()
