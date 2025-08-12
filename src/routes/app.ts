@@ -10,6 +10,7 @@ export const app = {
 
   /* After Login */
   auth: "/auth",
+  validateToken: "/auth/validate-token",
   home: "/inicio",
   kyc: "kyc",
   pld: "pld",

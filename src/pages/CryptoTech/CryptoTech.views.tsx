@@ -11,7 +11,6 @@ import { SectionForm } from "./Sections/SectionForm";
 import { SectionInfo } from "./Sections/SectionInfo";
 import { SectionIntroduction } from "./Sections/SectionIntroduction";
 import { SectionSell } from "./Sections/SectionSell";
-import { useAccessControl } from "src/routes/context/AccessControl";
 
 export const CryptoTech = () => {
   const { t: translator } = useTranslation();

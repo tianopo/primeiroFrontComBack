@@ -1,13 +1,17 @@
+import { ArrowFatLeft } from "@phosphor-icons/react";
 import { ChangeEvent, useState } from "react";
 import { FormProvider } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import { FlexCol } from "src/components/Flex/FlexCol";
 import { FormX } from "src/components/Form/FormX";
 import { InputX } from "src/components/Form/Input/InputX";
 import { ILoginDto, useLogin } from "src/pages/Auth/hooks/useLogin";
+import { app } from "src/routes/app";
 import { formatCPFOrCNPJ } from "src/utils/formats";
 
 export const FormLogin = () => {
   const { mutate, isPending, context } = useLogin();
+  const navigate = useNavigate();
   const [document, setDocument] = useState<string>("");
   const {
     formState: { errors },
@@ -63,6 +67,13 @@ export const FormLogin = () => {
             className="w-full rounded-4 bg-primary p-2 font-bold text-white"
           >
             {!isPending ? "LOGIN" : "loading..."}
+          </button>
+          <button
+            className="flex w-full cursor-pointer items-center rounded-6 py-1 font-semibold hover:text-primary"
+            onClick={() => navigate(app.first)}
+          >
+            <ArrowFatLeft width={20} height={17} weight="duotone" />
+            Voltar
           </button>
         </FlexCol>
       </FormX>

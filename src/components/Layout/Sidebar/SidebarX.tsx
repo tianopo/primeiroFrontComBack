@@ -1,7 +1,6 @@
-import { Bell, CopySimple, DoorOpen, Gear } from "@phosphor-icons/react";
+import { CopySimple, DoorOpen, Gear } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { IconX } from "src/components/Icons/IconX";
 import { useLogout } from "src/hooks/API/useLogout";
 import { app } from "src/routes/app";
 import { useAccessControl } from "src/routes/context/AccessControl";

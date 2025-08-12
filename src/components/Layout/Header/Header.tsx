@@ -101,8 +101,6 @@ export const Header = ({ navbar }: IHeader) => {
                   <li>Venda R$ {parseFloat(currencyData.USDBRL?.ask || "0")} |</li>
                   <li>Máxima R$ {parseFloat(currencyData.USDBRL?.high || "0")} |</li>
                   <li>Mínima R$ {parseFloat(currencyData.USDBRL?.low || "0")} |</li>
-                  <li>Variação R$ {currencyData.USDBRL?.varBid} |</li>
-                  <li>Porcentagem {currencyData.USDBRL?.pctChange}%</li>
                 </ul>
                 <span>Bitcoin (BTC/BRL):</span>
                 <ul className="flex flex-wrap gap-0.5 text-10 text-green-500">
@@ -110,8 +108,6 @@ export const Header = ({ navbar }: IHeader) => {
                   <li>Venda R$ {parseFloat(currencyData.BTCBRL?.ask || "0")} |</li>
                   <li>Máxima R$ {parseFloat(currencyData.BTCBRL?.high || "0")} |</li>
                   <li>Mínima R$ {parseFloat(currencyData.BTCBRL?.low || "0")} |</li>
-                  <li>Variação R$ {currencyData.BTCBRL?.varBid} |</li>
-                  <li>Porcentagem {currencyData.BTCBRL?.pctChange}%</li>
                 </ul>
               </>
             ) : (

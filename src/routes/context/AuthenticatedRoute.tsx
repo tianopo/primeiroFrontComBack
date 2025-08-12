@@ -1,6 +1,6 @@
 import { createContext } from "react";
 import { Outlet } from "react-router-dom";
-import { useToken } from "src/hooks/API/useToken";
+import { useValidateToken } from "src/hooks/API/useValidateToken";
 import { useTitle } from "src/hooks/utils/useTitle";
 
 interface IPrivateRouteContext {
@@ -11,7 +11,7 @@ const PrivateRouteUserContext = createContext<IPrivateRouteContext>({ token: nul
 
 export const AuthenticatedRoute = () => {
   useTitle();
-  useToken();
+  useValidateToken(); // chama o hook para validar token
 
   return (
     <PrivateRouteUserContext.Provider value={{ token: localStorage.getItem("token") }}>
