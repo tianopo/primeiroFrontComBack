@@ -7,6 +7,7 @@ import { app } from "src/routes/app";
 import { useAccessControl } from "src/routes/context/AccessControl";
 import "../Sidebar/Sidebar.css";
 import { SidebarX } from "../Sidebar/SidebarX";
+import { ModalPassword } from "./components/ModalPassword";
 
 interface INavbar {
   icon?: JSX.Element;
@@ -35,6 +36,7 @@ interface ICurrencies {
 
 export const Header = ({ navbar }: IHeader) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const currencyRef = useRef<ICurrencies | null>(null);
   const [currencyData, setCurrencyData] = useState<ICurrencies | null>(null);
   const navigate = useNavigate();
@@ -115,7 +117,10 @@ export const Header = ({ navbar }: IHeader) => {
             )}
           </div>
         </div>
-        <div className="hidden cursor-pointer items-center gap-2 rounded-6 p-2.5 text-write-secundary hover:bg-secundary hover:text-write-primary md:flex">
+        <div
+          className="hidden cursor-pointer items-center gap-2 rounded-6 p-2.5 text-write-secundary hover:bg-secundary hover:text-write-primary md:flex"
+          onClick={() => setShowPasswordModal(true)}
+        >
           <Gear width={19.45} height={20} weight="fill" onClick={() => navigate(app.users)} />
           <h5>{name}</h5>
         </div>
@@ -135,6 +140,7 @@ export const Header = ({ navbar }: IHeader) => {
           <SidebarX navbar={navbar} menuOpen />
         </div>
       )}
+      <ModalPassword isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
     </>
   );
 };

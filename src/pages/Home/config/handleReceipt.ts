@@ -148,7 +148,7 @@ export const handleReceipt = (data: any[]) => {
           `ID da ordem: ${item.numeroOrdem}`,
           `Data da Ordem: ${item.dataHora.split(" ")[0].split("-").reverse().join("/")}`,
           `Exchange: ${item.exchange.split(" ")[0]}`,
-          `Apelido: ${item.User?.Accounts?.find((acc: any) => acc.exchange === item.exchange).counterparty || "Não informado"}`,
+          `Apelido: ${item.User?.Accounts?.find((acc: any) => acc.exchange === item.exchange)?.counterparty || "Não informado"}`,
           `Nome: ${item.User?.name || "Não informado"}`,
           `Ativo: ${item.ativo}`,
           `Tipo: ${item.tipo}`,
@@ -190,7 +190,7 @@ export const handleReceipt = (data: any[]) => {
 
           canvas.toBlob((blob) => {
             if (blob) {
-              const fileName = `recibo-${item.User?.name || "cliente"}-${item.numeroOrdem}.png`;
+              const fileName = `recibo-${item.User?.name || "cliente"}-${item.valor}-${item.numeroOrdem}.png`;
               zip.file(fileName, blob);
             }
             resolve();
