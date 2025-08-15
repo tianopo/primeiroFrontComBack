@@ -4,7 +4,7 @@ import { InputX } from "src/components/Form/Input/InputX";
 import { useAccessControl } from "src/routes/context/AccessControl";
 import { IN1888 } from "./components/IN1888";
 import { fortnigthlyFiduciaTable } from "./config/fortnigthlyFiduciaTable";
-import { handleCompraVendaIN1888InExchange } from "./config/handleDownload";
+import { handleCompraVendaIN1888 } from "./config/handleDownload";
 import { handleReceipt } from "./config/handleReceipt";
 import { mensalFiduciaTable } from "./config/mensalFiduciaTable";
 import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
@@ -93,7 +93,7 @@ export const Home = () => {
     : { totalVendas: 0, totalCompras: 0, precoMedioCompra: 0, precoMedioVenda: 0 };
 
   const handleGenerate = async () => {
-    handleCompraVendaIN1888InExchange(filteredData, acesso);
+    handleCompraVendaIN1888(filteredData, acesso);
   };
 
   useEffect(() => {
