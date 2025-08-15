@@ -101,7 +101,7 @@ export const PendingOrders = () => {
                   return (
                     <div
                       key={index}
-                      className={`rounded p-2 text-sm shadow-inner ${msg.nickName === "crypto tech dev" ? "bg-gray-100" : "bg-red-100"}`}
+                      className={`rounded p-2 text-sm shadow-inner ${["crypto tech dev", "tianopo"].includes(msg.nickName) ? "bg-gray-100" : "bg-red-100"}`}
                     >
                       {msg.contentType === "pic" ? (
                         <img

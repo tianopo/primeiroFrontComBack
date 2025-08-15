@@ -1,7 +1,7 @@
 const today = new Date();
 const monthName = today.toLocaleDateString("pt-BR", { month: "long" });
 
-export const handleCompraVendaIN1888 = (formData: any[], acesso?: string | null) => {
+export const handleCompraVendaIN1888InExchange = (formData: any[], acesso?: string | null) => {
   const datesArray: string[] = [];
 
   const textContent = formData
@@ -16,6 +16,7 @@ export const handleCompraVendaIN1888 = (formData: any[], acesso?: string | null)
             : "0120";
       const dataSeparada = item.dataHora?.split(" ")[0].split("-");
       const dataHora = `${dataSeparada[2]}${dataSeparada[1]}${dataSeparada[0]}`;
+
       const tipoTransaction = (item: string) => item?.replace("R$", "").replace(/\./g, "");
       const valorOperacao = tipoTransaction(item.valor);
       const simboloAtivo = item.ativo || "";
@@ -48,6 +49,74 @@ export const handleCompraVendaIN1888 = (formData: any[], acesso?: string | null)
   const link = document.createElement("a");
   link.href = url;
   link.download = `Compra_Venda_IN188_${dataInicial}-${dataFinal}.txt`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+export const handleVendaIN1888NoExchange = (formData: any[], acesso?: string | null) => {
+  const datesArray: string[] = [];
+
+  const textContent = formData
+    .map((item) => {
+      const operationCode =
+        acesso === "User"
+          ? item.tipo === "compras"
+            ? "0120"
+            : "0110"
+          : item.tipo === "compras"
+            ? "0110"
+            : "0120";
+
+      // Data no formato DDMMAAAA
+      const dataSeparada = item.dataHora?.split(" ")[0].split("-");
+      const dataHora = `${dataSeparada[2]}${dataSeparada[1]}${dataSeparada[0]}`;
+
+      // Valor da operação (sem taxas) — remover "R$" e pontos
+      const valorOperacao = item.valor?.replace("R$", "")?.replace(/\./g, "")?.replace(",", ".");
+
+      // Valor das taxas (se existir) — ou "0,00"
+      const valorTaxas = item.taxa
+        ? item.taxa.replace("R$", "").replace(/\./g, "").replace(",", ".")
+        : "0,00";
+
+      // Símbolo do criptoativo
+      const simboloAtivo = item.ativo || "";
+
+      // Quantidade com vírgula e 10 casas decimais
+      const quantidade = parseFloat(item.quantidade.replace(",", "."))
+        .toFixed(10)
+        .toString()
+        .replace(".", ",");
+
+      // Dados do comprador (Pessoa Física ou Jurídica)
+      const pais = "BR";
+      const CPFCNPJ = item.user.document || "55.636.113/0001-70";
+      const isCPF = /^\d{11}$/.test(CPFCNPJ);
+      const isCNPJ = /^\d{14}$/.test(CPFCNPJ);
+      const TipoNI = isCPF ? "1" : isCNPJ ? "2" : "";
+      const NI = "";
+      const Nome = item.user.nome || "";
+
+      // Guarda datas para o range final
+      datesArray.push(dataHora);
+
+      // Monta a linha no formato da documentação
+      return `${operationCode}|${dataHora}|I|${valorOperacao}|${valorTaxas}|${simboloAtivo}|${quantidade}|${TipoNI}|${pais}|${CPFCNPJ}|${NI}|${Nome}`;
+    })
+    .join("\r\n");
+
+  // Ordena datas e define o intervalo
+  const sortedDates = datesArray.sort();
+  const dataInicial = sortedDates[0];
+  const dataFinal = sortedDates[sortedDates.length - 1];
+
+  // Gera o arquivo TXT
+  const blob = new Blob([textContent], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `Venda_IN1888_${dataInicial}-${dataFinal}.txt`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
