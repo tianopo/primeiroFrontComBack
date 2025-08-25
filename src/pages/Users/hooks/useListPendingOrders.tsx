@@ -11,6 +11,7 @@ export const useListPendingOrders = () => {
     try {
       const result = await api().get(apiRoute.pendingOrders);
       setData(result.data || []);
+      setError(null); // 🔹 zera o erro se a requisição for bem sucedida
     } catch (err) {
       setError(err);
       setData([]);
@@ -22,10 +23,19 @@ export const useListPendingOrders = () => {
   useEffect(() => {
     setIsLoading(true);
     fetchData();
+
+    // 🔹 Atualização automática normal
     const interval = setInterval(fetchData, 10000);
 
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (error) {
+      const retry = setTimeout(fetchData, 5000);
+      return () => clearTimeout(retry);
+    }
+  }, [error]);
 
   return { data, isLoading, error };
 };

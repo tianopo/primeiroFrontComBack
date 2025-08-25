@@ -2,7 +2,7 @@ import { toast } from "react-toastify";
 import { excelDateToJSDate } from "src/utils/formats";
 import * as XLSX from "xlsx";
 
-//kucoin é péssima em administrar datas, deve conferir as primeiras ordens e as últimas, retirar as que estão a mais e adicionar as que não foram adicionadas
+// kucoin é péssima em administrar datas, deve conferir as primeiras ordens e as últimas, retirar as que estão a mais e adicionar as que não foram adicionadas
 export const processExcelKucoin = (workbook: XLSX.WorkBook, selectedBroker: string): any[] => {
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
@@ -30,6 +30,7 @@ export const processExcelKucoin = (workbook: XLSX.WorkBook, selectedBroker: stri
   const formatNumber = (value: string): string => {
     return parseFloat(value).toFixed(2).replace(".", ",");
   };
+
   return rows
     .map((row) => {
       const [
@@ -46,10 +47,23 @@ export const processExcelKucoin = (workbook: XLSX.WorkBook, selectedBroker: stri
       ] = row;
 
       if (status?.trim().toLowerCase() !== "done") return false;
+
+      // --- Ajuste do horário (-11 horas) ---
+      let adjustedTime = excelDateToJSDate(Number(time));
+      try {
+        const parsed = new Date(adjustedTime);
+        if (!isNaN(parsed.getTime())) {
+          parsed.setHours(parsed.getHours() - 14);
+          adjustedTime = parsed.toISOString().slice(0, 19).replace("T", " ");
+        }
+      } catch {
+        adjustedTime = excelDateToJSDate(Number(time));
+      }
+
       return {
         numeroOrdem: orderId,
         tipo: side === "BUY" ? "compras" : "vendas",
-        dataHora: excelDateToJSDate(Number(time)),
+        dataHora: adjustedTime,
         exchange: selectedBroker,
         ativo: legalCurrency.split("/")[1],
         apelido: traderName,

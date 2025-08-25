@@ -22,9 +22,11 @@ export const processExcelHuobi = (workbook: XLSX.WorkBook, selectedBroker: strin
     "Status",
     "Counterparty",
   ];
+
   const formatNumber = (value: string): string => {
     return parseFloat(value).toFixed(2).replace(".", ",");
   };
+
   const isValid = expectedTitles.every((title, index) => titles[index] === title);
   if (!isValid) {
     toast.error(`Esta planilha não pertence a ${selectedBroker.split(" ")[0]}`);
@@ -53,10 +55,25 @@ export const processExcelHuobi = (workbook: XLSX.WorkBook, selectedBroker: strin
       ] = row;
 
       if (status?.trim().toLowerCase() !== "complete") return false;
+
+      // --- Ajuste da dataHora (-23h) ---
+      let adjustedTime = time;
+      try {
+        const parsed = new Date(time);
+        if (!isNaN(parsed.getTime())) {
+          parsed.setHours(parsed.getHours() - 14);
+          // Formata de volta no padrão YYYY-MM-DD HH:mm:ss
+          adjustedTime = parsed.toISOString().replace("T", " ").substring(0, 19);
+        }
+      } catch {
+        // Se não conseguir parsear, mantém o original
+        adjustedTime = time;
+      }
+
       return {
         numeroOrdem: orderId,
         tipo: side === "Buy" ? "compras" : "vendas",
-        dataHora: time,
+        dataHora: adjustedTime,
         exchange: selectedBroker,
         ativo: crypto,
         apelido: counterparty,

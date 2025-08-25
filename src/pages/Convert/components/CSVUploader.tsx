@@ -3,6 +3,7 @@ import React, { useRef, useState } from "react";
 export const CSVUploader = () => {
   const [headers, setHeaders] = useState<string[]>([]);
   const [rows, setRows] = useState<string[][]>([]);
+  const [tarifaTotal, setTarifaTotal] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -16,19 +17,31 @@ export const CSVUploader = () => {
     const csvSplitRegex = /,(?=(?:[^"]*"[^"]*")*[^"]*$)/;
 
     const parsedHeaders = lines[0].split(csvSplitRegex).map((h) => h.trim().replace(/^"|"$/g, ""));
-
     const parsedRows = lines
       .slice(1)
       .map((line) => line.split(csvSplitRegex).map((cell) => cell.trim().replace(/^"|"$/g, "")));
 
     setHeaders(parsedHeaders);
     setRows(parsedRows);
+
+    // === Soma das tarifas (4ª coluna = histórico, 5ª coluna = valor) ===
+    let total = 0;
+    parsedRows.forEach((row) => {
+      const historico = row[3]?.toLowerCase() || "";
+      if (historico.includes("tarifa")) {
+        let valor = row[4] || "0";
+        valor = valor.replace(/\./g, "").replace(",", ".");
+        total += parseFloat(valor) || 0;
+      }
+    });
+    setTarifaTotal(total);
   };
 
   const triggerFileInput = () => {
     fileInputRef.current?.click();
   };
 
+  // --- sua função exportToOFX continua igual ---
   const exportToOFX = () => {
     const dataIndex = headers.findIndex((h) => h.toLowerCase().includes("data"));
     const amountIndex = headers.findIndex((h) => h.toLowerCase().includes("valor"));
@@ -42,14 +55,11 @@ export const CSVUploader = () => {
       return;
     }
 
-    // Processa as transações para calcular datas e construir o array
     const processedTransactions = rows
       .map((row, index) => {
         const rawDate = row[dataIndex].replace(/[^0-9]/g, "");
-
         let date = rawDate;
         if (rawDate.length === 8) {
-          // converte ddmmyyyy -> yyyymmdd
           const day = rawDate.substring(0, 2);
           const month = rawDate.substring(2, 4);
           const year = rawDate.substring(4, 8);
@@ -57,8 +67,7 @@ export const CSVUploader = () => {
         }
 
         let rawAmount = row[amountIndex];
-        rawAmount = rawAmount.replace(/\./g, "");
-        rawAmount = rawAmount.replace(",", ".");
+        rawAmount = rawAmount.replace(/\./g, "").replace(",", ".");
         let amount = parseFloat(rawAmount);
 
         const type = row[typeIndex]?.trim().toLowerCase();
@@ -71,9 +80,7 @@ export const CSVUploader = () => {
         const memo = row[memoIndex];
         if (!date || isNaN(amount) || !memo) return null;
 
-        // Gera FITID único: use índice e data
         const fitid = `${date}-${index}`;
-
         return { date, amount, memo, fitid };
       })
       .filter(Boolean) as { date: string; amount: number; memo: string; fitid: string }[];
@@ -83,7 +90,6 @@ export const CSVUploader = () => {
       return;
     }
 
-    // Calcula datas para DTSTART e DTEND
     const dates = processedTransactions.map((t) => t.date);
     const dtStart = dates.reduce((a, b) => (a < b ? a : b));
     const dtEnd = dates.reduce((a, b) => (a > b ? a : b));
@@ -149,7 +155,6 @@ NEWFILEUID:NONE
 
     const ofxFooter = `
         </BANKTRANLIST>
-
         <LEDGERBAL>
           <BALAMT>0,00</BALAMT>
           <DTASOF>${dtEnd}</DTASOF>
@@ -191,6 +196,13 @@ NEWFILEUID:NONE
           </button>
         )}
       </div>
+
+      {/* Exibe soma das tarifas */}
+      {headers.length > 0 && (
+        <p className="font-semibold text-red-600">
+          Total de tarifas: R$ {tarifaTotal.toFixed(2).replace(".", ",")}
+        </p>
+      )}
 
       {/* Input de arquivo invisível */}
       <input

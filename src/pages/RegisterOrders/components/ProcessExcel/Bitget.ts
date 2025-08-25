@@ -37,8 +37,8 @@ export const processExcelBitget = (workbook: XLSX.WorkBook, selectedBroker: stri
         createdAt, // 1: "Time created"
         side, // 2: "Order type"
         crypto, // 3: "Crypto"
-        // 4: "Flat"
         ,
+        // 4: "Flat"
         totalPrice, // 5: "Amount"
         price, // 6: "Price"
         value, // 7: "Quantity"
@@ -53,27 +53,10 @@ export const processExcelBitget = (workbook: XLSX.WorkBook, selectedBroker: stri
         return isNaN(numericValue) ? "" : numericValue.toFixed(2).replace(".", ",");
       };
 
-      const formatExcelDateToDateTime = (serial: number | string): string => {
-        const excelDate = parseFloat(String(serial));
-        if (isNaN(excelDate)) return "";
-
-        const utcDays = Math.floor(excelDate - 25569); // Dias desde 1970-01-01
-        const utcValue = utcDays * 86400; // Segundos
-        const fractionalDay = excelDate - Math.floor(excelDate);
-        const totalSeconds = Math.floor(utcValue + fractionalDay * 86400);
-
-        const date = new Date(totalSeconds * 1000);
-        date.setHours(date.getHours() + 3); // ✅ Adiciona 3 horas para compensar o fuso
-
-        const pad = (n: number): string => n.toString().padStart(2, "0");
-
-        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-      };
-
       return {
         numeroOrdem: String(orderId),
         tipo: String(side).toLowerCase() === "sell" ? "vendas" : "compras",
-        dataHora: formatExcelDateToDateTime(createdAt),
+        dataHora: createdAt,
         exchange: selectedBroker,
         ativo: String(crypto),
         nome: String(counterparty),
