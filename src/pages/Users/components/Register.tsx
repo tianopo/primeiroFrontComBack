@@ -1,4 +1,4 @@
-import { ChangeEvent, Dispatch, SetStateAction, useState } from "react";
+import { ChangeEvent, Dispatch, SetStateAction, useEffect, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { Button } from "src/components/Buttons/Button";
 import { FormX } from "src/components/Form/FormX";
@@ -13,9 +13,14 @@ import { ResponseCompliance } from "./ResponseCompliance";
 
 interface IRegister {
   setForm: Dispatch<SetStateAction<boolean>>;
+  initialData: {
+    apelido: string;
+    nome: string;
+    exchange: string;
+  };
 }
 
-export const Register = ({ setForm }: IRegister) => {
+export const Register = ({ setForm, initialData }: IRegister) => {
   const [documento, setDocumento] = useState<string>("");
   const [nome, setNome] = useState<string>("");
   const [apelido, setApelido] = useState<string>("");
@@ -25,8 +30,19 @@ export const Register = ({ setForm }: IRegister) => {
     formState: { errors },
     setValue,
   } = context;
-
   const [responseData, setResponseData] = useState<any>(null);
+
+  useEffect(() => {
+    if (initialData) {
+      setApelido(initialData.apelido || "");
+      setNome(initialData.nome || "");
+      setExchange(initialData.exchange || "");
+
+      setValue("apelido", initialData.apelido || "");
+      setValue("nome", initialData.nome || "");
+      setValue("exchange", initialData.exchange || "");
+    }
+  }, [initialData]);
 
   const handleNomeChange = (e: ChangeEvent<HTMLInputElement>) => {
     setValue("nome", e.target.value);

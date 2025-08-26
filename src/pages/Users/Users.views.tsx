@@ -7,10 +7,21 @@ import { Register } from "./components/Register";
 
 export const Users = () => {
   const [form, setForm] = useState(true);
+
+  const [initialRegisterData, setInitialRegisterData] = useState({
+    apelido: "",
+    nome: "",
+    exchange: "",
+  });
+
   return (
     <div className="flex w-full flex-row flex-wrap justify-between gap-4 px-4">
-      {form ? <Register setForm={setForm} /> : <Edit setForm={setForm} />}
-      <PendingOrders />
+      {form ? (
+        <Register setForm={setForm} initialData={initialRegisterData} />
+      ) : (
+        <Edit setForm={setForm} />
+      )}
+      <PendingOrders setForm={setForm} setInitialRegisterData={setInitialRegisterData} />
       <Compliance />
       <Cashier />
     </div>

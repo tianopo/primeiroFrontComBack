@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { Copy } from "@phosphor-icons/react/dist/ssr";
+import { Dispatch, SetStateAction, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { ConfirmationDelete } from "src/components/Modal/ConfirmationDelete";
 import { generateSingleReceipt } from "src/pages/Home/config/handleReceipt";
@@ -8,9 +9,20 @@ import { useReleaseAssets } from "../hooks/useReleaseAssets";
 import { useSendChatMessage } from "../hooks/useSendChatMessage";
 import { ChatBox } from "./ChatBox";
 
+interface IPendingOrders {
+  setForm: Dispatch<SetStateAction<boolean>>;
+  setInitialRegisterData: Dispatch<
+    SetStateAction<{
+      apelido: string;
+      nome: string;
+      exchange: string;
+    }>
+  >;
+}
+
 export type KeyType = "empresa" | "pessoal";
 
-export const PendingOrders = () => {
+export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrders) => {
   const { data, isLoading, error } = useListPendingOrders();
   const { mutate: sendChatMessage } = useSendChatMessage();
   const { mutate: releaseAssets } = useReleaseAssets();
@@ -80,8 +92,23 @@ export const PendingOrders = () => {
           {orders.map((order: any) => (
             <div
               key={order.id}
-              className="flex w-fit flex-col gap-0.5 rounded-xl border border-gray-200 p-4 shadow"
+              className="relative flex w-fit flex-col gap-0.5 rounded-xl border border-gray-200 p-4 shadow"
             >
+              <button
+                className="absolute right-2 top-2 rounded-6 border border-gray-200 bg-white p-2 hover:bg-gray-100 hover:opacity-80"
+                onClick={() => {
+                  setInitialRegisterData({
+                    apelido: order.targetNickName || "",
+                    nome: order.buyerRealName || "",
+                    exchange: "Bybit https://www.bybit.com/ SG",
+                  });
+                  setForm(true); // 🔹 abre o formulário Register
+                  navigator.clipboard.writeText(order.buyerRealName.trim());
+                }}
+              >
+                <Copy width={20} height={20} weight="duotone" />
+              </button>
+
               <p>
                 <strong>ID da Ordem:</strong> {order.id}
               </p>
