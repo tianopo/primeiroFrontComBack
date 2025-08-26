@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { ConfirmationDelete } from "src/components/Modal/ConfirmationDelete";
 import { generateSingleReceipt } from "src/pages/Home/config/handleReceipt";
+import { useAccessControl } from "src/routes/context/AccessControl";
 import { useListPendingOrders } from "../hooks/useListPendingOrders";
 import { useReleaseAssets } from "../hooks/useReleaseAssets";
 import { useSendChatMessage } from "../hooks/useSendChatMessage";
+import { ChatBox } from "./ChatBox";
 
 export type KeyType = "empresa" | "pessoal";
 
@@ -12,6 +14,7 @@ export const PendingOrders = () => {
   const { data, isLoading, error } = useListPendingOrders();
   const { mutate: sendChatMessage } = useSendChatMessage();
   const { mutate: releaseAssets } = useReleaseAssets();
+  const { acesso } = useAccessControl();
 
   const [showModal, setShowModal] = useState(false);
   const [orderToRelease, setOrderToRelease] = useState<any>(null);
@@ -29,7 +32,7 @@ export const PendingOrders = () => {
     if (!base64Image) return;
 
     sendChatMessage(
-      { message: base64Image, contentType: "pic", orderId: orderToRelease.id },
+      { message: base64Image, contentType: "pic", orderId: orderToRelease.id, keyType: activeTab },
       { onSuccess: () => releaseAssets({ orderId: orderToRelease.id, keyType: activeTab }) },
     );
 
@@ -46,7 +49,6 @@ export const PendingOrders = () => {
   return (
     <div className="flex h-fit w-full flex-col gap-4 rounded-16 bg-white p-4 shadow-2xl">
       <h3 className="text-28 font-bold">Ordens Pendentes</h3>
-
       {/* Tabs */}
       <div className="flex gap-2">
         {["empresa", "pessoal"].map((tab) => {
@@ -142,8 +144,11 @@ export const PendingOrders = () => {
                 </div>
               )}
 
+              {/* Caixa de envio de mensagem */}
+              <ChatBox orderId={order.id} keyType={activeTab} />
+
               <Button
-                disabled={order.status === 10 || order.side === 0}
+                disabled={order.status === 10 || order.side === 0 || acesso !== "Master"}
                 onClick={() => handleSendReceipt(order)}
               >
                 Enviar Recibo

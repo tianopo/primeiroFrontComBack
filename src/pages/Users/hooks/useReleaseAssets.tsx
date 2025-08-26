@@ -5,14 +5,14 @@ import { responseError, responseSuccess } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
 import { KeyType } from "../components/PendingOrders";
 
-interface ReleaseAssetsParams {
+interface IReleaseAssets {
   orderId: string;
   keyType: KeyType;
 }
 
 export const useReleaseAssets = () => {
   const { mutate, isPending } = useMutation({
-    mutationFn: async ({ orderId, keyType }: ReleaseAssetsParams) => {
+    mutationFn: async ({ orderId, keyType }: IReleaseAssets) => {
       const result = await api().post(
         `${apiRoute.releaseAssets}?orderId=${orderId}&keyType=${keyType}`,
       );
