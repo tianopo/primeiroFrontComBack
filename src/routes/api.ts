@@ -22,4 +22,5 @@ export const apiRoute = {
   pendingOrders: "bybit/pending-orders",
   sendChatMessage: "bybit/send-chat-message",
   releaseAssets: "bybit/release-assets",
+  uploadChatMessage: "bybit/upload-chat-message",
 };

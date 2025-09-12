@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import { api } from "src/config/api";
+import { api, queryClient } from "src/config/api";
 import { responseError, responseSuccess } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
 import { KeyType } from "../components/PendingOrders";
@@ -18,7 +18,10 @@ export const useReleaseAssets = () => {
       );
       return result.data;
     },
-    onSuccess: () => responseSuccess("Ativos liberados com sucesso"),
+    onSuccess: () => {
+      responseSuccess("Ativos liberados com sucesso");
+      queryClient.invalidateQueries({ queryKey: ["pending-orders"] }); // 🔄 força refetch
+    },
     onError: (err: AxiosError) => responseError(err),
   });
 

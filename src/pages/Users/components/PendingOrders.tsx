@@ -8,6 +8,7 @@ import { useListPendingOrders } from "../hooks/useListPendingOrders";
 import { useReleaseAssets } from "../hooks/useReleaseAssets";
 import { useSendChatMessage } from "../hooks/useSendChatMessage";
 import { ChatBox } from "./ChatBox";
+import { OrderMessages } from "./OrderMessages"; // 🔹 import novo
 
 interface IPendingOrders {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -61,6 +62,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
   return (
     <div className="flex h-fit w-full flex-col gap-4 rounded-16 bg-white p-4 shadow-2xl">
       <h3 className="text-28 font-bold">Ordens Pendentes</h3>
+
       {/* Tabs */}
       <div className="flex gap-2">
         {["empresa", "pessoal"].map((tab) => {
@@ -75,7 +77,6 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                 {tab === "empresa" ? "Bybit E" : "Bybit P"}
               </Button>
 
-              {/* Bolinha vermelha de notificação */}
               {hasOrders && (
                 <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-red-500"></span>
               )}
@@ -102,7 +103,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                     nome: order.buyerRealName || "",
                     exchange: "Bybit https://www.bybit.com/ SG",
                   });
-                  setForm(true); // 🔹 abre o formulário Register
+                  setForm(true);
                   navigator.clipboard.writeText(order.buyerRealName.trim());
                 }}
               >
@@ -143,39 +144,28 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                 <strong>CPF/CNPJ:</strong> {order.document || "Não informado"}
               </p>
 
-              {order.messages?.length > 0 && (
-                <div className="mt-2 max-h-40 max-w-[600px] overflow-y-auto rounded-md border bg-gray-50 p-2">
-                  <p className="mb-1 text-sm font-semibold">Mensagens:</p>
-                  <div className="flex flex-col gap-1">
-                    {order.messages.map((msg: any, i: number) => (
-                      <div
-                        key={i}
-                        className={`rounded p-2 text-sm shadow-inner ${
-                          ["crypto tech dev", "crypto tech dv"].includes(msg.nickName)
-                            ? "bg-gray-100"
-                            : "bg-red-100"
-                        }`}
-                      >
-                        {msg.contentType === "pic" ? (
-                          <img
-                            src={msg.message}
-                            alt={`Imagem ${i + 1}`}
-                            className="max-w-xs rounded-md"
-                          />
-                        ) : (
-                          <p>{msg.message}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* 🔹 Componente separado */}
+              <OrderMessages messages={order.messages} />
 
-              {/* Caixa de envio de mensagem */}
               <ChatBox orderId={order.id} keyType={activeTab} />
 
               <Button
-                disabled={order.status === 10 || order.side === 0 || acesso !== "Master"}
+                disabled={
+                  order.status === 10 ||
+                  order.side === 0 ||
+                  acesso !== "Master" ||
+                  order.messages
+                    ?.slice(0)
+                    .reverse()
+                    .slice(-10)
+                    .some((msg: any) =>
+                      [
+                        "You have a new appeal. Please negotiate and communicate with the other party within the valid period.",
+                        "anular ordem",
+                        "CRYPTOTECH: anular ordem",
+                      ].includes(msg.message),
+                    )
+                }
                 onClick={() => handleSendReceipt(order)}
               >
                 Enviar Recibo

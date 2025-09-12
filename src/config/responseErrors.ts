@@ -8,8 +8,9 @@ export function responseError(err: AxiosError<any, any> | string) {
   else errorMessage = err;
 
   if (err instanceof AxiosError && err.code === "ERR_NETWORK")
-    toast.error("Server has no response");
-  else if (err instanceof AxiosError && err.code === "ECONNABORTED") toast.error("No reply!");
+    toast.error("Tente novamente mais tarde");
+  else if (err instanceof AxiosError && err.code === "ECONNABORTED")
+    toast.error("Sem Resposta, aguarde!");
   else toast.error(errorMessage);
 }
 

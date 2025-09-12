@@ -24,10 +24,10 @@ export const handleCompraVendaIN1888 = (formData: any[], acesso?: string | null)
     const dataHora = `${dataSeparada[2]}${dataSeparada[1]}${dataSeparada[0]}`;
 
     // Valores
-    const valorOperacao = item.valor?.replace("R$", "")?.replace(/\./g, "")?.replace(",", ".");
+    const valorOperacao = item.valor?.replace("R$", "")?.replace(/\./g, "").replace(".", ".");
 
     const valorTaxas = item.taxa
-      ? item.taxa.replace("R$", "").replace(/\./g, "").replace(",", ".")
+      ? item.taxa.replace("R$", "").replace(/\./g, "").replace(".", ".")
       : "0,00";
 
     // Ativo e quantidade
@@ -82,10 +82,29 @@ export const handleCompraVendaIN1888 = (formData: any[], acesso?: string | null)
     document.body.removeChild(link);
   };
 
+  // Ordenar as linhas: 0110 primeiro, depois 0120
+  const ordenarLinhas = (linhas: string[]) => {
+    return linhas.sort((a, b) => {
+      const codeA = a.split("|")[0];
+      const codeB = b.split("|")[0];
+      if (codeA === codeB) {
+        // Se forem iguais, ordenar pela data (coluna 2)
+        const dateA = a.split("|")[1];
+        const dateB = b.split("|")[1];
+        return dateA.localeCompare(dateB);
+      }
+      return codeA === "0110" ? -1 : 1; // 0110 vem antes de 0120
+    });
+  };
+
+  // Antes de gerar os arquivos, aplicar a ordenação
+  const linhasDentroOrdenadas = ordenarLinhas(linhasDentro);
+  const linhasForaOrdenadas = ordenarLinhas(linhasFora);
+
   linhasDentro.length > 0 &&
-    gerarArquivo(linhasDentro, datesArrayDentro, "Compra_Venda_IN1888_Dentro_Exchanges");
+    gerarArquivo(linhasDentroOrdenadas, datesArrayDentro, "Compra_Venda_IN1888_Dentro_Exchanges");
   linhasFora.length > 0 &&
-    gerarArquivo(linhasFora, datesArrayFora, "Compra_Venda_IN1888_Fora_Exchanges");
+    gerarArquivo(linhasForaOrdenadas, datesArrayFora, "Compra_Venda_IN1888_Fora_Exchanges");
 };
 
 export const handlePermutaIN1888 = (permutaData: any[]) => {

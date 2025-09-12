@@ -171,8 +171,8 @@ export const Home = () => {
     let csvContent = `Indicador de Tipo de Serviço,""Número RPS"",""Serie RPS"",""Data Prestação de Serviço"",""Data Emissão do RPS"",""RPS Substitutivo"",""Documento CPF/CNPJ"",""Inscrição Mobiliária"",""Razão Social"",Endereço,Número,Complemento,Bairro,""Código do Município"",""Código do País"",Cep,Telefone,Email,""ISS Retido no Tomador"",""Código do Município onde o Serviço foi Prestado"",""Código da Atividade"",""Código da Lista de Serviços"",Discriminação,""Valor NF"",""Valor Deduções"",""Valor Desconto Condicionado"",""Valor Desconto Incondicionado"",""Valor INSS"",""Valor Csll"",""Valor Outras Retenções"",""Valor Pis"",""Valor Cofins"",""Valor Ir"",""Valor Iss"",""Prestador Optante Simples Nacional"",Alíquota,""Código da Obra"",""Código ART"",""Inscrição Própria"",""Código do Benefício""\n`;
 
     const hoje = new Date();
-    const comissaoFixa = 0.1; // comissão padrão para ativos que não são USDT/USDC
-    const comissaoMargemErro = 13;
+    const comissaoFixa = 0.3; // comissão padrão para ativos que não são USDT/USDC
+    const comissaoMargemErro = 10;
     const codMunicipioServicoPrestado = 352440;
     const codAtividade = 6619399;
     const codListaServicos = 10.02;
@@ -226,7 +226,7 @@ export const Home = () => {
 
       let comissao = 0;
       if (possuiBtcOuEth) {
-        comissao = 2;
+        comissao = 5;
       } else if (possuiAtivosStable && possuiOutrosAtivos) {
         const ajustada = comissaoCalculada < comissaoFixa ? comissaoFixa : comissaoCalculada;
         comissao = (comissaoFixa + ajustada) / 2;

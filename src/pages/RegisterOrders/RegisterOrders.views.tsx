@@ -13,6 +13,7 @@ import { UploadXLSButton } from "./components/UploadXLSButton";
 import { useListUsers } from "./hooks/useListUsers";
 import { IOrder, useOrders } from "./hooks/useOrders";
 import "./registerOrders.css";
+import { extractApelidosFromError } from "./Utils/extractApelidosFromError";
 
 export const RegisterOrders = () => {
   const { mutate, isPending, context } = useOrders();
@@ -116,9 +117,22 @@ export const RegisterOrders = () => {
     }
   };
 
+  const [apelidosNaoEncontrados, setApelidosNaoEncontrados] = useState<Set<string>>(new Set());
+
   const handleSend = async () => {
     mutate(formData, {
-      onSuccess: () => {},
+      onSuccess: () => {
+        setApelidosNaoEncontrados(new Set());
+      },
+      onError: (err: any) => {
+        const msg =
+          err?.response?.data?.message ??
+          err?.message ??
+          (typeof err === "string" ? err : JSON.stringify(err));
+        const notFound = extractApelidosFromError(msg);
+        if (notFound.size > 0) setApelidosNaoEncontrados(notFound);
+        else toast.error("Erro ao enviar ordens.");
+      },
     });
   };
 
@@ -333,7 +347,13 @@ export const RegisterOrders = () => {
           </Button>
         </div>
       </div>
-      {formData.length > 0 && <HandleListEdit formData={formData} handleEdit={handleEdit} />}
+      {formData.length > 0 && (
+        <HandleListEdit
+          formData={formData}
+          handleEdit={handleEdit}
+          notFoundNicknames={apelidosNaoEncontrados}
+        />
+      )}
     </FlexCol>
   );
 };

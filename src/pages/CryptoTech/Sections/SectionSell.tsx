@@ -145,7 +145,7 @@ export const SectionSell = () => {
                   required
                   hidden
                 />
-                <h6>Valor mínimo 10,00</h6>
+                <h6>Valor mínimo 50,00</h6>
               </div>
               <div className="flex flex-col gap-2">
                 <SelectInstitucional
