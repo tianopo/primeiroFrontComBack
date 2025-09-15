@@ -1,6 +1,7 @@
 import { Copy } from "@phosphor-icons/react/dist/ssr";
 import { Dispatch, SetStateAction, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
+import { CardContainer } from "src/components/Layout/CardContainer";
 import { ConfirmationDelete } from "src/components/Modal/ConfirmationDelete";
 import { generateSingleReceipt } from "src/pages/Home/config/handleReceipt";
 import { useAccessControl } from "src/routes/context/AccessControl";
@@ -60,8 +61,8 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
   const orders = data[activeTab as keyof typeof data] || [];
 
   return (
-    <div className="flex h-fit w-full flex-col gap-4 rounded-16 bg-white p-4 shadow-2xl">
-      <h3 className="text-28 font-bold">Ordens Pendentes</h3>
+    <CardContainer full>
+      <h3 className="text-28 font-bold">ORDENS PENDENTES</h3>
 
       {/* Tabs */}
       <div className="flex gap-2">
@@ -186,6 +187,6 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
           }}
         />
       )}
-    </div>
+    </CardContainer>
   );
 };

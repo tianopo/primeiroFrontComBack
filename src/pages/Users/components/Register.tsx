@@ -1,3 +1,4 @@
+import { Broom } from "@phosphor-icons/react";
 import { ChangeEvent, Dispatch, SetStateAction, useEffect, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { Button } from "src/components/Buttons/Button";
@@ -29,6 +30,7 @@ export const Register = ({ setForm, initialData }: IRegister) => {
   const {
     formState: { errors },
     setValue,
+    reset,
   } = context;
   const [responseData, setResponseData] = useState<any>(null);
 
@@ -82,6 +84,14 @@ export const Register = ({ setForm, initialData }: IRegister) => {
     });
   };
 
+  const handleClear = () => {
+    setDocumento("");
+    setNome("");
+    setApelido("");
+    setResponseData(null);
+    reset();
+  };
+
   return (
     <CardContainer>
       <FormProvider {...context}>
@@ -89,9 +99,17 @@ export const Register = ({ setForm, initialData }: IRegister) => {
           onSubmit={handleSubmit}
           className="flex h-fit w-full flex-col flex-wrap justify-between gap-2 md:flex-row"
         >
-          <button onClick={() => setForm(false)} className="hover:cursor-pointer hover:underline">
-            <h3 className="text-28 font-bold">CADASTRE O USUÁRIO</h3>
-          </button>
+          <div className="flex w-full items-center justify-between">
+            <button onClick={() => setForm(false)} className="hover:cursor-pointer hover:underline">
+              <h3 className="text-28 font-bold">CADASTRE O USUÁRIO</h3>
+            </button>
+            <button
+              onClick={handleClear}
+              className="rounded-6 bg-black p-2 text-white hover:bg-gray-300"
+            >
+              <Broom width={20} height={17} weight="duotone" />
+            </button>
+          </div>
           <InputX
             title="Apelido"
             placeholder="User9855-54d4df"

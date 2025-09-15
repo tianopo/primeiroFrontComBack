@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Cashier } from "./components/Cashier";
 import { Compliance } from "./components/Compliance";
 import { Edit } from "./components/Edit";
 import { PendingOrders } from "./components/PendingOrders";
 import { Register } from "./components/Register";
+import { Transactions } from "./components/Transactions";
 
 export const Users = () => {
   const [form, setForm] = useState(true);
@@ -21,9 +21,9 @@ export const Users = () => {
       ) : (
         <Edit setForm={setForm} />
       )}
-      <PendingOrders setForm={setForm} setInitialRegisterData={setInitialRegisterData} />
       <Compliance />
-      <Cashier />
+      <PendingOrders setForm={setForm} setInitialRegisterData={setInitialRegisterData} />
+      <Transactions />
     </div>
   );
 };

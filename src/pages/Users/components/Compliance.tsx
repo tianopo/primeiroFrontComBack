@@ -1,3 +1,4 @@
+import { Broom } from "@phosphor-icons/react";
 import { ChangeEvent, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { Button } from "src/components/Buttons/Button";
@@ -15,6 +16,7 @@ export const Compliance = () => {
   const {
     formState: { errors },
     setValue,
+    reset,
   } = context;
 
   const handleDocumentChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -31,6 +33,12 @@ export const Compliance = () => {
     });
   };
 
+  const handleClear = () => {
+    setDocumento("");
+    setResponseData(null);
+    reset();
+  };
+
   return (
     <CardContainer>
       <FormProvider {...context}>
@@ -39,7 +47,16 @@ export const Compliance = () => {
             onSubmit={handleSubmit}
             className="flex flex-col flex-wrap justify-between gap-2 md:flex-row"
           >
-            <h3 className="text-28 font-bold">COMPLIANCE</h3>
+            <div className="flex w-full items-center justify-between">
+              <h3 className="text-28 font-bold">COMPLIANCE</h3>
+              <button
+                onClick={handleClear}
+                className="rounded-6 bg-black p-2 text-white hover:bg-gray-300"
+              >
+                <Broom width={20} height={17} weight="duotone" />
+              </button>
+            </div>
+
             <InputX
               title="Documento"
               placeholder="CPF ou CNPJ"
@@ -49,6 +66,7 @@ export const Compliance = () => {
             />
             <Button disabled={isPending || Object.keys(errors).length > 0}>Checar</Button>
           </FormX>
+
           <ResponseCompliance responseData={responseData} />
         </div>
       </FormProvider>
