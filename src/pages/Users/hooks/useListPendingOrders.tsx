@@ -9,7 +9,7 @@ export const useListPendingOrders = () => {
       const result = await api().get(apiRoute.pendingOrders);
       return result.data || [];
     },
-    refetchInterval: 10000, // 🔹 mantém atualização automática a cada 10s
-    retry: 1, // 🔹 em caso de erro tenta 1x
+    refetchInterval: 15000,
+    retry: 1,
   });
 };
