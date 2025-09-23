@@ -152,9 +152,11 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
 
               <Button
                 disabled={
-                  order.status === 10 ||
+                  order.status <= 10 ||
                   order.side === 0 ||
                   acesso !== "Master" ||
+                  order.document.length === 0 ||
+                  order.messages.length === 0 ||
                   order.messages
                     ?.slice(0)
                     .reverse()
@@ -169,7 +171,11 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                 }
                 onClick={() => handleSendReceipt(order)}
               >
-                Enviar Recibo
+                {order.status === 8
+                  ? "Aceite a ordem"
+                  : order.status === 10
+                    ? "Confirmação da Contraparte"
+                    : "Enviar Recibo"}
               </Button>
             </div>
           ))}
