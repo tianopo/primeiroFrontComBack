@@ -112,6 +112,22 @@ export const CryptoTech = () => {
           >
             <h6>{t("pld")}</h6>
           </a>
+          <a
+            href="/policy/prs.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:cursor-pointer hover:text-primary"
+          >
+            <h6>Política de Responsabilidade Socioambiental</h6>
+          </a>
+          <a
+            href="/policy/ce.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:cursor-pointer hover:text-primary"
+          >
+            <h6>Código de Ética</h6>
+          </a>
         </div>
         <div className="flex flex-col text-center">
           <h3 className="font-extrabold uppercase text-white">{t("navigation")}</h3>
