@@ -1,12 +1,15 @@
-// src/pages/Transactions.tsx
+import { PaperPlaneTilt } from "@phosphor-icons/react";
+import { useState } from "react";
 import { CardContainer } from "src/components/Layout/CardContainer";
 import { formatCurrency } from "src/utils/formats"; // você já usa em outras telas
 import { useAccountBalance } from "../hooks/fiducia/useAccountBalance";
 import { useListTransactions } from "../hooks/fiducia/useListTransactions";
+import { PixTransferModal } from "./PixTransferModal";
 
 export const Transactions = () => {
   const { data, error, isLoading } = useListTransactions();
   const { data: balance, error: balError, isLoading: balLoading } = useAccountBalance();
+  const [open, setOpen] = useState(false);
 
   if (isLoading) return <CardContainer full>Carregando...</CardContainer>;
   if (error) return <CardContainer full>Erro ao carregar transações</CardContainer>;
@@ -20,6 +23,12 @@ export const Transactions = () => {
 
         {/* Bloco de saldo à direita */}
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setOpen(true)}
+            className="flex items-center rounded-2xl bg-black px-4 py-2 font-bold text-white"
+          >
+            <PaperPlaneTilt size={18} className="mr-2" /> PIX
+          </button>
           {balLoading && <span className="text-sm text-gray-500">Carregando saldo…</span>}
           {balError && <span className="text-sm text-red-600">Erro ao carregar saldo</span>}
           {balance && (
@@ -60,6 +69,7 @@ export const Transactions = () => {
           </tbody>
         </table>
       </div>
+      {open && <PixTransferModal onClose={() => setOpen(false)} />}
     </CardContainer>
   );
 };

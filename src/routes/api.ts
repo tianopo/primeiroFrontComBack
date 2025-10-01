@@ -27,5 +27,10 @@ export const apiRoute = {
   /* FIDUCIA */
   consultarExtrato: (di: string, df: string) => `fiducia/conta/extrato/${di}/${df}/DESC/10`,
   extrato: "fiducia/pix/spi/extrato",
+  chaveOculto: (chave: string) =>
+    `fiducia/pix/dict/gestao-chave/${encodeURIComponent(chave)}/oculto`,
+  transferir: "fiducia/pix/spi/transferir",
+  gerarQrCode: "fiducia/pix/qrcode/dinamico/imediato/gerar",
+  listarQrCode: "fiducia/pix/qrcode/dinamico/imediato/listar",
   balance: "fiducia/conta/saldo",
 };
