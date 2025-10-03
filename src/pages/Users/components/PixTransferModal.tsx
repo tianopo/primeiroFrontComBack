@@ -71,7 +71,7 @@ export const PixTransferModal = ({ onClose }: { onClose: () => void }) => {
     const payload = {
       tipo_iniciacao: 0,
       banco_destino: bancoCodigo, // mapeado do retorno.banco.numero_codigo (fallback ispb)
-      agencia_destino: 0, // não fornecido pelo DICT (via chave não precisa)
+      agencia_destino: 1, // não fornecido pelo DICT (via chave não precisa)
       conta_destino: "", // não fornecido pelo DICT (via chave não precisa)
       cpfcnpj_destino: retorno?.cpfCnpj || "",
       nome_razaosocial_destino: retorno?.nomeFantasia || retorno?.nome || "",
@@ -94,7 +94,7 @@ export const PixTransferModal = ({ onClose }: { onClose: () => void }) => {
       },
     });
   };
-
+  console.log(dictData);
   return (
     <Modal onClose={onClose} fit>
       <div className="flex items-center justify-between">

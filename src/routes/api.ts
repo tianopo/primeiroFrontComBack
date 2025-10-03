@@ -27,6 +27,8 @@ export const apiRoute = {
   /* FIDUCIA */
   consultarExtrato: (di: string, df: string) => `fiducia/conta/extrato/${di}/${df}/DESC/10`,
   extrato: "fiducia/pix/spi/extrato",
+  consultarPix: (endToEndId: string) =>
+    `/fiducia/pix/spi/consultar?endToEndId=${encodeURIComponent(endToEndId)}`,
   chaveOculto: (chave: string) =>
     `fiducia/pix/dict/gestao-chave/${encodeURIComponent(chave)}/oculto`,
   transferir: "fiducia/pix/spi/transferir",
