@@ -198,8 +198,7 @@ export const Transactions = () => {
                                 <strong>Ag/Conta:</strong> {tx.agDebtd ?? "-"} / {tx.ctDebtd ?? "-"}
                               </li>
                               <li>
-                                <strong>Tipo de Conta:</strong> {tx.tpCtDebitada ?? "-"} /{" "}
-                                {tx.tpCtDebitada ?? "-"}
+                                <strong>Tipo de Conta:</strong> {tx.tpCtDebitada ?? "-"}
                               </li>
                               <li>
                                 <strong>Banco:</strong> {fmtBank(tx.banco_debito)}
@@ -224,8 +223,7 @@ export const Transactions = () => {
                                 {tx.ctCredtda ?? "-"}
                               </li>
                               <li>
-                                <strong>Tipo de Conta:</strong> {tx.tpCtCredtda ?? "-"} /{" "}
-                                {tx.tpCtCredtda ?? "-"}
+                                <strong>Tipo de Conta:</strong> {tx.tpCtCredtda ?? "-"}
                               </li>
                               <li>
                                 <strong>Banco:</strong> {fmtBank(tx.banco_credito)}
