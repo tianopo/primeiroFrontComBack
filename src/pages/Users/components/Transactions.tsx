@@ -1,5 +1,5 @@
 import { CaretDown, CaretRight, PaperPlaneTilt } from "@phosphor-icons/react";
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { CardContainer } from "src/components/Layout/CardContainer";
 import { useAccountBalance } from "../hooks/fiducia/useAccountBalance";
 import { useListTransactions } from "../hooks/fiducia/useListTransactions";
@@ -7,13 +7,15 @@ import { PixTransferModal } from "./PixTransferModal";
 
 const MY_CNPJ = "55636113000170";
 
-// saldo: vem em centavos (number)
+// Saldo: se vier em centavos, use (v/100) aqui.
 const fmtBalance = (v?: number) => {
   if (typeof v !== "number" || !Number.isFinite(v)) return "-";
-  return v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // const reais = v / 100; // <— habilite se o saldo for em centavos
+  const reais = v;
+  return reais.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
-// extrato: vem em reais (string/number), ex.: "1500", "24.52", "15000.00"
+// Extrato: normalmente já vem em reais (string/number)
 const fmtTxValue = (v: unknown) => {
   if (v === null || v === undefined) return "-";
   let n: number | null = null;
@@ -41,6 +43,23 @@ const fmtBank = (bk?: { nome_reduzido?: string; numero_codigo?: string }) => {
   const cod = bk.numero_codigo ?? "-";
   return `${nome} (${cod})`;
 };
+
+// classes de cor conforme tipo_transacao
+const rowTone = (t?: string) =>
+  t === "D"
+    ? "bg-red-50 hover:bg-red-100"
+    : t === "C"
+      ? "bg-green-50 hover:bg-green-100"
+      : "hover:bg-gray-50";
+
+const valueTone = (t?: string) => (t === "D" ? "text-red-700" : t === "C" ? "text-green-700" : "");
+
+const detailsTone = (t?: string) =>
+  t === "D"
+    ? "bg-red-50/60 border-red-200"
+    : t === "C"
+      ? "bg-green-50/60 border-green-200"
+      : "bg-gray-50 border-gray-200";
 
 export const Transactions = () => {
   const { data, error, isLoading } = useListTransactions();
@@ -108,7 +127,6 @@ export const Transactions = () => {
         </div>
       </div>
 
-      {/* Responsivo: sem min-width fixa; tabela ocupa 100% e detalhes expandem por linha */}
       <div className="overflow-x-auto">
         <table className="w-full border border-gray-300 text-sm">
           <thead>
@@ -128,14 +146,16 @@ export const Transactions = () => {
               const isOpen = expandedId === key;
 
               return (
-                <>
-                  <tr key={key} className="hover:bg-gray-50">
-                    <td className="border px-3 py-2 font-medium">{compact.valor}</td>
+                <React.Fragment key={key}>
+                  <tr className={rowTone(tx.tipo_transacao)}>
+                    <td className={`border px-3 py-2 font-medium ${valueTone(tx.tipo_transacao)}`}>
+                      {compact.valor}
+                    </td>
                     <td className="border px-3 py-2">{compact.nome}</td>
                     <td className="border px-3 py-2">{compact.doc}</td>
                     <td className="border px-3 py-2">{compact.dataFmt}</td>
                     <td
-                      className="cursor-pointer border px-3 py-2 text-gray-500 "
+                      className="cursor-pointer border px-3 py-2 text-gray-600"
                       onClick={() => toggleExpand(key)}
                     >
                       {isOpen ? <CaretDown size={16} /> : <CaretRight size={16} />}
@@ -143,9 +163,11 @@ export const Transactions = () => {
                   </tr>
 
                   {isOpen && (
-                    <tr key={`${key}-details`}>
-                      <td className="border bg-gray-50 px-3 py-3" colSpan={5}>
-                        {/* detalhes completos */}
+                    <tr>
+                      <td
+                        className={`border px-3 py-3 ${detailsTone(tx.tipo_transacao)}`}
+                        colSpan={5}
+                      >
                         <div className="grid gap-4 md:grid-cols-2">
                           <div>
                             <div className="mb-2 font-semibold">Identificação</div>
@@ -234,7 +256,7 @@ export const Transactions = () => {
                       </td>
                     </tr>
                   )}
-                </>
+                </React.Fragment>
               );
             })}
 
