@@ -42,11 +42,11 @@ export const LayoutX = () => {
   ];
 
   return (
-    <div className="flex h-full w-full flex-col">
+    <div className="flex h-full max-h-fit w-full flex-col">
       <Header navbar={nav} />
       <div className="flex w-full">
         <SidebarX navbar={nav} />
-        <div className="flex w-full flex-col gap-2 bg-primary p-6 md:gap-4">
+        <div className="flex max-h-full min-h-screen w-full flex-col gap-2 bg-primary p-6 md:h-full md:gap-4">
           <Outlet />
         </div>
       </div>
