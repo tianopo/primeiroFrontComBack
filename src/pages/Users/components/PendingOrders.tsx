@@ -155,7 +155,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                   order.status <= 10 ||
                   order.side === 0 ||
                   acesso !== "Master" ||
-                  order.document.length === 0 ||
+                  order.document === "documento não disponível" ||
                   order.messages.length === 0 ||
                   order.messages
                     ?.slice(0)
@@ -166,6 +166,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                         "You have a new appeal. Please negotiate and communicate with the other party within the valid period.",
                         "anular ordem",
                         "CRYPTOTECH: anular ordem",
+                        "usuário de risco inegociável, não podemos fazer a transação, contraparte cancele",
                       ].includes(msg.message),
                     )
                 }
