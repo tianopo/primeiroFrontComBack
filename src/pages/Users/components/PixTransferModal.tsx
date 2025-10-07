@@ -94,7 +94,7 @@ export const PixTransferModal = ({ onClose }: { onClose: () => void }) => {
       },
     });
   };
-  console.log(dictData);
+
   return (
     <Modal onClose={onClose} fit>
       <div className="flex items-center justify-between">
