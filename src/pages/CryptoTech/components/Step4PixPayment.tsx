@@ -14,34 +14,93 @@ import {
 } from "../utils/sanitizadores";
 
 type Step4PixPaymentProps = {
-  // Step 2 (pagador)
   nomeCompleto: string;
   cpfOuCnpj: string;
-
-  // Step 1/3 - valor pode vir "123,45" ou "123.45"
   quantidadeFiat: string;
 
-  // Campos do JSON (todos):
-  pixReceiverKey: string; // chave
-  solicitacaoPagador?: string | null; // solicitacao_pagador
-  modalidadeAlteracao?: number; // modalidade_alteracao
-  expiracaoSegundos?: number; // expiracao_QR
-  identificador?: string; // identificador
-  dadosAdicionaisNome?: string; // dados_adicionais_nome
-  dadosAdicionaisValor?: string; // dados_adicionais_valor
-  reutilizavel?: boolean; // reutilizavel
-  formato?: number; // formato (1 ou 2)
+  pixReceiverKey: string;
+  solicitacaoPagador?: string | null;
+  modalidadeAlteracao?: number;
+  expiracaoSegundos?: number;
+  identificador?: string;
+  dadosAdicionaisNome?: string;
+  dadosAdicionaisValor?: string;
+  reutilizavel?: boolean;
+  /** ⚠️ Deixe em 2 para vir imagem do backend */
+  formato?: number;
 
-  // callbacks
   onBack: () => void;
   onFinish?: () => void;
 };
 
+// ---------------- helpers ----------------
+
+/** Gera data URL para PNG base64 */
 const dataUrlFromBase64 = (b64?: string | null) => {
   if (!b64) return "";
   if (b64.startsWith("data:image")) return b64;
   return `data:image/png;base64,${b64}`;
 };
+
+/** Gera data URL para SVG (string) */
+const dataUrlFromSvg = (svg: string) => `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+
+/** Tenta extrair payload e imagem do objeto retorno, cobrindo várias chaves comuns */
+function pickQrFields(ret: any): { payload: string; imgDataUrl: string } {
+  // payload
+  const payload =
+    ret?.qrcode_payload ??
+    ret?.copia_e_cola ??
+    ret?.payload ??
+    (ret?.payloadBase64 ? safeAtob(ret.payloadBase64) : "") ??
+    "";
+
+  // imagem (vários formatos)
+  const rawImg =
+    ret?.imagem ??
+    ret?.imagem_base64 ??
+    ret?.qrCodeBase64 ??
+    ret?.qrCodeImageBase64 ??
+    ret?.qrcode_png_base64 ??
+    ret?.imagemPNGBase64 ??
+    ret?.imagemBase64 ??
+    ret?.qr_image ??
+    ret?.qrImage ??
+    ret?.image ??
+    "";
+
+  // se for SVG em string
+  if (typeof rawImg === "string" && rawImg.trim().startsWith("<svg")) {
+    return { payload, imgDataUrl: dataUrlFromSvg(rawImg) };
+  }
+
+  // se veio em base64 (sem prefixo)
+  if (typeof rawImg === "string" && rawImg && !rawImg.startsWith("http")) {
+    return { payload, imgDataUrl: dataUrlFromBase64(rawImg) };
+  }
+
+  // se a API já retornou data-url
+  if (typeof rawImg === "string" && rawImg.startsWith("data:image")) {
+    return { payload, imgDataUrl: rawImg };
+  }
+
+  // se veio como URL pública (raro neste fluxo), usamos direto
+  if (typeof rawImg === "string" && /^https?:\/\//.test(rawImg)) {
+    return { payload, imgDataUrl: rawImg };
+  }
+
+  return { payload, imgDataUrl: "" };
+}
+
+function safeAtob(s: string): string {
+  try {
+    return atob(s);
+  } catch {
+    return "";
+  }
+}
+
+// -----------------------------------------
 
 export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
   nomeCompleto,
@@ -55,7 +114,8 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
   dadosAdicionaisNome,
   dadosAdicionaisValor,
   reutilizavel = false,
-  formato = 1,
+  /** 🔴 MUDA O DEFAULT PARA 2 (queremos imagem do backend) */
+  formato = 2,
   onBack,
   onFinish,
 }) => {
@@ -68,16 +128,14 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
   const [status, setStatus] = useState<string>("—");
   const [ultimaAtualizacao, setUltimaAtualizacao] = useState<string>("");
 
-  // Guardamos o TXID realmente usado (sanitizado) para mostrar no resumo
   const [txidUsado, setTxidUsado] = useState<string>("");
 
   const { mutateAsync: gerar, isPending: isGenerating } = usePixGerarQrCodeDinamico();
   const { mutateAsync: buscar, isPending: isChecking } = usePixBuscarQrCode();
 
-  // Valor já sanitizado para API
+  // valor sanitizado (ex: "1234.56")
   const valorAPI = useMemo(() => sanitizeValor(quantidadeFiat), [quantidadeFiat]);
 
-  // 1) BODY sanitizado
   const buildSanitizedBody = (): GerarQrCodeBody => {
     const txid = sanitizeTxId(identificador);
     setTxidUsado(txid);
@@ -87,7 +145,7 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
       solicitacao_pagador: sanitizeTextOrNull(solicitacaoPagador),
       cpf_cnpj_pagador: sanitizeDoc(cpfOuCnpj),
       nome_pagador: String(nomeCompleto ?? "").trim(),
-      valor: valorAPI, // “1234.56”
+      valor: valorAPI,
       modalidade_alteracao: Number.isFinite(Number(modalidadeAlteracao))
         ? Number(modalidadeAlteracao)
         : 0,
@@ -96,11 +154,11 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
       dados_adicionais_nome: sanitizeTextOrNull(dadosAdicionaisNome) ?? undefined,
       dados_adicionais_valor: sanitizeTextOrNull(dadosAdicionaisValor) ?? undefined,
       reutilizavel: !!reutilizavel,
-      formato: sanitizeFormato(formato),
+      /** 🔴 força 2 se não vier válido */
+      formato: sanitizeFormato(formato) === 2 ? 2 : 2,
     };
   };
 
-  // Flag para rodar o “one-shot status check” apenas uma vez
   const oneShotStatusRef = useRef(false);
 
   const gerarQrCode = async () => {
@@ -109,7 +167,7 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
     setPayload("");
     setImgDataUrl("");
     setStatus("—");
-    oneShotStatusRef.current = false; // reset do one-shot
+    oneShotStatusRef.current = false;
 
     const body = buildSanitizedBody();
 
@@ -119,36 +177,12 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
 
       const id =
         ret?.id_documento ?? ret?.idDocumento ?? ret?.documentoId ?? ret?.id ?? ret?.qrcodeId ?? "";
-
-      // payload pode vir de várias formas
-      let pay = ret?.qrcode_payload ?? ret?.copia_e_cola ?? ret?.payload ?? "";
-
-      if (!pay && ret?.payloadBase64) {
-        try {
-          pay = atob(ret.payloadBase64);
-        } catch {
-          /* ignore */
-        }
-      }
-
-      const img =
-        ret?.imagem ?? ret?.imagem_base64 ?? ret?.qrCodeBase64 ?? ret?.qrCodeImageBase64 ?? "";
-
-      if (!pay) {
-        // Mesmo sem payload retornado, seguimos — o one-shot abaixo fará uma busca.
-        setIdDocumento(id);
-        setPayload("");
-        setImgDataUrl("");
-        setStatus("EM_ABERTO");
-        setUltimaAtualizacao(new Date().toLocaleString("pt-BR"));
-        return;
-      }
+      const picked = pickQrFields(ret);
 
       setIdDocumento(id);
-      setPayload(pay);
-      setImgDataUrl(
-        img ? (img.startsWith("data:image") ? img : `data:image/png;base64,${img}`) : "",
-      );
+      if (picked.payload) setPayload(picked.payload);
+      if (picked.imgDataUrl) setImgDataUrl(picked.imgDataUrl);
+
       setStatus("EM_ABERTO");
       setUltimaAtualizacao(new Date().toLocaleString("pt-BR"));
     } catch (e: any) {
@@ -161,43 +195,53 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
     try {
       const data = await buscar({ id_documento: idDocumento });
       const ret = (data as any)?.retorno ?? data;
+
       const sit = ret?.situacao ?? ret?.status ?? "—";
       setStatus(String(sit));
       setUltimaAtualizacao(new Date().toLocaleString("pt-BR"));
 
-      // Alguns backends passam payload/qr somente depois:
-      const payFromSearch = ret?.qrcode_payload ?? ret?.copia_e_cola ?? ret?.payload ?? "";
-      if (!payload && payFromSearch) setPayload(payFromSearch);
-
-      const img =
-        ret?.imagem ?? ret?.imagem_base64 ?? ret?.qrCodeBase64 ?? ret?.qrCodeImageBase64 ?? "";
-      if (!imgDataUrl && img) {
-        setImgDataUrl(img.startsWith("data:image") ? img : `data:image/png;base64,${img}`);
-      }
+      const picked = pickQrFields(ret);
+      if (!payload && picked.payload) setPayload(picked.payload);
+      if (!imgDataUrl && picked.imgDataUrl) setImgDataUrl(picked.imgDataUrl);
     } catch {
-      // silencioso (só não derruba tela)
+      /* silencioso */
     }
   };
 
-  // Gera ao montar
+  // gera ao montar
   useEffect(() => {
     gerarQrCode();
   }, []);
 
-  // 2) ONE-SHOT: se não veio nem payload nem imagem, faz UMA consulta de status
+  // one-shot: se não veio payload/imagem, tenta buscar uma vez
   useEffect(() => {
     if (!idDocumento) return;
-    if (payload || imgDataUrl) return; // já temos algo para exibir
-    if (oneShotStatusRef.current) return; // já fizemos a tentativa única
+    if (payload || imgDataUrl) return;
+    if (oneShotStatusRef.current) return;
     oneShotStatusRef.current = true;
-
-    // pequena folga pro provedor “preparar” o registro
-    const t = setTimeout(() => {
-      buscarStatus();
-    }, 800);
-
+    const t = setTimeout(() => buscarStatus(), 800);
     return () => clearTimeout(t);
   }, [idDocumento, payload, imgDataUrl]);
+
+  // 🔁 Fallback local: se tiver payload e NENHUMA imagem, gera PNG no cliente (lazy import)
+  useEffect(() => {
+    const makeLocalQr = async () => {
+      if (!payload || imgDataUrl) return;
+      try {
+        const QR = await import("qrcode"); // npm i qrcode
+        const url = await QR.toDataURL(payload, {
+          errorCorrectionLevel: "M",
+          margin: 1,
+          scale: 6,
+          // sem cor custom pra manter padrão do projeto
+        });
+        setImgDataUrl(url);
+      } catch {
+        // se não tiver a lib, segue só com copia/cola
+      }
+    };
+    makeLocalQr();
+  }, [payload, imgDataUrl]);
 
   const copy = async () => {
     try {
@@ -213,24 +257,7 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
 
   return (
     <div className="label-buy container-opacity-light flex w-full max-w-[950px] flex-col gap-6 text-justify font-extrabold">
-      <div className="flex items-center justify-between">
-        <h4>Pagamento via PIX</h4>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onBack}
-            className="button-colorido-buy !bg-gray-700 hover:opacity-80"
-            type="button"
-          >
-            <ArrowLeft weight="bold" /> Voltar
-          </button>
-          {onFinish && (
-            <button onClick={onFinish} className="button-colorido-buy" type="button">
-              Concluir
-            </button>
-          )}
-        </div>
-      </div>
-
+      <h4>Pagamento via PIX</h4>
       {loading ? (
         <div className="rounded-6 border-edge-primary bg-white/20 p-6 text-center">
           Gerando QR Code…
@@ -267,7 +294,7 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
               <div className="mb-2 font-semibold">PIX Copia e Cola</div>
               <textarea
                 readOnly
-                className="h-40 w-full rounded border border-gray-300 bg-black p-2 text-xs"
+                className="h-40 w-full rounded border border-gray-300 bg-black p-2 text-xs text-white"
                 value={payload}
               />
               <div className="mt-2 flex items-center justify-between">
@@ -307,13 +334,12 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
                   >
                     Atualizar
                   </button>
-                  {/* Removido o Auto-atualizar porque não há mais polling */}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Resumo com TODOS os campos enviados (já sanitizados) */}
+          {/* Resumo */}
           <div className="rounded-6 border-edge-primary bg-white/15 p-5 text-sm">
             <div className="mb-2 font-semibold">Resumo</div>
             <ul className="leading-7">
@@ -322,7 +348,7 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
                 {sanitizeDoc(cpfOuCnpj)}
               </li>
               <li>
-                <strong>Valor:</strong> R{"$ "}
+                <strong>Valor:</strong>{" "}
                 {Number(valorAPI).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
               </li>
               <li>
