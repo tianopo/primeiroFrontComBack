@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { usePixConsultar } from "../../hooks/fiducia/usePixConsultar";
-import { fmtTxValue } from "../../utils/transactions";
+import { fmtDateTime, fmtTxValue } from "../../utils/transactions";
 
 type Props = {
   endToEndId: string;
@@ -36,7 +36,7 @@ export const PixEndToEndPanel: React.FC<Props> = ({ endToEndId, onClear }) => {
           <button
             type="button"
             onClick={onClear}
-            className="rounded-md border border-blue-300 bg-white px-3 py-1 text-sm text-blue-700 hover:bg-blue-100"
+            className="rounded-md border border-blue-300 bg-white px-3 py-1 text-20 text-blue-700 hover:bg-blue-100"
             title="Voltar ao extrato"
           >
             Limpar / Voltar
@@ -44,10 +44,10 @@ export const PixEndToEndPanel: React.FC<Props> = ({ endToEndId, onClear }) => {
         </div>
       </div>
 
-      {isFetching && <div className="text-sm text-gray-600">Consultando…</div>}
+      {isFetching && <div className="text-20 text-gray-600">Consultando…</div>}
 
       {error && (
-        <div className="text-sm text-red-600">
+        <div className="text-20 text-red-600">
           Não foi possível consultar este EndToEnd no momento.
         </div>
       )}
@@ -59,17 +59,17 @@ export const PixEndToEndPanel: React.FC<Props> = ({ endToEndId, onClear }) => {
               {/* Identificação / Valor */}
               <div className="rounded-lg border border-white/60 bg-white p-3">
                 <div className="mb-2 font-semibold">Identificação</div>
-                <ul className="space-y-1 text-sm">
+                <ul className="space-y-1 text-20">
                   {labelRow("EndToEnd ID", r?.endToEndId ?? r?.NumCtrlSTR)}
-                  {labelRow("NumCtrlSTR", r?.NumCtrlSTR)}
                   {labelRow("Valor lançamento", fmtTxValue(r?.valor_lancamento))}
+                  {labelRow("Criado em", fmtDateTime(r?.created_at))}
                 </ul>
               </div>
 
               {/* Débito */}
               <div className="rounded-lg border border-white/60 bg-white p-3">
                 <div className="mb-2 font-semibold">Débito</div>
-                <ul className="space-y-1 text-sm">
+                <ul className="space-y-1 text-20">
                   {labelRow("Nome (Débito)", r?.nome_cliente_debito)}
                   {labelRow("CPF/CNPJ (Débito)", r?.cnpj_cpf_debito)}
                   {labelRow("Agência (Débito)", r?.agDebtd)}
@@ -82,7 +82,7 @@ export const PixEndToEndPanel: React.FC<Props> = ({ endToEndId, onClear }) => {
               {/* Crédito */}
               <div className="rounded-lg border border-white/60 bg-white p-3">
                 <div className="mb-2 font-semibold">Crédito</div>
-                <ul className="space-y-1 text-sm">
+                <ul className="space-y-1 text-20">
                   {labelRow("Nome (Crédito)", r?.nome_clienteCredtada)}
                   {labelRow("CPF/CNPJ (Crédito)", r?.cnpj_cpf_clienteCredtada)}
                   {labelRow("Agência (Crédito)", r?.agCredtda)}
@@ -94,7 +94,7 @@ export const PixEndToEndPanel: React.FC<Props> = ({ endToEndId, onClear }) => {
 
               {/* (Opcional) JSON bruto para depuração */}
               <div className="md:col-span-3">
-                <details className="rounded-lg border border-white/60 bg-white p-3 text-sm">
+                <details className="rounded-lg border border-white/60 bg-white p-3 text-20">
                   <summary className="cursor-pointer select-none font-semibold">
                     Ver JSON bruto
                   </summary>
@@ -105,7 +105,7 @@ export const PixEndToEndPanel: React.FC<Props> = ({ endToEndId, onClear }) => {
               </div>
             </div>
           ) : (
-            <div className="text-sm text-gray-700">
+            <div className="text-20 text-gray-700">
               {data ? "EndToEnd não encontrado." : "Informe um EndToEnd para consultar."}
             </div>
           )}

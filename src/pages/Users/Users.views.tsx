@@ -8,7 +8,7 @@ import { Transactions } from "./components/Transactions";
 type TabKey = "register" | "edit" | "compliance";
 
 export const Users = () => {
-  const [form, setForm] = useState(true); // true => Register, false => Edit
+  const [form, setForm] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>(form ? "register" : "edit");
 
   const [initialRegisterData, setInitialRegisterData] = useState({
@@ -25,7 +25,6 @@ export const Users = () => {
     setActiveTab(tab);
     if (tab === "register") setForm(true);
     if (tab === "edit") setForm(false);
-    // tab === "compliance" não altera `form`
   };
 
   const tabBtnClass = (tab: TabKey) =>
@@ -39,7 +38,7 @@ export const Users = () => {
     <div className="flex w-full flex-row flex-wrap justify-between gap-4 px-4">
       {/* Tabs */}
       <div className="w-full">
-        <div className="mb-3 flex w-full gap-2 border-b border-gray-200 lg:w-[calc(50%-1rem)]">
+        <div className="mb-3 flex w-full gap-2 border-b border-gray-200 font-bold lg:w-[calc(50%-1rem)]">
           <button className={tabBtnClass("register")} onClick={() => switchTab("register")}>
             Cadastro
           </button>
@@ -50,14 +49,12 @@ export const Users = () => {
             Compliance
           </button>
         </div>
-
         {activeTab === "register" && (
           <Register setForm={setForm} initialData={initialRegisterData} />
         )}
         {activeTab === "edit" && <Edit setForm={setForm} />}
         {activeTab === "compliance" && <Compliance />}
       </div>
-
       <PendingOrders setForm={setForm} setInitialRegisterData={setInitialRegisterData} />
       <Transactions />
     </div>

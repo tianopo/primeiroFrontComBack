@@ -7,6 +7,7 @@ import { blockchainsOptions } from "src/utils/selectsOptions";
 import { InputInstitucional } from "../components/InputInstitucional";
 import { ModalInstitutional } from "../components/ModalInstitutional";
 import { SelectInstitucional } from "../components/SelectInstitucional";
+import { Step4PixPayment } from "../components/Step4PixPayment";
 import "../cryptoTech.css";
 
 export const SectionSell = () => {
@@ -68,10 +69,10 @@ export const SectionSell = () => {
   }, [ativo]);
 
   const atualizarTaxa = (fiatValue: number) => {
-    let taxa = 3;
+    let taxa = 2.5;
     if (fiatValue < 200) taxa = 20;
-    else if (fiatValue >= 200 && fiatValue < 400) taxa = 10;
-    else if (fiatValue >= 400 && fiatValue < 50000) taxa = 5;
+    else if (fiatValue >= 200 && fiatValue < 500) taxa = 10;
+    else if (fiatValue >= 500 && fiatValue < 50000) taxa = 3;
     setTaxaPercentual(taxa);
     return taxa;
   };
@@ -268,40 +269,42 @@ export const SectionSell = () => {
           </>
         )}
         <div className="flex flex-col justify-between gap-2 md:flex-row">
-          {step > 1 && (
+          {step > 1 && step < 4 && (
             <button onClick={handlePrevious} className="button-colorido-buy">
               <ArrowLeft weight="bold" /> Anterior
             </button>
           )}
-          <button
-            className="button-colorido-buy"
-            disabled={
-              (step === 1 && ![quantidadeAtivo, quantidadeFiat, ativo, moeda].every(Boolean)) ||
-              (step === 2 &&
-                ![nomeCompleto, CPFouCNPJ, email, enderecoDaCarteira].every(Boolean)) ||
-              (step === 3 &&
-                ![
-                  quantidadeAtivo,
-                  quantidadeFiat,
-                  ativo,
-                  moeda,
-                  nomeCompleto,
-                  CPFouCNPJ,
-                  email,
-                  enderecoDaCarteira,
-                  confirmado,
-                ].every(Boolean))
-            }
-            onClick={step === 3 ? () => setShowModal(true) : handleNext}
-          >
-            {step === 3 ? (
-              "Concluir Conversão"
-            ) : (
-              <>
-                Prosseguir <ArrowRight weight="bold" />
-              </>
-            )}
-          </button>
+          {step >= 1 && step < 4 && (
+            <button
+              className="button-colorido-buy"
+              disabled={
+                (step === 1 && ![quantidadeAtivo, quantidadeFiat, ativo, moeda].every(Boolean)) ||
+                (step === 2 &&
+                  ![nomeCompleto, CPFouCNPJ, email, enderecoDaCarteira].every(Boolean)) ||
+                (step === 3 &&
+                  ![
+                    quantidadeAtivo,
+                    quantidadeFiat,
+                    ativo,
+                    moeda,
+                    nomeCompleto,
+                    CPFouCNPJ,
+                    email,
+                    enderecoDaCarteira,
+                    confirmado,
+                  ].every(Boolean))
+              }
+              onClick={step === 3 ? () => setShowModal(true) : handleNext}
+            >
+              {step === 3 ? (
+                "Concluir Conversão"
+              ) : (
+                <>
+                  Prosseguir <ArrowRight weight="bold" />
+                </>
+              )}
+            </button>
+          )}
         </div>
         {step === 1 && (
           <div className="container_warn">
@@ -313,6 +316,18 @@ export const SectionSell = () => {
               solicitação.
             </p>
           </div>
+        )}
+        {step === 4 && (
+          <Step4PixPayment
+            nomeCompleto={nomeCompleto}
+            cpfOuCnpj={CPFouCNPJ}
+            quantidadeFiat={quantidadeFiat}
+            pixReceiverKey={"f2bf47ad-5786-4fcb-ab41-828d66fbb318"}
+            solicitacaoPagador={`
+              Intermdiação de ${quantidadeFiat} ${moeda} para ${quantidadeAtivo} ${ativo} - Cryptotech`}
+            onBack={() => setStep(3)}
+            onFinish={() => setShowModal(false)}
+          />
         )}
       </div>
       {showModal && (
@@ -359,7 +374,13 @@ export const SectionSell = () => {
                 <h6 className="font-bold">{`${quantidadeAtivo} ${ativo}`}</h6>
               </div>
             </div>
-            <button className="button-colorido-buy" onClick={() => alert("Em Manutenção")}>
+            <button
+              className="button-colorido-buy"
+              onClick={() => {
+                setShowModal(false);
+                handleNext();
+              }}
+            >
               {step === 3 ? (
                 "Concluir Conversão"
               ) : (

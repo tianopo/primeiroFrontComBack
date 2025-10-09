@@ -31,7 +31,8 @@ export const apiRoute = {
   chaveOculto: (chave: string) =>
     `fiducia/pix/dict/gestao-chave/${encodeURIComponent(chave)}/oculto`,
   transferir: "fiducia/pix/spi/transferir",
-  gerarQrCode: "fiducia/pix/qrcode/dinamico/imediato/gerar",
-  listarQrCode: "fiducia/pix/qrcode/dinamico/imediato/listar",
   balance: "fiducia/conta/saldo",
+  gerarQrCodePix: "/fiducia/pix/qrcode/dinamico/imediato/gerar",
+  buscarQrCodePix: "/fiducia/pix/qrcode/dinamico/imediato/buscar",
+  decodificarQrCodeOculto: "/fiducia/pix/qrcode/decodificar/oculto",
 };

@@ -25,7 +25,6 @@ export const RoleProtectedRoute = ({ allowedRoles }: RoleProtectedRouteProps) =>
   if (checkingAccess) {
     return <Spinner />;
   }
-  console.log(acesso);
   if (unauthorized) {
     return <Navigate to={app.unauthorized} replace />;
   }

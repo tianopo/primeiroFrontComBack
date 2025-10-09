@@ -1,8 +1,8 @@
 import { XCircle } from "@phosphor-icons/react";
 import React, { useEffect, useMemo, useState } from "react";
 import { Modal } from "src/components/Modal/Modal";
-import { usePixDictLookup } from "../hooks/fiducia/usePixDictLookup";
-import { usePixTransferir } from "../hooks/fiducia/usePixTransferir";
+import { usePixDictLookup } from "../../hooks/fiducia/usePixDictLookup";
+import { usePixTransferir } from "../../hooks/fiducia/usePixTransferir";
 
 type TipoChave = 1 | 2 | 3 | 4 | 5;
 

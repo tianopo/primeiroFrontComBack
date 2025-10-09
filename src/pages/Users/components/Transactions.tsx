@@ -14,8 +14,8 @@ import {
   rowTone,
   valueTone,
 } from "../utils/transactions";
-import { PixTransferModal } from "./PixTransferModal";
 import { PixEndToEndPanel } from "./Transactions/PixEndToEndPanel";
+import { PixTransferModal } from "./Transactions/PixTransferModal";
 import { TransactionsSearchBar } from "./Transactions/TransactionsSearchBar";
 
 const isEndToEnd = (s: string) => {
