@@ -1,23 +1,24 @@
 import { ArrowLeft, CheckCircle, Copy, Timer, XCircle } from "@phosphor-icons/react";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import QRCode from "qrcode";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { usePixBuscarQrCode } from "../hook/usePixBuscarQrCode";
-import { GerarQrCodeBody, usePixGerarQrCodeDinamico } from "../hook/usePixGerarQrCodeDinamico";
+import { usePixBuscarQrCode } from "../../hook/usePixBuscarQrCode";
+import { GerarQrCodeBody, usePixGerarQrCodeDinamico } from "../../hook/usePixGerarQrCodeDinamico";
+import { useWhatsappClient } from "../../hook/useWhatsappClient";
 import {
+  pickQrFields,
   sanitizeDoc,
-  sanitizeExpiracao,
   sanitizeFormato,
   sanitizeKey,
   sanitizeTextOrNull,
   sanitizeTxId,
   sanitizeValor,
-} from "../utils/sanitizadores";
+} from "../../utils/sanitizadores";
 
-type Step4PixPaymentProps = {
+interface IStep4PixPayment {
   nomeCompleto: string;
   cpfOuCnpj: string;
   quantidadeFiat: string;
-
   pixReceiverKey: string;
   solicitacaoPagador?: string | null;
   modalidadeAlteracao?: number;
@@ -26,83 +27,12 @@ type Step4PixPaymentProps = {
   dadosAdicionaisNome?: string;
   dadosAdicionaisValor?: string;
   reutilizavel?: boolean;
-  /** ⚠️ Deixe em 2 para vir imagem do backend */
   formato?: number;
-
+  whatsapp: string;
   onBack: () => void;
-  onFinish?: () => void;
-};
-
-// ---------------- helpers ----------------
-
-/** Gera data URL para PNG base64 */
-const dataUrlFromBase64 = (b64?: string | null) => {
-  if (!b64) return "";
-  if (b64.startsWith("data:image")) return b64;
-  return `data:image/png;base64,${b64}`;
-};
-
-/** Gera data URL para SVG (string) */
-const dataUrlFromSvg = (svg: string) => `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
-
-/** Tenta extrair payload e imagem do objeto retorno, cobrindo várias chaves comuns */
-function pickQrFields(ret: any): { payload: string; imgDataUrl: string } {
-  // payload
-  const payload =
-    ret?.qrcode_payload ??
-    ret?.copia_e_cola ??
-    ret?.payload ??
-    (ret?.payloadBase64 ? safeAtob(ret.payloadBase64) : "") ??
-    "";
-
-  // imagem (vários formatos)
-  const rawImg =
-    ret?.imagem ??
-    ret?.imagem_base64 ??
-    ret?.qrCodeBase64 ??
-    ret?.qrCodeImageBase64 ??
-    ret?.qrcode_png_base64 ??
-    ret?.imagemPNGBase64 ??
-    ret?.imagemBase64 ??
-    ret?.qr_image ??
-    ret?.qrImage ??
-    ret?.image ??
-    "";
-
-  // se for SVG em string
-  if (typeof rawImg === "string" && rawImg.trim().startsWith("<svg")) {
-    return { payload, imgDataUrl: dataUrlFromSvg(rawImg) };
-  }
-
-  // se veio em base64 (sem prefixo)
-  if (typeof rawImg === "string" && rawImg && !rawImg.startsWith("http")) {
-    return { payload, imgDataUrl: dataUrlFromBase64(rawImg) };
-  }
-
-  // se a API já retornou data-url
-  if (typeof rawImg === "string" && rawImg.startsWith("data:image")) {
-    return { payload, imgDataUrl: rawImg };
-  }
-
-  // se veio como URL pública (raro neste fluxo), usamos direto
-  if (typeof rawImg === "string" && /^https?:\/\//.test(rawImg)) {
-    return { payload, imgDataUrl: rawImg };
-  }
-
-  return { payload, imgDataUrl: "" };
 }
 
-function safeAtob(s: string): string {
-  try {
-    return atob(s);
-  } catch {
-    return "";
-  }
-}
-
-// -----------------------------------------
-
-export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
+export const Step4PixPayment = ({
   nomeCompleto,
   cpfOuCnpj,
   quantidadeFiat,
@@ -114,32 +44,26 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
   dadosAdicionaisNome,
   dadosAdicionaisValor,
   reutilizavel = false,
-  /** 🔴 MUDA O DEFAULT PARA 2 (queremos imagem do backend) */
   formato = 2,
+  whatsapp,
   onBack,
-  onFinish,
-}) => {
+}: IStep4PixPayment) => {
   const [err, setErr] = useState<string | null>(null);
-
-  const [idDocumento, setIdDocumento] = useState<string>("");
-  const [payload, setPayload] = useState<string>("");
-  const [imgDataUrl, setImgDataUrl] = useState<string>("");
-
-  const [status, setStatus] = useState<string>("—");
-  const [ultimaAtualizacao, setUltimaAtualizacao] = useState<string>("");
-
-  const [txidUsado, setTxidUsado] = useState<string>("");
-
+  const [idDocumento, setIdDocumento] = useState("");
+  const [payload, setPayload] = useState("");
+  const [imgDataUrl, setImgDataUrl] = useState("");
+  const [status, setStatus] = useState("—");
+  const [ultimaAtualizacao, setUltimaAtualizacao] = useState("");
+  const [txidUsado, setTxidUsado] = useState("");
   const { mutateAsync: gerar, isPending: isGenerating } = usePixGerarQrCodeDinamico();
   const { mutateAsync: buscar, isPending: isChecking } = usePixBuscarQrCode();
-
-  // valor sanitizado (ex: "1234.56")
+  const oneShotRef = useRef(false);
   const valorAPI = useMemo(() => sanitizeValor(quantidadeFiat), [quantidadeFiat]);
+  const { openWhatsappWithText, shareTextAndImage } = useWhatsappClient();
 
-  const buildSanitizedBody = (): GerarQrCodeBody => {
+  const body = (): GerarQrCodeBody => {
     const txid = sanitizeTxId(identificador);
     setTxidUsado(txid);
-
     return {
       chave: sanitizeKey(pixReceiverKey),
       solicitacao_pagador: sanitizeTextOrNull(solicitacaoPagador),
@@ -149,17 +73,14 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
       modalidade_alteracao: Number.isFinite(Number(modalidadeAlteracao))
         ? Number(modalidadeAlteracao)
         : 0,
-      expiracao_QR: sanitizeExpiracao(expiracaoSegundos),
+      expiracao_QR: expiracaoSegundos,
       identificador: txid,
       dados_adicionais_nome: sanitizeTextOrNull(dadosAdicionaisNome) ?? undefined,
       dados_adicionais_valor: sanitizeTextOrNull(dadosAdicionaisValor) ?? undefined,
       reutilizavel: !!reutilizavel,
-      /** 🔴 força 2 se não vier válido */
       formato: sanitizeFormato(formato) === 2 ? 2 : 2,
     };
   };
-
-  const oneShotStatusRef = useRef(false);
 
   const gerarQrCode = async () => {
     setErr(null);
@@ -167,22 +88,16 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
     setPayload("");
     setImgDataUrl("");
     setStatus("—");
-    oneShotStatusRef.current = false;
-
-    const body = buildSanitizedBody();
-
+    oneShotRef.current = false;
     try {
-      const data = await gerar(body);
+      const data = await gerar(body());
       const ret = (data as any)?.retorno ?? data;
-
       const id =
         ret?.id_documento ?? ret?.idDocumento ?? ret?.documentoId ?? ret?.id ?? ret?.qrcodeId ?? "";
-      const picked = pickQrFields(ret);
-
+      const { payload: pay, imgDataUrl: img } = pickQrFields(ret);
       setIdDocumento(id);
-      if (picked.payload) setPayload(picked.payload);
-      if (picked.imgDataUrl) setImgDataUrl(picked.imgDataUrl);
-
+      if (pay) setPayload(pay);
+      if (img) setImgDataUrl(img);
       setStatus("EM_ABERTO");
       setUltimaAtualizacao(new Date().toLocaleString("pt-BR"));
     } catch (e: any) {
@@ -195,68 +110,68 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
     try {
       const data = await buscar({ id_documento: idDocumento });
       const ret = (data as any)?.retorno ?? data;
-
-      const sit = ret?.situacao ?? ret?.status ?? "—";
-      setStatus(String(sit));
+      setStatus(String(ret?.situacao ?? ret?.status ?? "—"));
       setUltimaAtualizacao(new Date().toLocaleString("pt-BR"));
-
-      const picked = pickQrFields(ret);
-      if (!payload && picked.payload) setPayload(picked.payload);
-      if (!imgDataUrl && picked.imgDataUrl) setImgDataUrl(picked.imgDataUrl);
-    } catch {
-      /* silencioso */
-    }
+      const { payload: pay, imgDataUrl: img } = pickQrFields(ret);
+      if (!payload && pay) setPayload(pay);
+      if (!imgDataUrl && img) setImgDataUrl(img);
+    } catch {}
   };
 
-  // gera ao montar
   useEffect(() => {
     gerarQrCode();
   }, []);
-
-  // one-shot: se não veio payload/imagem, tenta buscar uma vez
   useEffect(() => {
-    if (!idDocumento) return;
-    if (payload || imgDataUrl) return;
-    if (oneShotStatusRef.current) return;
-    oneShotStatusRef.current = true;
+    if (!idDocumento || payload || imgDataUrl || oneShotRef.current) return;
+    oneShotRef.current = true;
     const t = setTimeout(() => buscarStatus(), 800);
     return () => clearTimeout(t);
   }, [idDocumento, payload, imgDataUrl]);
-
-  // 🔁 Fallback local: se tiver payload e NENHUMA imagem, gera PNG no cliente (lazy import)
   useEffect(() => {
-    const makeLocalQr = async () => {
+    (async () => {
       if (!payload || imgDataUrl) return;
       try {
-        const QR = await import("qrcode"); // npm i qrcode
-        const url = await QR.toDataURL(payload, {
+        const url = await QRCode.toDataURL(payload, {
           errorCorrectionLevel: "M",
           margin: 1,
           scale: 6,
-          // sem cor custom pra manter padrão do projeto
         });
         setImgDataUrl(url);
-      } catch {
-        // se não tiver a lib, segue só com copia/cola
-      }
-    };
-    makeLocalQr();
+      } catch {}
+    })();
   }, [payload, imgDataUrl]);
 
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(payload);
       toast.success("Copiado !");
-    } catch {
-      /* ignore */
-    }
+    } catch {}
+  };
+  const loading = isGenerating;
+  const paid = status.toUpperCase().includes("LIQ") || status.toUpperCase().includes("CONFIR");
+
+  const composeWhatsappMessage = () => {
+    const valorBRL = Number(valorAPI).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+    const linhas = [
+      "💬 *Cryptotech* — Detalhes do pagamento via PIX",
+      `• *Pagador*: ${String(nomeCompleto ?? "").trim()} — ${cpfOuCnpj}`,
+      `• *Valor*: R$ ${valorBRL}`,
+      `• *Chave recebedora*: ${pixReceiverKey}`,
+      solicitacaoPagador ? `• *Solicitação*: ${solicitacaoPagador}` : null,
+      idDocumento ? `• *ID do documento*: ${idDocumento}` : null,
+      "",
+      "🔗 *PIX (Copia e Cola)*:",
+      payload || "(ainda não disponível)",
+    ].filter(Boolean);
+    return linhas.join("\n");
   };
 
-  const loading = isGenerating;
-  const paid = status?.toUpperCase().includes("LIQ") || status?.toUpperCase().includes("CONFIR");
+  const onFinish = () => {
+    return console.log("finalizado");
+  };
 
   return (
-    <div className="label-buy container-opacity-light flex w-full max-w-[950px] flex-col gap-6 text-justify font-extrabold">
+    <>
       <h4>Pagamento via PIX</h4>
       {loading ? (
         <div className="rounded-6 border-edge-primary bg-white/20 p-6 text-center">
@@ -273,7 +188,6 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
       ) : (
         <>
           <div className="grid gap-6 md:grid-cols-2">
-            {/* QR Code */}
             <div className="flex flex-col items-center justify-center rounded-6 border-edge-primary bg-white/15 p-5">
               <div className="mb-3 font-semibold">Escaneie com o app do seu banco</div>
               {imgDataUrl ? (
@@ -284,12 +198,11 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
                 />
               ) : (
                 <div className="w-full rounded bg-white/60 p-4 text-center text-sm text-gray-700">
-                  Use o “PIX Copia e Cola” ao lado.
+                  Use o “PIX Copia e Cola”.
                 </div>
               )}
             </div>
 
-            {/* PIX Copia e Cola */}
             <div className="rounded-6 border-edge-primary bg-white/15 p-5">
               <div className="mb-2 font-semibold">PIX Copia e Cola</div>
               <textarea
@@ -302,17 +215,15 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
                   type="button"
                   onClick={copy}
                   className="rounded-6 border px-3 py-2 text-sm hover:bg-gray-100"
-                  title="Copiar para a área de transferência"
+                  title="Copiar"
                 >
                   <Copy size={16} className="mr-1 inline-block" /> Copiar
                 </button>
-
                 <div className="flex items-center gap-2 text-xs text-gray-300">
                   <Timer size={14} /> Atualização: {ultimaAtualizacao || "—"}
                 </div>
               </div>
 
-              {/* Status + controles */}
               <div className="mt-4 flex items-center justify-between rounded bg-white/50 p-3">
                 <div className="flex items-center gap-2">
                   {paid ? (
@@ -325,21 +236,18 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
                     {paid && <div className="text-xs text-green-700">Pagamento confirmado.</div>}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={buscarStatus}
-                    disabled={!idDocumento || isChecking}
-                    className="rounded-6 border px-3 py-2 text-sm hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
-                    title="Atualizar status agora"
-                  >
-                    Atualizar
-                  </button>
-                </div>
+                <button
+                  onClick={buscarStatus}
+                  disabled={!idDocumento || isChecking}
+                  className="rounded-6 border px-3 py-2 text-sm hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  title="Atualizar status"
+                >
+                  Atualizar
+                </button>
               </div>
             </div>
           </div>
 
-          {/* Resumo */}
           <div className="rounded-6 border-edge-primary bg-white/15 p-5 text-sm">
             <div className="mb-2 font-semibold">Resumo</div>
             <ul className="leading-7">
@@ -351,24 +259,16 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
                 <strong>Valor:</strong>{" "}
                 {Number(valorAPI).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
               </li>
-              <li>
-                <strong>Chave recebedora:</strong> {sanitizeKey(pixReceiverKey)}
-              </li>
+              {/* <li><strong>Chave recebedora:</strong> {sanitizeKey(pixReceiverKey)}</li> */}
               <li>
                 <strong>Solicitação do pagador:</strong>{" "}
                 {sanitizeTextOrNull(solicitacaoPagador) ?? "—"}
               </li>
               <li>
-                <strong>Expiração (s):</strong> {sanitizeExpiracao(expiracaoSegundos)}
+                <strong>Expiração:</strong> {expiracaoSegundos / (60 * 60)} hora
               </li>
-              <li>
-                <strong>Identificador (TXID):</strong> {txidUsado || "(gerado automaticamente)"}
-              </li>
-              {idDocumento && (
-                <li>
-                  <strong>ID do documento:</strong> {idDocumento}
-                </li>
-              )}
+              {/* <li><strong>Identificador (TXID):</strong> {txidUsado || "(gerado automaticamente)"}</li>
+              {idDocumento && <li><strong>ID do documento:</strong> {idDocumento}</li>} */}
             </ul>
           </div>
         </>
@@ -388,6 +288,45 @@ export const Step4PixPayment: React.FC<Step4PixPaymentProps> = ({
           </button>
         )}
       </div>
-    </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          className="rounded-6 border px-3 py-2 text-sm hover:bg-gray-100 disabled:opacity-60"
+          disabled={!payload}
+          onClick={() => openWhatsappWithText({ to: whatsapp, text: composeWhatsappMessage() })}
+          title="Abrir WhatsApp com mensagem preenchida"
+        >
+          Enviar pelo WhatsApp (texto)
+        </button>
+
+        <button
+          type="button"
+          className="rounded-6 border px-3 py-2 text-sm hover:bg-gray-100 disabled:opacity-60 md:hidden"
+          disabled={!payload}
+          onClick={() =>
+            shareTextAndImage({
+              to: whatsapp,
+              text: composeWhatsappMessage(),
+              imgDataUrl: imgDataUrl || undefined,
+              filename: `pix-${idDocumento || Date.now()}.png`,
+            })
+          }
+          title="Compartilhar (mobile) texto + imagem"
+        >
+          Compartilhar texto + QR (mobile)
+        </button>
+
+        {imgDataUrl && (
+          <a
+            download={`pix-${idDocumento || Date.now()}.png`}
+            href={imgDataUrl}
+            className="rounded-6 border px-3 py-2 text-sm hover:bg-gray-100"
+            title="Baixar imagem do QR para anexar no WhatsApp"
+          >
+            Baixar QR
+          </a>
+        )}
+      </div>
+    </>
   );
 };

@@ -4,6 +4,7 @@ import { ButtonChangeLanguage } from "src/components/Buttons/ButtonChangeLanguag
 import { app } from "src/routes/app";
 import { AnimateBlink } from "./components/AnimateBlink";
 import { AnimateSnake } from "./components/AnimateSnake";
+import { FloatingWhatsApp } from "./components/FloatingWhatsApp";
 import { Navbar } from "./components/Navbar";
 import "./cryptoTech.css";
 import { SectionDigitalAssetsSale } from "./Sections/SectionDigitalAssetsSale";
@@ -86,6 +87,10 @@ export const CryptoTech = () => {
           {t("text2")}
         </h6>
       </section>
+      <FloatingWhatsApp
+        phoneInternational="5512992546355"
+        message="Preciso de ajuda com sua prestação de serviços"
+      />
       <footer className="border-gradient flex h-fit flex-col items-center justify-between gap-2 border-t-1 md:h-48 md:flex-row md:items-start">
         <div className="pulse-complete -right-24 bg-gradient-conic-secundary"></div>
         <div className="flex-start flex flex-col text-white">

@@ -33,14 +33,6 @@ export const sanitizeValor = (v: string | number) => {
 // Chave PIX recebedora (trim)
 export const sanitizeKey = (s: string) => String(s ?? "").trim();
 
-// Expiração (segundos) segura
-export const sanitizeExpiracao = (n?: number) => {
-  const x = Number(n);
-  if (!Number.isFinite(x) || x <= 0) return 3600;
-  // (opcional) clamp leve
-  return Math.min(Math.max(x, 60), 86400);
-};
-
 // Formato (1 ou 2)
 export const sanitizeFormato = (f?: number) => (f === 2 ? 2 : 1);
 
@@ -49,4 +41,41 @@ export const sanitizeTextOrNull = (s?: string | null) => {
   if (s === null || s === undefined) return null;
   const t = String(s).trim();
   return t.length ? t : null;
+};
+
+export const dataUrlFromBase64 = (b64?: string | null) =>
+  !b64 ? "" : b64.startsWith("data:image") ? b64 : `data:image/png;base64,${b64}`;
+export const dataUrlFromSvg = (svg: string) => `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+export const safeAtob = (s: string) => {
+  try {
+    return atob(s);
+  } catch {
+    return "";
+  }
+};
+
+export const pickQrFields = (ret: any) => {
+  const payload =
+    ret?.qrcode_payload ??
+    ret?.copia_e_cola ??
+    ret?.payload ??
+    (ret?.payloadBase64 ? safeAtob(ret.payloadBase64) : "") ??
+    "";
+  const raw =
+    ret?.imagem ??
+    ret?.imagem_base64 ??
+    ret?.qrCodeBase64 ??
+    ret?.qrCodeImageBase64 ??
+    ret?.qrcode_png_base64 ??
+    ret?.imagemPNGBase64 ??
+    ret?.imagemBase64 ??
+    ret?.qr_image ??
+    ret?.qrImage ??
+    ret?.image ??
+    "";
+  if (typeof raw === "string" && raw.trim().startsWith("<svg"))
+    return { payload, imgDataUrl: dataUrlFromSvg(raw) };
+  if (typeof raw === "string" && raw.startsWith("data:image")) return { payload, imgDataUrl: raw };
+  if (typeof raw === "string" && /^https?:\/\//.test(raw)) return { payload, imgDataUrl: raw };
+  return { payload, imgDataUrl: typeof raw === "string" && raw ? dataUrlFromBase64(raw) : "" };
 };

@@ -19,6 +19,7 @@ export const apiRoute = {
   user: "user",
   account: "user/account",
   userId: (id: string) => `user/account/${id}`,
+  checkCryptotech: "user/check-cryptotech",
   /* BYBIT */
   pendingOrders: "bybit/pending-orders",
   sendChatMessage: "bybit/send-chat-message",
@@ -35,4 +36,6 @@ export const apiRoute = {
   gerarQrCodePix: "/fiducia/pix/qrcode/dinamico/imediato/gerar",
   buscarQrCodePix: "/fiducia/pix/qrcode/dinamico/imediato/buscar",
   decodificarQrCodeOculto: "/fiducia/pix/qrcode/decodificar/oculto",
+  /* WHATSAPP */
+  notifyWhatsapp: "whatsapp/notify",
 };
