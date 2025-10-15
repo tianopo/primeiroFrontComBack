@@ -10,7 +10,6 @@ import { Step2 } from "../components/SectionSellSteps/Step2";
 import { Step3 } from "../components/SectionSellSteps/Step3";
 import { Step4PixPayment } from "../components/SectionSellSteps/Step4PixPayment";
 import "../cryptoTech.css";
-import { useComplianceCheck } from "../hook/useComplianceCheck";
 
 export const SectionSell = () => {
   const [step, setStep] = useState(1);
@@ -30,7 +29,6 @@ export const SectionSell = () => {
   // step 3
   const [confirmado, setConfirmado] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const { mutate: checkCompliance, isPending } = useComplianceCheck();
   // ===== Helpers =====
   useEffect(() => {
     (async () => {
@@ -102,15 +100,7 @@ export const SectionSell = () => {
         toast.error("Informe um CPF/CNPJ válido.");
         return;
       }
-      checkCompliance(
-        { documento: CPFouCNPJ },
-        {
-          onSuccess: () => {
-            handleNext();
-          },
-          onError: () => {},
-        },
-      );
+      handleNext();
       return;
     }
 
@@ -157,10 +147,7 @@ export const SectionSell = () => {
   );
 
   const buttonDisabled =
-    isPending ||
-    (step === 1 && !canStep1) ||
-    (step === 2 && !canStep2) ||
-    (step === 3 && !canStep3);
+    (step === 1 && !canStep1) || (step === 2 && !canStep2) || (step === 3 && !canStep3);
 
   return (
     <section className="flex w-full justify-center" id="sell">
@@ -220,8 +207,7 @@ export const SectionSell = () => {
               disabled={buttonDisabled}
               onClick={handleNextGuarded}
             >
-              {isPending ? "Verificando..." : step === 3 ? "Concluir Conversão" : "Prosseguir"}{" "}
-              <ArrowRight weight="bold" />
+              {step === 3 ? "Concluir Conversão" : "Prosseguir"} <ArrowRight weight="bold" />
             </button>
           )}
         </div>
@@ -242,9 +228,11 @@ export const SectionSell = () => {
             nomeCompleto={nomeCompleto}
             cpfOuCnpj={CPFouCNPJ}
             quantidadeFiat={quantidadeFiat}
+            quantidadeAtivo={quantidadeAtivo}
             pixReceiverKey="f2bf47ad-5786-4fcb-ab41-828d66fbb318"
             solicitacaoPagador={`Intermediação de ${quantidadeFiat} ${moeda} para ${quantidadeAtivo} ${ativo} - Cryptotech`}
             whatsapp={whatsapp}
+            ativo={ativo}
             onBack={() => setStep(3)}
           />
         )}
@@ -261,8 +249,8 @@ export const SectionSell = () => {
               fornecidos de forma errada.
             </h6>
             <h6>
-              Informe um e-mail válido para que possamos entrar em contato, caso necessário. Se
-              precisar, nos chame no whatsapp no balão do canto inferior direito.
+              Informe um número de whatsapp válido para que possamos entrar em contato, caso
+              necessário. Se precisar, nos chame no whatsapp no balão do canto inferior direito.
             </h6>
             <h6>
               Solicitamos essas informações exclusivamente para sua segurança. Seus dados pessoais e

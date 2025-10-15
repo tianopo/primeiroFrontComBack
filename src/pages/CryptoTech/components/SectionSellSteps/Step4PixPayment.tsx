@@ -2,6 +2,8 @@ import { ArrowLeft, CheckCircle, Copy, Timer, XCircle } from "@phosphor-icons/re
 import QRCode from "qrcode";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
+import { formatCurrency, formatDateTime } from "src/utils/formats";
+import { useCreateOrder } from "../../hook/useCreateOrder";
 import { usePixBuscarQrCode } from "../../hook/usePixBuscarQrCode";
 import { GerarQrCodeBody, usePixGerarQrCodeDinamico } from "../../hook/usePixGerarQrCodeDinamico";
 import { useWhatsappClient } from "../../hook/useWhatsappClient";
@@ -12,13 +14,13 @@ import {
   sanitizeKey,
   sanitizeTextOrNull,
   sanitizeTxId,
-  sanitizeValor,
 } from "../../utils/sanitizadores";
 
 interface IStep4PixPayment {
   nomeCompleto: string;
   cpfOuCnpj: string;
   quantidadeFiat: string;
+  quantidadeAtivo: string;
   pixReceiverKey: string;
   solicitacaoPagador?: string | null;
   modalidadeAlteracao?: number;
@@ -29,6 +31,7 @@ interface IStep4PixPayment {
   reutilizavel?: boolean;
   formato?: number;
   whatsapp: string;
+  ativo: string;
   onBack: () => void;
 }
 
@@ -36,6 +39,7 @@ export const Step4PixPayment = ({
   nomeCompleto,
   cpfOuCnpj,
   quantidadeFiat,
+  quantidadeAtivo,
   pixReceiverKey,
   solicitacaoPagador = null,
   modalidadeAlteracao = 0,
@@ -46,6 +50,7 @@ export const Step4PixPayment = ({
   reutilizavel = false,
   formato = 2,
   whatsapp,
+  ativo,
   onBack,
 }: IStep4PixPayment) => {
   const [err, setErr] = useState<string | null>(null);
@@ -58,8 +63,10 @@ export const Step4PixPayment = ({
   const { mutateAsync: gerar, isPending: isGenerating } = usePixGerarQrCodeDinamico();
   const { mutateAsync: buscar, isPending: isChecking } = usePixBuscarQrCode();
   const oneShotRef = useRef(false);
-  const valorAPI = useMemo(() => sanitizeValor(quantidadeFiat), [quantidadeFiat]);
+  const valorAPI = useMemo(() => quantidadeFiat.replace(",", "."), [quantidadeFiat]);
   const { openWhatsappWithText, shareTextAndImage } = useWhatsappClient();
+  const { createOrder, creatingOrder } = useCreateOrder();
+  const orderCreatedRef = useRef(false);
 
   const body = (): GerarQrCodeBody => {
     const txid = sanitizeTxId(identificador);
@@ -89,17 +96,49 @@ export const Step4PixPayment = ({
     setImgDataUrl("");
     setStatus("—");
     oneShotRef.current = false;
+
     try {
       const data = await gerar(body());
       const ret = (data as any)?.retorno ?? data;
+
       const id =
         ret?.id_documento ?? ret?.idDocumento ?? ret?.documentoId ?? ret?.id ?? ret?.qrcodeId ?? "";
+
       const { payload: pay, imgDataUrl: img } = pickQrFields(ret);
+
       setIdDocumento(id);
       if (pay) setPayload(pay);
       if (img) setImgDataUrl(img);
       setStatus("EM_ABERTO");
       setUltimaAtualizacao(new Date().toLocaleString("pt-BR"));
+
+      // ⬇️⬇️⬇️ INSIRA AQUI o bloco de criação da ordem ⬇️⬇️⬇️
+      try {
+        if (!orderCreatedRef.current && id) {
+          const qtdAtivo = Number(quantidadeAtivo);
+          const valorBRL = Number(quantidadeFiat.replace(",", "."));
+          const valorToken = qtdAtivo > 0 ? valorBRL / qtdAtivo : 0;
+
+          const payloadOrder = {
+            nome: nomeCompleto,
+            apelido: cpfOuCnpj,
+            numeroOrdem: id,
+            dataHora: formatDateTime(new Date().toISOString()),
+            exchange: "CRYPTOTECH https://www.cryptotechdev.com/ BR",
+            ativo,
+            quantidade: quantidadeAtivo,
+            valor: formatCurrency(quantidadeFiat),
+            valorToken: valorToken.toFixed(4).toString(),
+            taxa: "0",
+            tipo: "vendas" as const,
+            status: "Pending" as const,
+            document: cpfOuCnpj,
+          };
+
+          await createOrder(payloadOrder);
+          orderCreatedRef.current = true;
+        }
+      } catch {}
     } catch (e: any) {
       setErr(e?.response?.data ?? e?.message ?? "Erro ao gerar QR Code");
     }

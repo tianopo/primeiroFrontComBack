@@ -11,6 +11,7 @@ export const apiRoute = {
   orders: "orders",
   tax: "orders/tax",
   comercial: "orders/comercial",
+  qrCode: "orders/qrCode",
   /* COMPLIANCE */
   compliance: "compliance",
   operation: "compliance/operation",
@@ -19,7 +20,6 @@ export const apiRoute = {
   user: "user",
   account: "user/account",
   userId: (id: string) => `user/account/${id}`,
-  checkCryptotech: "user/check-cryptotech",
   /* BYBIT */
   pendingOrders: "bybit/pending-orders",
   sendChatMessage: "bybit/send-chat-message",
