@@ -156,7 +156,7 @@ export const Home = () => {
     // Config fixa (mesma que você já usa)
     const hoje = new Date();
     const monthName = hoje.toLocaleDateString("pt-BR", { month: "long" });
-    const comissaoFixa = 0.1; // % base para não-stable / fallback
+    const comissaoFixa = 0.08; // % base para não-stable / fallback
     const comissaoMargemErro = 10; // ajuste de margem
     const codMunicipioServicoPrestado = 352440;
     const codAtividade = 6619399;
@@ -181,11 +181,7 @@ export const Home = () => {
 
     let somaTotalNFE = 0;
 
-    // **Agora: 1 LINHA POR ORDEM**
     for (const t of filteredData) {
-      // Se quiser emitir NFE apenas para VENDAS, descomente a linha abaixo:
-      if (t.tipo !== "vendas") continue;
-
       const buyerName = t.User?.name || "N/A";
       const cpfCnpj = (t.User?.document || "").replace(/\D/g, "") || "00000000000";
 
@@ -193,31 +189,57 @@ export const Home = () => {
       const valorToken = parseNum(t.valorToken);
       const ativo = String(t.ativo || "").toUpperCase();
 
-      // Comissão por ordem
+      const ehStable = isStable(ativo);
+      const ehBTCouETH = isBtcOrEth(ativo);
+
+      // =========================
+      // REGRAS DE ELEGIBILIDADE
+      // =========================
+      if (t.tipo === "compras") {
+        if (!ehStable) continue;
+        if (!(precoMedioCompra > 0 && valorToken < precoMedioCompra)) continue;
+      } else if (t.tipo !== "vendas") {
+        continue;
+      }
+
+      // =========================
+      // CÁLCULO DE COMISSÃO
+      // =========================
       let comissao = comissaoFixa;
-      if (isBtcOrEth(ativo)) {
+
+      if (ehBTCouETH) {
         comissao = 5;
-      } else if (isStable(ativo)) {
-        const calc =
-          precoMedioCompra > 0
-            ? ((valorToken - precoMedioCompra) / precoMedioCompra) * 100
-            : comissaoFixa;
-        const calculada = calc - comissaoMargemErro;
-        comissao = Math.max(comissaoFixa, calculada);
+      } else if (ehStable) {
+        if (t.tipo === "vendas") {
+          const basePct =
+            precoMedioCompra > 0
+              ? ((valorToken - precoMedioCompra) / precoMedioCompra) * 100
+              : comissaoFixa;
+          const ajustada = basePct - comissaoMargemErro;
+          comissao = Math.max(comissaoFixa, ajustada);
+        } else {
+          const basePct =
+            precoMedioCompra > 0
+              ? ((precoMedioCompra - valorToken) / precoMedioCompra) * 100
+              : comissaoFixa;
+          const ajustada = basePct - comissaoMargemErro;
+          comissao = Math.max(comissaoFixa, ajustada);
+        }
       } else {
         comissao = comissaoFixa;
       }
 
-      // Valor da NFE (comissão * valor da ordem)
+      // =========================
+      // MONTAGEM DA LINHA CSV
+      // =========================
       const valorNfe = Number((valorBRL * (comissao / 100)).toFixed(2));
-      const valorIss = Math.round(valorNfe * (aliquota / 10000)); // mesmo cálculo que você já usava
+      const valorIss = Math.round(valorNfe * (aliquota / 10000));
       somaTotalNFE += valorNfe;
 
-      // Datas (uma por ordem)
       const dataPrestacaoServico = toBRDate(t.dataHora);
 
-      // Discriminação (APENAS a ordem)
       const fileContent = `"- Serviço: Intermediação de Ativos Digitais
+- Operação: ${t.tipo}
 - Comissão aplicada: ${comissao.toFixed(2)}%
 - Identificador da Ordem: ${t.numeroOrdem}
 - Data/Hora: ${toBRDate(t.dataHora)}
@@ -228,9 +250,8 @@ export const Home = () => {
 - Exchange/Corretora: ${String(t.exchange || "").split(" ")[0]}
 
 Suporte de Dúvidas
-- Para informações do P2P, consulte a documentação ou o suporte da corretora"`; // mantém aspas conforme seu padrão
+- Para informações do P2P, consulte a documentação ou o suporte da corretora"`;
 
-      // Linha CSV (mantém a sua estrutura)
       const csvData =
         `R,${numeroRPS},RPS,${dataPrestacaoServico},${toBRDate(hoje)},,${cpfCnpj},,${buyerName},,,,,,48,,,,S,` +
         `${codMunicipioServicoPrestado},${codAtividade},${codListaServicos},${fileContent},` +
