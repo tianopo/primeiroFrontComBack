@@ -184,7 +184,7 @@ export const Home = () => {
     // **Agora: 1 LINHA POR ORDEM**
     for (const t of filteredData) {
       // Se quiser emitir NFE apenas para VENDAS, descomente a linha abaixo:
-      // if (t.tipo !== "vendas") continue;
+      if (t.tipo !== "vendas") continue;
 
       const buyerName = t.User?.name || "N/A";
       const cpfCnpj = (t.User?.document || "").replace(/\D/g, "") || "00000000000";
