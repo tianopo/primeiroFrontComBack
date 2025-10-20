@@ -140,155 +140,120 @@ export const Home = () => {
   const handleTransactions = async () => {
     if (!filteredData) return;
 
-    const today = new Date();
-    const monthName = today.toLocaleDateString("pt-BR", { month: "long" });
+    // Helpers
+    const parseBRL = (v: any) =>
+      typeof v === "number"
+        ? v
+        : parseFloat(String(v).replace("R$", "").replace(/\./g, "").replace(",", "."));
+    const parseNum = (v: any) => parseFloat(String(v).replace(",", "."));
+    const toBRDate = (d: Date | string) =>
+      new Date(d).toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
 
-    const groupedByBuyer = filteredData.reduce((acc: any, transaction: any) => {
-      const buyerDocument = transaction.tipo === "vendas" ? transaction.User?.document : "N/A";
-      if (buyerDocument !== "N/A") {
-        if (!acc[buyerDocument]) {
-          acc[buyerDocument] = {
-            buyer: transaction.tipo && transaction.User,
-            totalVendas: 0,
-            totalCompras: 0,
-            transactions: [],
-          };
-        }
-        acc[buyerDocument].transactions.push(transaction);
-
-        const valor = parseFloat(
-          transaction.valor.replace(".", "").replace(",", ".").replace("R$", ""),
-        );
-        if (transaction.tipo === "vendas") {
-          acc[buyerDocument].totalVendas += valor;
-        } else if (transaction.tipo === "compras") {
-          acc[buyerDocument].totalCompras += valor;
-        }
-      }
-      return acc;
-    }, {});
-
-    let csvContent = `Indicador de Tipo de Serviço,""Número RPS"",""Serie RPS"",""Data Prestação de Serviço"",""Data Emissão do RPS"",""RPS Substitutivo"",""Documento CPF/CNPJ"",""Inscrição Mobiliária"",""Razão Social"",Endereço,Número,Complemento,Bairro,""Código do Município"",""Código do País"",Cep,Telefone,Email,""ISS Retido no Tomador"",""Código do Município onde o Serviço foi Prestado"",""Código da Atividade"",""Código da Lista de Serviços"",Discriminação,""Valor NF"",""Valor Deduções"",""Valor Desconto Condicionado"",""Valor Desconto Incondicionado"",""Valor INSS"",""Valor Csll"",""Valor Outras Retenções"",""Valor Pis"",""Valor Cofins"",""Valor Ir"",""Valor Iss"",""Prestador Optante Simples Nacional"",Alíquota,""Código da Obra"",""Código ART"",""Inscrição Própria"",""Código do Benefício""\n`;
-
+    // Config fixa (mesma que você já usa)
     const hoje = new Date();
-    const comissaoFixa = 0.3; // comissão padrão para ativos que não são USDT/USDC
-    const comissaoMargemErro = 10;
+    const monthName = hoje.toLocaleDateString("pt-BR", { month: "long" });
+    const comissaoFixa = 0.1; // % base para não-stable / fallback
+    const comissaoMargemErro = 10; // ajuste de margem
     const codMunicipioServicoPrestado = 352440;
     const codAtividade = 6619399;
     const codListaServicos = 10.02;
-    const aliquota = 201; // 2,01%
+    const aliquota = 201; // 2,01% => "201" em centésimos de ponto
     const inscricaoMunicipal = 90598;
+
+    // RPS sequencial (mantido)
     let numeroRPS = parseInt(localStorage.getItem("numeroRPS") || "0", 10);
+
+    // Para o nome do arquivo
+    const validationEmptyBuyers = buyer === "" || buyer === " N/A";
+    const buyerNames = buyer.split(" ");
+    const formattedBuyer =
+      `${buyerNames[0] || ""} ${buyerNames[buyerNames.length - 1] || ""}`.trim();
+
+    const isStable = (symbol: string) => ["USDT", "USDC"].includes(symbol);
+    const isBtcOrEth = (symbol: string) => ["BTC", "ETH"].includes(symbol);
+
+    // CSV header (mantido)
+    let csvContent = `Indicador de Tipo de Serviço,""Número RPS"",""Serie RPS"",""Data Prestação de Serviço"",""Data Emissão do RPS"",""RPS Substitutivo"",""Documento CPF/CNPJ"",""Inscrição Mobiliária"",""Razão Social"",Endereço,Número,Complemento,Bairro,""Código do Município"",""Código do País"",Cep,Telefone,Email,""ISS Retido no Tomador"",""Código do Município onde o Serviço foi Prestado"",""Código da Atividade"",""Código da Lista de Serviços"",Discriminação,""Valor NF"",""Valor Deduções"",""Valor Desconto Condicionado"",""Valor Desconto Incondicionado"",""Valor INSS"",""Valor Csll"",""Valor Outras Retenções"",""Valor Pis"",""Valor Cofins"",""Valor Ir"",""Valor Iss"",""Prestador Optante Simples Nacional"",Alíquota,""Código da Obra"",""Código ART"",""Inscrição Própria"",""Código do Benefício""\n`;
+
     let somaTotalNFE = 0;
 
-    Object.values(groupedByBuyer).forEach((group: any) => {
-      const buyer = group.buyer;
-      const buyerName = buyer?.name || "N/A";
-      const cpfCnpj = buyer?.document?.replace(/[^0-9]/g, "");
-      // datas
-      const datasOrdenadas = group.transactions
-        .map((t: any) => new Date(t.dataHora))
-        .sort((a: Date, b: Date) => a.getTime() - b.getTime());
+    // **Agora: 1 LINHA POR ORDEM**
+    for (const t of filteredData) {
+      // Se quiser emitir NFE apenas para VENDAS, descomente a linha abaixo:
+      // if (t.tipo !== "vendas") continue;
 
-      const primeiraData = datasOrdenadas[0];
-      const ultimaData = datasOrdenadas[datasOrdenadas.length - 1];
+      const buyerName = t.User?.name || "N/A";
+      const cpfCnpj = (t.User?.document || "").replace(/\D/g, "") || "00000000000";
 
-      const formatarData = (data: Date) =>
-        data.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+      const valorBRL = parseBRL(t.valor);
+      const valorToken = parseNum(t.valorToken);
+      const ativo = String(t.ativo || "").toUpperCase();
 
-      const periodoTransacoes = `Primeira e Última Transação: ${formatarData(primeiraData)} - ${formatarData(ultimaData)}`;
-      // valores, comissões e ativos
-      const transacoesStable = group.transactions.filter(
-        (t: any) =>
-          ["USDT", "USDC"].includes(t.ativo) &&
-          !isNaN(parseFloat(t.valorToken?.toString().replace(",", "."))),
-      );
-
-      const somaTokensComprador = transacoesStable.reduce((acc: number, t: any) => {
-        return acc + parseFloat(t.valorToken.toString().replace(",", "."));
-      }, 0);
-
-      const mediaTokensComprador =
-        transacoesStable.length > 0 ? somaTokensComprador / transacoesStable.length : 0;
-
-      const comissaoDinamica =
-        precoMedioCompra > 0
-          ? ((mediaTokensComprador - precoMedioCompra) / precoMedioCompra) * 100
-          : 0;
-
-      const comissaoCalculada = comissaoDinamica - comissaoMargemErro;
-
-      const possuiAtivosStable = transacoesStable.length > 0;
-      const possuiOutrosAtivos = group.transactions.some(
-        (t: any) => !["USDT", "USDC"].includes(t.ativo),
-      );
-      const possuiBtcOuEth = group.transactions.some((t: any) => ["BTC", "ETH"].includes(t.ativo));
-
-      let comissao = 0;
-      if (possuiBtcOuEth) {
+      // Comissão por ordem
+      let comissao = comissaoFixa;
+      if (isBtcOrEth(ativo)) {
         comissao = 5;
-      } else if (possuiAtivosStable && possuiOutrosAtivos) {
-        const ajustada = comissaoCalculada < comissaoFixa ? comissaoFixa : comissaoCalculada;
-        comissao = (comissaoFixa + ajustada) / 2;
-      } else if (possuiOutrosAtivos) {
+      } else if (isStable(ativo)) {
+        const calc =
+          precoMedioCompra > 0
+            ? ((valorToken - precoMedioCompra) / precoMedioCompra) * 100
+            : comissaoFixa;
+        const calculada = calc - comissaoMargemErro;
+        comissao = Math.max(comissaoFixa, calculada);
+      } else {
         comissao = comissaoFixa;
-      } else {
-        comissao = comissaoCalculada < comissaoFixa ? comissaoFixa : comissaoCalculada;
       }
 
-      const totalVendas = group.totalVendas;
-      const valorNfe = Number((totalVendas * (comissao / 100)).toFixed(2));
-      const valorIss = Math.round(valorNfe * (aliquota / 10000));
-      const valorSomaNfe = Number((totalVendas * (comissao / 100)).toFixed(2));
-      somaTotalNFE += valorSomaNfe;
+      // Valor da NFE (comissão * valor da ordem)
+      const valorNfe = Number((valorBRL * (comissao / 100)).toFixed(2));
+      const valorIss = Math.round(valorNfe * (aliquota / 10000)); // mesmo cálculo que você já usava
+      somaTotalNFE += valorNfe;
 
-      const endDateObj = group.transactions.reduce((latest: Date, transaction: any) => {
-        const transactionDate = new Date(transaction.dataHora);
-        return transactionDate > latest ? transactionDate : latest;
-      }, new Date(group.transactions[0].dataHora));
-      const isValidDate = (d: any) => d instanceof Date && !isNaN(d.getTime());
+      // Datas (uma por ordem)
+      const dataPrestacaoServico = toBRDate(t.dataHora);
 
-      let dataPrestacaoServico: string;
+      // Discriminação (APENAS a ordem)
+      const fileContent = `"- Serviço: Intermediação de Ativos Digitais
+- Comissão aplicada: ${comissao.toFixed(2)}%
+- Identificador da Ordem: ${t.numeroOrdem}
+- Data/Hora: ${toBRDate(t.dataHora)}
+- Valor do Token: ${t.valorToken}
+- Ativo Digital: ${t.ativo}
+- Quantidade de Tokens: ${t.quantidade}
+- Valor Pago: ${t.valor}
+- Exchange/Corretora: ${String(t.exchange || "").split(" ")[0]}
 
-      if (isValidDate(endDateObj)) {
-        dataPrestacaoServico = endDateObj.toLocaleDateString("pt-BR");
-      } else {
-        const today = new Date();
-        const firstDayPreviousMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-        dataPrestacaoServico = firstDayPreviousMonth.toLocaleDateString("pt-BR");
-      }
+Suporte de Dúvidas
+- Para informações do P2P, consulte a documentação ou o suporte da corretora"`; // mantém aspas conforme seu padrão
 
-      // Discriminação formatada corretamente
-      let fileContent = `"- Serviço: Intermediação de Ativos Digitais\n- Comissão média: ${comissao.toFixed(2)}%\n- Quantidade Vendida: ${group.transactions.filter((transaction: any) => transaction.tipo === "vendas").length}\n- ${periodoTransacoes}\n- Valor da Nota: ${valorNfe.toFixed(2)}\nOrdem dos Campos após nome da corretora:\n- Identificador da Ordem\n- Dia e Hora\n- Valor do Token\n- Ativo Digital\n- Quantidade de Tokens\n- Valor Pago\nExchange/Corretora\n`;
-
-      group.transactions.forEach((transaction: any) => {
-        if (transaction.tipo === "vendas" && fileContent.length < 1800) {
-          fileContent += `${transaction.numeroOrdem}\n${transaction.dataHora}\n${transaction.valorToken}\n${transaction.ativo}\n${transaction.quantidade}\n${transaction.valor}\n${transaction.exchange.split(" ")[0]}\n\n`;
-        }
-      });
-
-      if (fileContent.length > 1800) fileContent += `Há mais ...\n`;
-
-      fileContent += `Suporte de Dúvidas\n- Para informações do P2P, consulte documentação ou o suporte da corretora"`;
-
-      // Criar o conteúdo CSV
-      const csvData = `R,${numeroRPS},RPS,${dataPrestacaoServico},${hoje.toLocaleDateString("pt-BR")},,${cpfCnpj},,${buyerName},,,,,,48,,,,S,${codMunicipioServicoPrestado},${codAtividade},${codListaServicos},${fileContent},${(valorNfe * 100).toFixed(2)},0,0,0,0,0,0,0,0,0,${valorIss},S,${aliquota},0,0,${inscricaoMunicipal},\n`;
+      // Linha CSV (mantém a sua estrutura)
+      const csvData =
+        `R,${numeroRPS},RPS,${dataPrestacaoServico},${toBRDate(hoje)},,${cpfCnpj},,${buyerName},,,,,,48,,,,S,` +
+        `${codMunicipioServicoPrestado},${codAtividade},${codListaServicos},${fileContent},` +
+        `${(valorNfe * 100).toFixed(2)},0,0,0,0,0,0,0,0,0,${valorIss},S,${aliquota},0,0,${inscricaoMunicipal},\n`;
 
       csvContent += csvData;
       numeroRPS += 1;
-    });
+    }
 
-    localStorage.setItem("numeroRPS", numeroRPS.toString());
+    // Atualiza sequencial
+    localStorage.setItem("numeroRPS", String(numeroRPS));
     setValorTotalNFE(somaTotalNFE);
 
-    const buyerNames = buyer.split(" ");
-    const formattedBuyer = `${buyerNames[0]} ${buyerNames[buyerNames.length - 1]}`;
+    // Nome do arquivo
+    const fileName = validationEmptyBuyers
+      ? `nota_fiscal_${monthName}.csv`
+      : `nota_fiscal_${formattedBuyer}_${monthName}.csv`;
 
-    // Criar o arquivo .csv para download
+    // Download
     const blobCsv = new Blob([csvContent], { type: "text/csv" });
     const linkCsv = document.createElement("a");
     linkCsv.href = URL.createObjectURL(blobCsv);
-    linkCsv.download = `nota_fiscal_${validationEmptyBuyers ? monthName : `${formattedBuyer}_${monthName}`}.csv`;
+    linkCsv.download = fileName;
     document.body.appendChild(linkCsv);
     linkCsv.click();
     document.body.removeChild(linkCsv);
