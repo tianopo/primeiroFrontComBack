@@ -25,16 +25,11 @@ export const SidebarX = ({ navbar, menuOpen }: ISidebarX) => {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const copyTexts = [
-    { label: "PIX CNPJ", text: "55.636.113/0001-70" },
-    { label: "PIX Aleatório", text: "2596c0b4-b3d3-4790-8d7e-9faea5976925" },
+    { label: "PIX CNPJ", text: "9d9bbfe8-8dd7-4d3f-8fd1-861fdffbeed5" },
+    { label: "PIX Aleatório", text: "9d9bbfe8-8dd7-4d3f-8fd1-861fdffbeed5" },
     {
       label: "Transferência",
-      text: `Nome: CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA
-CNPJ: 55.636.113/0001-70
-Conta: 77249-1
-Agência: 0001
-Banco: 382 - Fidúcia SCM
-Conta Corrente`,
+      text: `Não há para Corpx`,
     },
     {
       label: "Envio Final",
