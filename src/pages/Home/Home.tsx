@@ -36,49 +36,52 @@ export const Home = () => {
   };
 
   const calculateTotals = (filteredData: any[]) => {
+    const parseBRL = (v: any) =>
+      typeof v === "number"
+        ? v
+        : parseFloat(String(v).replace("R$", "").replace(/\./g, "").replace(",", "."));
+
+    const parseNum = (v: any) => {
+      if (typeof v === "number") return v;
+      return parseFloat(String(v).replace(",", "."));
+    };
+
     let totalVendas = 0;
     let totalCompras = 0;
-    let precoMedioCompra = 0;
-    let precoMedioVenda = 0;
 
-    let somaValorTokenCompra = 0;
-    let quantidadeComprasToken = 0;
+    // Acumuladores para média ponderada (apenas USDT/USDC)
+    let sumValorTokenCompraPonderado = 0; // Σ (preço * quantidade)
+    let sumQuantCompra = 0; // Σ quantidade
 
-    let somaValorTokenVenda = 0;
-    let quantidadeVendasToken = 0;
+    let sumValorTokenVendaPonderado = 0; // Σ (preço * quantidade)
+    let sumQuantVenda = 0; // Σ quantidade
 
-    filteredData.forEach((transaction: any) => {
-      const valor = parseFloat(
-        transaction.valor.replace(".", "").replace(",", ".").replace("R$", ""),
-      );
+    for (const t of filteredData) {
+      // Totais em BRL
+      const valorBRL = parseBRL(t.valor);
+      if (t.tipo === "vendas") totalVendas += Number.isFinite(valorBRL) ? valorBRL : 0;
+      else if (t.tipo === "compras") totalCompras += Number.isFinite(valorBRL) ? valorBRL : 0;
 
-      if (transaction.tipo === "vendas") {
-        totalVendas += valor;
-      } else if (transaction.tipo === "compras") {
-        totalCompras += valor;
+      // Médias ponderadas somente para stablecoins
+      const isStablecoin = ["USDT", "USDC"].includes(String(t.ativo).toUpperCase());
+      if (!isStablecoin) continue;
+
+      const precoToken = parseNum(t.valorToken); // preço unitário (ex.: 5.40)
+      const quantidade = parseNum(t.quantidade); // peso
+      if (!Number.isFinite(precoToken) || !Number.isFinite(quantidade) || quantidade <= 0) continue;
+
+      if (t.tipo === "compras") {
+        sumValorTokenCompraPonderado += precoToken * quantidade;
+        sumQuantCompra += quantidade;
+      } else if (t.tipo === "vendas") {
+        sumValorTokenVendaPonderado += precoToken * quantidade;
+        sumQuantVenda += quantidade;
       }
-
-      const isStablecoin = ["USDT", "USDC"].includes(transaction.ativo);
-      const valorToken = parseFloat(transaction.valorToken?.toString().replace(",", "."));
-
-      if (!isNaN(valorToken) && isStablecoin) {
-        if (transaction.tipo === "compras") {
-          somaValorTokenCompra += valorToken;
-          quantidadeComprasToken++;
-        } else if (transaction.tipo === "vendas") {
-          somaValorTokenVenda += valorToken;
-          quantidadeVendasToken++;
-        }
-      }
-    });
-
-    if (quantidadeComprasToken > 0) {
-      precoMedioCompra = somaValorTokenCompra / quantidadeComprasToken;
     }
 
-    if (quantidadeVendasToken > 0) {
-      precoMedioVenda = somaValorTokenVenda / quantidadeVendasToken;
-    }
+    const precoMedioCompra = sumQuantCompra > 0 ? sumValorTokenCompraPonderado / sumQuantCompra : 0;
+
+    const precoMedioVenda = sumQuantVenda > 0 ? sumValorTokenVendaPonderado / sumQuantVenda : 0;
 
     return { totalVendas, totalCompras, precoMedioCompra, precoMedioVenda };
   };
