@@ -21,10 +21,10 @@ export const apiRoute = {
   account: "user/account",
   userId: (id: string) => `user/account/${id}`,
   /* BYBIT */
-  pendingOrders: "bybit/pending-orders",
   sendChatMessage: "bybit/send-chat-message",
   releaseAssets: "bybit/release-assets",
   uploadChatMessage: "bybit/upload-chat-message",
+  pendingOrders: "bybit/pending-orders",
   /* FIDUCIA */
   consultarExtrato: (di: string, df: string) => `fiducia/conta/extrato/${di}/${df}/DESC/10`,
   extrato: "fiducia/pix/spi/extrato",

@@ -1,4 +1,5 @@
-import { Copy } from "@phosphor-icons/react/dist/ssr";
+// ...imports já existentes
+import { Copy } from "@phosphor-icons/react";
 import { Dispatch, SetStateAction, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { CardContainer } from "src/components/Layout/CardContainer";
@@ -9,7 +10,8 @@ import { useListPendingOrders } from "../hooks/useListPendingOrders";
 import { useReleaseAssets } from "../hooks/useReleaseAssets";
 import { useSendChatMessage } from "../hooks/useSendChatMessage";
 import { ChatBox } from "./ChatBox";
-import { OrderMessages } from "./OrderMessages"; // 🔹 import novo
+import { OrderMessages } from "./OrderMessages";
+import { CryptotechOrders } from "./PendingOrders/CryptotechOrders";
 
 interface IPendingOrders {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -22,7 +24,7 @@ interface IPendingOrders {
   >;
 }
 
-export type KeyType = "empresa" | "pessoal";
+export type KeyType = "empresa" | "pessoal" | "cryptotech";
 
 export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrders) => {
   const { data, isLoading, error } = useListPendingOrders();
@@ -58,26 +60,27 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
   if (error) return <p>Erro ao carregar ordens.</p>;
   if (!data) return <p>Sem ordens pendentes.</p>;
 
-  const orders = data[activeTab as keyof typeof data] || [];
-
+  const orders = (data[activeTab as keyof typeof data] as any[]) || [];
   return (
     <CardContainer full>
       <h3 className="text-28 font-bold">ORDENS PENDENTES</h3>
 
       {/* Tabs */}
       <div className="flex gap-2">
-        {["empresa", "pessoal"].map((tab) => {
-          const hasOrders = (data[tab as keyof typeof data] || []).length > 0;
-
+        {[
+          { key: "empresa", label: "Bybit E" },
+          { key: "pessoal", label: "Bybit P" },
+          { key: "cryptotech", label: "Cryptotech" },
+        ].map(({ key, label }) => {
+          const hasOrders = ((data as any)[key] || []).length > 0;
           return (
-            <div key={tab} className="relative">
+            <div key={key} className="relative">
               <Button
-                onClick={() => setActiveTab(tab as KeyType)}
-                className={`rounded-6 p-2 ${activeTab === tab ? "bg-blue-500 text-white" : "bg-gray-200"}`}
+                onClick={() => setActiveTab(key as KeyType)}
+                className={`rounded-6 p-2 ${activeTab === key ? "bg-blue-500 text-white" : "bg-gray-200"}`}
               >
-                {tab === "empresa" ? "Bybit E" : "Bybit P"}
+                {label}
               </Button>
-
               {hasOrders && (
                 <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-red-500"></span>
               )}
@@ -88,7 +91,14 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
 
       {/* Lista de ordens */}
       {orders.length === 0 ? (
-        <p>Sem ordens em {activeTab}.</p>
+        <p>Sem ordens em {activeTab}</p>
+      ) : activeTab === "cryptotech" ? (
+        <CryptotechOrders
+          orders={orders}
+          activeTab={activeTab}
+          setForm={setForm}
+          setInitialRegisterData={setInitialRegisterData}
+        />
       ) : (
         <div className="flex flex-wrap gap-2">
           {orders.map((order: any) => (
@@ -102,10 +112,13 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                   setInitialRegisterData({
                     apelido: order.targetNickName || "",
                     nome: order.buyerRealName || "",
-                    exchange: "Bybit https://www.bybit.com/ SG",
+                    exchange:
+                      activeTab === "empresa"
+                        ? "Bybit https://www.bybit.com/ SG"
+                        : "Bybit https://www.bybit.com/ SG",
                   });
                   setForm(true);
-                  navigator.clipboard.writeText(order.buyerRealName.trim());
+                  navigator.clipboard.writeText((order.buyerRealName || "").trim());
                 }}
               >
                 <Copy width={20} height={20} weight="duotone" />
@@ -145,9 +158,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                 <strong>CPF/CNPJ:</strong> {order.document || "Não informado"}
               </p>
 
-              {/* 🔹 Componente separado */}
               <OrderMessages messages={order.messages} />
-
               <ChatBox orderId={order.id} keyType={activeTab} />
 
               <Button
@@ -183,8 +194,8 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
         </div>
       )}
 
-      {/* Modal */}
-      {showModal && orderToRelease && (
+      {/* Modal Bybit E/P (permanece aqui para esses tabs) */}
+      {showModal && orderToRelease && activeTab !== "cryptotech" && (
         <ConfirmationDelete
           text={`Você tem certeza que deseja liberar para ${orderToRelease.buyerRealName} o valor de ${orderToRelease.amount}?`}
           onConfirm={handleConfirmRelease}
