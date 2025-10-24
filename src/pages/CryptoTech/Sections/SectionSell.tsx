@@ -3,7 +3,7 @@ import { WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import axios from "axios";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { formatCPFOrCNPJ } from "src/utils/formats";
+import { formatCPFOrCNPJ, formatCurrencyNoReal } from "src/utils/formats";
 import { ModalInstitutional } from "../components/ModalInstitutional";
 import { Step1 } from "../components/SectionSellSteps/Step1";
 import { Step2 } from "../components/SectionSellSteps/Step2";
@@ -50,8 +50,9 @@ export const SectionSell = () => {
   };
 
   const handleFiatChange = (v: string) => {
-    setQuantidadeFiat(v);
-    const n = parseFloat(v.replace(",", "."));
+    const f = formatCurrencyNoReal(v);
+    setQuantidadeFiat(f);
+    const n = parseFloat(f.replace(",", "."));
     if (Number.isFinite(n)) {
       const taxa = 1 - atualizarTaxa(n) / 100;
       setQuantidadeAtivo(((n / dolar) * taxa).toFixed(8));
@@ -64,7 +65,7 @@ export const SectionSell = () => {
     if (Number.isFinite(n)) {
       const fiatEstimado = n * dolar;
       const taxa = 1 - atualizarTaxa(fiatEstimado) / 100;
-      setQuantidadeFiat(((n * dolar) / taxa).toFixed(2));
+      setQuantidadeFiat(((n * dolar) / taxa).toFixed(2).replace(".", ","));
     }
   };
 
@@ -86,6 +87,7 @@ export const SectionSell = () => {
   const handleNextGuarded = async () => {
     if (step === 1) {
       const fiatNumber = Number(String(quantidadeFiat).replace(",", "."));
+      console.log(fiatNumber);
       if (!Number.isFinite(fiatNumber) || fiatNumber < 50) {
         toast.error("O valor mínimo é R$ 50,00.");
         return;

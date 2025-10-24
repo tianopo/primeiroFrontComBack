@@ -377,14 +377,14 @@ Suporte de Dúvidas
                       key={transaction.numeroOrdem}
                       className="my-1.5 w-full rounded-8 border-1 border-edge-primary p-4 sm:w-72"
                     >
-                      <p className="max-w-[200px] truncate">
+                      <p className="max-w-[250px] truncate">
                         <strong>Ordem:</strong> {transaction.numeroOrdem}
                       </p>
                       <p>
                         <strong>Data/Hora:</strong> {transaction.dataHora}
                       </p>
                       <p>
-                        <p className="max-w-[200px] truncate">
+                        <p className="max-w-[250px] truncate">
                           <strong>Usuário:</strong> {transaction.User?.name}
                         </p>
                         <strong>Ativo:</strong> {transaction.ativo}

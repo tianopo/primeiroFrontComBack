@@ -64,14 +64,14 @@ export const CryptotechOrders = ({
           const nome = order.User?.name || "";
           const doc = order.User?.document || "Não informado";
           const apelido = nome;
-
+          console.log(order);
           return (
             <div
               key={order.id || order.numeroOrdem}
               className="relative flex w-fit flex-col gap-0.5 rounded-xl border border-gray-200 p-4 shadow"
             >
               <button
-                className="absolute right-2 top-2 rounded-6 border border-gray-200 bg-white p-2 hover:bg-gray-100 hover:opacity-80"
+                className="absolute right-2 top-8 rounded-6 border border-gray-200 bg-white p-2 hover:bg-gray-100 hover:opacity-80"
                 onClick={() => {
                   setInitialRegisterData({
                     apelido,
@@ -84,38 +84,38 @@ export const CryptotechOrders = ({
               >
                 <Copy width={20} height={20} weight="duotone" />
               </button>
-
-              <p>
-                <strong>ID/Ordem:</strong> {order.numeroOrdem || order.id}
-              </p>
-              <p>
-                <strong>Data/Hora:</strong> {order.dataHora || "N/A"}
-              </p>
-              <p>
-                <strong>Status:</strong> {statusLabel(order.status)}
-              </p>
-              <p>
-                <strong>Nome:</strong> {nome || "Não informado"}
-              </p>
-              <p>
-                <strong>Ativo:</strong> {order.ativo}
-              </p>
-              <p>
-                <strong>Tipo:</strong> {order.tipo}
-              </p>
-              <p>
-                <strong>Quantidade:</strong> {order.quantidade}
-              </p>
-              <p>
-                <strong>Valor:</strong> {order.valor}
-              </p>
-              <p>
-                <strong>Valor Token:</strong> {order.valorToken || "-"}
-              </p>
-              <p>
-                <strong>CPF/CNPJ:</strong> {doc}
-              </p>
-
+              <div className=" mb-1 flex flex-col gap-0.5">
+                <p>
+                  <strong>ID/Ordem:</strong> {order.numeroOrdem || order.id}
+                </p>
+                <p>
+                  <strong>Data/Hora:</strong> {order.dataHora || "N/A"}
+                </p>
+                <p>
+                  <strong>Status:</strong> {statusLabel(order.status)}
+                </p>
+                <p>
+                  <strong>Nome:</strong> {nome || "Não informado"}
+                </p>
+                <p>
+                  <strong>Ativo:</strong> {order.ativo}
+                </p>
+                <p>
+                  <strong>Tipo:</strong> {order.tipo}
+                </p>
+                <p>
+                  <strong>Quantidade:</strong> {order.quantidade}
+                </p>
+                <p>
+                  <strong>Valor:</strong> {order.valor}
+                </p>
+                <p>
+                  <strong>Valor Token:</strong> {order.valorToken || "-"}
+                </p>
+                <p>
+                  <strong>CPF/CNPJ:</strong> {doc}
+                </p>
+              </div>
               <Button
                 disabled={acesso !== "Master" || !doc || doc === "documento não disponível"}
                 onClick={() => handleSendCoin(order)}

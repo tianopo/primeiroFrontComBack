@@ -170,6 +170,15 @@ export const formatCurrency = (value: string): string => {
   return input;
 };
 
+export const formatCurrencyNoReal = (value: string): string => {
+  let input = value.replace(/[^0-9,]/g, "");
+  if (input.length > 2) {
+    input = input.replace(/,/g, "");
+    input = input.replace(/(\d*)(\d{2})$/, "$1,$2");
+  }
+  return input;
+};
+
 export const formatDateHour = (value: string): string => {
   let input = value.replace(/[^0-9]/g, "");
   if (input.length <= 2) {
