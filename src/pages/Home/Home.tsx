@@ -239,7 +239,8 @@ export const Home = () => {
       const valorIss = Math.round(valorNfe * (aliquota / 10000));
       somaTotalNFE += valorNfe;
 
-      const dataPrestacaoServico = toBRDate(t.dataHora);
+      const _br = toBRDate(t.dataHora);
+      const dataPrestacaoServico = _br === "Invalid Date" ? toBRDate(new Date()) : _br;
 
       const fileContent = `"- Serviço: Intermediação de Ativos Digitais
 - Operação: ${t.tipo}

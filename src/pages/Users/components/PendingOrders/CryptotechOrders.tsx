@@ -2,8 +2,8 @@ import { Copy } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { ConfirmationDelete } from "src/components/Modal/ConfirmationDelete";
-import { generateSingleReceipt } from "src/pages/Home/config/handleReceipt";
 import { useAccessControl } from "src/routes/context/AccessControl";
+import { useAdvanceOrderStatus } from "../../hooks/useAdvanceOrderStatus";
 
 type KeyType = "empresa" | "pessoal" | "cryptotech";
 
@@ -41,18 +41,21 @@ export const CryptotechOrders = ({
   const { acesso } = useAccessControl();
   const [showModal, setShowModal] = useState(false);
   const [orderToRelease, setOrderToRelease] = useState<ICryptotechOrder | null>(null);
+  const { mutate: advanceStatus, isPending: isAdvancing } = useAdvanceOrderStatus();
 
   const handleSendCoin = async (order: ICryptotechOrder) => {
+    setOrderToRelease(order);
     setShowModal(true);
   };
 
   const handleConfirmRelease = async () => {
     if (!orderToRelease) return;
-    const base64Image = await generateSingleReceipt(orderToRelease as any);
-    if (!base64Image) return;
-
-    setShowModal(false);
-    setOrderToRelease(null);
+    advanceStatus(orderToRelease.id, {
+      onSettled: () => {
+        setShowModal(false);
+        setOrderToRelease(null);
+      },
+    });
   };
 
   if (!orders || orders.length === 0) return <p>Sem ordens em Cryptotech.</p>;
@@ -64,7 +67,9 @@ export const CryptotechOrders = ({
           const nome = order.User?.name || "";
           const doc = order.User?.document || "Não informado";
           const apelido = nome;
-          console.log(order);
+
+          const isPending = order.status === "Pending";
+          const isPaid = order.status === "Paid";
           return (
             <div
               key={order.id || order.numeroOrdem}
@@ -84,7 +89,8 @@ export const CryptotechOrders = ({
               >
                 <Copy width={20} height={20} weight="duotone" />
               </button>
-              <div className=" mb-1 flex flex-col gap-0.5">
+
+              <div className="mb-1 flex flex-col gap-0.5">
                 <p>
                   <strong>ID/Ordem:</strong> {order.numeroOrdem || order.id}
                 </p>
@@ -116,11 +122,18 @@ export const CryptotechOrders = ({
                   <strong>CPF/CNPJ:</strong> {doc}
                 </p>
               </div>
+
               <Button
-                disabled={acesso !== "Master" || !doc || doc === "documento não disponível"}
+                disabled={
+                  acesso !== "Master" ||
+                  !doc ||
+                  doc === "documento não disponível" ||
+                  isPending ||
+                  isAdvancing
+                }
                 onClick={() => handleSendCoin(order)}
               >
-                Enviar Moedas
+                {isAdvancing ? "Processando…" : isPaid ? "Enviar Moedas" : "Aguardando Pagamento"}
               </Button>
             </div>
           );
@@ -129,7 +142,7 @@ export const CryptotechOrders = ({
 
       {showModal && orderToRelease && (
         <ConfirmationDelete
-          text={`Você tem certeza que deseja liberar para ${orderToRelease?.User?.name || "o cliente"} o valor de ${orderToRelease?.valor || "R$ 0,00"}?`}
+          text={`Você confirma o envio de moedas para ${orderToRelease?.User?.name || "o cliente"} no valor de ${orderToRelease?.valor || "R$ 0,00"}?`}
           onConfirm={handleConfirmRelease}
           onCancel={() => {
             setShowModal(false);

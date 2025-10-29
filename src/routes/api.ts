@@ -12,6 +12,7 @@ export const apiRoute = {
   tax: "orders/tax",
   comercial: "orders/comercial",
   qrCode: "orders/qrCode",
+  changeStatus: (orderId: string) => `/orders/${orderId}/status/advance`,
   /* COMPLIANCE */
   compliance: "compliance",
   operation: "compliance/operation",
