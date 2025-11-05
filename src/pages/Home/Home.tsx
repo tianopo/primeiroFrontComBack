@@ -159,8 +159,8 @@ export const Home = () => {
     // Config fixa (mesma que você já usa)
     const hoje = new Date();
     const monthName = hoje.toLocaleDateString("pt-BR", { month: "long" });
-    const comissaoFixa = 0.08; // % base para não-stable / fallback
-    const comissaoMargemErro = 10; // ajuste de margem
+    const comissaoFixa = 0.1; // % base para não-stable / fallback
+    const comissaoMargemErro = 8; // ajuste de margem
     const codMunicipioServicoPrestado = 352440;
     const codAtividade = 6619399;
     const codListaServicos = 10.02;
@@ -211,7 +211,7 @@ export const Home = () => {
       let comissao = comissaoFixa;
 
       if (ehBTCouETH) {
-        comissao = 5;
+        comissao = 9.5;
       } else if (ehStable) {
         if (t.tipo === "vendas") {
           const basePct =
@@ -252,6 +252,7 @@ export const Home = () => {
 - Quantidade de Tokens: ${t.quantidade}
 - Valor Pago: ${t.valor}
 - Exchange/Corretora: ${String(t.exchange || "").split(" ")[0]}
+- Margem de Erro da Comissão: ${comissaoMargemErro} BRL
 
 Suporte de Dúvidas
 - Para informações do P2P, consulte a documentação ou o suporte da corretora"`;
