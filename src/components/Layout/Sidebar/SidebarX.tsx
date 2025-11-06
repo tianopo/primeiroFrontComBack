@@ -1,10 +1,11 @@
-import { CopySimple, DoorOpen, Gear } from "@phosphor-icons/react";
-import { useState } from "react";
+import { CopySimple, DoorOpen, Gear, SlidersHorizontal } from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useLogout } from "src/hooks/API/useLogout";
 import { app } from "src/routes/app";
 import { useAccessControl } from "src/routes/context/AccessControl";
 import "./Sidebar.css";
+import { useUpdateExchangeOffsets } from "../LayoutX/UseUpdateExchangesOffsets";
 
 interface INavbar {
   icon?: JSX.Element;
@@ -22,6 +23,7 @@ export const SidebarX = ({ navbar, menuOpen }: ISidebarX) => {
   const { mutate } = useLogout();
   const navigate = useNavigate();
   const location = useLocation();
+
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const copyTexts = [

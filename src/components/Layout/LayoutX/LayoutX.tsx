@@ -4,6 +4,7 @@ import { app } from "src/routes/app";
 import { useAccessControl } from "src/routes/context/AccessControl";
 import { Header } from "../Header/Header";
 import { SidebarX } from "../Sidebar/SidebarX";
+import { BallonEditPrice } from "./BallonEditPrice";
 
 export const LayoutX = () => {
   const { acesso } = useAccessControl();
@@ -48,6 +49,7 @@ export const LayoutX = () => {
         <SidebarX navbar={nav} />
         <div className="flex max-h-full min-h-screen w-full flex-col gap-2 bg-primary p-6 md:h-full md:gap-4">
           <Outlet />
+          {acesso === "Master" && <BallonEditPrice />}
         </div>
       </div>
     </div>

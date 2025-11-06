@@ -79,7 +79,7 @@ export const Header = ({ navbar }: IHeader) => {
     };
 
     fetchAndCheckCurrency(); // Executa uma vez no início
-    const interval = setInterval(fetchAndCheckCurrency, 30000); // Executa a cada 30 segundos
+    const interval = setInterval(fetchAndCheckCurrency, 60000); // Executa a cada 30 segundos
     return () => clearInterval(interval); // Limpa o intervalo ao desmontar
   }, []);
 

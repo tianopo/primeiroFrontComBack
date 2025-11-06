@@ -39,4 +39,6 @@ export const apiRoute = {
   decodificarQrCodeOculto: "/fiducia/pix/qrcode/decodificar/oculto",
   /* WHATSAPP */
   notifyWhatsapp: "whatsapp/notify",
+  /* API */
+  exchangeOffsets: "api/exchange-offsets",
 };
