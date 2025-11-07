@@ -1,32 +1,23 @@
 import { SlidersHorizontal, X } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { useUpdateExchangeOffsets } from "./UseUpdateExchangesOffsets";
+import { useExchangeOffsets } from "./useExchangeOffsets";
 
 export const BallonEditPrice = () => {
+  const { data, isLoading } = useExchangeOffsets();
   const { mutate: updateOffsets, isPending: updatingOffsets } = useUpdateExchangeOffsets();
 
   const [editingOffsets, setEditingOffsets] = useState(false);
   const [sellOffset, setSellOffset] = useState("0.10");
   const [buyOffset, setBuyOffset] = useState("0.10");
-
+  console.log(data);
+  // Sempre que vier do Redis, refletir nos inputs (formatação com 2 casas decimais)
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("exchange-offsets");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed.sellOffset != null) setSellOffset(String(parsed.sellOffset));
-        if (parsed.buyOffset != null) setBuyOffset(String(parsed.buyOffset));
-      } else {
-        const defaults = { sellOffset: 0.1, buyOffset: 0.1 };
-        localStorage.setItem("exchange-offsets", JSON.stringify(defaults));
-        updateOffsets(defaults);
-      }
-    } catch {
-      const defaults = { sellOffset: 0.1, buyOffset: 0.1 };
-      localStorage.setItem("exchange-offsets", JSON.stringify(defaults));
-      updateOffsets(defaults);
+    if (data) {
+      setSellOffset(String(data.sellOffset));
+      setBuyOffset(String(data.buyOffset));
     }
-  }, []);
+  }, [data]);
 
   const handleOpen = () => {
     if (!editingOffsets) setEditingOffsets(true);
@@ -42,31 +33,26 @@ export const BallonEditPrice = () => {
     if (!Number.isFinite(sell) || !Number.isFinite(buy) || sell < 0 || buy < 0) return;
 
     const payload = { sellOffset: sell, buyOffset: buy };
-
     updateOffsets(payload, {
-      onSuccess: () => {
-        localStorage.setItem("exchange-offsets", JSON.stringify(payload));
-        setEditingOffsets(false);
-      },
+      onSuccess: () => setEditingOffsets(false),
     });
   };
+
+  const label = isLoading ? "Carregando..." : `SELL: ${sellOffset} | BUY: ${buyOffset}`;
 
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 rounded-10 bg-gray-50 p-2 text-xs text-gray-700 shadow-lg">
       {!editingOffsets ? (
-        // Balão fechado: clique abre edição
         <button
           type="button"
           onClick={handleOpen}
-          className="flex items-center gap-2 rounded-6 bg-blue-600 px-2 py-1 text-16 font-medium text-white hover:bg-blue-700"
+          disabled={isLoading}
+          className="flex items-center gap-2 rounded-6 bg-blue-600 px-2 py-1 text-16 font-medium text-white hover:bg-blue-700 disabled:opacity-60"
         >
           <SlidersHorizontal size={18} />
-          <p>
-            SELL: {sellOffset} | BUY: {buyOffset}
-          </p>
+          <p>{label}</p>
         </button>
       ) : (
-        // Modo edição
         <>
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-16 font-medium text-blue-700">
@@ -88,7 +74,7 @@ export const BallonEditPrice = () => {
               <input
                 value={sellOffset}
                 onChange={(e) => setSellOffset(e.target.value)}
-                className="w-16 rounded border border-gray-300 px-1 py-0.5 text-right text-16"
+                className="w-20 rounded border border-gray-300 px-1 py-0.5 text-right text-16"
               />
             </label>
             <label className="flex items-center justify-between gap-2">
@@ -96,7 +82,7 @@ export const BallonEditPrice = () => {
               <input
                 value={buyOffset}
                 onChange={(e) => setBuyOffset(e.target.value)}
-                className="w-16 rounded border border-gray-300 px-1 py-0.5 text-right text-16"
+                className="w-20 rounded border border-gray-300 px-1 py-0.5 text-right text-16"
               />
             </label>
           </div>

@@ -17,8 +17,8 @@ export const useUpdateExchangeOffsets = () => {
     },
     onSuccess: (data) => {
       responseSuccess("Offsets atualizados com sucesso");
+      queryClient.invalidateQueries({ queryKey: ["exchange-offsets"] });
       queryClient.setQueryData(["exchange-offsets"], data);
-      localStorage.setItem("exchange-offsets", JSON.stringify(data));
     },
     onError: (err: AxiosError) => responseError(err),
   });
