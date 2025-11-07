@@ -12,6 +12,7 @@ import { useSendChatMessage } from "../hooks/useSendChatMessage";
 import { ChatBox } from "./ChatBox";
 import { OrderMessages } from "./OrderMessages";
 import { CryptotechOrders } from "./PendingOrders/CryptotechOrders";
+import { CoinexOrders } from "./PendingOrders/CoinexOrders";
 
 interface IPendingOrders {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -24,7 +25,7 @@ interface IPendingOrders {
   >;
 }
 
-export type KeyType = "empresa" | "pessoal" | "cryptotech";
+export type KeyType = "empresa" | "pessoal" | "coinex" | "cryptotech";
 
 export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrders) => {
   const { data, isLoading, error } = useListPendingOrders();
@@ -70,6 +71,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
         {[
           { key: "empresa", label: "Bybit E" },
           { key: "pessoal", label: "Bybit P" },
+          { key: "coinex", label: "Coinex" },
           { key: "cryptotech", label: "Cryptotech" },
         ].map(({ key, label }) => {
           const hasOrders = ((data as any)[key] || []).length > 0;
@@ -99,6 +101,8 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
           setForm={setForm}
           setInitialRegisterData={setInitialRegisterData}
         />
+      ) : activeTab === "coinex" ? (
+        <CoinexOrders orders={orders} />
       ) : (
         <div className="flex flex-wrap gap-2">
           {orders.map((order: any) => (

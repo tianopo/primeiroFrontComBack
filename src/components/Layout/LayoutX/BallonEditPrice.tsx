@@ -10,8 +10,7 @@ export const BallonEditPrice = () => {
   const [editingOffsets, setEditingOffsets] = useState(false);
   const [sellOffset, setSellOffset] = useState("0.10");
   const [buyOffset, setBuyOffset] = useState("0.10");
-  console.log(data);
-  // Sempre que vier do Redis, refletir nos inputs (formatação com 2 casas decimais)
+
   useEffect(() => {
     if (data) {
       setSellOffset(String(data.sellOffset));
