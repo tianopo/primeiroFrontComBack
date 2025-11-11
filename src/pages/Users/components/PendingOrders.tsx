@@ -148,13 +148,10 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                   : order.buyerRealName || "Não informado"}
               </p>
               <p>
-                <strong>Ativo:</strong> {order.tokenId}
-              </p>
-              <p>
                 <strong>Tipo:</strong> {order.side === 0 ? "compras" : "vendas"}
               </p>
               <p>
-                <strong>Quantidade:</strong> {order.notifyTokenQuantity}
+                <strong>Quantidade:</strong> {order.notifyTokenQuantity} {order.tokenId}
               </p>
               <p>
                 <strong>Valor:</strong> {order.amount} {order.currencyId}
