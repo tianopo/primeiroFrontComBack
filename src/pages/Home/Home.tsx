@@ -160,7 +160,7 @@ export const Home = () => {
     const hoje = new Date();
     const monthName = hoje.toLocaleDateString("pt-BR", { month: "long" });
     const comissaoFixa = 0.1; // % base para não-stable / fallback
-    const comissaoMargemErro = 8; // ajuste de margem
+    const comissaoMargemErro = 5; // ajuste de margem
     const codMunicipioServicoPrestado = 352440;
     const codAtividade = 6619399;
     const codListaServicos = 10.02;
@@ -252,7 +252,7 @@ export const Home = () => {
 - Quantidade de Tokens: ${t.quantidade}
 - Valor Pago: ${t.valor}
 - Exchange/Corretora: ${String(t.exchange || "").split(" ")[0]}
-- Margem de Erro da Comissão: ${comissaoMargemErro} BRL
+- Margem de Erro da Comissão:  Cerca de 0.0${comissaoMargemErro} BRL
 
 Suporte de Dúvidas
 - Para informações do P2P, consulte a documentação ou o suporte da corretora"`;

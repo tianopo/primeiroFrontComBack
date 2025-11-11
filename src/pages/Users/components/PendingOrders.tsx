@@ -11,8 +11,8 @@ import { useReleaseAssets } from "../hooks/useReleaseAssets";
 import { useSendChatMessage } from "../hooks/useSendChatMessage";
 import { ChatBox } from "./ChatBox";
 import { OrderMessages } from "./OrderMessages";
-import { CryptotechOrders } from "./PendingOrders/CryptotechOrders";
 import { CoinexOrders } from "./PendingOrders/CoinexOrders";
+import { CryptotechOrders } from "./PendingOrders/CryptotechOrders";
 
 interface IPendingOrders {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -153,10 +153,10 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                 <strong>Quantidade:</strong> {order.notifyTokenQuantity}
               </p>
               <p>
-                <strong>Valor:</strong> R$ {order.amount}
+                <strong>Valor:</strong> {order.amount} {order.currencyId}
               </p>
               <p>
-                <strong>Preço Unitário:</strong> R$ {order.price?.replace(".", ",")}
+                <strong>Preço Unitário:</strong> {order.price?.replace(".", ",")} {order.currencyId}
               </p>
               <p>
                 <strong>CPF/CNPJ:</strong> {order.document || "Não informado"}
@@ -201,7 +201,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
       {/* Modal Bybit E/P (permanece aqui para esses tabs) */}
       {showModal && orderToRelease && activeTab !== "cryptotech" && (
         <ConfirmationDelete
-          text={`Você tem certeza que deseja liberar para ${orderToRelease.buyerRealName} o valor de ${orderToRelease.amount}?`}
+          text={`Você tem certeza que deseja liberar para ${orderToRelease.buyerRealName} a quantidade de ${orderToRelease.notifyTokenQuantity} ${orderToRelease.tokenId} no valor de ${orderToRelease.amount} ${orderToRelease.currencyId}?`}
           onConfirm={handleConfirmRelease}
           onCancel={() => {
             setShowModal(false);
