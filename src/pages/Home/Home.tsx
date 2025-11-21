@@ -211,7 +211,7 @@ export const Home = () => {
       let comissao = comissaoFixa;
 
       if (ehBTCouETH) {
-        comissao = 9.5;
+        comissao = 4.5;
       } else if (ehStable) {
         if (t.tipo === "vendas") {
           const basePct =

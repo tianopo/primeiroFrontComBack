@@ -52,9 +52,10 @@ export const generateSingleReceipt = (item: any): Promise<string> => {
         `Apelido: ${item.targetNickName || "Não informado"}`,
         `Nome: ${item.buyerRealName || "Não informado"}`,
         `Ativo: ${item.tokenId}`,
+        `Moeda: ${item.currencyId}`,
         `Tipo: ${item.side === 0 ? "compras" : "vendas"}`,
-        `Valor: R$ ${item.amount.replace(".", ",")}`,
-        `Preço unitário: R$ ${item.price.replace(".", ",")}`,
+        `Valor: ${item.amount.replace(".", ",")}`,
+        `Preço unitário: ${item.price.replace(".", ",")}`,
         `Quantidade: ${item.notifyTokenQuantity}`,
         `CPF/CNPJ: ${item.document || "Não informado"}`,
       ];

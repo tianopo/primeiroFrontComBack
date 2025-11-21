@@ -25,7 +25,7 @@ interface IPendingOrders {
   >;
 }
 
-export type KeyType = "empresa" | "pessoal" | "coinex" | "cryptotech";
+export type KeyType = "empresa" | "pessoal" | "coinexEmpresa" | "coinexPessoal" | "cryptotech";
 
 export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrders) => {
   const { data, isLoading, error } = useListPendingOrders();
@@ -67,11 +67,12 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
       <h3 className="text-28 font-bold">ORDENS PENDENTES</h3>
 
       {/* Tabs */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {[
           { key: "empresa", label: "Bybit E" },
           { key: "pessoal", label: "Bybit P" },
-          { key: "coinex", label: "Coinex" },
+          { key: "coinexEmpresa", label: "Coinex E" },
+          { key: "coinexPessoal", label: "Coinex P" },
           { key: "cryptotech", label: "Cryptotech" },
         ].map(({ key, label }) => {
           const hasOrders = ((data as any)[key] || []).length > 0;
@@ -79,7 +80,9 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
             <div key={key} className="relative">
               <Button
                 onClick={() => setActiveTab(key as KeyType)}
-                className={`rounded-6 p-2 ${activeTab === key ? "bg-blue-500 text-white" : "bg-gray-200"}`}
+                className={`rounded-6 p-2 ${
+                  activeTab === key ? "bg-blue-500 text-white" : "bg-gray-200"
+                }`}
               >
                 {label}
               </Button>
@@ -101,8 +104,11 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
           setForm={setForm}
           setInitialRegisterData={setInitialRegisterData}
         />
-      ) : activeTab === "coinex" ? (
-        <CoinexOrders orders={orders} />
+      ) : activeTab === "coinexEmpresa" || activeTab === "coinexPessoal" ? (
+        <CoinexOrders
+          orders={orders}
+          title={activeTab === "coinexEmpresa" ? "Coinex Empresa" : "Coinex Pessoal"}
+        />
       ) : (
         <div className="flex flex-wrap gap-2">
           {orders.map((order: any) => (
