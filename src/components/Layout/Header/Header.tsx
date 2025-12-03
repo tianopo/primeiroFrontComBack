@@ -65,7 +65,6 @@ export const Header = ({ navbar }: IHeader) => {
     const fetchAndCheckCurrency = async () => {
       try {
         const { data } = await axios.get("https://economia.awesomeapi.com.br/last/USD-BRL,BTC-BRL");
-        console.log(data);
         if (currencyRef.current) {
           checkFluctuation(data.USDBRL, currencyRef.current.USDBRL, "nos últimos 30 segundos");
         }

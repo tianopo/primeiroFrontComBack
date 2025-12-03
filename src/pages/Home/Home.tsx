@@ -7,7 +7,47 @@ import { fortnigthlyFiduciaTable } from "./config/fortnigthlyFiduciaTable";
 import { handleCompraVendaIN1888 } from "./config/handleDownload";
 import { handleReceipt } from "./config/handleReceipt";
 import { mensalFiduciaTable } from "./config/mensalFiduciaTable";
+import { useDeleteOrder } from "./hooks/useDeleteOrder";
 import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
+import { useUpdateOrder } from "./hooks/useUpdateOrder";
+
+/**
+ * Helpers globais
+ */
+const parseBRL = (v: any): number => {
+  if (typeof v === "number") return v;
+
+  let raw = String(v).replace("R$", "").trim();
+  raw = raw.replace(/\s/g, "");
+
+  const hasComma = raw.includes(",");
+  const hasDot = raw.includes(".");
+
+  if (hasComma && hasDot) {
+    // Formato pt-BR: 1.234,56
+    raw = raw.replace(/\./g, "").replace(",", ".");
+  } else if (hasComma && !hasDot) {
+    // Formato: 1234,56
+    raw = raw.replace(",", ".");
+  } else {
+    // Só ponto ou só dígitos: 1234.56 ou 1234 (mantém)
+  }
+
+  const n = parseFloat(raw);
+  return Number.isFinite(n) ? n : 0;
+};
+
+const parseNum = (v: any): number => {
+  if (typeof v === "number") return v;
+  return parseFloat(String(v).replace(",", "."));
+};
+
+const toBRDate = (d: Date | string) =>
+  new Date(d).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 
 export const Home = () => {
   const { acesso } = useAccessControl();
@@ -29,6 +69,44 @@ export const Home = () => {
     filterDates.startDate,
     filterDates.endDate,
   );
+  const { mutate: updateOrder, isPending: isUpdating } = useUpdateOrder();
+  const { mutate: deleteOrder, isPending: isDeleting } = useDeleteOrder();
+
+  // 🔹 handler simples de edição (pode evoluir depois)
+  const handleEditOrder = (transaction: any) => {
+    const novoValor = window.prompt(
+      `Editar Valor (BRL) da ordem ${transaction.numeroOrdem}`,
+      String(transaction.valor ?? ""),
+    );
+    if (novoValor === null) return;
+
+    const novoValorToken = window.prompt(
+      `Editar Valor do Token da ordem ${transaction.numeroOrdem}`,
+      String(transaction.valorToken ?? ""),
+    );
+    if (novoValorToken === null) return;
+
+    const novaTaxa = window.prompt(
+      `Editar Taxa da ordem ${transaction.numeroOrdem}`,
+      String(transaction.taxa ?? ""),
+    );
+    if (novaTaxa === null) return;
+
+    updateOrder({
+      id: transaction.id, // 👈 agora usando id
+      valor: novoValor,
+      valorToken: novoValorToken,
+      taxa: novaTaxa,
+    });
+  };
+
+  // 🔹 handler de exclusão
+  const handleDeleteOrder = (transaction: any) => {
+    const ok = window.confirm(`Tem certeza que deseja excluir a ordem ${transaction.numeroOrdem}?`);
+    if (!ok) return;
+
+    deleteOrder(transaction.id); // 👈 aqui também id
+  };
 
   const handleOrder = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,16 +114,6 @@ export const Home = () => {
   };
 
   const calculateTotals = (filteredData: any[]) => {
-    const parseBRL = (v: any) =>
-      typeof v === "number"
-        ? v
-        : parseFloat(String(v).replace("R$", "").replace(/\./g, "").replace(",", "."));
-
-    const parseNum = (v: any) => {
-      if (typeof v === "number") return v;
-      return parseFloat(String(v).replace(",", "."));
-    };
-
     let totalVendas = 0;
     let totalCompras = 0;
 
@@ -57,7 +125,7 @@ export const Home = () => {
     let sumQuantVenda = 0; // Σ quantidade
 
     for (const t of filteredData) {
-      // Totais em BRL
+      // Totais em BRL (base real das NFs)
       const valorBRL = parseBRL(t.valor);
       if (t.tipo === "vendas") totalVendas += Number.isFinite(valorBRL) ? valorBRL : 0;
       else if (t.tipo === "compras") totalCompras += Number.isFinite(valorBRL) ? valorBRL : 0;
@@ -143,24 +211,11 @@ export const Home = () => {
   const handleTransactions = async () => {
     if (!filteredData) return;
 
-    // Helpers
-    const parseBRL = (v: any) =>
-      typeof v === "number"
-        ? v
-        : parseFloat(String(v).replace("R$", "").replace(/\./g, "").replace(",", "."));
-    const parseNum = (v: any) => parseFloat(String(v).replace(",", "."));
-    const toBRDate = (d: Date | string) =>
-      new Date(d).toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
-
-    // Config fixa (mesma que você já usa)
+    // Config fixa
     const hoje = new Date();
     const monthName = hoje.toLocaleDateString("pt-BR", { month: "long" });
     const comissaoFixa = 0.1; // % base para não-stable / fallback
-    const comissaoMargemErro = 5; // ajuste de margem
+    const comissaoMargemErro = 10; // ajuste de margem
     const codMunicipioServicoPrestado = 352440;
     const codAtividade = 6619399;
     const codListaServicos = 10.02;
@@ -171,7 +226,6 @@ export const Home = () => {
     let numeroRPS = parseInt(localStorage.getItem("numeroRPS") || "0", 10);
 
     // Para o nome do arquivo
-    const validationEmptyBuyers = buyer === "" || buyer === " N/A";
     const buyerNames = buyer.split(" ");
     const formattedBuyer =
       `${buyerNames[0] || ""} ${buyerNames[buyerNames.length - 1] || ""}`.trim();
@@ -188,6 +242,7 @@ export const Home = () => {
       const buyerName = t.User?.name || "N/A";
       const cpfCnpj = (t.User?.document || "").replace(/\D/g, "") || "00000000000";
 
+      // BASE SEMPRE EM BRL DA ORDEM
       const valorBRL = parseBRL(t.valor);
       const valorToken = parseNum(t.valorToken);
       const ativo = String(t.ativo || "").toUpperCase();
@@ -199,6 +254,7 @@ export const Home = () => {
       // REGRAS DE ELEGIBILIDADE
       // =========================
       if (t.tipo === "compras") {
+        // só gera NF de compra se for stable e estiver abaixo do preço médio
         if (!ehStable) continue;
         if (!(precoMedioCompra > 0 && valorToken < precoMedioCompra)) continue;
       } else if (t.tipo !== "vendas") {
@@ -206,13 +262,15 @@ export const Home = () => {
       }
 
       // =========================
-      // CÁLCULO DE COMISSÃO
+      // CÁLCULO DE COMISSÃO (em %)
       // =========================
-      let comissao = comissaoFixa;
+      let comissao = comissaoFixa; // 0.1% mínimo
 
       if (ehBTCouETH) {
+        // BTC / ETH: sempre 4,5% em cima do valor BRL da ordem
         comissao = 4.5;
       } else if (ehStable) {
+        // Stablecoin: comissão dinâmica baseada no spread, mantendo margem de erro
         if (t.tipo === "vendas") {
           const basePct =
             precoMedioCompra > 0
@@ -229,14 +287,18 @@ export const Home = () => {
           comissao = Math.max(comissaoFixa, ajustada);
         }
       } else {
+        // Outros ativos: fica na comissão fixa de 0,1%
         comissao = comissaoFixa;
       }
 
       // =========================
-      // MONTAGEM DA LINHA CSV
+      // MONTAGEM DA LINHA CSV / CÁLCULO DA NF
       // =========================
+      // valorNfe = valor em R$ da comissão (ex.: 10.000 * 4,5% = 450,00)
       const valorNfe = Number((valorBRL * (comissao / 100)).toFixed(2));
       const valorIss = Math.round(valorNfe * (aliquota / 10000));
+
+      // SOMA EM R$ (sem *100) PARA EXIBIÇÃO NA TELA
       somaTotalNFE += valorNfe;
 
       const _br = toBRDate(t.dataHora);
@@ -257,6 +319,7 @@ export const Home = () => {
 Suporte de Dúvidas
 - Para informações do P2P, consulte a documentação ou o suporte da corretora"`;
 
+      // Aqui sim, para o outro sistema, manda em CENTAVOS (valorNfe * 100)
       const csvData =
         `R,${numeroRPS},RPS,${dataPrestacaoServico},${toBRDate(hoje)},,${cpfCnpj},,${buyerName},,,,,,48,,,,S,` +
         `${codMunicipioServicoPrestado},${codAtividade},${codListaServicos},${fileContent},` +
@@ -406,6 +469,23 @@ Suporte de Dúvidas
                       <p>
                         <strong>Tipo:</strong> {transaction.tipo}
                       </p>
+
+                      {acesso === "Master" && (
+                        <div className="mt-3 flex gap-2">
+                          <Button
+                            onClick={() => handleEditOrder(transaction)}
+                            disabled={isUpdating}
+                          >
+                            Editar
+                          </Button>
+                          <Button
+                            onClick={() => handleDeleteOrder(transaction)}
+                            disabled={isDeleting}
+                          >
+                            Excluir
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
