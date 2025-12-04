@@ -1,4 +1,3 @@
-// ...imports já existentes
 import { Copy } from "@phosphor-icons/react";
 import { Dispatch, SetStateAction, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
@@ -35,7 +34,33 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
 
   const [showModal, setShowModal] = useState(false);
   const [orderToRelease, setOrderToRelease] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<KeyType>("empresa");
+
+  // 🔹 activeTab persistido no localStorage
+  const [activeTab, setActiveTab] = useState<KeyType>(() => {
+    if (typeof window === "undefined") return "empresa";
+
+    const stored = window.localStorage.getItem("pendingOrdersActiveTab") as KeyType | null;
+    const validTabs: KeyType[] = [
+      "empresa",
+      "pessoal",
+      "coinexEmpresa",
+      "coinexPessoal",
+      "cryptotech",
+    ];
+
+    if (stored && validTabs.includes(stored)) {
+      return stored;
+    }
+
+    return "empresa";
+  });
+
+  const handleChangeTab = (key: KeyType) => {
+    setActiveTab(key);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("pendingOrdersActiveTab", key);
+    }
+  };
 
   const handleSendReceipt = (order: any) => {
     setOrderToRelease(order);
@@ -62,6 +87,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
   if (!data) return <p>Sem ordens pendentes.</p>;
 
   const orders = (data[activeTab as keyof typeof data] as any[]) || [];
+
   return (
     <CardContainer full>
       <h3 className="text-28 font-bold">ORDENS PENDENTES</h3>
@@ -79,7 +105,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
           return (
             <div key={key} className="relative">
               <Button
-                onClick={() => setActiveTab(key as KeyType)}
+                onClick={() => handleChangeTab(key as KeyType)}
                 className={`rounded-6 p-2 ${
                   activeTab === key ? "bg-blue-500 text-white" : "bg-gray-200"
                 }`}
@@ -205,7 +231,6 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
         </div>
       )}
 
-      {/* Modal Bybit E/P (permanece aqui para esses tabs) */}
       {showModal && orderToRelease && activeTab !== "cryptotech" && (
         <ConfirmationDelete
           text={`Você tem certeza que deseja liberar para ${orderToRelease.buyerRealName} a quantidade de ${orderToRelease.notifyTokenQuantity} ${orderToRelease.tokenId} no valor de ${orderToRelease.amount} ${orderToRelease.currencyId}?`}

@@ -5,6 +5,7 @@ import { InputX } from "src/components/Form/Input/InputX";
 import { IconX } from "src/components/Icons/IconX";
 import { ConfirmationDelete } from "src/components/Modal/ConfirmationDelete";
 import { useAccessControl } from "src/routes/context/AccessControl";
+import { EditOrderModal } from "./components/EditOrderModal";
 import { IN1888 } from "./components/IN1888";
 import { fortnigthlyFiduciaTable } from "./config/fortnigthlyFiduciaTable";
 import { handleCompraVendaIN1888 } from "./config/handleDownload";
@@ -14,7 +15,6 @@ import { mensalFiduciaTable } from "./config/mensalFiduciaTable";
 import { useDeleteOrder } from "./hooks/useDeleteOrder";
 import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
 import { useUpdateOrder } from "./hooks/useUpdateOrder";
-import { EditOrderModal } from "./components/EditOrderModal";
 
 export const Home = () => {
   const { acesso } = useAccessControl();
@@ -204,8 +204,8 @@ export const Home = () => {
     // Config fixa
     const hoje = new Date();
     const monthName = hoje.toLocaleDateString("pt-BR", { month: "long" });
-    const comissaoFixa = 0.1; // % base para não-stable / fallback
-    const comissaoMargemErro = 10; // ajuste de margem
+    const comissaoFixa = 0.01; // % base para não-stable / fallback
+    const comissaoMargemErro = 15; // ajuste de margem
     const codMunicipioServicoPrestado = 352440;
     const codAtividade = 6619399;
     const codListaServicos = 10.02;
@@ -240,27 +240,18 @@ export const Home = () => {
       const ehStable = isStable(ativo);
       const ehBTCouETH = isBtcOrEth(ativo);
 
-      // =========================
-      // REGRAS DE ELEGIBILIDADE
-      // =========================
       if (t.tipo === "compras") {
-        // só gera NF de compra se for stable e estiver abaixo do preço médio
         if (!ehStable) continue;
         if (!(precoMedioCompra > 0 && valorToken < precoMedioCompra)) continue;
       } else if (t.tipo !== "vendas") {
         continue;
       }
 
-      // =========================
-      // CÁLCULO DE COMISSÃO (em %)
-      // =========================
       let comissao = comissaoFixa; // 0.1% mínimo
 
       if (ehBTCouETH) {
-        // BTC / ETH: sempre 4,5% em cima do valor BRL da ordem
-        comissao = 4.5;
+        comissao = 1.5;
       } else if (ehStable) {
-        // Stablecoin: comissão dinâmica baseada no spread, mantendo margem de erro
         if (t.tipo === "vendas") {
           const basePct =
             precoMedioCompra > 0
