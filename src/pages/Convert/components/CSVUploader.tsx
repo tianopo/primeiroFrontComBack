@@ -24,16 +24,38 @@ export const CSVUploader = () => {
     setHeaders(parsedHeaders);
     setRows(parsedRows);
 
-    // === Soma das tarifas (4ª coluna = histórico, 5ª coluna = valor) ===
+    // === Soma dinâmica das tarifas ===
+    // Tenta achar coluna de descrição/histórico e coluna de valor pela label
+    const lowerHeaders = parsedHeaders.map((h) => h.toLowerCase());
+
+    const descricaoIndex = lowerHeaders.findIndex(
+      (h) =>
+        h.includes("descri") || h.includes("histó") || h.includes("histor") || h.includes("transa"),
+    );
+    const valorIndex = lowerHeaders.findIndex((h) => h.includes("valor"));
+
     let total = 0;
-    parsedRows.forEach((row) => {
-      const historico = row[3]?.toLowerCase() || "";
-      if (historico.includes("tarifa")) {
-        let valor = row[4] || "0";
-        valor = valor.replace(/\./g, "").replace(",", ".");
-        total += parseFloat(valor) || 0;
-      }
-    });
+
+    if (descricaoIndex !== -1 && valorIndex !== -1) {
+      parsedRows.forEach((row) => {
+        const descricao = (row[descricaoIndex] || "").toLowerCase();
+
+        if (descricao.includes("tarifa")) {
+          let valorStr = row[valorIndex] || "0";
+
+          // Remove símbolos de moeda e espaços
+          valorStr = valorStr.replace(/[R$\s]/gi, "");
+          // Remove separador de milhar e troca vírgula por ponto
+          valorStr = valorStr.replace(/\./g, "").replace(",", ".");
+
+          const valorNum = parseFloat(valorStr);
+          if (!Number.isNaN(valorNum)) {
+            total += valorNum;
+          }
+        }
+      });
+    }
+
     setTarifaTotal(total);
   };
 
@@ -41,44 +63,63 @@ export const CSVUploader = () => {
     fileInputRef.current?.click();
   };
 
-  // --- sua função exportToOFX continua igual ---
-  const exportToOFX = () => {
-    const dataIndex = headers.findIndex((h) => h.toLowerCase().includes("data"));
-    const amountIndex = headers.findIndex((h) => h.toLowerCase().includes("valor"));
-    const memoIndex = headers.findIndex((h) => h.toLowerCase().includes("transa"));
-    const typeIndex = headers.findIndex((h) => h.toLowerCase().includes("tipo"));
+  /**
+   * Constrói transações a partir de headers/rows para uso em ambos bancos
+   * Funciona para:
+   *  - Fidúcia (Internet Banking Fidúcia 01-15.csv)
+   *  - Corpx (extrato_completo_2025-11-01_2025-11-01.csv)
+   */
+  const buildProcessedTransactions = () => {
+    const lowerHeaders = headers.map((h) => h.toLowerCase());
+
+    const dataIndex = lowerHeaders.findIndex((h) => h.includes("data")); // "data" / "data lançamento"
+    const amountIndex = lowerHeaders.findIndex((h) => h.includes("valor")); // "valor" / "valor (r$)"
+    const memoIndex = lowerHeaders.findIndex(
+      (h) =>
+        h.includes("transa") || h.includes("descri") || h.includes("histó") || h.includes("histor"),
+    ); // "transações" / "descricao" / "histórico"
+    const typeIndex = lowerHeaders.findIndex((h) => h.includes("tipo")); // "tipo de transação" / "tipo"
 
     if (dataIndex === -1 || amountIndex === -1 || memoIndex === -1 || typeIndex === -1) {
       alert(
-        "Certifique-se de que os cabeçalhos são: data, valor (R$), transações, tipo de transação.",
+        "Certifique-se de que os cabeçalhos possuem colunas de: data, valor, descrição/transação, tipo.",
       );
-      return;
+      return null;
     }
 
     const processedTransactions = rows
       .map((row, index) => {
-        const rawDate = row[dataIndex].replace(/[^0-9]/g, "");
+        // --- Data ---
+        // Fidúcia e Corpx costumam vir como dd/mm/aaaa
+        const rawDate = (row[dataIndex] || "").replace(/[^0-9]/g, "");
         let date = rawDate;
         if (rawDate.length === 8) {
           const day = rawDate.substring(0, 2);
           const month = rawDate.substring(2, 4);
           const year = rawDate.substring(4, 8);
-          date = `${year}${month}${day}`;
+          date = `${year}${month}${day}`; // yyyymmdd
         }
 
-        let rawAmount = row[amountIndex];
+        // --- Valor ---
+        let rawAmount = row[amountIndex] || "0";
+        // Remove símbolo de moeda e espaços
+        rawAmount = rawAmount.replace(/[R$\s]/gi, "");
+        // Remove separador de milhar e troca vírgula por ponto
         rawAmount = rawAmount.replace(/\./g, "").replace(",", ".");
         let amount = parseFloat(rawAmount);
 
-        const type = row[typeIndex]?.trim().toLowerCase();
-        if (type === "débito" || type === "debito") {
+        // --- Tipo (débito/crédito) ---
+        const typeRaw = (row[typeIndex] || "").trim().toLowerCase();
+        if (typeRaw.includes("débito") || typeRaw.includes("debito") || typeRaw === "d") {
           amount = -Math.abs(amount);
-        } else if (type === "crédito" || type === "credito") {
+        } else if (typeRaw.includes("crédito") || typeRaw.includes("credito") || typeRaw === "c") {
           amount = Math.abs(amount);
+        } else {
+          // fallback: se não conseguir identificar, mantém o sinal original
         }
 
         const memo = row[memoIndex];
-        if (!date || isNaN(amount) || !memo) return null;
+        if (!date || Number.isNaN(amount) || !memo) return null;
 
         const fitid = `${date}-${index}`;
         return { date, amount, memo, fitid };
@@ -87,12 +128,24 @@ export const CSVUploader = () => {
 
     if (processedTransactions.length === 0) {
       alert("Nenhuma transação válida encontrada.");
-      return;
+      return null;
     }
 
     const dates = processedTransactions.map((t) => t.date);
     const dtStart = dates.reduce((a, b) => (a < b ? a : b));
     const dtEnd = dates.reduce((a, b) => (a > b ? a : b));
+
+    return { processedTransactions, dtStart, dtEnd };
+  };
+
+  /**
+   * Exporta OFX para o banco Fidúcia
+   */
+  const exportToOFXFiducia = () => {
+    const result = buildProcessedTransactions();
+    if (!result) return;
+
+    const { processedTransactions, dtStart, dtEnd } = result;
 
     const now = new Date();
     const dateTimeStr = now
@@ -170,7 +223,99 @@ NEWFILEUID:NONE
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `export-${Date.now()}.ofx`;
+    link.download = `fiducia-${Date.now()}.ofx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  /**
+   * Exporta OFX para o banco Corpx
+   * – Mesma lógica de transações, mudando apenas os dados da conta.
+   */
+  const exportToOFXCorpx = () => {
+    const result = buildProcessedTransactions();
+    if (!result) return;
+
+    const { processedTransactions, dtStart, dtEnd } = result;
+
+    const now = new Date();
+    const dateTimeStr = now
+      .toISOString()
+      .replace(/[-:T.Z]/g, "")
+      .slice(0, 8);
+
+    const ofxHeader = `OFXHEADER:100
+DATA:OFXSGML
+VERSION:102
+SECURITY:NONE
+ENCODING:UTF-8
+CHARSET:NONE
+COMPRESSION:NONE
+OLDFILEUID:NONE
+NEWFILEUID:NONE
+
+<OFX>
+  <SIGNONMSGSRSV1>
+    <SONRS>
+      <STATUS>
+        <CODE>0</CODE>
+        <SEVERITY>INFO</SEVERITY>
+      </STATUS>
+      <DTSERVER>${dateTimeStr}</DTSERVER>
+      <LANGUAGE>ENG</LANGUAGE>
+    </SONRS>
+  </SIGNONMSGSRSV1>
+  <BANKMSGSRSV1>
+    <STMTTRNRS>
+      <TRNUID>2</TRNUID>
+      <STATUS>
+        <CODE>0</CODE>
+        <SEVERITY>INFO</SEVERITY>
+      </STATUS>
+      <STMTRS>
+        <CURDEF>BRL</CURDEF>
+        <BANKACCTFROM>
+          <BANKID>00000000</BANKID>       <!-- Substituir pelo BANKID real do Corpx -->
+          <ACCTID>00000000</ACCTID>       <!-- Substituir pela conta real do Corpx -->
+          <ACCTTYPE>CHECKING</ACCTTYPE>
+        </BANKACCTFROM>
+        <BANKTRANLIST>
+          <DTSTART>${dtStart}</DTSTART>
+          <DTEND>${dtEnd}</DTEND>
+`;
+
+    const transactions = processedTransactions
+      .map(
+        (t) => `
+          <STMTTRN>
+            <TRNTYPE>OTHER</TRNTYPE>
+            <DTPOSTED>${t.date}</DTPOSTED>
+            <TRNAMT>${t.amount.toFixed(2).replace(".", ",")}</TRNAMT>
+            <FITID>${t.fitid}</FITID>
+            <NAME>${t.memo}</NAME>
+          </STMTTRN>`,
+      )
+      .join("\n");
+
+    const ofxFooter = `
+        </BANKTRANLIST>
+        <LEDGERBAL>
+          <BALAMT>0,00</BALAMT>
+          <DTASOF>${dtEnd}</DTASOF>
+        </LEDGERBAL>
+      </STMTRS>
+    </STMTTRNRS>
+  </BANKMSGSRSV1>
+</OFX>`;
+
+    const ofxContent = ofxHeader + transactions + ofxFooter;
+
+    const blob = new Blob([ofxContent], { type: "text/ofx" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `corpx-${Date.now()}.ofx`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -179,7 +324,7 @@ NEWFILEUID:NONE
   return (
     <div className="space-y-4">
       {/* Botões */}
-      <div className="flex gap-4">
+      <div className="flex flex-wrap gap-4">
         <button
           onClick={triggerFileInput}
           className="rounded bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
@@ -188,12 +333,21 @@ NEWFILEUID:NONE
         </button>
 
         {headers.length > 0 && (
-          <button
-            onClick={exportToOFX}
-            className="rounded bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700"
-          >
-            Exportar como OFX
-          </button>
+          <>
+            <button
+              onClick={exportToOFXFiducia}
+              className="rounded bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700"
+            >
+              Exportar OFX (Fidúcia)
+            </button>
+
+            <button
+              onClick={exportToOFXCorpx}
+              className="rounded bg-purple-600 px-4 py-2 font-semibold text-white hover:bg-purple-700"
+            >
+              Exportar OFX (Corpx)
+            </button>
+          </>
         )}
       </div>
 
@@ -213,7 +367,7 @@ NEWFILEUID:NONE
         className="hidden"
       />
 
-      {/* Tabela */}
+      {/* Tabela de visualização */}
       {headers.length > 0 && (
         <div className="overflow-auto">
           <table className="min-w-full border border-gray-300 text-sm">
