@@ -1,53 +1,20 @@
+import { PencilSimple, Trash } from "@phosphor-icons/react";
 import React, { useEffect, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { InputX } from "src/components/Form/Input/InputX";
+import { IconX } from "src/components/Icons/IconX";
+import { ConfirmationDelete } from "src/components/Modal/ConfirmationDelete";
 import { useAccessControl } from "src/routes/context/AccessControl";
 import { IN1888 } from "./components/IN1888";
 import { fortnigthlyFiduciaTable } from "./config/fortnigthlyFiduciaTable";
 import { handleCompraVendaIN1888 } from "./config/handleDownload";
 import { handleReceipt } from "./config/handleReceipt";
+import { parseBRL, parseNum, toBRDate } from "./config/helpers";
 import { mensalFiduciaTable } from "./config/mensalFiduciaTable";
 import { useDeleteOrder } from "./hooks/useDeleteOrder";
 import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
 import { useUpdateOrder } from "./hooks/useUpdateOrder";
-
-/**
- * Helpers globais
- */
-const parseBRL = (v: any): number => {
-  if (typeof v === "number") return v;
-
-  let raw = String(v).replace("R$", "").trim();
-  raw = raw.replace(/\s/g, "");
-
-  const hasComma = raw.includes(",");
-  const hasDot = raw.includes(".");
-
-  if (hasComma && hasDot) {
-    // Formato pt-BR: 1.234,56
-    raw = raw.replace(/\./g, "").replace(",", ".");
-  } else if (hasComma && !hasDot) {
-    // Formato: 1234,56
-    raw = raw.replace(",", ".");
-  } else {
-    // Só ponto ou só dígitos: 1234.56 ou 1234 (mantém)
-  }
-
-  const n = parseFloat(raw);
-  return Number.isFinite(n) ? n : 0;
-};
-
-const parseNum = (v: any): number => {
-  if (typeof v === "number") return v;
-  return parseFloat(String(v).replace(",", "."));
-};
-
-const toBRDate = (d: Date | string) =>
-  new Date(d).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+import { EditOrderModal } from "./components/EditOrderModal";
 
 export const Home = () => {
   const { acesso } = useAccessControl();
@@ -65,6 +32,12 @@ export const Home = () => {
   const [visibleExchanges, setVisibleExchanges] = useState<{ [key: string]: boolean }>({});
   const [valorTotalNFE, setValorTotalNFE] = useState(0);
 
+  // estado para confirmação de deleção e edição
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState<any | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [transactionToEdit, setTransactionToEdit] = useState<any | null>(null);
+
   const { data, error, isLoading } = useListTransactionsInDate(
     filterDates.startDate,
     filterDates.endDate,
@@ -72,40 +45,57 @@ export const Home = () => {
   const { mutate: updateOrder, isPending: isUpdating } = useUpdateOrder();
   const { mutate: deleteOrder, isPending: isDeleting } = useDeleteOrder();
 
-  // 🔹 handler simples de edição (pode evoluir depois)
+  // 🔹 handler de edição: só abre o modal
   const handleEditOrder = (transaction: any) => {
-    const novoValor = window.prompt(
-      `Editar Valor (BRL) da ordem ${transaction.numeroOrdem}`,
-      String(transaction.valor ?? ""),
-    );
-    if (novoValor === null) return;
-
-    const novoValorToken = window.prompt(
-      `Editar Valor do Token da ordem ${transaction.numeroOrdem}`,
-      String(transaction.valorToken ?? ""),
-    );
-    if (novoValorToken === null) return;
-
-    const novaTaxa = window.prompt(
-      `Editar Taxa da ordem ${transaction.numeroOrdem}`,
-      String(transaction.taxa ?? ""),
-    );
-    if (novaTaxa === null) return;
-
-    updateOrder({
-      id: transaction.id, // 👈 agora usando id
-      valor: novoValor,
-      valorToken: novoValorToken,
-      taxa: novaTaxa,
-    });
+    setTransactionToEdit(transaction);
+    setShowEditModal(true);
   };
 
-  // 🔹 handler de exclusão
-  const handleDeleteOrder = (transaction: any) => {
-    const ok = window.confirm(`Tem certeza que deseja excluir a ordem ${transaction.numeroOrdem}?`);
-    if (!ok) return;
+  // 🔹 envio do formulário do modal de edição
+  const handleEditSubmit = (payload: {
+    ativo: string;
+    quantidade: string;
+    valor: string;
+    valorToken: string;
+    taxa: string;
+    tipo: "compras" | "vendas";
+  }) => {
+    if (!transactionToEdit) return;
 
-    deleteOrder(transaction.id); // 👈 aqui também id
+    updateOrder({
+      id: transactionToEdit.id,
+      ativo: payload.ativo,
+      quantidade: payload.quantidade,
+      valor: payload.valor,
+      valorToken: payload.valorToken,
+      taxa: payload.taxa,
+      tipo: payload.tipo,
+    });
+
+    setShowEditModal(false);
+    setTransactionToEdit(null);
+  };
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    setTransactionToEdit(null);
+  };
+  // 🔹 abrir modal de confirmação de deleção
+  const handleDeleteOrderClick = (transaction: any) => {
+    setTransactionToDelete(transaction);
+    setShowDeleteConfirmation(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!transactionToDelete) return;
+    deleteOrder(transactionToDelete.id);
+    setShowDeleteConfirmation(false);
+    setTransactionToDelete(null);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirmation(false);
+    setTransactionToDelete(null);
   };
 
   const handleOrder = (e: React.FormEvent) => {
@@ -294,7 +284,6 @@ export const Home = () => {
       // =========================
       // MONTAGEM DA LINHA CSV / CÁLCULO DA NF
       // =========================
-      // valorNfe = valor em R$ da comissão (ex.: 10.000 * 4,5% = 450,00)
       const valorNfe = Number((valorBRL * (comissao / 100)).toFixed(2));
       const valorIss = Math.round(valorNfe * (aliquota / 10000));
 
@@ -442,9 +431,41 @@ Suporte de Dúvidas
                       key={transaction.numeroOrdem}
                       className="my-1.5 w-full rounded-8 border-1 border-edge-primary p-4 sm:w-72"
                     >
-                      <p className="max-w-[250px] truncate">
-                        <strong>Ordem:</strong> {transaction.numeroOrdem}
-                      </p>
+                      <div className="mb-2 flex items-start justify-between gap-2">
+                        <p className="max-w-[250px] truncate">
+                          <strong>Ordem:</strong> {transaction.numeroOrdem}
+                        </p>
+
+                        {acesso === "Master" && (
+                          <div className="flex gap-2">
+                            <IconX
+                              name="Editar"
+                              icon={
+                                <PencilSimple
+                                  className="cursor-pointer rounded-6 hover:bg-secundary hover:text-write-primary"
+                                  width={19.45}
+                                  height={20}
+                                  weight="regular"
+                                  onClick={() => handleEditOrder(transaction)}
+                                />
+                              }
+                            />
+                            <IconX
+                              name="Excluir"
+                              icon={
+                                <Trash
+                                  className="cursor-pointer rounded-6 text-variation-error hover:bg-secundary hover:text-write-primary"
+                                  width={19.45}
+                                  height={20}
+                                  weight="regular"
+                                  onClick={() => handleDeleteOrderClick(transaction)}
+                                />
+                              }
+                            />
+                          </div>
+                        )}
+                      </div>
+
                       <p>
                         <strong>Data/Hora:</strong> {transaction.dataHora}
                       </p>
@@ -469,23 +490,6 @@ Suporte de Dúvidas
                       <p>
                         <strong>Tipo:</strong> {transaction.tipo}
                       </p>
-
-                      {acesso === "Master" && (
-                        <div className="mt-3 flex gap-2">
-                          <Button
-                            onClick={() => handleEditOrder(transaction)}
-                            disabled={isUpdating}
-                          >
-                            Editar
-                          </Button>
-                          <Button
-                            onClick={() => handleDeleteOrder(transaction)}
-                            disabled={isDeleting}
-                          >
-                            Excluir
-                          </Button>
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -494,7 +498,24 @@ Suporte de Dúvidas
           ))}
         </div>
       )}
+
       {showModal && <IN1888 onClose={() => setShowModal(false)} />}
+
+      {showDeleteConfirmation && transactionToDelete && (
+        <ConfirmationDelete
+          text={`Tem certeza que deseja excluir a ordem ${transactionToDelete.numeroOrdem}?`}
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+        />
+      )}
+
+      {showEditModal && transactionToEdit && (
+        <EditOrderModal
+          order={transactionToEdit}
+          onClose={handleCloseEditModal}
+          onSubmit={handleEditSubmit}
+        />
+      )}
     </div>
   );
 };

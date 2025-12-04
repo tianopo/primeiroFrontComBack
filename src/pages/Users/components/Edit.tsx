@@ -38,7 +38,6 @@ export const Edit = ({ setForm }: IEdit) => {
   const handleNomeChange = (e: ChangeEvent<HTMLInputElement>) => {
     const fullValue = e.target.value;
 
-    // Apenas atualiza se o valor for um item completo da lista
     const match = data?.find((user: any) => {
       const nomeComExchange = `${user?.User.name} - ${user?.exchange.split(" ")[0]}`;
       return nomeComExchange === fullValue;
@@ -53,7 +52,6 @@ export const Edit = ({ setForm }: IEdit) => {
       setExchange(userExchange);
       setValue("exchange", userExchange);
     } else {
-      // Apenas atualiza o nome, não altera a exchange se o valor for parcial
       setNome(fullValue);
       setValue("nome", fullValue);
     }
