@@ -16,17 +16,44 @@ export const CSVUploader = () => {
     // Regex que divide apenas por vírgulas fora de aspas
     const csvSplitRegex = /,(?=(?:[^"]*"[^"]*")*[^"]*$)/;
 
-    const parsedHeaders = lines[0].split(csvSplitRegex).map((h) => h.trim().replace(/^"|"$/g, ""));
-    const parsedRows = lines
+    const newHeaders = lines[0].split(csvSplitRegex).map((h) => h.trim().replace(/^"|"$/g, ""));
+    const newRows = lines
       .slice(1)
       .map((line) => line.split(csvSplitRegex).map((cell) => cell.trim().replace(/^"|"$/g, "")));
 
-    setHeaders(parsedHeaders);
-    setRows(parsedRows);
+    // --- Acumular arquivos em vez de substituir ---
+    let finalHeaders: string[] = [];
+    let finalRows: string[][] = [];
 
-    // === Soma dinâmica das tarifas ===
-    // Tenta achar coluna de descrição/histórico e coluna de valor pela label
-    const lowerHeaders = parsedHeaders.map((h) => h.toLowerCase());
+    if (headers.length === 0) {
+      // Primeiro arquivo
+      finalHeaders = newHeaders;
+      finalRows = newRows;
+    } else {
+      // Já existe algo carregado: verificar se os headers são compatíveis
+      const currentLower = headers.map((h) => h.toLowerCase());
+      const incomingLower = newHeaders.map((h) => h.toLowerCase());
+
+      const sameStructure =
+        currentLower.length === incomingLower.length &&
+        currentLower.every((h, idx) => h === incomingLower[idx]);
+
+      if (sameStructure) {
+        // Junta linhas: arquivo 1 + arquivo 2 + ...
+        finalHeaders = headers;
+        finalRows = [...rows, ...newRows];
+      } else {
+        // Estruturas diferentes -> reinicia com o novo arquivo
+        finalHeaders = newHeaders;
+        finalRows = newRows;
+      }
+    }
+
+    setHeaders(finalHeaders);
+    setRows(finalRows);
+
+    // === Soma dinâmica das tarifas (com base no conjunto acumulado) ===
+    const lowerHeaders = finalHeaders.map((h) => h.toLowerCase());
 
     const descricaoIndex = lowerHeaders.findIndex(
       (h) =>
@@ -37,7 +64,7 @@ export const CSVUploader = () => {
     let total = 0;
 
     if (descricaoIndex !== -1 && valorIndex !== -1) {
-      parsedRows.forEach((row) => {
+      finalRows.forEach((row) => {
         const descricao = (row[descricaoIndex] || "").toLowerCase();
 
         if (descricao.includes("tarifa")) {
@@ -72,13 +99,13 @@ export const CSVUploader = () => {
   const buildProcessedTransactions = () => {
     const lowerHeaders = headers.map((h) => h.toLowerCase());
 
-    const dataIndex = lowerHeaders.findIndex((h) => h.includes("data")); // "data" / "data lançamento"
-    const amountIndex = lowerHeaders.findIndex((h) => h.includes("valor")); // "valor" / "valor (r$)"
+    const dataIndex = lowerHeaders.findIndex((h) => h.includes("data"));
+    const amountIndex = lowerHeaders.findIndex((h) => h.includes("valor"));
     const memoIndex = lowerHeaders.findIndex(
       (h) =>
         h.includes("transa") || h.includes("descri") || h.includes("histó") || h.includes("histor"),
-    ); // "transações" / "descricao" / "histórico"
-    const typeIndex = lowerHeaders.findIndex((h) => h.includes("tipo")); // "tipo de transação" / "tipo"
+    );
+    const typeIndex = lowerHeaders.findIndex((h) => h.includes("tipo"));
 
     if (dataIndex === -1 || amountIndex === -1 || memoIndex === -1 || typeIndex === -1) {
       alert(
@@ -90,7 +117,6 @@ export const CSVUploader = () => {
     const processedTransactions = rows
       .map((row, index) => {
         // --- Data ---
-        // Fidúcia e Corpx costumam vir como dd/mm/aaaa
         const rawDate = (row[dataIndex] || "").replace(/[^0-9]/g, "");
         let date = rawDate;
         if (rawDate.length === 8) {
@@ -102,9 +128,7 @@ export const CSVUploader = () => {
 
         // --- Valor ---
         let rawAmount = row[amountIndex] || "0";
-        // Remove símbolo de moeda e espaços
         rawAmount = rawAmount.replace(/[R$\s]/gi, "");
-        // Remove separador de milhar e troca vírgula por ponto
         rawAmount = rawAmount.replace(/\./g, "").replace(",", ".");
         let amount = parseFloat(rawAmount);
 
@@ -114,8 +138,6 @@ export const CSVUploader = () => {
           amount = -Math.abs(amount);
         } else if (typeRaw.includes("crédito") || typeRaw.includes("credito") || typeRaw === "c") {
           amount = Math.abs(amount);
-        } else {
-          // fallback: se não conseguir identificar, mantém o sinal original
         }
 
         const memo = row[memoIndex];
@@ -138,9 +160,6 @@ export const CSVUploader = () => {
     return { processedTransactions, dtStart, dtEnd };
   };
 
-  /**
-   * Exporta OFX para o banco Fidúcia
-   */
   const exportToOFXFiducia = () => {
     const result = buildProcessedTransactions();
     if (!result) return;
@@ -209,7 +228,7 @@ NEWFILEUID:NONE
     const ofxFooter = `
         </BANKTRANLIST>
         <LEDGERBAL>
-          <BALAMT>0,00</BALAMT>
+          <BALAMT>0,00</BALMT>
           <DTASOF>${dtEnd}</DTASOF>
         </LEDGERBAL>
       </STMTRS>
@@ -229,10 +248,6 @@ NEWFILEUID:NONE
     document.body.removeChild(link);
   };
 
-  /**
-   * Exporta OFX para o banco Corpx
-   * – Mesma lógica de transações, mudando apenas os dados da conta.
-   */
   const exportToOFXCorpx = () => {
     const result = buildProcessedTransactions();
     if (!result) return;
@@ -301,7 +316,7 @@ NEWFILEUID:NONE
     const ofxFooter = `
         </BANKTRANLIST>
         <LEDGERBAL>
-          <BALAMT>0,00</BALAMT>
+          <BALAMT>0,00</BALMT>
           <DTASOF>${dtEnd}</DTASOF>
         </LEDGERBAL>
       </STMTRS>
@@ -351,11 +366,17 @@ NEWFILEUID:NONE
         )}
       </div>
 
-      {/* Exibe soma das tarifas */}
+      {/* Exibe soma das tarifas + quantidade de linhas */}
       {headers.length > 0 && (
-        <p className="font-semibold text-red-600">
-          Total de tarifas: R$ {tarifaTotal.toFixed(2).replace(".", ",")}
-        </p>
+        <div className="space-y-1">
+          <p className="font-semibold text-red-600">
+            Total de tarifas (todos os CSVs carregados): R${" "}
+            {tarifaTotal.toFixed(2).replace(".", ",")}
+          </p>
+          <p className="text-sm text-gray-700">
+            Total de linhas (transações carregadas): <strong>{rows.length}</strong>
+          </p>
+        </div>
       )}
 
       {/* Input de arquivo invisível */}
