@@ -87,7 +87,7 @@ export const SectionSell = () => {
   const handleNextGuarded = async () => {
     if (step === 1) {
       const fiatNumber = Number(String(quantidadeFiat).replace(",", "."));
-      console.log(fiatNumber);
+
       if (!Number.isFinite(fiatNumber) || fiatNumber < 50) {
         toast.error("O valor mínimo é R$ 50,00.");
         return;

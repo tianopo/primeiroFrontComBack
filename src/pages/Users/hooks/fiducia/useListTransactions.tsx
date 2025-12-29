@@ -11,7 +11,7 @@ export const useListTransactions = (pg = 1, limit = 25) => {
   const { data, error, isLoading, isFetching } = useQuery({
     queryKey: ["transactions-data", pg, limit],
     queryFn: fetcher,
-    refetchInterval: 30000,
+    refetchInterval: 600000,
     retry: 1,
     placeholderData: (prev) => prev, // mantém dados anteriores enquanto carrega
   });
