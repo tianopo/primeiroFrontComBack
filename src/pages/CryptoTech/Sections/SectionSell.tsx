@@ -225,19 +225,7 @@ export const SectionSell = () => {
           </div>
         )}
 
-        {step === 4 && (
-          <Step4PixPayment
-            nomeCompleto={nomeCompleto}
-            cpfOuCnpj={CPFouCNPJ}
-            quantidadeFiat={quantidadeFiat}
-            quantidadeAtivo={quantidadeAtivo}
-            pixReceiverKey="f2bf47ad-5786-4fcb-ab41-828d66fbb318"
-            solicitacaoPagador={`Intermediação de ${quantidadeFiat} ${moeda} para ${quantidadeAtivo} ${ativo} - Cryptotech`}
-            whatsapp={whatsapp}
-            ativo={ativo}
-            onBack={() => setStep(3)}
-          />
-        )}
+        {step === 4 && <Step4PixPayment />}
       </div>
 
       {showModal && (

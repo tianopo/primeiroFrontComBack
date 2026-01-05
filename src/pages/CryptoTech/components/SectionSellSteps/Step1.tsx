@@ -39,7 +39,7 @@ export const Step1 = ({
 }: IStep1) => {
   return (
     <>
-      <h4>Compre Agora</h4>
+      <h4>Compre Agora (suspenso)</h4>
 
       <SelectInstitucional
         title="Rede Blockchain"
