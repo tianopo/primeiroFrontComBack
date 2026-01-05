@@ -26,17 +26,6 @@ export const apiRoute = {
   releaseAssets: "bybit/release-assets",
   uploadChatMessage: "bybit/upload-chat-message",
   pendingOrders: "bybit/pending-orders",
-  /* FIDUCIA */
-  consultarExtrato: (di: string, df: string) => `fiducia/conta/extrato/${di}/${df}/DESC/10`,
-  extrato: "fiducia/pix/spi/extrato",
-  pixConsultar: "/fiducia/pix/spi/consultar",
-  chaveOculto: (chave: string) =>
-    `fiducia/pix/dict/gestao-chave/${encodeURIComponent(chave)}/oculto`,
-  transferir: "fiducia/pix/spi/transferir",
-  balance: "fiducia/conta/saldo",
-  gerarQrCodePix: "/fiducia/pix/qrcode/dinamico/imediato/gerar",
-  buscarQrCodePix: "/fiducia/pix/qrcode/dinamico/imediato/buscar",
-  decodificarQrCodeOculto: "/fiducia/pix/qrcode/decodificar/oculto",
   /* WHATSAPP */
   notifyWhatsapp: "whatsapp/notify",
   /* API */

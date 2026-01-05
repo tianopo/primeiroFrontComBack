@@ -3,7 +3,6 @@ import { Compliance } from "./components/Compliance";
 import { Edit } from "./components/Edit";
 import { PendingOrders } from "./components/PendingOrders";
 import { Register } from "./components/Register";
-import { Transactions } from "./components/Transactions";
 
 type TabKey = "register" | "edit" | "compliance";
 
@@ -56,7 +55,6 @@ export const Users = () => {
         {activeTab === "compliance" && <Compliance />}
       </div>
       <PendingOrders setForm={setForm} setInitialRegisterData={setInitialRegisterData} />
-      <Transactions />
     </div>
   );
 };

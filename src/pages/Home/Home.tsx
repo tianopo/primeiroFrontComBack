@@ -205,7 +205,7 @@ export const Home = () => {
     const hoje = new Date();
     const monthName = hoje.toLocaleDateString("pt-BR", { month: "long" });
     const comissaoFixa = 0.01; // % base para não-stable / fallback
-    const comissaoMargemErro = 15; // ajuste de margem
+    const comissaoMargemErro = 20; // ajuste de margem
     const codMunicipioServicoPrestado = 352440;
     const codAtividade = 6619399;
     const codListaServicos = 10.02;
@@ -250,7 +250,7 @@ export const Home = () => {
       let comissao = comissaoFixa; // 0.1% mínimo
 
       if (ehBTCouETH) {
-        comissao = 1.5;
+        comissao = 1;
       } else if (ehStable) {
         if (t.tipo === "vendas") {
           const basePct =
