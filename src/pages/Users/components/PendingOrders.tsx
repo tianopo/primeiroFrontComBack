@@ -10,6 +10,7 @@ import { useReleaseAssets } from "../hooks/useReleaseAssets";
 import { useSendChatMessage } from "../hooks/useSendChatMessage";
 import { ChatBox } from "./ChatBox";
 import { OrderMessages } from "./OrderMessages";
+import { BinanceOrders } from "./PendingOrders/BinanceOrders";
 import { CoinexOrders } from "./PendingOrders/CoinexOrders";
 import { CryptotechOrders } from "./PendingOrders/CryptotechOrders";
 
@@ -24,7 +25,13 @@ interface IPendingOrders {
   >;
 }
 
-export type KeyType = "empresa" | "pessoal" | "coinexEmpresa" | "coinexPessoal" | "cryptotech";
+export type KeyType =
+  | "empresa"
+  | "pessoal"
+  | "coinexEmpresa"
+  | "coinexPessoal"
+  | "cryptotech"
+  | "binance";
 
 export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrders) => {
   const { data, isLoading, error } = useListPendingOrders();
@@ -46,6 +53,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
       "coinexEmpresa",
       "coinexPessoal",
       "cryptotech",
+      "binance",
     ];
 
     if (stored && validTabs.includes(stored)) {
@@ -86,7 +94,10 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
   if (error) return <p>Erro ao carregar ordens.</p>;
   if (!data) return <p>Sem ordens pendentes.</p>;
 
-  const orders = (data[activeTab as keyof typeof data] as any[]) || [];
+  const orders =
+    activeTab === "binance"
+      ? ((data as any)?.binance?.items ?? [])
+      : (((data as any)[activeTab] as any[]) ?? []);
 
   return (
     <CardContainer full>
@@ -100,8 +111,12 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
           { key: "coinexEmpresa", label: "Coinex E" },
           { key: "coinexPessoal", label: "Coinex P" },
           { key: "cryptotech", label: "Cryptotech" },
+          { key: "binance", label: "Binance" },
         ].map(({ key, label }) => {
-          const hasOrders = ((data as any)[key] || []).length > 0;
+          const hasOrders =
+            key === "binance"
+              ? ((data as any)?.binance?.items ?? []).length > 0
+              : (((data as any)[key] ?? []) as any[]).length > 0;
           return (
             <div key={key} className="relative">
               <Button
@@ -135,6 +150,8 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
           orders={orders}
           title={activeTab === "coinexEmpresa" ? "Coinex Empresa" : "Coinex Pessoal"}
         />
+      ) : activeTab === "binance" ? (
+        <BinanceOrders orders={orders} />
       ) : (
         <div className="flex flex-wrap gap-2">
           {orders.map((order: any) => (
