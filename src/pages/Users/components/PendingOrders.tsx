@@ -171,7 +171,6 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                         : "Bybit https://www.bybit.com/ SG",
                   });
                   setForm(true);
-                  navigator.clipboard.writeText((order.buyerRealName || "").trim());
                 }}
               >
                 <Copy width={20} height={20} weight="duotone" />
