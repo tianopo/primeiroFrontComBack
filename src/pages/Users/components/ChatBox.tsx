@@ -1,7 +1,7 @@
 import { ArrowCircleRight, FilePdf, ImageSquare } from "@phosphor-icons/react/dist/ssr";
 import { useRef, useState } from "react";
 import { useAccessControl } from "src/routes/context/AccessControl";
-import { useSendChatMessage } from "../hooks/useSendChatMessage";
+import { useSendChatMessageBybit } from "../hooks/useSendChatMessageBybit";
 import { KeyType } from "./PendingOrders";
 
 interface ChatBoxProps {
@@ -11,7 +11,7 @@ interface ChatBoxProps {
 
 export const ChatBox = ({ orderId, keyType }: ChatBoxProps) => {
   const [message, setMessage] = useState("");
-  const { mutate: sendChatMessage, isPending } = useSendChatMessage();
+  const { mutate: sendChatMessage, isPending } = useSendChatMessageBybit();
   const { name } = useAccessControl();
 
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -52,8 +52,8 @@ export const ChatBox = ({ orderId, keyType }: ChatBoxProps) => {
     <div className="my-2 flex items-center gap-2 rounded-6 border-1 border-gray-300 p-1">
       {/* Input de texto */}
       <input
-        id={`chat-input-${orderId}`}
-        name={`chat-input-${orderId}`}
+        id={`chat-input-${keyType}-${orderId}`}
+        name={`chat-input-${keyType}-${orderId}`}
         type="text"
         placeholder="Digite sua mensagem..."
         value={message}

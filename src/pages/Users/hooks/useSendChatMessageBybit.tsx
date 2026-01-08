@@ -5,19 +5,19 @@ import { responseError } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
 import { KeyType } from "../components/PendingOrders";
 
-interface ISendChatMessage {
+interface ISendChatMessageBybit {
   message: string;
   contentType: "str" | "pic" | "pdf" | "video";
   orderId: string;
   keyType: KeyType;
 }
 
-export const useSendChatMessage = () => {
+export const useSendChatMessageBybit = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async (data: ISendChatMessage) => {
-      const result = await api().post(apiRoute.sendChatMessage, data);
+    mutationFn: async (data: ISendChatMessageBybit) => {
+      const result = await api().post(apiRoute.sendChatMessageBybit, data);
       return result.data;
     },
     onSuccess: () => {

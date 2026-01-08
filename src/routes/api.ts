@@ -22,12 +22,13 @@ export const apiRoute = {
   account: "user/account",
   userId: (id: string) => `user/account/${id}`,
   /* BYBIT */
-  sendChatMessage: "bybit/send-chat-message",
+  sendChatMessageBybit: "bybit/send-chat-message",
   releaseAssets: "bybit/release-assets",
   uploadChatMessage: "bybit/upload-chat-message",
   pendingOrders: "bybit/pending-orders",
   /* BINANCE */
   binanceOrdersWithChats: "binance/order/detail-with-messages",
+  sendChatMessageBinance: "binance/chat/send",
   /* WHATSAPP */
   notifyWhatsapp: "whatsapp/notify",
   /* API */

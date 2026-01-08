@@ -7,7 +7,7 @@ import { generateSingleReceipt } from "src/pages/Home/config/handleReceipt";
 import { useAccessControl } from "src/routes/context/AccessControl";
 import { useListPendingOrders } from "../hooks/useListPendingOrders";
 import { useReleaseAssets } from "../hooks/useReleaseAssets";
-import { useSendChatMessage } from "../hooks/useSendChatMessage";
+import { useSendChatMessageBybit } from "../hooks/useSendChatMessageBybit";
 import { ChatBox } from "./ChatBox";
 import { OrderMessages } from "./OrderMessages";
 import { BinanceOrders } from "./PendingOrders/BinanceOrders";
@@ -35,7 +35,7 @@ export type KeyType =
 
 export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrders) => {
   const { data, isLoading, error } = useListPendingOrders();
-  const { mutate: sendChatMessage } = useSendChatMessage();
+  const { mutate: sendChatMessage } = useSendChatMessageBybit();
   const { mutate: releaseAssets } = useReleaseAssets();
   const { acesso } = useAccessControl();
 
