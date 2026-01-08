@@ -88,7 +88,6 @@ export const BinanceOrders = ({ orders }: { orders: BinanceOrderItem[] }) => {
         const ChatBox = () => {
           const [message, setMessage] = useState("");
           const { mutate: sendChatMessage, isPending } = useSendChatMessageBinance();
-          const { name } = useAccessControl();
 
           const imageInputRef = useRef<HTMLInputElement>(null);
 
@@ -232,10 +231,6 @@ export const BinanceOrders = ({ orders }: { orders: BinanceOrderItem[] }) => {
             <OrderMessages messages={normalizedForOrderMessages} />
 
             <ChatBox />
-
-            <Button disabled={!orderId} onClick={() => navigator.clipboard.writeText(orderId)}>
-              Copiar OrderNo
-            </Button>
           </div>
         );
       })}
