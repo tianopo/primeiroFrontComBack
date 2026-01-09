@@ -28,6 +28,7 @@ export const apiRoute = {
   pendingOrders: "bybit/pending-orders",
   /* BINANCE */
   binanceOrdersWithChats: "binance/order/detail-with-messages",
+  referencePrice: "binance/reference-price",
   sendChatMessageBinance: "binance/chat/send",
   /* WHATSAPP */
   notifyWhatsapp: "whatsapp/notify",
