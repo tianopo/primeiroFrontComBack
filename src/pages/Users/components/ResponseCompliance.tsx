@@ -1,4 +1,3 @@
-import { Fiducia } from "./QueryDataList/Fiducia";
 import { OFAC } from "./QueryDataList/OFAC";
 import { Slave } from "./QueryDataList/Slave";
 import { AE } from "./QueryDataTransparencia/AE";
@@ -38,9 +37,6 @@ export const ResponseCompliance = ({ responseData }: IResponseCompliance) => {
       <div className="flex w-full flex-row flex-wrap justify-center">
         {/*Lists*/}
         {typeof responseData?.slave === "boolean" && <Slave responseData={responseData?.slave} />}
-        {typeof responseData?.fiducia === "boolean" && (
-          <Fiducia responseData={responseData?.fiducia} />
-        )}
         {responseData?.ofac && <OFAC responseData={responseData?.ofac} />}
         {/*Portal da transparência*/}
         {responseData?.pdt?.viagens && <Viagens responseData={responseData?.pdt?.viagens} />}
