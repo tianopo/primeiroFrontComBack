@@ -2,7 +2,6 @@ import { createBrowserRouter } from "react-router-dom";
 import { Unauthorized } from "src/components/Feedback/Unathorized.views";
 import { LayoutX } from "src/components/Layout/LayoutX/LayoutX";
 import { Auth } from "src/pages/Auth/Auth.views";
-import { ConsultaCPF } from "src/pages/ConsultarCPF.views";
 import { Contracts } from "src/pages/Contracts/Contracts.views";
 import { Convert } from "src/pages/Convert/Convert.views";
 import { CryptoTech } from "src/pages/CryptoTech/CryptoTech.views";
@@ -30,7 +29,6 @@ export const browserRouter = createBrowserRouter([
       {
         element: <LayoutX />,
         children: [
-          { path: "/teste", element: <ConsultaCPF /> },
           { path: app.home, element: <Home /> },
           {
             element: <RoleProtectedRoute allowedRoles={["Master"]} />,
