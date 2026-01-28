@@ -4,7 +4,7 @@ import { OFXUploader } from "./components/OFXUploader";
 
 export const Convert = () => {
   return (
-    <CardContainer>
+    <CardContainer full>
       <div className="flex gap-3">
         <CSVUploader />
         <OFXUploader />

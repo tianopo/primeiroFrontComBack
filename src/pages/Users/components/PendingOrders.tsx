@@ -6,7 +6,6 @@ import { ConfirmationDelete } from "src/components/Modal/ConfirmationDelete";
 import { generateSingleReceipt } from "src/pages/Home/config/handleReceipt";
 import { useAccessControl } from "src/routes/context/AccessControl";
 import { useListPendingOrders } from "../hooks/useListPendingOrders";
-import { useNewOrderNotifier } from "../hooks/useNewOrderNotifier";
 import { useReleaseAssets } from "../hooks/useReleaseAssets";
 import { useSendChatMessageBybit } from "../hooks/useSendChatMessageBybit";
 import { ChatBox } from "./ChatBox";
@@ -43,7 +42,6 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
   const [showModal, setShowModal] = useState(false);
   const [orderToRelease, setOrderToRelease] = useState<any>(null);
 
-  useNewOrderNotifier(data, acesso!);
   // 🔹 activeTab persistido no localStorage
   const [activeTab, setActiveTab] = useState<KeyType>(() => {
     if (typeof window === "undefined") return "empresa";

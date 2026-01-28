@@ -16,7 +16,7 @@ export const OrderMessages = ({ messages }: OrderMessagesProps) => {
       <p className="mb-1 text-sm font-semibold">Mensagens:</p>
       <div className="flex flex-col gap-1">
         {messages.map((msg: any, i: number) => {
-          const sender = (msg?.fromNickName || msg.nickName).toLowerCase();
+          const sender = (msg?.fromNickName || msg.nickName)?.toLowerCase();
           const isFromCryptotech = cryptotechAliases.includes(sender);
 
           return (

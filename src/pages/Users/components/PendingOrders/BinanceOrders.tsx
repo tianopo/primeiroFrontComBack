@@ -1,9 +1,7 @@
 import { ArrowCircleRight, Copy, ImageSquare } from "@phosphor-icons/react";
-import { Button } from "src/components/Buttons/Button";
-import { OrderMessages } from "../OrderMessages";
-import { useState, useRef } from "react";
-import { useAccessControl } from "src/routes/context/AccessControl";
+import { useRef, useState } from "react";
 import { useSendChatMessageBinance } from "../../hooks/useSendChatMessageBinance";
+import { OrderMessages } from "../OrderMessages";
 
 type BinanceMessage = {
   orderNo: string;
