@@ -144,7 +144,7 @@ export const Protection = () => {
           readOnly={order.length > 0 && tipoTransferencia === "usuario"}
           options={data
             ?.filter((item: any) =>
-              (item.name || "").toLowerCase().includes((comprador || "").toLowerCase()),
+              (item.name || "")?.toLowerCase()?.includes((comprador || "").toLowerCase()),
             )
             .map((item: any) => item.name)}
         />
@@ -245,7 +245,7 @@ export const Protection = () => {
               busca
               readOnly={order.length > 0 && tipoTransferencia === "usuario"}
               options={data
-                ?.filter((user: any) => user?.counterparty && user.counterparty.includes(usuario))
+                ?.filter((user: any) => user?.counterparty && user?.counterparty?.includes(usuario))
                 .map((user: any) => user?.counterparty)}
             />
           </>

@@ -117,7 +117,7 @@ export const Services = () => {
           }
           busca
           options={data
-            ?.filter((user: any) => user && user.name.includes(usuario.name))
+            ?.filter((user: any) => user && user?.name?.includes(usuario.name))
             .map((user: any) => `${user.name} - ${user.document}`)}
         />
         <Select

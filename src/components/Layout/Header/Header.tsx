@@ -39,17 +39,17 @@ export const Header = ({ navbar }: IHeader) => {
           <div className="flex flex-col items-start font-bold">
             {prices ? (
               <div className="flex flex-col gap-0.5">
-                <span>
+                <h6>
                   Dólar (USDT/BRL):{" "}
                   <strong className="text-green-500">R$ {prices.USDTBRL || "-"}</strong>
-                </span>
-                <span>
+                </h6>
+                <h6>
                   Bitcoin (BTC/BRL):{" "}
                   <strong className="text-green-500">R$ {prices.BTCBRL || "-"}</strong>
-                </span>
+                </h6>
               </div>
             ) : (
-              <span className="text-red-500">Erro ao carregar cotações</span>
+              <h6 className="text-red-500">Erro ao carregar cotações</h6>
             )}
           </div>
         </div>
