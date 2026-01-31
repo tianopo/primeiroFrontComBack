@@ -16,7 +16,6 @@ export const Protection = () => {
   const [tipoTransferencia, setTipoTransferencia] = useState<string>("usuario");
   const [order, setOrder] = useState<string>("");
   const [comprador, setComprador] = useState<string>("");
-  const [instituicao, setInstituicao] = useState<string>("");
   const [dataHora, setDataHora] = useState<string>("");
   const [quantidade, setQuantidade] = useState<string>("");
   const [valor, setValor] = useState<string>("");
@@ -149,13 +148,6 @@ export const Protection = () => {
             .map((item: any) => item.name)}
         />
         <InputX
-          title="Instituição"
-          placeholder="PagSeguro"
-          value={instituicao}
-          onChange={(e) => setInstituicao(e.target.value)}
-          required
-        />
-        <InputX
           title="Data Hora"
           placeholder="AAAA-MM-DD HH:MM:SS"
           value={dataHora}
@@ -267,7 +259,6 @@ export const Protection = () => {
               {
                 tipoTransferencia,
                 comprador,
-                instituicao,
                 dataHora,
                 quantidade,
                 valor,

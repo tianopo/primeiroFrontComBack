@@ -6,7 +6,6 @@ import * as Yup from "yup";
 export interface IProtection {
   tipoTransferencia: string;
   comprador: string;
-  instituicao: string;
   dataHora: string;
   quantidade: string;
   valor: string;
@@ -25,7 +24,6 @@ const schema = Yup.object({
     .required("O tipo de transferência é obrigatório")
     .label("Tipo Transferência") as Yup.StringSchema<string>,
   comprador: Yup.string().required("Instituição é obrigatória").label("Comprador"),
-  instituicao: Yup.string().required("Instituição é obrigatória").label("Instituição"),
   dataHora: Yup.string()
     .required("Data e Hora é obrigatória")
     .matches(

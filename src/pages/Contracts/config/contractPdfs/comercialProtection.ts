@@ -5,7 +5,6 @@ export const protection = (
   {
     tipoTransferencia,
     comprador,
-    instituicao,
     dataHora,
     quantidade,
     valor,
@@ -19,7 +18,7 @@ export const protection = (
   files: File[],
 ) => {
   let docContent = `
-    <p>Carta Resposta à instituição da(o) ${instituicao}</p>
+    <p>Carta Resposta ao(os) MED(s)</p>
     <p>Pelo presente instrumento particular, e na melhor forma de direito, as partes a seguir qualificadas:</p>
   `;
 
@@ -32,7 +31,7 @@ export const protection = (
     `Especificadamente essa operação foi realizada da Cryptotech Desenvolvimento e Trading LTDA para a ${["exchange", "usuario"].includes(tipoTransferencia) ? `plataforma ${exchange}` : `carteira ${wallet}`} do comprador ${comprador} conforme evidências abaixo.`,
     `O Sr. / A Sra. ${comprador} comprou ${valor} em ativos ${ativo} que reflete na quantidade de ${quantidade} ${ativo}`,
     `Essa quantidade de ativo ${ativo} foi transferido na data de ${DH(0, 2, "-") + "/" + DH(0, 1, "-") + "/" + DH(0, 0, "-")} com uma ordem criada na hora de ${DH(1, 0, ":") + ":" + DH(1, 1, ":")} para a(o) ${tipoTransferencia === "exchange" ? `plataforma da(o) ${exchange} no UID ${uid}` : `${tipoTransferencia === "wallet" ? `carteira(o) ${wallet} no endereço ${endereco}` : `usuário ${usuario}`}`} sob a titularidade do Sr./ da Sra. ${comprador}.`,
-    `Esclareço ainda que a CryptoTech por políticas internas não realiza transação com terceiros e aplica em todas suas operações dentro da política de KYC e PLD.`,
+    `Esclareço ainda que a CryptoTech por políticas internas não realiza transação com terceiros e aplica em todas suas operações dentro da política de KYC e PLD própria.`,
   ];
   parties.forEach((paragraph) => {
     addContent(paragraph, 12);
