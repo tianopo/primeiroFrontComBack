@@ -8,9 +8,9 @@ export const Contracts = () => {
   const TabContent = () => {
     switch (activeTab) {
       case 1:
-        return <Services />;
-      case 2:
         return <Protection />;
+      case 2:
+        return <Services />;
       default:
         return null;
     }
@@ -22,19 +22,19 @@ export const Contracts = () => {
       <div className="mb-4 flex flex-col justify-center gap-4 md:flex-row">
         <button
           className={`rounded px-4 py-2 ${
-            activeTab === 1 ? "bg-blue-500 text-white" : "bg-gray-200"
+            activeTab === 2 ? "bg-blue-500 text-white" : "bg-gray-200"
           }`}
           onClick={() => setActiveTab(1)}
         >
-          Prestação de Serviços
+          Defesa Comercial
         </button>
         <button
           className={`rounded px-4 py-2 ${
-            activeTab === 2 ? "bg-blue-500 text-white" : "bg-gray-200"
+            activeTab === 1 ? "bg-blue-500 text-white" : "bg-gray-200"
           }`}
           onClick={() => setActiveTab(2)}
         >
-          Defesa Comercial
+          Prestação de Serviços
         </button>
       </div>
       <TabContent />

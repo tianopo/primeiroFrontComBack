@@ -94,9 +94,18 @@ export const Protection = () => {
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setUploadedFiles([...uploadedFiles, ...Array.from(e.target.files)]);
-    }
+    if (!e.target.files) return;
+
+    const incoming = Array.from(e.target.files);
+
+    const allowed = incoming.filter((f) => {
+      const name = (f.name || "").toLowerCase();
+      const isPdf = f.type === "application/pdf" || name.endsWith(".pdf");
+      const isImg = f.type.startsWith("image/");
+      return isPdf || isImg;
+    });
+
+    setUploadedFiles((prev) => [...prev, ...allowed]);
   };
 
   const handleSubmit = () => {
@@ -246,7 +255,7 @@ export const Protection = () => {
           <label className="text-sm font-medium">Adicionar Arquivo (PDF/Imagem)</label>
           <input
             type="file"
-            accept="image/*"
+            accept="application/pdf,image/*"
             onChange={handleFileUpload}
             multiple
             className="mt-2"

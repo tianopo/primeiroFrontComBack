@@ -1,3 +1,5 @@
+import { generateComplianceDoc } from "../utils/generateComplianceDoc";
+import { Deskdata } from "./DeskData/Deskdata";
 import { OFAC } from "./QueryDataList/OFAC";
 import { Slave } from "./QueryDataList/Slave";
 import { AE } from "./QueryDataTransparencia/AE";
@@ -26,14 +28,28 @@ export const ResponseCompliance = ({ responseData }: IResponseCompliance) => {
       <h5>
         <strong>{responseData?.pdt?.cpf?.nome}</strong>
       </h5>
+
       {responseData?.pdt?.cpf?.nis && (
         <h5>
           <strong>NIS: </strong>
           {responseData?.pdt?.cpf?.nis}
         </h5>
       )}
+
       <h6>{responseData?.ourData}</h6>
+      <h6>Algumas ordens são registradas apenas no mês seguinte</h6>
       <h6>{responseData?.userAnalysis}</h6>
+
+      <div className="my-2 flex justify-center">
+        <button
+          type="button"
+          className="rounded-md bg-black px-3 py-2 text-sm text-white hover:opacity-90"
+          onClick={() => generateComplianceDoc(responseData)}
+        >
+          Gerar PDF
+        </button>
+      </div>
+
       <div className="flex w-full flex-row flex-wrap justify-center">
         {/*Lists*/}
         {typeof responseData?.slave === "boolean" && <Slave responseData={responseData?.slave} />}
@@ -52,6 +68,8 @@ export const ResponseCompliance = ({ responseData }: IResponseCompliance) => {
         {responseData?.pdt?.cepim && <CEPIM responseData={responseData?.pdt?.cepim} />}
         {responseData?.pdt?.ceis && <CEIS responseData={responseData?.pdt?.ceis} />}
         {responseData?.pdt?.ceaf && <CEAF responseData={responseData?.pdt?.ceaf} />}
+
+        {responseData?.deskdata && <Deskdata responseData={responseData?.deskdata} />}
       </div>
     </div>
   );
