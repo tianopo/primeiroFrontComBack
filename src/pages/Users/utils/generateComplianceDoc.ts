@@ -625,7 +625,7 @@ export const generateComplianceDoc = (responseData: any) => {
     : "";
 
   // ✅ (Opcional) se você quiser reter JSON do PDT como auditoria, deixe; senão remova:
-  const pdtKeysAll = ["cpf", "sdc", "safra", "peti", "bpc", "ae", "cf"]; // mantém só os que você quiser em JSON
+  const pdtKeysAll = ["cpf", "sdc", "safra", "peti", "bpc", "ae"]; // mantém só os que você quiser em JSON
   const pdtJsonAuditSections = pdtKeysAll
     .filter((k) => pdt?.[k])
     .map((k) =>
