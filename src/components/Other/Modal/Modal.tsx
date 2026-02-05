@@ -1,6 +1,6 @@
 import { X } from "@phosphor-icons/react";
-import { Flex } from "../Flex/Flex";
-import { FlexCol } from "../Flex/FlexCol";
+import { Flex } from "../../Flex/Flex";
+import { FlexCol } from "../../Flex/FlexCol";
 interface IModalPix {
   setShowModal: React.Dispatch<React.SetStateAction<boolean>>;
   showModal: boolean;
