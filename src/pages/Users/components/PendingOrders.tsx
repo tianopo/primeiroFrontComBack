@@ -164,7 +164,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                 onClick={() => {
                   setInitialRegisterData({
                     apelido: order.targetNickName || "",
-                    nome: order.buyerRealName || "",
+                    nome: order?.side === 0 ? order.sellerRealName : order.buyerRealName,
                     exchange:
                       activeTab === "empresa"
                         ? "Bybit https://www.bybit.com/ SG"
@@ -191,7 +191,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
               </p>
               <p>
                 <strong>Nome:</strong>{" "}
-                {order.side === 0
+                {order?.side === 0
                   ? order.sellerRealName || "Não informado"
                   : order.buyerRealName || "Não informado"}
               </p>
