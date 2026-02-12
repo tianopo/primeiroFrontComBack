@@ -5,84 +5,87 @@ export const processExcelBybit = (workbook: XLSX.WorkBook, selectedBroker: strin
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
 
-  const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
-  const [titles, ...rows] = json;
-  const expectedTitles = [
-    "Order No.",
+  const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+  const [titlesRaw, ...rows] = json;
+
+  const norm = (v: any) =>
+    String(v ?? "")
+      .trim()
+      .toLowerCase();
+
+  const titles = (titlesRaw ?? []).map(norm);
+
+  // ✅ valida os títulos sem quebrar com "Time (UTC-03:00)"
+  const expected = [
+    "order no.",
     "p2p-convert",
-    "Type",
-    "Fiat Amount",
-    "Currency",
-    "Price",
-    "Currency",
-    "Coin Amount",
-    "Cryptocurrency",
-    "Transaction Fees",
-    "Cryptocurrency",
-    "Counterparty",
-    "Status",
-    "Time",
+    "type",
+    "fiat amount",
+    "currency",
+    "price",
+    "currency",
+    "coin amount",
+    "cryptocurrency",
+    "transaction fees",
+    "cryptocurrency",
+    "counterparty",
+    "status",
   ];
 
-  const isValid = expectedTitles.every((title, index) => titles[index] === title);
+  const isValid =
+    expected.every((t, i) => titles[i] === t) &&
+    // último cabeçalho pode ser "time" ou "time (utc-03:00)"
+    titles[13]?.startsWith("time");
+
   if (!isValid) {
     toast.error(`Esta planilha não pertence a ${selectedBroker.split(" ")[0]}`);
     return [];
   }
 
+  const toBRL2 = (value: any): string => {
+    const n = parseFloat(String(value));
+    return Number.isFinite(n) ? n.toFixed(2).replace(".", ",") : "";
+  };
+
   return rows
     .map((row) => {
       const [
-        numeroOrdem,
+        numeroOrdem, // 0
+        // 1 p2p-convert
         ,
-        tipo,
-        fiatAmount,
-        currency,
-        price,
+        type, // 2 BUY/SELL
+        fiatAmount, // 3
+        currency, // 4
+        price, // 5
+        // 6 currency (repetido)
         ,
-        coinAmount,
-        cryptocurrency,
-        transactionFees,
+        coinAmount, // 7
+        cryptocurrency, // 8
+        transactionFees, // 9
+        // 10 crypto (repetido)
         ,
-        counterparty,
-        status,
-        dataHora,
-      ] = row;
-      const formatToTwoDecimalPlaces = (value: string): string => {
-        const numericValue = parseFloat(value);
-        const roundedValue = numericValue.toFixed(2);
+        counterparty, // 11
+        status, // 12
+        timeStr, // 13 Time (UTC-03:00)
+      ] = row ?? [];
 
-        return roundedValue.replace(".", ",");
-      };
+      // ✅ pegar só BUY e Completed (exclui canceladas e SELL)
+      if (norm(status) !== "completed") return false;
+      if (norm(type) !== "buy") return false;
+      if (String(currency ?? "").trim() !== "BRL") return false;
 
-      // Subtrair 3 horas de dataHoraTransacao
-      const adjustDateTime = (dateTime: string): string => {
-        const date = new Date(dateTime);
-        date.setTime(date.getTime() - 3 * 60 * 60 * 1000);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        const hours = String(date.getHours()).padStart(2, "0");
-        const minutes = String(date.getMinutes()).padStart(2, "0");
-        const seconds = String(date.getSeconds()).padStart(2, "0");
-        // Retorna no formato "YYYY-MM-DD HH:mm:ss"
-        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-      };
-
-      if (status?.trim().toLowerCase() !== "completed") return false;
-      if (currency?.trim() !== "BRL") return false;
       return {
-        numeroOrdem,
-        tipo: tipo === "BUY" ? "compras" : "vendas",
-        dataHora: adjustDateTime(dataHora),
+        numeroOrdem: String(numeroOrdem),
+        tipo: "compras",
+        dataHora: String(timeStr ?? ""), // já vem em UTC-03:00
         exchange: selectedBroker,
-        ativo: cryptocurrency,
-        apelido: counterparty,
-        quantidade: coinAmount,
-        valor: formatToTwoDecimalPlaces(fiatAmount),
-        valorToken: price,
-        taxa: transactionFees,
+        ativo: String(cryptocurrency ?? ""),
+        apelido: String(counterparty ?? ""),
+        quantidade: String(coinAmount ?? ""),
+        valor: toBRL2(fiatAmount),
+        valorToken: String(price ?? ""),
+        taxa: String(transactionFees ?? "0"),
       };
     })
-    .filter(Boolean);
+    .filter(Boolean) as any[];
 };

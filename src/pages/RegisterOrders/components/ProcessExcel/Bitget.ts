@@ -5,66 +5,90 @@ export const processExcelBitget = (workbook: XLSX.WorkBook, selectedBroker: stri
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
 
-  const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
-  const [titles, ...rows] = json;
+  const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+  const [titlesRaw, ...rows] = json;
 
-  const expectedTitles = [
-    "Order number",
-    "Time created",
-    "Order type",
-    "Crypto",
-    "Flat",
-    "Amount",
-    "Price",
-    "Quantity",
-    "Counterparty",
+  const normalize = (v: any) =>
+    String(v ?? "")
+      .trim()
+      .toLowerCase();
+
+  const titles = (titlesRaw ?? []).map(normalize);
+
+  // ✅ required (Counterparty é opcional porque seu arquivo não tem)
+  const required = [
+    "order number",
+    "time created",
+    "order type",
+    "crypto",
+    "flat",
+    "amount",
+    "price",
+    "quantity",
     "status",
   ];
 
-  const isValid = expectedTitles.every(
-    (title, index) => titles[index]?.toLowerCase().trim() === title.toLowerCase().trim(),
-  );
+  const hasAll = required.every((t) => titles.includes(t));
 
-  if (!isValid) {
+  if (!hasAll) {
     toast.error(`Esta planilha não pertence à corretora ${selectedBroker.split(" ")[0]}`);
     return [];
   }
 
+  const idx = Object.fromEntries(required.map((t) => [t, titles.indexOf(t)])) as Record<
+    string,
+    number
+  >;
+  const idxCounterparty = titles.indexOf("counterparty"); // opcional
+
+  const excelDateToString = (v: any) => {
+    // Bitget costuma vir como número serial do Excel (ex.: 46053.97)
+    if (typeof v === "number" && isFinite(v)) {
+      const d = XLSX.SSF.parse_date_code(v);
+      if (!d) return String(v);
+
+      const pad = (n: number) => String(n).padStart(2, "0");
+      return `${d.y}-${pad(d.m)}-${pad(d.d)} ${pad(d.H)}:${pad(d.M)}:${pad(Math.floor(d.S || 0))}`;
+    }
+
+    // se já vier como string
+    return String(v ?? "");
+  };
+
+  const formatToTwoDecimalPlaces = (value: string | number): string => {
+    const numericValue = parseFloat(String(value));
+    return isNaN(numericValue) ? "" : numericValue.toFixed(2).replace(".", ",");
+  };
+
   return rows
     .map((row) => {
-      const [
-        orderId, // 0: "Order number"
-        createdAt, // 1: "Time created"
-        side, // 2: "Order type"
-        crypto, // 3: "Crypto"
-        ,
-        // 4: "Flat"
-        totalPrice, // 5: "Amount"
-        price, // 6: "Price"
-        value, // 7: "Quantity"
-        counterparty, // 8: "Counterparty"
-        status, // 9: "status"
-      ] = row;
+      if (!row || row.length === 0) return false;
 
-      if (!orderId || status.toLowerCase().trim() !== "completed") return false;
+      const orderId = row[idx["order number"]];
+      const createdAt = row[idx["time created"]];
+      const side = row[idx["order type"]];
+      const crypto = row[idx["crypto"]];
+      const totalPrice = row[idx["amount"]];
+      const price = row[idx["price"]];
+      const quantity = row[idx["quantity"]];
+      const status = row[idx["status"]];
+      const counterparty = idxCounterparty >= 0 ? row[idxCounterparty] : undefined;
 
-      const formatToTwoDecimalPlaces = (value: string | number): string => {
-        const numericValue = parseFloat(String(value));
-        return isNaN(numericValue) ? "" : numericValue.toFixed(2).replace(".", ",");
-      };
+      if (!orderId) return false;
+      if (normalize(status) !== "completed") return false;
 
       return {
         numeroOrdem: String(orderId),
-        tipo: String(side).toLowerCase() === "sell" ? "vendas" : "compras",
-        dataHora: createdAt,
+        tipo: normalize(side) === "sell" ? "vendas" : "compras",
+        dataHora: excelDateToString(createdAt),
         exchange: selectedBroker,
         ativo: String(crypto),
-        nome: String(counterparty),
-        quantidade: String(value),
+        nome: counterparty ? String(counterparty) : "-", // ✅ não existe no seu arquivo
+        quantidade: String(quantity),
         valor: formatToTwoDecimalPlaces(totalPrice),
         valorToken: String(price),
         taxa: "0",
       };
     })
-    .filter(Boolean);
+    .filter(Boolean) as any[];
 };
