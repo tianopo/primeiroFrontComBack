@@ -66,7 +66,7 @@ export const processExcelKucoin = (workbook: XLSX.WorkBook, selectedBroker: stri
         dataHora: adjustedTime,
         exchange: selectedBroker,
         ativo: legalCurrency.split("/")[1],
-        apelido: traderName,
+        apelido: String(traderName),
         quantidade: currencyAmount.toString(),
         valor: formatNumber(legalAmount.toString()),
         valorToken: price.toString(),
