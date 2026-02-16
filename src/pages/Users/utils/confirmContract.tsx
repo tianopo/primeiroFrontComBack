@@ -9,6 +9,7 @@ export interface IUsuario {
 export interface IConfirmContract {
   usuario: IUsuario;
   ordem: string;
+  data: string;
   exchange: string;
   quantidade: string;
   valor: string;
@@ -18,6 +19,7 @@ export interface IConfirmContract {
 export const services = ({
   usuario,
   ordem,
+  data,
   exchange,
   quantidade,
   valor,
@@ -38,7 +40,7 @@ export const services = ({
 
   // Add Parties
   const parties = [
-    `${usuario.name}, brasileiro, inscrita no CPF/MF sob nº ${usuario.document}, neste ato denominada simplesmente COMPRADORA; e de outro lado,`,
+    `${usuario.name}, brasileira, inscrita no CPF/MF sob nº ${usuario.document}, neste ato denominada simplesmente COMPRADORA; e de outro lado,`,
     `CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA, pessoa jurídica de direito privado com sede localizada na Estrada do Limoeiro, 495 - Jardim California, Jacarei - SP, 12.305-810, inscrita no C.N.P.J/MF sob o número 55.636.113/0001-70, neste ato representada por Matheus Henrique de Abreu brasileiro, casado, inscrito no CPF/MF sob nº 338.624.448-30, residente e domiciliada na Rua Estrada do Limoeiro, 495 - Jardim California, Jacarei - SP, 12.305-810, pagamento será feito via transferência bancária (Pix ou TED) através dos dados enviados a compradora, doravante denominada simplesmente VENDEDORA, e,`,
     `tem entre si, justo e contratado, o presente CONTRATO DE COMPRA DE ATIVOS, que serão realizados mediante as seguintes cláusulas e condições:`,
   ];
@@ -54,7 +56,7 @@ export const services = ({
       title: `1. DO OBJETO DO CONTRATO`,
       content: [
         `1.1 O objeto do presente contrato é a compra e venda de ativos nas condições do presente contrato.`,
-        `1.2 O Vendedor compromete-se a vender e o Comprador compromete-se a comprar a quantia de ${quantidade} ${ativo}, por meio da transferência do ativo ${ativo} na ordem ${ordem} no P2P da corretora ${exchange}, conforme acordado entre as partes.`,
+        `1.2 O Vendedor compromete-se a vender e o Comprador compromete-se a comprar a quantia de ${quantidade} ${ativo}, por meio da transferência do ativo ${ativo} na ordem ${ordem} em ${data} no P2P da corretora ${exchange}, conforme acordado entre as partes.`,
       ],
     },
     {
@@ -131,7 +133,7 @@ transferência bancária, conforme combinado entre as partes.`,
     });
     addLineBreak(2); // Pula 2 linhas entre as cláusulas
   });
-  // alterar para tempo em timestamp
+  // data
   const currentDate = new Date();
   currentDate.setHours(currentDate.getHours());
   const formattedDate = currentDate.toLocaleString("pt-BR", {
@@ -143,9 +145,21 @@ transferência bancária, conforme combinado entre as partes.`,
   });
 
   // Finalização
-  const [dia = "", mesAno = "", anoComVirgula = ""] = (formattedDate ?? "").split("/");
-  const ano = (anoComVirgula ?? "").split(",")[0];
-  const mesExtenso = currentDate.toLocaleDateString("pt-BR", { month: "long" });
+  const parseDateParts = (iso: string) => {
+    const [yyyy = "", mm = "", dd = ""] = (iso ?? "").split("-");
+    const dateObj = yyyy && mm && dd ? new Date(Number(yyyy), Number(mm) - 1, Number(dd)) : null;
+
+    const dia = dd || "-";
+    const ano = yyyy || "-";
+    const mesExtenso =
+      dateObj && !isNaN(dateObj.getTime())
+        ? dateObj.toLocaleDateString("pt-BR", { month: "long" })
+        : "-";
+
+    return { dia, mesExtenso, ano };
+  };
+
+  const { dia, mesExtenso, ano } = parseDateParts(data);
 
   const final = [
     `E, assim, por estarem justas e contratadas, as partes declaram que este instrumento foi aceito eletronicamente no chat da ordem ${ordem} e arquivado para fins de registro e auditoria nos sistemas da Cryptotech.`,
@@ -158,8 +172,8 @@ transferência bancária, conforme combinado entre as partes.`,
   addLineBreak(3);
 
   const representanteCryptotech = {
-    nome: "Representante Legal da CRYPTOTECH", // ex.: "Matheus Henrique de Abreu"
-    cpf: "000.000.000-00", // ex.: "338.624.448-30"
+    nome: "Matheus Henrique de Abreu",
+    cpf: "338.624.448-30",
   };
 
   docContent += `
