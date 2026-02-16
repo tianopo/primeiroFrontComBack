@@ -20,11 +20,13 @@ export const Home = () => {
   const { acesso } = useAccessControl();
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const today = () => new Date().toISOString().slice(0, 10);
   const [filterDates, setFilterDates] = useState(() => {
     if (acesso === "User") {
       return { startDate: "2024-06-21", endDate: "3000-12-31" };
     }
-    return { startDate: "", endDate: "" };
+    const now = today();
+    return { startDate: now, endDate: now };
   });
   const [showModal, setShowModal] = useState(false);
   const [buyer, setBuyer] = useState("");
@@ -205,7 +207,7 @@ export const Home = () => {
     const hoje = new Date();
     const monthName = hoje.toLocaleDateString("pt-BR", { month: "long" });
     const comissaoFixa = 0.01; // % base para não-stable / fallback
-    const comissaoMargemErro = 20; // ajuste de margem
+    const comissaoMargemErro = 10; // ajuste de margem
     const codMunicipioServicoPrestado = 352440;
     const codAtividade = 6619399;
     const codListaServicos = 10.02;
@@ -250,7 +252,7 @@ export const Home = () => {
       let comissao = comissaoFixa; // 0.1% mínimo
 
       if (ehBTCouETH) {
-        comissao = 1;
+        comissao = 3;
       } else if (ehStable) {
         if (t.tipo === "vendas") {
           const basePct =
