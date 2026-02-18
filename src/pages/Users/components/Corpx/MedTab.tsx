@@ -8,7 +8,7 @@ export const MedTab = ({
   isLoading,
   error,
 }: {
-  accountId: string | undefined;
+  accountId: string;
   data: any;
   isLoading: boolean;
   error: boolean;

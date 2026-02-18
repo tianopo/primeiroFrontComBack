@@ -10,6 +10,6 @@ export const useCorpxBalance = () => {
       return res.data;
     },
     refetchOnWindowFocus: false,
-    staleTime: 20_000,
+    staleTime: 30_000,
   });
 };

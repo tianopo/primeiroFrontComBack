@@ -3,24 +3,21 @@ import { Button } from "src/components/Buttons/Button";
 import { CardContainer } from "src/components/Layout/CardContainer";
 import { useCorpxBalance } from "../../hooks/Corpx/useCorpxBalance";
 import { useCorpxListMeds } from "../../hooks/Corpx/useCorpxListMeds";
-import { useCorpxPixLimits } from "../../hooks/Corpx/useCorpxPixLimits";
 import { useCorpxStatement } from "../../hooks/Corpx/useCorpxStatement";
-import { LimitsTab } from "./LimitsTab";
 import { MedTab } from "./MedTab";
 import { PixOutModal } from "./PixOutModal";
 import { RefundModal } from "./RefundModal";
 import { StatementTab } from "./StatementTab";
 import { StatusTab } from "./StatusTab";
 
-type TabKey = "extrato" | "med" | "limits" | "status";
+type TabKey = "extrato" | "med" | "status";
 
 // helper: yyyy-mm-dd (para input date)
 const todayYMD = () => new Date().toISOString().slice(0, 10);
 
 export const Extrato = () => {
   // accountId persistido igual PendingOrders
-  const accountId = process.env.CORPX_ACCOUNT_ID ?? "";
-
+  const accountId = "c5130dff-f3f7-4e99-a78d-a3b3d7363cd0";
   const [activeTab, setActiveTab] = useState<TabKey>(() => {
     if (typeof window === "undefined") return "extrato";
     return (window.localStorage.getItem("corpxExtratoActiveTab") as TabKey) ?? "extrato";
@@ -36,8 +33,8 @@ export const Extrato = () => {
   const tabBtnClass = (tab: TabKey) =>
     `px-4 py-2 -mb-px border-b-2 transition-colors ${
       activeTab === tab
-        ? "border-black text-black font-semibold"
-        : "border-transparent text-white hover:text-gray-900"
+        ? "border-primary text-primary font-semibold"
+        : "border-transparent text-black hover:text-gray-600"
     }`;
 
   // filtros do extrato (form) + aplicado
@@ -67,7 +64,6 @@ export const Extrato = () => {
 
   // queries gerais
   const balanceQ = useCorpxBalance();
-  const limitsQ = useCorpxPixLimits();
   const medsQ = useCorpxListMeds("OPEN");
 
   // ✅ extrato via statement hook
@@ -92,14 +88,24 @@ export const Extrato = () => {
       <CardContainer full>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-28 font-bold">EXTRATO (CorpX)</h3>
-
+          <div className="mb-4 grid gap-3 md:grid-cols-2">
+            {balanceQ.isLoading ? (
+              <h6>Carregando...</h6>
+            ) : balanceQ.error ? (
+              <h6>Erro ao carregar saldo</h6>
+            ) : (
+              <>
+                <h6>
+                  Saldo{balanceQ.data.total} {balanceQ.data.currency}
+                </h6>
+                <h6>
+                  Disponível: {balanceQ.data.available} {balanceQ.data.locked}
+                </h6>
+              </>
+            )}
+          </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button
-              onClick={() => setShowPixModal(true)}
-              className="rounded-6 bg-blue-500 text-white"
-            >
-              Fazer PIX
-            </Button>
+            <Button onClick={() => setShowPixModal(true)}>Fazer PIX</Button>
           </div>
         </div>
 
@@ -111,41 +117,9 @@ export const Extrato = () => {
           <button className={tabBtnClass("med")} onClick={() => switchTab("med")}>
             MED
           </button>
-          <button className={tabBtnClass("limits")} onClick={() => switchTab("limits")}>
-            Limites
-          </button>
           <button className={tabBtnClass("status")} onClick={() => switchTab("status")}>
             Status
           </button>
-        </div>
-
-        {/* Resumo topo */}
-        <div className="mb-4 grid gap-3 md:grid-cols-2">
-          <div className="rounded-xl border border-gray-200 p-3">
-            <div className="mb-2 font-semibold">Saldo (Balance)</div>
-            {balanceQ.isLoading ? (
-              <p>Carregando...</p>
-            ) : balanceQ.error ? (
-              <p>Erro ao carregar saldo</p>
-            ) : (
-              <pre className="max-h-56 overflow-auto rounded bg-gray-50 p-2 text-xs">
-                {JSON.stringify(balanceQ.data, null, 2)}
-              </pre>
-            )}
-          </div>
-
-          <div className="rounded-xl border border-gray-200 p-3">
-            <div className="mb-2 font-semibold">Limites (Resumo)</div>
-            {limitsQ.isLoading ? (
-              <p>Carregando...</p>
-            ) : limitsQ.error ? (
-              <p>Erro ao carregar limites</p>
-            ) : (
-              <pre className="max-h-56 overflow-auto rounded bg-gray-50 p-2 text-xs">
-                {JSON.stringify(limitsQ.data, null, 2)}
-              </pre>
-            )}
-          </div>
         </div>
 
         {/* Conteúdo por tab */}
@@ -180,8 +154,6 @@ export const Extrato = () => {
             error={!!medsQ.error}
           />
         )}
-
-        {activeTab === "limits" && <LimitsTab limits={limitsQ.data} loading={limitsQ.isLoading} />}
 
         {activeTab === "status" && <StatusTab />}
       </CardContainer>

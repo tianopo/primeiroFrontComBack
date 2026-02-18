@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Compliance } from "./components/Compliance";
+import { Extrato } from "./components/Corpx/Extrato";
 import { Edit } from "./components/Edit";
 import { PendingOrders } from "./components/PendingOrders";
 import { Register } from "./components/Register";
@@ -55,6 +56,7 @@ export const Users = () => {
         {activeTab === "compliance" && <Compliance />}
       </div>
       <PendingOrders setForm={setForm} setInitialRegisterData={setInitialRegisterData} />
+      <Extrato />
     </div>
   );
 };

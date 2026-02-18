@@ -3,6 +3,7 @@ import { Button } from "src/components/Buttons/Button";
 import { Modal } from "src/components/Modal/Modal";
 import { useCorpxPixOut } from "../../hooks/Corpx/useCorpxPixOut";
 import { PixKeyType } from "../../utils/Interface";
+import { PixOutResponse } from "./PixOutResponse";
 
 const KEY_TYPES: PixKeyType[] = ["CPF", "CNPJ", "EMAIL", "PHONE", "EVP"];
 
@@ -12,9 +13,9 @@ export const PixOutModal = ({ accountId, onClose }: { accountId: string; onClose
   const [amount, setAmount] = useState("100.00");
   const [keyType, setKeyType] = useState<PixKeyType>("CPF");
   const [key, setKey] = useState("");
-  const [description, setDescription] = useState("Service payment");
+  const [description, setDescription] = useState("Intermediação de ativos digitais");
   const [identifier, setIdentifier] = useState(`order-${Date.now()}`);
-
+  console.log(accountId);
   const canSend = !!accountId && !!key && !!amount && Number(amount) > 0;
 
   const submit = () => {
@@ -91,23 +92,17 @@ export const PixOutModal = ({ accountId, onClose }: { accountId: string; onClose
       </div>
 
       <div className="mt-4 flex justify-end gap-2">
-        <Button className="rounded-6 bg-gray-200" onClick={onClose} disabled={isPending}>
+        <Button onClick={onClose} disabled={isPending}>
           Cancelar
         </Button>
-        <Button
-          className="rounded-6 bg-blue-500 text-white"
-          onClick={submit}
-          disabled={!canSend || isPending}
-        >
+        <Button onClick={submit} disabled={!canSend || isPending}>
           {isPending ? "Enviando..." : "Enviar"}
         </Button>
       </div>
 
       <div className="mt-3">
         <div className="font-semibold">Resposta</div>
-        <pre className="max-h-56 overflow-auto rounded bg-gray-50 p-2 text-xs">
-          {data ? JSON.stringify(data, null, 2) : "Sem envio ainda."}
-        </pre>
+        <PixOutResponse data={data} />
       </div>
     </Modal>
   );

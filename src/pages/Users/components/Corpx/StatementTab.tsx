@@ -58,17 +58,13 @@ export const StatementTab = (props: {
           />
         </label>
 
-        <Button className="rounded-6 bg-blue-500 text-white" onClick={onApply}>
-          Buscar
-        </Button>
+        <Button onClick={onApply}>Buscar</Button>
 
         <div className="ml-auto flex items-center gap-2">
-          <Button className="rounded-6 bg-gray-200" onClick={onPrev} disabled={page <= 1}>
+          <Button onClick={onPrev} disabled={page <= 1}>
             Página {page} ←
           </Button>
-          <Button className="rounded-6 bg-gray-200" onClick={onNext}>
-            → Próxima
-          </Button>
+          <Button onClick={onNext}>→ Próxima</Button>
           <span className="text-xs text-gray-500">size: {size}</span>
         </div>
       </div>
