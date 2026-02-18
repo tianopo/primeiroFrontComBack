@@ -34,4 +34,18 @@ export const apiRoute = {
   notifyWhatsapp: "whatsapp/notify",
   /* API */
   exchangeOffsets: "api/exchange-offsets",
+  /* CORPX */
+  corpxPix: {
+    balance: `/corpx/pix/balance`,
+    statement: `/corpx/pix/accounts/statement`,
+    limits: `/corpx/pix/limits`,
+    pixOut: `/corpx/pix/out`,
+    refund: `/corpx/pix/refund`,
+    transactionStatus: `/corpx/pix/transactions/status`,
+    qrcodes: `/corpx/pix/qrcodes`,
+    qrcode: `/corpx/pix/qrcode`,
+    qrcodeDynamic: `/corpx/pix/qrcode/dynamic`,
+    meds: `/corpx/pix/med`,
+    respondMed: (medId: string) => `/corpx/pix/med/${medId}/response`,
+  },
 };
