@@ -13,6 +13,7 @@ import { OrderMessages } from "./OrderMessages";
 import { BinanceOrders } from "./PendingOrders/BinanceOrders";
 import { CoinexOrders } from "./PendingOrders/CoinexOrders";
 import { CryptotechOrders } from "./PendingOrders/CryptotechOrders";
+import { PaymentTermsBox } from "./PendingOrders/PaymentTermsBox";
 
 interface IPendingOrders {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -159,6 +160,14 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
               key={order.id}
               className="relative flex w-fit flex-col gap-0.5 rounded-xl border border-gray-200 p-4 shadow"
             >
+              {order?.side === 0 &&
+                Array.isArray(order?.paymentTerms) &&
+                order.paymentTerms.length > 0 && (
+                  <PaymentTermsBox
+                    terms={order.paymentTerms}
+                    title="Dados para pagamento (vendedor)"
+                  />
+                )}
               <button
                 className="absolute right-2 top-2 rounded-6 border border-gray-200 bg-white p-2 hover:bg-gray-100 hover:opacity-80"
                 onClick={() => {
