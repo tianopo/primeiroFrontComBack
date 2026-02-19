@@ -78,7 +78,7 @@ export const useCorpxStatement = (params: {
       const res = await api().get(url);
       return res.data as CorpxStatementResponse;
     },
-    refetchOnWindowFocus: false,
-    staleTime: 15_000,
+    refetchInterval: 30000,
+    retry: 1,
   });
 };

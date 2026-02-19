@@ -2,7 +2,7 @@ import { Copy } from "@phosphor-icons/react";
 import { Dispatch, SetStateAction, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { CardContainer } from "src/components/Layout/CardContainer";
-import { ConfirmationDelete } from "src/components/Modal/ConfirmationDelete";
+import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalButton";
 import { generateSingleReceipt } from "src/pages/Home/config/handleReceipt";
 import { useAccessControl } from "src/routes/context/AccessControl";
 import { useListPendingOrders } from "../hooks/useListPendingOrders";
@@ -248,7 +248,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
       )}
 
       {showModal && orderToRelease && activeTab !== "cryptotech" && (
-        <ConfirmationDelete
+        <ConfirmationModalButton
           text={`Você tem certeza que deseja liberar para ${orderToRelease.buyerRealName} a quantidade de ${orderToRelease.notifyTokenQuantity} ${orderToRelease.tokenId} no valor de ${orderToRelease.amount} ${orderToRelease.currencyId}?`}
           onConfirm={handleConfirmRelease}
           onCancel={() => {

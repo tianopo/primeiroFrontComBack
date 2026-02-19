@@ -1,12 +1,16 @@
 import { Button } from "../Buttons/Button";
 
-interface IConfirmationDeleteProps {
+interface IConfirmationModalButtonProps {
   text: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-export const ConfirmationDelete = ({ text, onConfirm, onCancel }: IConfirmationDeleteProps) => {
+export const ConfirmationModalButton = ({
+  text,
+  onConfirm,
+  onCancel,
+}: IConfirmationModalButtonProps) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="flex h-1/3 w-3/4 flex-col justify-center gap-1 overflow-y-auto rounded-lg bg-white p-2 shadow-lg md:w-1/3">

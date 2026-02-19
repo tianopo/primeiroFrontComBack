@@ -12,7 +12,7 @@ export const useCorpxListMeds = (status: string = "OPEN") => {
       const res = await api().get(url);
       return res.data;
     },
-    refetchOnWindowFocus: false,
-    staleTime: 15_000,
+    refetchInterval: 3600000,
+    retry: 1,
   });
 };

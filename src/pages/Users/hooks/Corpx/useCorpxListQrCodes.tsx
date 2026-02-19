@@ -11,7 +11,7 @@ export const useCorpxListQrCodes = (status?: string) => {
       const res = await api().get(url);
       return res.data; // pode ser {items,count} ou array, a tela trata
     },
-    refetchOnWindowFocus: false,
-    staleTime: 15_000,
+    refetchInterval: 3600000,
+    retry: 1,
   });
 };

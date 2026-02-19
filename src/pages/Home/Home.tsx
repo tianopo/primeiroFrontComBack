@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { InputX } from "src/components/Form/Input/InputX";
 import { IconX } from "src/components/Icons/IconX";
-import { ConfirmationDelete } from "src/components/Modal/ConfirmationDelete";
+import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalButton";
 import { useAccessControl } from "src/routes/context/AccessControl";
 import { EditOrderModal } from "./components/EditOrderModal";
 import { IN1888 } from "./components/IN1888";
@@ -495,7 +495,7 @@ Suporte de Dúvidas
       {showModal && <IN1888 onClose={() => setShowModal(false)} />}
 
       {showDeleteConfirmation && transactionToDelete && (
-        <ConfirmationDelete
+        <ConfirmationModalButton
           text={`Tem certeza que deseja excluir a ordem ${transactionToDelete.numeroOrdem}?`}
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}

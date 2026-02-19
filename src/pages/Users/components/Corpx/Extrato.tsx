@@ -8,9 +8,8 @@ import { MedTab } from "./MedTab";
 import { PixOutModal } from "./PixOutModal";
 import { RefundModal } from "./RefundModal";
 import { StatementTab } from "./StatementTab";
-import { StatusTab } from "./StatusTab";
 
-type TabKey = "extrato" | "med" | "status";
+type TabKey = "extrato" | "med";
 
 // helper: yyyy-mm-dd (para input date)
 const todayYMD = () => new Date().toISOString().slice(0, 10);
@@ -51,7 +50,7 @@ export const Extrato = () => {
   const [applied, setApplied] = useState(() => ({
     startDate,
     endDate,
-    page: 1,
+    page: 0,
     size: 50,
   }));
 
@@ -94,14 +93,10 @@ export const Extrato = () => {
             ) : balanceQ.error ? (
               <h6>Erro ao carregar saldo</h6>
             ) : (
-              <>
-                <h6>
-                  Saldo{balanceQ.data.total} {balanceQ.data.currency}
-                </h6>
-                <h6>
-                  Disponível: {balanceQ.data.available} {balanceQ.data.locked}
-                </h6>
-              </>
+              <h6>
+                {" "}
+                Saldo: {balanceQ.data.total} {balanceQ.data.currency}
+              </h6>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -117,14 +112,12 @@ export const Extrato = () => {
           <button className={tabBtnClass("med")} onClick={() => switchTab("med")}>
             MED
           </button>
-          <button className={tabBtnClass("status")} onClick={() => switchTab("status")}>
-            Status
-          </button>
         </div>
 
         {/* Conteúdo por tab */}
         {activeTab === "extrato" && (
           <StatementTab
+            accountId={accountId}
             statementQ={statementQ}
             startDate={startDate}
             endDate={endDate}
@@ -135,14 +128,13 @@ export const Extrato = () => {
                 ...p,
                 startDate,
                 endDate,
-                page: 1,
+                page: 0,
               }))
             }
             page={applied.page}
             size={applied.size}
-            onPrev={() => setApplied((p) => ({ ...p, page: Math.max(1, p.page - 1) }))}
+            onPrev={() => setApplied((p) => ({ ...p, page: Math.max(0, p.page - 1) }))}
             onNext={() => setApplied((p) => ({ ...p, page: p.page + 1 }))}
-            onRefund={(endToEndId, amount) => setRefundModal({ open: true, endToEndId, amount })}
           />
         )}
 
@@ -154,8 +146,6 @@ export const Extrato = () => {
             error={!!medsQ.error}
           />
         )}
-
-        {activeTab === "status" && <StatusTab />}
       </CardContainer>
 
       {showPixModal && <PixOutModal accountId={accountId} onClose={() => setShowPixModal(false)} />}

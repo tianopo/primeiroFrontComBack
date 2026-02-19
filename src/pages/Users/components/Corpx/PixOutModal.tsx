@@ -15,7 +15,7 @@ export const PixOutModal = ({ accountId, onClose }: { accountId: string; onClose
   const [key, setKey] = useState("");
   const [description, setDescription] = useState("Intermediação de ativos digitais");
   const [identifier, setIdentifier] = useState(`order-${Date.now()}`);
-  console.log(accountId);
+
   const canSend = !!accountId && !!key && !!amount && Number(amount) > 0;
 
   const submit = () => {

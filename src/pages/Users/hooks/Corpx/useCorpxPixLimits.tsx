@@ -9,7 +9,7 @@ export const useCorpxPixLimits = () => {
       const res = await api().get(apiRoute.corpxPix.limits);
       return res.data;
     },
-    refetchOnWindowFocus: false,
-    staleTime: 20_000,
+    refetchInterval: 3600000,
+    retry: 1,
   });
 };

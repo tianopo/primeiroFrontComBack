@@ -9,7 +9,7 @@ export const useCorpxBalance = () => {
       const res = await api().get(apiRoute.corpxPix.balance);
       return res.data;
     },
-    refetchOnWindowFocus: false,
-    staleTime: 30_000,
+    refetchInterval: 30000,
+    retry: 1,
   });
 };

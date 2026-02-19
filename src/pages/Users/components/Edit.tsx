@@ -8,7 +8,7 @@ import { InputX } from "src/components/Form/Input/InputX";
 import { Select } from "src/components/Form/Select/Select";
 import { IconX } from "src/components/Icons/IconX";
 import { CardContainer } from "src/components/Layout/CardContainer";
-import { ConfirmationDelete } from "src/components/Modal/ConfirmationDelete";
+import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalButton";
 import { responseError } from "src/config/responseErrors";
 import { formatCPFOrCNPJ } from "src/utils/formats";
 import { exchangeOptions } from "src/utils/selectsOptions";
@@ -244,7 +244,7 @@ export const Edit = ({ setForm }: IEdit) => {
         </FormX>
       </FormProvider>
       {isConfirming && (
-        <ConfirmationDelete
+        <ConfirmationModalButton
           text="Você tem certeza que deseja excluir este dado ?"
           onConfirm={handleConfirmDelete}
           onCancel={() => setIsConfirming(false)}

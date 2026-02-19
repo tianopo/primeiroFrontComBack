@@ -1,7 +1,7 @@
 import { Copy } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 import { Button } from "src/components/Buttons/Button";
-import { ConfirmationDelete } from "src/components/Modal/ConfirmationDelete";
+import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalButton";
 import { useAccessControl } from "src/routes/context/AccessControl";
 import { useAdvanceOrderStatus } from "../../hooks/useAdvanceOrderStatus";
 
@@ -141,7 +141,7 @@ export const CryptotechOrders = ({
       </div>
 
       {showModal && orderToRelease && (
-        <ConfirmationDelete
+        <ConfirmationModalButton
           text={`Você confirma o envio de moedas para ${orderToRelease?.User?.name || "o cliente"} no valor de ${orderToRelease?.valor || "R$ 0,00"}?`}
           onConfirm={handleConfirmRelease}
           onCancel={() => {
