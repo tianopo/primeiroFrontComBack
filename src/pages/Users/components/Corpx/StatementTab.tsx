@@ -1,7 +1,8 @@
+import { Clock } from "@phosphor-icons/react";
 import { Fragment, useMemo, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
-import { StatusConsulta } from "./StatusConsulta";
 import { RefundModal } from "./RefundModal"; // ajuste o path
+import { StatusConsulta } from "./StatusConsulta";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
@@ -255,20 +256,45 @@ export const StatementTab = (props: {
                 <tbody>
                   {items.map((it: any, idx: number) => {
                     const direction = String(it?.direction ?? "").toUpperCase();
+                    const status = String(it?.status ?? "").toUpperCase();
+
                     const isIN = direction === "IN";
                     const isOUT = direction === "OUT";
-
-                    const rowBg = isIN ? "bg-green-50" : isOUT ? "bg-red-50" : "bg-white";
+                    const isPending = status === "PENDING";
 
                     const amount = typeof it?.amount === "number" ? it.amount : 0;
-                    const valueText = `${isIN ? "+" : "-"} ${formatBRL(Math.abs(amount))}`;
 
-                    // ✅ cor do texto só na coluna valor
-                    const valueColor = isIN
-                      ? "text-green-700"
-                      : isOUT
-                        ? "text-red-700"
-                        : "text-gray-900";
+                    // Fundo
+                    const rowBg = isPending
+                      ? "bg-gray-50"
+                      : isIN
+                        ? "bg-green-50"
+                        : isOUT
+                          ? "bg-red-50"
+                          : "bg-white";
+
+                    // Cor do texto do valor
+                    const valueColor = isPending
+                      ? "text-gray-500"
+                      : isIN
+                        ? "text-green-700"
+                        : isOUT
+                          ? "text-red-700"
+                          : "text-gray-900";
+
+                    // Prefixo: relógio no pending, senão +/-
+                    const prefixNode = isPending ? (
+                      <span className="inline-flex items-center">
+                        <Clock size={14} className="text-gray-500" weight="regular" />
+                      </span>
+                    ) : (
+                      <span className="inline-flex w-4 justify-center">
+                        {isIN ? "+" : isOUT ? "-" : ""}
+                      </span>
+                    );
+
+                    // Texto do valor (no pending, sem +/-, só o valor)
+                    const valueText = formatBRL(Math.abs(amount));
 
                     const name = isIN ? it?.payer?.name : it?.payee?.name;
                     const doc = isIN ? it?.payer?.document : it?.payee?.document;
@@ -284,6 +310,7 @@ export const StatementTab = (props: {
                         >
                           <td className="border px-4 py-2">{formatDateShort(it?.timestamp)}</td>
                           <td className={`border px-4 py-2 font-semibold ${valueColor}`}>
+                            {prefixNode}
                             {valueText}
                           </td>
                           <td className="border px-4 py-2">{name ?? "-"}</td>
