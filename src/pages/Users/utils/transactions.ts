@@ -51,3 +51,40 @@ export const detailsTone = (t?: string) =>
     : t === "C"
       ? "bg-green-50/60 border-green-200"
       : "bg-gray-50 border-gray-200";
+
+export const toBRDate = (formatted?: string) => {
+  if (!formatted) return "-";
+  // exemplos aceitos:
+  // "2026-02-20 10:54:31"
+  // "2026-02-20T10:54:31"
+  const datePart = formatted.split("T")[0]?.split(" ")[0] ?? formatted;
+  const [yyyy, mm, dd] = datePart.split("-");
+  if (!yyyy || !mm || !dd) return formatted;
+  return `${dd}/${mm}/${yyyy}`;
+};
+
+export const parseDateParts = (raw: string) => {
+  if (!raw) return { dia: "-", mesExtenso: "-", ano: "-" };
+
+  let d: Date | null = null;
+
+  // "DD/MM/YYYY"
+  if (/^\d{2}\/\d{2}\/\d{4}/.test(raw)) {
+    const [dd, mm, yyyy] = raw.split("/");
+    d = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+  }
+  // "YYYY-MM-DD ..." ou "YYYY-MM-DD"
+  else if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+    const onlyDate = raw.split("T")[0]?.split(" ")[0] ?? raw;
+    const [yyyy, mm, dd] = onlyDate.split("-");
+    d = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+  }
+
+  if (!d || Number.isNaN(d.getTime())) return { dia: "-", mesExtenso: "-", ano: "-" };
+
+  const dia = String(d.getDate()).padStart(2, "0");
+  const ano = String(d.getFullYear());
+  const mesExtenso = d.toLocaleDateString("pt-BR", { month: "long" });
+
+  return { dia, mesExtenso, ano };
+};

@@ -8,12 +8,14 @@ import { useAccessControl } from "src/routes/context/AccessControl";
 import { useListPendingOrders } from "../hooks/useListPendingOrders";
 import { useReleaseAssets } from "../hooks/useReleaseAssets";
 import { useSendChatMessageBybit } from "../hooks/useSendChatMessageBybit";
+import { toBRDate } from "../utils/transactions";
 import { ChatBox } from "./ChatBox";
 import { OrderMessages } from "./OrderMessages";
 import { BinanceOrders } from "./PendingOrders/BinanceOrders";
 import { CoinexOrders } from "./PendingOrders/CoinexOrders";
 import { CryptotechOrders } from "./PendingOrders/CryptotechOrders";
 import { PaymentTermsBox } from "./PendingOrders/PaymentTermsBox";
+import { confirmContract } from "../utils/confirmContract";
 
 interface IPendingOrders {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -82,21 +84,45 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
     const base64Image = await generateSingleReceipt(orderToRelease);
     if (!base64Image) return;
 
-    // ✅ Primeiro libera os ativos
     releaseAssets(
       { orderId: orderToRelease.id, keyType: activeTab },
       {
         onSuccess: () => {
-          // ✅ Só depois (se liberar com sucesso) envia a imagem no chat
-          sendChatMessage({
-            message: base64Image,
-            contentType: "pic",
-            orderId: orderToRelease.id,
-            keyType: activeTab,
-          });
+          // ✅ só envia a imagem depois de liberar com sucesso
+          sendChatMessage(
+            {
+              message: base64Image,
+              contentType: "pic",
+              orderId: orderToRelease.id,
+              keyType: activeTab,
+            },
+            {
+              onSuccess: () => {
+                confirmContract({
+                  usuario: {
+                    apelido: orderToRelease?.targetNickName ?? "-",
+                    name:
+                      orderToRelease?.side === 0
+                        ? (orderToRelease?.sellerRealName ?? "-")
+                        : (orderToRelease?.buyerRealName ?? "-"),
+                    document: orderToRelease?.document ?? "-",
+                  },
+                  ordem: String(orderToRelease?.id ?? "-"),
+                  data: toBRDate(orderToRelease?.formattedDate),
+                  exchange: "Bybit",
+                  quantidade: String(orderToRelease?.notifyTokenQuantity ?? "-"),
+                  valor: String(orderToRelease?.amount ?? "-"),
+                  ativo: String(orderToRelease?.tokenId ?? "-"),
+                });
 
-          setShowModal(false);
-          setOrderToRelease(null);
+                setShowModal(false);
+                setOrderToRelease(null);
+              },
+              onError: () => {
+                // se falhar enviar imagem, não gera PDF
+              },
+            },
+          );
         },
         onError: () => {},
       },

@@ -1,4 +1,5 @@
 import { generateDocAsPdf } from "src/pages/Contracts/config/generateDocAsPdf";
+import { parseDateParts } from "./transactions";
 
 export interface IUsuario {
   apelido: string;
@@ -16,7 +17,7 @@ export interface IConfirmContract {
   ativo: string;
 }
 
-export const services = ({
+export const confirmContract = ({
   usuario,
   ordem,
   data,
@@ -143,21 +144,6 @@ transferência bancária, conforme combinado entre as partes.`,
     hour: "2-digit",
     minute: "2-digit",
   });
-
-  // Finalização
-  const parseDateParts = (iso: string) => {
-    const [yyyy = "", mm = "", dd = ""] = (iso ?? "").split("-");
-    const dateObj = yyyy && mm && dd ? new Date(Number(yyyy), Number(mm) - 1, Number(dd)) : null;
-
-    const dia = dd || "-";
-    const ano = yyyy || "-";
-    const mesExtenso =
-      dateObj && !isNaN(dateObj.getTime())
-        ? dateObj.toLocaleDateString("pt-BR", { month: "long" })
-        : "-";
-
-    return { dia, mesExtenso, ano };
-  };
 
   const { dia, mesExtenso, ano } = parseDateParts(data);
 
