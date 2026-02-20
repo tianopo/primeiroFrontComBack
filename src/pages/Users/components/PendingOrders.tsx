@@ -82,13 +82,25 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
     const base64Image = await generateSingleReceipt(orderToRelease);
     if (!base64Image) return;
 
-    sendChatMessage(
-      { message: base64Image, contentType: "pic", orderId: orderToRelease.id, keyType: activeTab },
-      { onSuccess: () => releaseAssets({ orderId: orderToRelease.id, keyType: activeTab }) },
-    );
+    // ✅ Primeiro libera os ativos
+    releaseAssets(
+      { orderId: orderToRelease.id, keyType: activeTab },
+      {
+        onSuccess: () => {
+          // ✅ Só depois (se liberar com sucesso) envia a imagem no chat
+          sendChatMessage({
+            message: base64Image,
+            contentType: "pic",
+            orderId: orderToRelease.id,
+            keyType: activeTab,
+          });
 
-    setShowModal(false);
-    setOrderToRelease(null);
+          setShowModal(false);
+          setOrderToRelease(null);
+        },
+        onError: () => {},
+      },
+    );
   };
 
   if (isLoading) return <p>Carregando ordens...</p>;
@@ -99,7 +111,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
     activeTab === "binance"
       ? ((data as any)?.binance?.items ?? [])
       : (((data as any)[activeTab] as any[]) ?? []);
-
+  console.log(orders);
   return (
     <CardContainer full>
       <h3 className="text-28 font-bold">ORDENS PENDENTES</h3>
