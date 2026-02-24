@@ -122,14 +122,14 @@ const DetailRow = ({ label, value }: { label: string; value: string }) => (
 );
 
 export const StatementTab = (props: {
-  accountId: string; // ✅ necessário para abrir RefundModal aqui
+  accountId: string;
   statementQ: any;
   startDate: string;
   endDate: string;
   onChangeStart: (v: string) => void;
   onChangeEnd: (v: string) => void;
   onApply: () => void;
-  page: number; // 0-based internamente
+  page: number;
   size: number;
   onPrev: () => void;
   onNext: () => void;

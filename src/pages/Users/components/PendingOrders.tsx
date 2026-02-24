@@ -146,6 +146,10 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
     activeTab === "binance"
       ? ((data as any)?.binance?.items ?? [])
       : (((data as any)[activeTab] as any[]) ?? []);
+
+  const onlyDigits = (v?: string) => String(v ?? "").replace(/\D/g, "");
+  const hasRegisteredCpf = (doc?: string) => onlyDigits(doc).length === 11;
+  console.log(orders);
   return (
     <CardContainer full>
       <h3 className="text-28 font-bold">ORDENS PENDENTES</h3>
@@ -265,6 +269,11 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
               <p>
                 <strong>CPF/CNPJ:</strong> {order.document || "Não informado"}
               </p>
+              {hasRegisteredCpf(order.document) && order?.pixInStatement?.originalEndToEnd ? (
+                <p>
+                  <strong>EndToEnd:</strong> {order.pixInStatement.originalEndToEnd}
+                </p>
+              ) : null}
               <OrderMessages messages={order.messages} />
               <ChatBox orderId={order.id} keyType={activeTab} />
               <Button

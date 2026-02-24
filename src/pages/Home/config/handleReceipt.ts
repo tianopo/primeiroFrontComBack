@@ -24,8 +24,8 @@ export const generateSingleReceipt = (item: any): Promise<string> => {
       ctx.font = "16px Arial";
       const now = new Date().toLocaleString("pt-BR");
       const dataRecibo = [
-        `ID do recibo: ${item.id}`,
-        `Data da impressão: ${now}`,
+        `${item?.pixInStatement ? `EndToEnd: ${item?.pixInStatement?.originalEndToEnd}` : `ID do recibo: ${item.id}`}`,
+        `${item?.pixInStatement ? `Data da transação: ${item?.pixInStatement?.timestamp}` : `Data da impressão: ${now}`}`,
         `CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA`,
         `CPF/CNPJ: 55.636.113/0001-70`,
         `Banco: CORPX BANK`,
