@@ -86,7 +86,7 @@ export const Extrato = () => {
     <div className="flex w-full flex-col gap-4 px-4">
       <CardContainer full>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-28 font-bold">EXTRATO (CorpX)</h3>
+          <h4 className="text-28 font-bold">EXTRATO (CorpX)</h4>
           <div className="mb-4 grid gap-3 md:grid-cols-2">
             {balanceQ.isLoading ? (
               <h6>Carregando...</h6>

@@ -1,5 +1,6 @@
 import { Copy } from "@phosphor-icons/react";
 import { Dispatch, SetStateAction, useState } from "react";
+import { toast } from "react-toastify";
 import { Button } from "src/components/Buttons/Button";
 import { CardContainer } from "src/components/Layout/CardContainer";
 import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalButton";
@@ -8,14 +9,14 @@ import { useAccessControl } from "src/routes/context/AccessControl";
 import { useListPendingOrders } from "../hooks/useListPendingOrders";
 import { useReleaseAssets } from "../hooks/useReleaseAssets";
 import { useSendChatMessageBybit } from "../hooks/useSendChatMessageBybit";
-import { toBRDate } from "../utils/transactions";
+import { confirmContract } from "../utils/confirmContract";
+import { toBRDate } from "../utils/helpers";
 import { ChatBox } from "./ChatBox";
 import { OrderMessages } from "./OrderMessages";
 import { BinanceOrders } from "./PendingOrders/BinanceOrders";
 import { CoinexOrders } from "./PendingOrders/CoinexOrders";
 import { CryptotechOrders } from "./PendingOrders/CryptotechOrders";
 import { PaymentTermsBox } from "./PendingOrders/PaymentTermsBox";
-import { confirmContract } from "../utils/confirmContract";
 
 interface IPendingOrders {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -87,42 +88,50 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
     releaseAssets(
       { orderId: orderToRelease.id, keyType: activeTab },
       {
-        onSuccess: () => {
-          // ✅ só envia a imagem depois de liberar com sucesso
-          sendChatMessage(
-            {
+        onSuccess: async () => {
+          try {
+            sendChatMessage({
               message: base64Image,
               contentType: "pic",
               orderId: orderToRelease.id,
               keyType: activeTab,
-            },
-            {
-              onSuccess: () => {
-                confirmContract({
-                  usuario: {
-                    apelido: orderToRelease?.targetNickName ?? "-",
-                    name:
-                      orderToRelease?.side === 0
-                        ? (orderToRelease?.sellerRealName ?? "-")
-                        : (orderToRelease?.buyerRealName ?? "-"),
-                    document: orderToRelease?.document ?? "-",
-                  },
-                  ordem: String(orderToRelease?.id ?? "-"),
-                  data: toBRDate(orderToRelease?.formattedDate),
-                  exchange: "Bybit",
-                  quantidade: String(orderToRelease?.notifyTokenQuantity ?? "-"),
-                  valor: String(orderToRelease?.amount ?? "-"),
-                  ativo: String(orderToRelease?.tokenId ?? "-"),
-                });
+            });
+            const contract = await confirmContract({
+              usuario: {
+                apelido: orderToRelease?.targetNickName ?? "-",
+                name:
+                  orderToRelease?.side === 0
+                    ? (orderToRelease?.sellerRealName ?? "-")
+                    : (orderToRelease?.buyerRealName ?? "-"),
+                document: orderToRelease?.document ?? "-",
+              },
+              ordem: String(orderToRelease?.id ?? "-"),
+              data: toBRDate(orderToRelease?.formattedDate),
+              exchange: "Bybit",
+              quantidade: String(orderToRelease?.notifyTokenQuantity ?? "-"),
+              valor: String(orderToRelease?.amount ?? "-"),
+              ativo: String(orderToRelease?.tokenId ?? "-"),
+            });
 
-                setShowModal(false);
-                setOrderToRelease(null);
+            sendChatMessage(
+              {
+                message: contract.pdfBase64,
+                contentType: "pdf",
+                orderId: String(orderToRelease?.id),
+                keyType: activeTab,
               },
-              onError: () => {
-                // se falhar enviar imagem, não gera PDF
+              {
+                onSuccess: () => {
+                  setShowModal(false);
+                  setOrderToRelease(null);
+                },
               },
-            },
-          );
+            );
+          } catch (e) {
+            toast.error("falha em emitir o contrato assinado");
+          }
+          setShowModal(false);
+          setOrderToRelease(null);
         },
         onError: () => {},
       },
@@ -137,7 +146,6 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
     activeTab === "binance"
       ? ((data as any)?.binance?.items ?? [])
       : (((data as any)[activeTab] as any[]) ?? []);
-  console.log(orders);
   return (
     <CardContainer full>
       <h3 className="text-28 font-bold">ORDENS PENDENTES</h3>
@@ -257,10 +265,8 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
               <p>
                 <strong>CPF/CNPJ:</strong> {order.document || "Não informado"}
               </p>
-
               <OrderMessages messages={order.messages} />
               <ChatBox orderId={order.id} keyType={activeTab} />
-
               <Button
                 disabled={
                   order.status <= 10 ||

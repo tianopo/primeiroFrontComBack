@@ -15,6 +15,7 @@ import { mensalFiduciaTable } from "./config/mensalFiduciaTable";
 import { useDeleteOrder } from "./hooks/useDeleteOrder";
 import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
 import { useUpdateOrder } from "./hooks/useUpdateOrder";
+import { GenerateContractButton } from "./components/GenerateContractButton";
 
 export const Home = () => {
   const { acesso } = useAccessControl();
@@ -483,6 +484,9 @@ Suporte de Dúvidas
                       <p>
                         <strong>Tipo:</strong> {transaction.tipo}
                       </p>
+                      <div className="mt-3">
+                        <GenerateContractButton transaction={transaction} />
+                      </div>
                     </div>
                   ))}
                 </div>

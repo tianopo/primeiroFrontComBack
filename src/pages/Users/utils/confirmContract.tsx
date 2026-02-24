@@ -1,12 +1,11 @@
-import { generateDocAsPdf } from "src/pages/Contracts/config/generateDocAsPdf";
-import { parseDateParts } from "./transactions";
+import { bytesToBase64, createPdfFromLines, StyledLine, wrapParagraph } from "src/utils/simplePdf";
+import { parseDateParts } from "./helpers";
 
 export interface IUsuario {
   apelido: string;
   name: string;
   document: string;
 }
-
 export interface IConfirmContract {
   usuario: IUsuario;
   ordem: string;
@@ -17,7 +16,64 @@ export interface IConfirmContract {
   ativo: string;
 }
 
-export const confirmContract = ({
+const clean = (v: string) => String(v ?? "-").trim();
+
+const monthNames = [
+  "janeiro",
+  "fevereiro",
+  "março",
+  "abril",
+  "maio",
+  "junho",
+  "julho",
+  "agosto",
+  "setembro",
+  "outubro",
+  "novembro",
+  "dezembro",
+];
+
+function safeParseDateParts(input: string): { dia: string; mesExtenso: string; ano: string } {
+  const raw = String(input ?? "").trim();
+
+  // tenta helper atual primeiro
+  try {
+    const p = parseDateParts(raw);
+    if (p?.dia && p?.mesExtenso && p?.ano && ![p.dia, p.mesExtenso, p.ano].includes("-")) return p;
+  } catch {}
+
+  // dd/mm/yyyy [HH:mm[:ss]]
+  let m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?$/);
+  if (m) {
+    const dia = String(Number(m[1]));
+    const mesExtenso = monthNames[Number(m[2]) - 1] ?? "-";
+    const ano = m[3];
+    return { dia, mesExtenso, ano };
+  }
+
+  // yyyy-mm-dd[ HH:mm[:ss]] ou yyyy-mm-ddTHH:mm...
+  m = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T]\d{1,2}:\d{2}(?::\d{2})?)?/);
+  if (m) {
+    const dia = String(Number(m[3]));
+    const mesExtenso = monthNames[Number(m[2]) - 1] ?? "-";
+    const ano = m[1];
+    return { dia, mesExtenso, ano };
+  }
+
+  // última tentativa: Date.parse (se vier ISO com timezone etc.)
+  const dt = new Date(raw);
+  if (!Number.isNaN(dt.getTime())) {
+    return {
+      dia: String(dt.getDate()),
+      mesExtenso: monthNames[dt.getMonth()] ?? "-",
+      ano: String(dt.getFullYear()),
+    };
+  }
+
+  return { dia: "-", mesExtenso: "-", ano: "-" };
+}
+
+export const confirmContract = async ({
   usuario,
   ordem,
   data,
@@ -26,171 +82,215 @@ export const confirmContract = ({
   valor,
   ativo,
 }: IConfirmContract) => {
-  let docContent = `
-    <h1>CONTRATO DE COMPRA E VENDA</h1>
-    <p>Pelo presente instrumento particular, e na melhor forma de direito, as partes a seguir qualificadas:</p>
-  `;
+  const uName = clean(usuario?.name);
+  const uDoc = clean(usuario?.document);
+  const uNick = clean(usuario?.apelido);
 
-  const addContent = (text: string, fontSize: number) => {
-    docContent += `<p style="font - size:${fontSize} pt;">${text}</p>`;
-  };
+  const o = clean(ordem);
+  const d = clean(data);
+  const ex = clean(exchange);
+  const q = clean(quantidade);
+  const v = clean(valor);
+  const a = clean(ativo);
 
-  const addLineBreak = (lines: number = 1) => {
-    docContent += `<br>`.repeat(lines);
-  };
-
-  // Add Parties
-  const parties = [
-    `${usuario.name}, brasileira, inscrita no CPF/MF sob nº ${usuario.document}, neste ato denominada simplesmente COMPRADORA; e de outro lado,`,
-    `CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA, pessoa jurídica de direito privado com sede localizada na Estrada do Limoeiro, 495 - Jardim California, Jacarei - SP, 12.305-810, inscrita no C.N.P.J/MF sob o número 55.636.113/0001-70, neste ato representada por Matheus Henrique de Abreu brasileiro, casado, inscrito no CPF/MF sob nº 338.624.448-30, residente e domiciliada na Rua Estrada do Limoeiro, 495 - Jardim California, Jacarei - SP, 12.305-810, pagamento será feito via transferência bancária (Pix ou TED) através dos dados enviados a compradora, doravante denominada simplesmente VENDEDORA, e,`,
-    `tem entre si, justo e contratado, o presente CONTRATO DE COMPRA DE ATIVOS, que serão realizados mediante as seguintes cláusulas e condições:`,
-  ];
-  parties.forEach((paragraph) => {
-    addContent(paragraph, 12);
-  });
-
-  addLineBreak(2);
-
-  // Add Clause Titles and Content
-  const clauses = [
-    {
-      title: `1. DO OBJETO DO CONTRATO`,
-      content: [
-        `1.1 O objeto do presente contrato é a compra e venda de ativos nas condições do presente contrato.`,
-        `1.2 O Vendedor compromete-se a vender e o Comprador compromete-se a comprar a quantia de ${quantidade} ${ativo}, por meio da transferência do ativo ${ativo} na ordem ${ordem} em ${data} no P2P da corretora ${exchange}, conforme acordado entre as partes.`,
-      ],
-    },
-    {
-      title: `2. DA RESPONSABILIDADE DAS PARTES`,
-      content: [
-        `2.1 VENDEDOR`,
-        `2.1.1 O Vendedor é responsável por garantir que a quantidade de ativos - ${ativo} seja transferida para a carteira do Comprador conforme o acordado.`,
-        `2.1.2 O Vendedor garante que o ativo - ${ativo} transferido é legítimo, sem qualquer vínculo com fraudes ou ações ilícitas, e que não está sujeito a qualquer penhora, restrição ou ônus.`,
-        `2.1.3 O Vendedor não será responsável por qualquer perda, dano ou prejuízo resultante de falhas na transação, incluindo erros de rede ou problemas com carteiras de criptomoedas ou contas de corretoras.`,
-        `2.2 COMPRADOR`,
-        `2.2.1 O Comprador compromete-se a informar de forma completa e correta o endereço de sua carteira digital e/ou a realizar a ordem diretamente por sua conta na plataforma/corretora indicada para o recebimento dos ativos adquiridos, garantindo ainda que o pagamento seja efetuado nos prazos, valores e condições estabelecidos neste contrato.`,
-        `2.2.2 O Comprador reconhece e assume integral responsabilidade pela gestão e segurança de sua carteira digital e/ou conta em plataforma/corretora, incluindo a guarda de credenciais, chaves privadas, frases-semente, autenticações (2FA) e demais mecanismos de acesso, isentando o Vendedor de qualquer responsabilidade por perdas, extravios, indisponibilidades, acessos não autorizados, fraudes ou danos decorrentes de falha de custódia, negligência, compartilhamento de informações ou uso inadequado de tais credenciais.`,
-      ],
-    },
-    {
-      title: `3. DA EXCLUSÃO DE RESPONSABILIDADE`,
-      content: [
-        `3.1 O Vendedor não será responsável por qualquer falha ou erro decorrente de causas fora de seu controle, incluindo problemas com a rede blockchain, falhas de sistema ou qualquer outro evento imprevisto que possa afetar a execução deste contrato`,
-      ],
-    },
-    {
-      title: `4. DO APORTE DE RECURSOS - VALOR E FORMA DE PAGAMENTO`,
-      content: [
-        `4.1 O valor total da transação é de ${valor}, correspondente à compra de ativos ${quantidade} ${ativo}.`,
-        `4.2 O pagamento será efetuado pelo Comprador ao Vendedor da seguinte forma:
-transferência bancária, conforme combinado entre as partes.`,
-        `4.3 O pagamento deverá ser realizado até dentro dos limites do tempo da ordem no P2P da corretora, sendo considerado automaticamente rescindido o contrato em caso de não cumprimento deste prazo.`,
-        `4.4 O Vendedor se reserva o direito de verificar a autenticidade e regularidade da transferência antes de concluir a operação de envio dos ativos.`,
-      ],
-    },
-    {
-      title: `5. DA TRANSFERÊNCIA DE ATIVOS`,
-      content: [
-        `5.1 O Vendedor se compromete a transferir para a carteira digital do Comprador, identificada pelo apelido ${usuario.apelido} na corretora ${exchange} a quantidade de ${quantidade} ${ativo} após a confirmação do pagamento pelo Comprador.`,
-        `5.2 A transferência será realizada via P2P`,
-        `5.3 O Vendedor declara que o ativo que está vendendo é de sua legítima propriedade, não estando sujeito a qualquer ônus ou restrição.`,
-      ],
-    },
-    {
-      title: `6. DOS RISCOS ASSUMIDOS`,
-      content: [
-        `6.1 As partes reconhecem que o mercado de criptomoedas é altamente volátil e os valores podem variar significativamente em curtos períodos de tempo. O Comprador entende e assume os riscos relacionados à flutuação no valor do ativo.`,
-        `6.2 As partes reconhecem que não há devolução e / ou reembolso de ativo após a transferência ser concluída.`,
-        `6.3 Após a transferência, o comprador assume todos os riscos e responsabilidades relacionados aos ativos adquiridos.`,
-      ],
-    },
-    {
-      title: `7. DA INADIMPLÊNCIA`,
-      content: [
-        `7.1 Caso o pagamento não seja confirmado dentro do prazo estipulado na Cláusula 4.3, o contrato será automaticamente rescindido, sem necessidade de notificação, e o Vendedor não terá mais obrigação de transferir o ativo objeto da negociação.`,
-      ],
-    },
-    {
-      title: `8. DISPOSIÇÕES GERAIS`,
-      content: [
-        `8.1 Este contrato é celebrado de boa-fé, sendo que ambas as partes declaram ter lido e compreendido seus termos.`,
-        `8.2 Este contrato é vinculativo e obriga as partes, seus sucessores e cessionários.`,
-        `8.3 Este contrato representa o acordo integral entre as partes, substituindo quaisquer entendimentos ou negociações anteriores, verbais ou escritos.`,
-        `8.4 Qualquer alteração ou aditamento a este contrato deverá ser realizada por escrito e assinada por ambas as partes`,
-        `8.5 As partes reconhecem que todas as transações de ativos/criptomoedas são registradas em blockchain e/ou na corretora utilizada, e que as informações ali contidas serão consideradas referência para verificação do cumprimento das obrigações estabelecidas neste contrato.`,
-        `8.6 Este contrato entra em vigor a partir da realização do pagamento e da confirmação da ordem pelo cliente no botão de confirmação. O aceite e a assinatura ocorrerão de forma eletrônica, vinculados ao nome e CPF/CNPJ cadastrados na corretora, para fins de registro, auditoria e comprovação, conforme o disposto em lei.`,
-        `8.6.1 Caso o pagamento seja realizado por CNPJ em substituição ao CPF, o aceite permanecerá válido desde que o CNPJ seja de pessoa jurídica com sócio único e haja vinculação/compatibilidade comprovada entre o pagador (CNPJ) e o comprador cadastrado na corretora (CPF), conforme as políticas internas de KYC/PLD/FT aplicáveis a ambos os perfis (pessoa física e pessoa jurídica). Nessa hipótese, o pagamento via CNPJ e o aceite eletrônico são considerados equivalentes para fins de validação e registro da operação.`,
-        `8.7 Ao aceitar este contrato, o cliente declara ciência e concordância com as Políticas de PLD/FT (Prevenção à Lavagem de Dinheiro e ao Financiamento do Terrorismo), KYC (Conheça Seu Cliente) e demais regras de conformidade da CRYPTOTECH, bem como com os Termos de Uso e políticas aplicáveis disponíveis no site oficial da empresa, os quais passam a integrar este instrumento para todos os fins.`,
-        `8.8 Este contrato será regido pelas disposições da legislação brasileira, em especial pelas normas do Código Civil, e, no que for pertinente, pela Lei nº 14.063/2020, que trata de assinaturas eletrônicas.`,
-        `8.9 Em caso de litígios oriundos deste contrato, as partes elegem o foro da Comarca de Jacareí – São Paulo, renunciando a qualquer outro, por mais privilegiado que seja.`,
-      ],
-    },
-  ];
-
-  clauses.forEach((clause) => {
-    addContent(clause.title, 14);
-    clause.content.forEach((paragraph) => {
-      addContent(paragraph, 12);
-    });
-    addLineBreak(2); // Pula 2 linhas entre as cláusulas
-  });
-  // data
-  const currentDate = new Date();
-  currentDate.setHours(currentDate.getHours());
-  const formattedDate = currentDate.toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-  const { dia, mesExtenso, ano } = parseDateParts(data);
-
-  const final = [
-    `E, assim, por estarem justas e contratadas, as partes declaram que este instrumento foi aceito eletronicamente no chat da ordem ${ordem} e arquivado para fins de registro e auditoria nos sistemas da Cryptotech.`,
-    `Jacareí, ${dia} de ${mesExtenso} de ${ano}.`,
-  ];
-
-  final.forEach((paragraph) => {
-    addContent(paragraph, 12);
-  });
-  addLineBreak(3);
+  const { dia, mesExtenso, ano } = safeParseDateParts(data);
+  const dataExtenso = `${dia} de ${mesExtenso} de ${ano}`;
 
   const representanteCryptotech = {
     nome: "Matheus Henrique de Abreu",
     cpf: "338.624.448-30",
   };
 
-  docContent += `
-  <div style="page-break-before: always; margin-top: 200px; margin-bottom: 120px;">
-    <p style="font-size:12pt;"><strong>ASSINATURA ELETRÔNICA</strong></p>
+  const lines: StyledLine[] = [];
 
-    <p style="font-size:12pt; margin-top: 24px;">
-      <strong>Vendedor:</strong> CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA
-    </p>
-    <p style="font-size:12pt;">CNPJ: 55.636.113/0001-70</p>
-    <p style="font-size:12pt;">
-      Assinatura eletrônica: <strong>${representanteCryptotech.nome}</strong>
-    </p>
-    <p style="font-size:12pt;">CPF do representante: ${representanteCryptotech.cpf}</p>
-    <p style="font-size:10pt; opacity:0.85;">
-      Registro: aceite eletrônico vinculado à ordem ${ordem}, com data e hora do evento no chat/plataforma.
-    </p>
+  const spacer = (n = 1) => {
+    for (let i = 0; i < n; i++) lines.push({ text: "" });
+  };
 
-    <p style="font-size:12pt; margin-top: 28px;">
-      <strong>Comprador:</strong> ${usuario?.name ?? "-"}
-    </p>
-    <p style="font-size:12pt;">CPF/CNPJ: ${usuario?.document ?? "-"}</p>
-    <p style="font-size:12pt;">
-      Assinatura eletrônica: <strong>${usuario?.name ?? "-"}</strong>
-    </p>
-    <p style="font-size:10pt; opacity:0.85;">
-      Registro: aceite eletrônico do comprador vinculado ao nome e CPF/CNPJ cadastrados na corretora, associado à ordem ${ordem}.
-    </p>
-  </div>
-`;
+  // Título
+  lines.push({ text: "CONTRATO DE COMPRA E VENDA", size: 16, font: "F1" });
+  spacer(1);
 
-  // Gera o conteúdo e inicia a impressão como PDF
-  generateDocAsPdf(docContent);
+  // Intro
+  for (const ln of wrapParagraph(
+    "Pelo presente instrumento particular, e na melhor forma de direito, as partes a seguir qualificadas:",
+    11,
+  ))
+    lines.push({ text: ln });
+  spacer(1);
+
+  const parties = [
+    `${uName}, brasileira, inscrita no CPF/MF sob nº ${uDoc}, neste ato denominada simplesmente COMPRADORA; e de outro lado,`,
+    `CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA, pessoa jurídica de direito privado com sede na Estrada do Limoeiro, 495 - Jardim California, Jacarei - SP, 12305-810, inscrita no CNPJ/MF sob nº 55.636.113/0001-70, neste ato representada por ${representanteCryptotech.nome}, CPF/MF sob nº ${representanteCryptotech.cpf}, doravante denominada simplesmente VENDEDORA; e,`,
+    `tem entre si, justo e contratado, o presente CONTRATO DE COMPRA DE ATIVOS, que será realizado mediante as seguintes cláusulas e condições:`,
+  ];
+
+  for (const p of parties) {
+    for (const ln of wrapParagraph(p, 11)) lines.push({ text: ln });
+    spacer(1);
+  }
+
+  // Cláusulas
+  const addH = (t: string) => {
+    lines.push({ text: t, size: 13, font: "F1" });
+    spacer(1);
+  };
+  const addP = (t: string) => {
+    for (const ln of wrapParagraph(t, 11)) lines.push({ text: ln });
+    spacer(1);
+  };
+
+  addH("1. DO OBJETO DO CONTRATO");
+  addP(
+    "1.1 O objeto do presente contrato é a compra e venda de ativos nas condições do presente contrato.",
+  );
+  addP(
+    `1.2 O VENDEDOR compromete-se a vender e a COMPRADORA compromete-se a comprar a quantia de ${q} ${a}, por meio da transferência do ativo ${a} na ordem de número ${o}, em ${d}, no P2P da corretora ${ex}, conforme acordado entre as partes.`,
+  );
+
+  addH("2. DA RESPONSABILIDADE DAS PARTES");
+  addP("2.1 VENDEDOR");
+  addP(
+    `2.1.1 O Vendedor é responsável por garantir que a quantidade de ativos (${a}) seja transferida para a carteira do Comprador conforme o acordado.`,
+  );
+  addP(
+    `2.1.2 O Vendedor garante que o ativo (${a}) transferido é legítimo, sem qualquer vínculo com fraudes ou ações ilícitas, e que não está sujeito a qualquer penhora, restrição ou ônus.`,
+  );
+  addP("2.2 COMPRADOR");
+  addP(
+    "2.2.1 O Comprador compromete-se a realizar o pagamento nos prazos, valores e condições estabelecidos neste contrato.",
+  );
+  addP(
+    "2.2.2 O Comprador assume responsabilidade pela segurança de sua conta/carteira e credenciais (2FA, chaves, etc.), isentando o Vendedor de perdas decorrentes de falhas de custódia ou uso indevido.",
+  );
+
+  addH("3. DA EXCLUSÃO DE RESPONSABILIDADE");
+  addP(
+    "3.1 O Vendedor não será responsável por falhas fora de seu controle, incluindo problemas de rede, falhas de sistema ou eventos imprevistos que afetem a execução deste contrato.",
+  );
+
+  addH("4. DO VALOR E FORMA DE PAGAMENTO");
+  addP(`4.1 O valor total da transação é de ${v}, correspondente à compra de ${q} ${a}.`);
+  addP(
+    "4.2 O pagamento será efetuado via transferência bancária (Pix ou TED), conforme combinado entre as partes.",
+  );
+  addP(
+    "4.3 O pagamento deverá ser realizado dentro do prazo da ordem no P2P da corretora, sendo rescindido automaticamente em caso de descumprimento.",
+  );
+
+  addH("5. DA TRANSFERÊNCIA DE ATIVOS");
+  addP(
+    `5.1 O Vendedor se compromete a transferir à carteira/conta do Comprador (apelido ${uNick} na corretora ${ex}) a quantidade de ${q} ${a} após a confirmação do pagamento.`,
+  );
+  addP("5.2 A transferência será realizada via P2P.");
+  addP("5.3 O Vendedor declara legítima propriedade do ativo vendido, livre de ônus e restrições.");
+
+  addH("6. DOS RISCOS ASSUMIDOS");
+  addP(
+    "6.1 O mercado de criptoativos é volátil; o Comprador reconhece e assume riscos de variação.",
+  );
+  addP("6.2 Não há devolução/reembolso de ativo após a transferência ser concluída.");
+  addP(
+    "6.3 Após a transferência, o Comprador assume os riscos e responsabilidades sobre os ativos adquiridos.",
+  );
+
+  addH("7. DA INADIMPLÊNCIA");
+  addP(
+    "7.1 Se o pagamento não for confirmado no prazo, o contrato será automaticamente rescindido, sem necessidade de notificação.",
+  );
+
+  addH("8. DISPOSIÇÕES GERAIS");
+  addP(
+    "8.1 Este contrato é celebrado de boa-fé; ambas as partes declaram ter lido e compreendido seus termos.",
+  );
+  addP("8.2 Este contrato obriga as partes e seus sucessores.");
+  addP("8.3 Este contrato representa o acordo integral, substituindo entendimentos anteriores.");
+  addP("8.4 Alterações/aditamentos somente por escrito.");
+  addP(
+    "8.5 Transações podem ser registradas em blockchain e/ou na corretora e podem servir de referência para auditoria.",
+  );
+  addP(
+    "8.6 O aceite e a assinatura ocorrerão de forma eletrônica, vinculados aos dados cadastrados na corretora, para fins de registro e auditoria.",
+  );
+  addP("8.7 O comprador declara ciência das políticas internas de KYC/PLD/FT aplicáveis.");
+  addP(
+    "8.8 Regido pela legislação brasileira, especialmente Código Civil e Lei nº 14.063/2020 (assinaturas eletrônicas).",
+  );
+  addP("8.9 Foro: Comarca de Jacareí - São Paulo, com renúncia a qualquer outro.");
+
+  // Final
+  addP(
+    `E, assim, por estarem justas e contratadas, as partes declaram que este instrumento foi aceito eletronicamente no chat da ordem de número ${o} e arquivado para fins de registro e auditoria nos sistemas da Cryptotech.`,
+  );
+
+  // ✅ aqui corrige o “Jacareí, - de - de -.”
+  addP(`Jacareí, ${dataExtenso}.`);
+
+  // Página nova para a “assinatura”
+  lines.push({ text: "__PAGE_BREAK__" });
+
+  lines.push({ text: "ASSINATURA ELETRÔNICA", size: 14, font: "F1" });
+  spacer(1);
+
+  // ===== VENDEDOR =====
+  lines.push({ text: "VENDEDOR: CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA", size: 11, font: "F1" });
+  lines.push({ text: "CNPJ: 55.636.113/0001-70" });
+  spacer(1);
+
+  lines.push({ text: "Assinatura eletrônica:", size: 11, font: "F1" });
+  // ✅ MAIS ESPAÇO antes do nome
+  spacer(1);
+  lines.push({ text: representanteCryptotech.nome, size: 16, font: "F2" });
+  lines.push({
+    text: "_______________________________________________________________",
+    size: 11,
+    font: "F1",
+  });
+  spacer(1);
+
+  lines.push({
+    text: `CPF do representante: ${representanteCryptotech.cpf}`,
+    size: 11,
+    font: "F1",
+  });
+  lines.push({
+    text: "Registro: aceite eletrônico vinculado à ordem e ao evento no chat/plataforma.",
+    size: 10,
+    font: "F1",
+  });
+
+  spacer(2);
+
+  // ===== COMPRADOR =====
+  lines.push({ text: `COMPRADOR: ${uName}`, size: 11, font: "F1" });
+  lines.push({ text: `CPF/CNPJ: ${uDoc}` });
+  spacer(1);
+
+  lines.push({ text: "Assinatura eletrônica:", size: 11, font: "F1" });
+  // ✅ MAIS ESPAÇO antes do nome
+  spacer(1);
+  lines.push({ text: uName, size: 16, font: "F2" });
+  lines.push({
+    text: "_______________________________________________________________",
+    size: 11,
+    font: "F1",
+  });
+  spacer(1);
+
+  lines.push({
+    text: `Registro: aceite eletrônico do comprador vinculado ao cadastro na corretora e à ordem ${o}.`,
+    size: 10,
+    font: "F1",
+  });
+
+  // Gera PDF
+  const pdfBytes = createPdfFromLines(lines);
+  const pdfBase64 = bytesToBase64(pdfBytes);
+  const dataUrl = `data:application/pdf;base64,${pdfBase64}`;
+
+  return {
+    dataUrl,
+    pdfBase64,
+    fileName: `contrato-${o}.pdf`,
+  };
 };
