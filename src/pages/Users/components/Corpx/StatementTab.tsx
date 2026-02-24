@@ -254,7 +254,7 @@ export const StatementTab = (props: {
                 </thead>
 
                 <tbody>
-                  {items.map((it: any, idx: number) => {
+                  {items?.map((it: any, idx: number) => {
                     const direction = String(it?.direction ?? "").toUpperCase();
                     const status = String(it?.status ?? "").toUpperCase();
 
@@ -341,7 +341,7 @@ export const StatementTab = (props: {
 
                                 {/* ✅ detalhes completos (sem JSON), com labels PT-BR */}
                                 <div className="grid gap-2 md:grid-cols-2">
-                                  {flatten(it).map((row) => (
+                                  {flatten(it)?.map((row) => (
                                     <div
                                       key={row.key}
                                       className="rounded-lg border border-gray-100 p-1"

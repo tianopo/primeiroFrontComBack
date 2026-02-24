@@ -49,7 +49,7 @@ export const DeskdataRelationships = ({ relationships }: { relationships?: any }
                 </Td>
               </tr>
             ) : (
-              items.map((it, idx) => (
+              items?.map((it, idx) => (
                 <tr key={idx} className="border-t hover:bg-gray-50">
                   <Td>{safe(it?.name)}</Td>
                   <Td>{safe(it?.class)}</Td>

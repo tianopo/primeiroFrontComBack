@@ -87,7 +87,7 @@ export const DeskdataLawsuits = ({ lawsuits }: { lawsuits?: any }) => {
                       <div className="mt-3">
                         <div className="mb-1 text-xs font-bold text-gray-700">Partes</div>
                         <ul className="list-disc pl-5 text-xs text-gray-700">
-                          {p.parties.map((pt: any, i: number) => (
+                          {p?.parties.map((pt: any, i: number) => (
                             <li key={i}>
                               <strong>{safe(pt?.type)}:</strong> {safe(pt?.name)} ({safe(pt?.doc)})
                               — {safe(pt?.role)}
@@ -101,7 +101,7 @@ export const DeskdataLawsuits = ({ lawsuits }: { lawsuits?: any }) => {
                       <div className="mt-3">
                         <div className="mb-1 text-xs font-bold text-gray-700">Eventos</div>
                         <ul className="list-disc pl-5 text-xs text-gray-700">
-                          {p.events.map((ev: any, i: number) => (
+                          {p?.events.map((ev: any, i: number) => (
                             <li key={i}>
                               <strong>{fmtDate(ev?.date)}:</strong> {safe(ev?.content)}
                             </li>
@@ -114,7 +114,7 @@ export const DeskdataLawsuits = ({ lawsuits }: { lawsuits?: any }) => {
                       <div className="mt-3">
                         <div className="mb-1 text-xs font-bold text-gray-700">Petições</div>
                         <ul className="list-disc pl-5 text-xs text-gray-700">
-                          {p.petitions.map((ptt: any, i: number) => (
+                          {p?.petitions.map((ptt: any, i: number) => (
                             <li key={i}>
                               <strong>{fmtDate(ptt?.date)}:</strong> {safe(ptt?.type)} —{" "}
                               {safe(ptt?.author)}
@@ -128,7 +128,7 @@ export const DeskdataLawsuits = ({ lawsuits }: { lawsuits?: any }) => {
                       <div className="mt-3">
                         <div className="mb-1 text-xs font-bold text-gray-700">Decisões</div>
                         <ul className="list-disc pl-5 text-xs text-gray-700">
-                          {p.decisions.map((dc: any, i: number) => (
+                          {p?.decisions.map((dc: any, i: number) => (
                             <li key={i}>
                               <strong>{fmtDate(dc?.date)}:</strong> {safe(dc?.content)}
                             </li>
