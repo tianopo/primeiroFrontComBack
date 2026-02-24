@@ -37,15 +37,9 @@ export const Extrato = () => {
     }`;
 
   // filtros do extrato (form) + aplicado
-  const [startDate, setStartDate] = useState(() => {
-    if (typeof window === "undefined") return todayYMD();
-    return window.localStorage.getItem("corpxStatementStartDate") ?? todayYMD();
-  });
+  const [startDate, setStartDate] = useState(todayYMD());
 
-  const [endDate, setEndDate] = useState(() => {
-    if (typeof window === "undefined") return todayYMD();
-    return window.localStorage.getItem("corpxStatementEndDate") ?? todayYMD();
-  });
+  const [endDate, setEndDate] = useState(todayYMD());
 
   const [applied, setApplied] = useState(() => ({
     startDate,
@@ -53,13 +47,6 @@ export const Extrato = () => {
     page: 0,
     size: 50,
   }));
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("corpxStatementStartDate", startDate);
-      window.localStorage.setItem("corpxStatementEndDate", endDate);
-    }
-  }, [startDate, endDate]);
 
   // queries gerais
   const balanceQ = useCorpxBalance();
