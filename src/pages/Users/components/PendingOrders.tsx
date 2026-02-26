@@ -107,7 +107,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
               },
               ordem: String(orderToRelease?.id ?? "-"),
               data: toBRDate(orderToRelease?.formattedDate),
-              exchange: "Bybit",
+              exchange: String(),
               quantidade: String(orderToRelease?.notifyTokenQuantity ?? "-"),
               valor: String(orderToRelease?.amount ?? "-"),
               ativo: String(orderToRelease?.tokenId ?? "-"),

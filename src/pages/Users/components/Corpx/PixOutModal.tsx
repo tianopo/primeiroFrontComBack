@@ -10,7 +10,7 @@ const KEY_TYPES: PixKeyType[] = ["CPF", "CNPJ", "EMAIL", "PHONE", "EVP"];
 export const PixOutModal = ({ accountId, onClose }: { accountId: string; onClose: () => void }) => {
   const { mutate: pixOut, isPending, data } = useCorpxPixOut();
 
-  const [amount, setAmount] = useState("100.00");
+  const [amount, setAmount] = useState("");
   const [keyType, setKeyType] = useState<PixKeyType>("CPF");
   const [key, setKey] = useState("");
   const [description, setDescription] = useState("Intermediação de ativos digitais");

@@ -40,23 +40,23 @@ export const BallonEditPrice = () => {
   const label = isLoading ? "Carregando..." : `SELL: ${sellOffset} | BUY: ${buyOffset}`;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 rounded-10 bg-gray-50 p-2 text-xs text-gray-700 shadow-lg">
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 rounded-10 bg-gray-50 p-2 text-32 text-gray-700 shadow-lg">
       {!editingOffsets ? (
         <button
           type="button"
           onClick={handleOpen}
           disabled={isLoading}
-          className="flex items-center gap-2 rounded-6 bg-blue-600 px-2 py-1 text-16 font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+          className="flex items-center gap-2 rounded-6 bg-blue-600 p-2 font-medium text-white hover:bg-blue-700 disabled:opacity-60"
         >
           <SlidersHorizontal size={18} />
-          <p>{label}</p>
+          <h6>{label}</h6>
         </button>
       ) : (
         <>
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-16 font-medium text-blue-700">
+            <div className="flex items-center gap-2 font-medium text-blue-700">
               <SlidersHorizontal size={18} />
-              <p>Editar BUY/SELL</p>
+              <h6>Editar BUY/SELL</h6>
             </div>
             <button
               type="button"
@@ -69,19 +69,19 @@ export const BallonEditPrice = () => {
 
           <div className="mt-1 flex flex-col gap-1">
             <label className="flex items-center justify-between gap-2">
-              <p>SELL OFFSET</p>
+              <h6>SELL OFFSET</h6>
               <input
                 value={sellOffset}
                 onChange={(e) => setSellOffset(e.target.value)}
-                className="w-20 rounded border border-gray-300 px-1 py-0.5 text-right text-16"
+                className="w-32 rounded border border-gray-300 px-1 py-0.5 text-right"
               />
             </label>
             <label className="flex items-center justify-between gap-2">
-              <p>BUY OFFSET</p>
+              <h6>BUY OFFSET</h6>
               <input
                 value={buyOffset}
                 onChange={(e) => setBuyOffset(e.target.value)}
-                className="w-20 rounded border border-gray-300 px-1 py-0.5 text-right text-16"
+                className="w-32 rounded border border-gray-300 px-1 py-0.5 text-right"
               />
             </label>
           </div>
@@ -90,7 +90,7 @@ export const BallonEditPrice = () => {
             type="button"
             onClick={handleSave}
             disabled={updatingOffsets}
-            className="mt-1 flex items-center justify-center gap-2 rounded-6 bg-blue-600 px-2 py-1 text-16 font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+            className="mt-1 flex items-center justify-center gap-2 rounded-6 bg-blue-600 px-2 py-1 text-20 font-medium text-white hover:bg-blue-700 disabled:opacity-60"
           >
             {updatingOffsets ? "Salvando..." : "Salvar BUY/SELL"}
           </button>
