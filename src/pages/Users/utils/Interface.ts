@@ -1,6 +1,24 @@
 export type PixKeyType = "CPF" | "CNPJ" | "EMAIL" | "PHONE" | "EVP";
 
-export interface PixOutBody {
+export type DictLookupResponse = {
+  cached: boolean;
+  key: string;
+  keyType: PixKeyType;
+  ownerName: string;
+  ownerDocument: string;
+  personType: "PF" | "PJ" | string;
+  bankName: string;
+  bankCode: string;
+  bankIspb: string;
+  branch: string;
+  accountNumber: string;
+  accountType: string;
+  status: string;
+  createdAt: string;
+  cachedAt: string;
+};
+
+export type PixOutBody = {
   accountId: string;
   amount: number;
   currency: "BRL";
@@ -8,7 +26,28 @@ export interface PixOutBody {
   key: string;
   description?: string;
   identifier?: string;
-}
+};
+
+export type PixOutResponse = Record<string, any>;
+
+export const querystringPixOut = (params?: Record<string, any>) => {
+  if (!params) return "";
+  const q = Object.entries(params)
+    .filter(([, v]) => v !== undefined && v !== null && `${v}`.trim() !== "")
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+    .join("&");
+  return q ? `?${q}` : "";
+};
+
+export const parseBRL = (v: string) => {
+  // aceita "500", "500.50", "R$ 500,00"
+  const cleaned = (v || "")
+    .replace(/[^\d,.-]/g, "")
+    .replace(/\./g, "")
+    .replace(",", ".");
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : NaN;
+};
 
 export interface PixRefundBody {
   accountId: string;

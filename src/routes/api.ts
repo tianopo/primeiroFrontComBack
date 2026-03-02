@@ -41,6 +41,7 @@ export const apiRoute = {
     statement: `/corpx/accounts/statement`,
     limits: `/corpx/limits`,
     pixOut: `/corpx/out`,
+    dictLookup: (pixKey: string) => `/corpx/pix/${encodeURIComponent(pixKey)}`,
     refund: `/corpx/refund`,
     transactionStatus: `/corpx/transactions/status`,
     qrcodes: `/corpx/qrcodes`,

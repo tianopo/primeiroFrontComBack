@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalButton";
 import { Modal } from "src/components/Modal/Modal";
-import { useCorpxRefundPix } from "../../hooks/Corpx/useCorpxRefundPix";
+import { useCorpxRefundPix } from "../../../hooks/Corpx/useCorpxRefundPix";
 
 const formatBRL = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 

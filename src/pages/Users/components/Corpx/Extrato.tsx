@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { CardContainer } from "src/components/Layout/CardContainer";
 import { useCorpxBalance } from "../../hooks/Corpx/useCorpxBalance";
 import { useCorpxListMeds } from "../../hooks/Corpx/useCorpxListMeds";
 import { useCorpxStatement } from "../../hooks/Corpx/useCorpxStatement";
 import { MedTab } from "./MedTab";
-import { PixOutModal } from "./PixOutModal";
-import { RefundModal } from "./RefundModal";
+import { PixToolModal } from "./Pix/PixToolModal";
+import { RefundModal } from "./Pix/RefundModal";
 import { StatementTab } from "./StatementTab";
 
 type TabKey = "extrato" | "med";
@@ -135,7 +135,9 @@ export const Extrato = () => {
         )}
       </CardContainer>
 
-      {showPixModal && <PixOutModal accountId={accountId} onClose={() => setShowPixModal(false)} />}
+      {showPixModal && (
+        <PixToolModal accountId={accountId} onClose={() => setShowPixModal(false)} />
+      )}
 
       {refundModal.open && (
         <RefundModal

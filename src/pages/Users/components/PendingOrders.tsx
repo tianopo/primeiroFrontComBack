@@ -149,7 +149,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
 
   const onlyDigits = (v?: string) => String(v ?? "").replace(/\D/g, "");
   const hasRegisteredCpf = (doc?: string) => onlyDigits(doc).length === 11;
-  console.log(orders);
+
   return (
     <CardContainer full>
       <h3 className="text-28 font-bold">ORDENS PENDENTES</h3>

@@ -1,7 +1,7 @@
 import { Clock } from "@phosphor-icons/react";
 import { Fragment, useMemo, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
-import { RefundModal } from "./RefundModal"; // ajuste o path
+import { RefundModal } from "./Pix/RefundModal"; // ajuste o path
 import { StatusConsulta } from "./StatusConsulta";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
