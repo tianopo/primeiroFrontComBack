@@ -7,6 +7,7 @@ import { useCorpxStatement } from "../../hooks/Corpx/useCorpxStatement";
 import { MedTab } from "./MedTab";
 import { PixToolModal } from "./Pix/PixToolModal";
 import { RefundModal } from "./Pix/RefundModal";
+import { StatementRedisModal } from "./StatementRedisModal";
 import { StatementTab } from "./StatementTab";
 
 type TabKey = "extrato" | "med";
@@ -21,6 +22,7 @@ export const Extrato = () => {
     if (typeof window === "undefined") return "extrato";
     return (window.localStorage.getItem("corpxExtratoActiveTab") as TabKey) ?? "extrato";
   });
+  const [open, setOpen] = useState(false);
 
   const switchTab = (tab: TabKey) => {
     setActiveTab(tab);
@@ -87,6 +89,8 @@ export const Extrato = () => {
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <Button onClick={() => setOpen(true)}>Checar</Button>
+            {open && <StatementRedisModal onClose={() => setOpen(false)} />}
             <Button onClick={() => setShowPixModal(true)}>Fazer PIX</Button>
           </div>
         </div>

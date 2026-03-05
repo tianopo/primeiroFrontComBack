@@ -49,5 +49,8 @@ export const apiRoute = {
     qrcodeDynamic: `/corpx/qrcode/dynamic`,
     meds: `/corpx/med`,
     respondMed: (medId: string) => `/corpx/med/${medId}/response`,
+    statementRedis: `/corpx/accounts/statement/redis`,
+    statementRedisVerification: (endToEnd: string) =>
+      `/corpx/accounts/statement/redis/${endToEnd}/verification`,
   },
 };
