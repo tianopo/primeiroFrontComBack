@@ -6,14 +6,14 @@ import type { IExchangeOffsets } from "./UseUpdateExchangesOffsets";
 export const useExchangeOffsets = () => {
   const fetcher = async (): Promise<IExchangeOffsets> => {
     const { data } = await api().get(apiRoute.exchangeOffsets);
-    return data; // { sellOffset, buyOffset }
+    return data;
   };
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["exchange-offsets"],
     queryFn: fetcher,
     refetchOnWindowFocus: false,
-    staleTime: 0, // sempre buscar o atual quando precisar
+    staleTime: 0,
   });
 
   return { data, isLoading, error };

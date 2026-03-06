@@ -1,20 +1,36 @@
 import { SlidersHorizontal, X } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
-import { useUpdateExchangeOffsets } from "./UseUpdateExchangesOffsets";
+import { useUpdateExchangeOffsets, type IExchangeOffsets } from "./UseUpdateExchangesOffsets";
 import { useExchangeOffsets } from "./useExchangeOffsets";
+
+type TOffsetForm = Record<keyof IExchangeOffsets, string>;
+
+const INITIAL_FORM: TOffsetForm = {
+  binanceSellOffset: "0.10",
+  binanceBuyOffset: "0.10",
+  bybitSellOffset: "0.10",
+  bybitBuyOffset: "0.10",
+  coinexSellOffset: "0.10",
+  coinexBuyOffset: "0.10",
+};
 
 export const BallonEditPrice = () => {
   const { data, isLoading } = useExchangeOffsets();
   const { mutate: updateOffsets, isPending: updatingOffsets } = useUpdateExchangeOffsets();
 
   const [editingOffsets, setEditingOffsets] = useState(false);
-  const [sellOffset, setSellOffset] = useState("0.10");
-  const [buyOffset, setBuyOffset] = useState("0.10");
+  const [form, setForm] = useState<TOffsetForm>(INITIAL_FORM);
 
   useEffect(() => {
     if (data) {
-      setSellOffset(String(data.sellOffset));
-      setBuyOffset(String(data.buyOffset));
+      setForm({
+        binanceSellOffset: String(data.binanceSellOffset),
+        binanceBuyOffset: String(data.binanceBuyOffset),
+        bybitSellOffset: String(data.bybitSellOffset),
+        bybitBuyOffset: String(data.bybitBuyOffset),
+        coinexSellOffset: String(data.coinexSellOffset),
+        coinexBuyOffset: String(data.coinexBuyOffset),
+      });
     }
   }, [data]);
 
@@ -26,21 +42,70 @@ export const BallonEditPrice = () => {
     if (!updatingOffsets) setEditingOffsets(false);
   };
 
-  const handleSave = () => {
-    const sell = Number(sellOffset.replace(",", "."));
-    const buy = Number(buyOffset.replace(",", "."));
-    if (!Number.isFinite(sell) || !Number.isFinite(buy) || sell < 0 || buy < 0) return;
+  const handleChange = (field: keyof IExchangeOffsets, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
 
-    const payload = { sellOffset: sell, buyOffset: buy };
+  const parseNumber = (value: string) => Number(value.replace(",", "."));
+
+  const handleSave = () => {
+    const payload: IExchangeOffsets = {
+      binanceSellOffset: parseNumber(form.binanceSellOffset),
+      binanceBuyOffset: parseNumber(form.binanceBuyOffset),
+      bybitSellOffset: parseNumber(form.bybitSellOffset),
+      bybitBuyOffset: parseNumber(form.bybitBuyOffset),
+      coinexSellOffset: parseNumber(form.coinexSellOffset),
+      coinexBuyOffset: parseNumber(form.coinexBuyOffset),
+    };
+
+    const hasInvalid = Object.values(payload).some((value) => !Number.isFinite(value) || value < 0);
+
+    if (hasInvalid) return;
+
     updateOffsets(payload, {
       onSuccess: () => setEditingOffsets(false),
     });
   };
 
-  const label = isLoading ? "Carregando..." : `SELL: ${sellOffset} | BUY: ${buyOffset}`;
+  const summary = isLoading
+    ? "Carregando..."
+    : `BINANCE___ SELL: ${form.binanceSellOffset} BUY: ${form.binanceBuyOffset} | BYBIT_____ SELL: ${form.bybitSellOffset} BUY: ${form.bybitBuyOffset} | COINEX____ SELL: ${form.coinexSellOffset} BUY: ${form.coinexBuyOffset}`;
+
+  const renderSection = (
+    title: string,
+    sellField: keyof IExchangeOffsets,
+    buyField: keyof IExchangeOffsets,
+  ) => (
+    <div className="rounded-8 border border-gray-200 p-2">
+      <h6 className="mb-2 font-semibold text-blue-700">{title}</h6>
+
+      <div className="flex flex-col gap-2">
+        <label className="flex items-center justify-between gap-2">
+          <h6>SELL OFFSET</h6>
+          <input
+            value={form[sellField]}
+            onChange={(e) => handleChange(sellField, e.target.value)}
+            className="w-32 rounded border border-gray-300 px-1 py-0.5 text-right"
+          />
+        </label>
+
+        <label className="flex items-center justify-between gap-2">
+          <h6>BUY OFFSET</h6>
+          <input
+            value={form[buyField]}
+            onChange={(e) => handleChange(buyField, e.target.value)}
+            className="w-32 rounded border border-gray-300 px-1 py-0.5 text-right"
+          />
+        </label>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 rounded-10 bg-gray-50 p-2 text-32 text-gray-700 shadow-lg">
+    <div className="fixed bottom-4 right-4 z-50 flex max-w-[460px] flex-col gap-2 rounded-10 bg-gray-50 p-2 text-32 text-gray-700 shadow-lg">
       {!editingOffsets ? (
         <button
           type="button"
@@ -49,15 +114,19 @@ export const BallonEditPrice = () => {
           className="flex items-center gap-2 rounded-6 bg-blue-600 p-2 font-medium text-white hover:bg-blue-700 disabled:opacity-60"
         >
           <SlidersHorizontal size={18} />
-          <h6>{label}</h6>
+          <div className="flex w-28 flex-col flex-wrap gap-2 text-left leading-tight">
+            <h6>Editar offsets</h6>
+            <span className="text-16">{summary}</span>
+          </div>
         </button>
       ) : (
         <>
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 font-medium text-blue-700">
               <SlidersHorizontal size={18} />
-              <h6>Editar BUY/SELL</h6>
+              <h6>Editar offsets por corretora</h6>
             </div>
+
             <button
               type="button"
               onClick={handleClose}
@@ -67,23 +136,10 @@ export const BallonEditPrice = () => {
             </button>
           </div>
 
-          <div className="mt-1 flex flex-col gap-1">
-            <label className="flex items-center justify-between gap-2">
-              <h6>SELL OFFSET</h6>
-              <input
-                value={sellOffset}
-                onChange={(e) => setSellOffset(e.target.value)}
-                className="w-32 rounded border border-gray-300 px-1 py-0.5 text-right"
-              />
-            </label>
-            <label className="flex items-center justify-between gap-2">
-              <h6>BUY OFFSET</h6>
-              <input
-                value={buyOffset}
-                onChange={(e) => setBuyOffset(e.target.value)}
-                className="w-32 rounded border border-gray-300 px-1 py-0.5 text-right"
-              />
-            </label>
+          <div className="mt-1 flex flex-col gap-2">
+            {renderSection("Binance", "binanceSellOffset", "binanceBuyOffset")}
+            {renderSection("Bybit", "bybitSellOffset", "bybitBuyOffset")}
+            {renderSection("Coinex", "coinexSellOffset", "coinexBuyOffset")}
           </div>
 
           <button
@@ -92,7 +148,7 @@ export const BallonEditPrice = () => {
             disabled={updatingOffsets}
             className="mt-1 flex items-center justify-center gap-2 rounded-6 bg-blue-600 px-2 py-1 text-20 font-medium text-white hover:bg-blue-700 disabled:opacity-60"
           >
-            {updatingOffsets ? "Salvando..." : "Salvar BUY/SELL"}
+            {updatingOffsets ? "Salvando..." : "Salvar offsets"}
           </button>
         </>
       )}

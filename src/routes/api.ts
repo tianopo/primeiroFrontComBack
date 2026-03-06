@@ -50,7 +50,6 @@ export const apiRoute = {
     meds: `/corpx/med`,
     respondMed: (medId: string) => `/corpx/med/${medId}/response`,
     statementRedis: `/corpx/accounts/statement/redis`,
-    statementRedisVerification: (endToEnd: string) =>
-      `/corpx/accounts/statement/redis/${endToEnd}/verification`,
+    statementRedisVerificationBulk: "/corpx/accounts/statement/redis/verification/bulk",
   },
 };

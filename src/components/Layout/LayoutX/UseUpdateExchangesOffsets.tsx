@@ -5,8 +5,12 @@ import { responseError, responseSuccess } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
 
 export interface IExchangeOffsets {
-  sellOffset: number;
-  buyOffset: number;
+  binanceSellOffset: number;
+  binanceBuyOffset: number;
+  bybitSellOffset: number;
+  bybitBuyOffset: number;
+  coinexSellOffset: number;
+  coinexBuyOffset: number;
 }
 
 export const useUpdateExchangeOffsets = () => {
