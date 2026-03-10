@@ -17,6 +17,7 @@ import { BinanceOrders } from "./PendingOrders/BinanceOrders";
 import { CoinexOrders } from "./PendingOrders/CoinexOrders";
 import { CryptotechOrders } from "./PendingOrders/CryptotechOrders";
 import { PaymentTermsBox } from "./PendingOrders/PaymentTermsBox";
+import { StatementRedisPanel } from "./Corpx/StatementRedisPanel";
 
 interface IPendingOrders {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -317,6 +318,12 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
             setShowModal(false);
             setOrderToRelease(null);
           }}
+          showExtra
+          extra={
+            <StatementRedisPanel
+              autoSelectEndToEnd={orderToRelease?.pixInStatement?.originalEndToEnd}
+            />
+          }
         />
       )}
     </CardContainer>
