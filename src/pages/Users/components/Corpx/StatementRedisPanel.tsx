@@ -2,10 +2,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { Button } from "src/components/Buttons/Button";
+import { useCorpxSetStatementsVerificationBulk } from "../../hooks/Corpx/useCorpxSetStatementVerification";
 import {
-  CorpxStatementRedisItem,
   useCorpxStatementRedis,
-} from "src/pages/Home/hooks/Corpx/useCorpxStatementRedis";
+  CorpxStatementRedisItem,
+} from "../../hooks/Corpx/useCorpxStatementRedis";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
@@ -22,8 +23,7 @@ const formatDateShort = (iso?: string) => {
   return `${dd}/${mm}/${yy} ${hh}:${mi}`;
 };
 
-const formatBRL = (v: number) =>
-  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const formatBRL = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 const Switch = ({
   checked,
