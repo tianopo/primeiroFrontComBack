@@ -70,17 +70,20 @@ export const StatementRedisModal = ({ onClose }: { onClose: () => void }) => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const next: Record<string, boolean> = {};
-    const nextSelected = new Set<string>();
+    setVerif((prev) => {
+      const next = { ...prev };
+      for (const it of items) {
+        if (!it?.endToEnd) continue;
+        // se já existe no estado local, mantém; senão, inicializa do backend
+        if (next[it.endToEnd] === undefined) next[it.endToEnd] = Boolean(it?.verification);
+      }
+      return next;
+    });
 
-    for (const it of items) {
-      if (!it?.endToEnd) continue;
-      next[it.endToEnd] = Boolean(it?.verification);
-      // não pré-seleciona nada
-    }
-
-    setVerif(next);
-    setSelected(nextSelected);
+    setSelected((prev) => {
+      const validIds = new Set(items.map((it) => it.endToEnd).filter(Boolean));
+      return new Set([...prev].filter((id) => validIds.has(id)));
+    });
   }, [items]);
 
   const toggleSelect = (endToEnd: string) => {
@@ -93,7 +96,16 @@ export const StatementRedisModal = ({ onClose }: { onClose: () => void }) => {
   };
 
   const onToggleSwitch = (endToEnd: string, v: boolean) => {
+    // marca/desmarca o switch
     setVerif((prev) => ({ ...prev, [endToEnd]: v }));
+
+    // ✅ se marcou true -> seleciona; se marcou false -> remove da seleção
+    setSelected((prev) => {
+      const s = new Set(prev);
+      if (v) s.add(endToEnd);
+      else s.delete(endToEnd);
+      return s;
+    });
   };
 
   const selectedIds = Array.from(selected);
@@ -120,8 +132,7 @@ export const StatementRedisModal = ({ onClose }: { onClose: () => void }) => {
             Atualiza a cada 30s • {q.data?.date ? `Dia: ${q.data.date}` : "Dia atual"}
           </span>
           <span className="text-xs text-gray-500">
-            Selecionadas: <strong>{selectedIds.length}</strong> • Marcadas (true):{" "}
-            <strong>{selectedTrue.length}</strong>
+            Selecionadas: <strong>{selectedIds.length}</strong>
           </span>
         </div>
 
@@ -158,7 +169,7 @@ export const StatementRedisModal = ({ onClose }: { onClose: () => void }) => {
 
                   const endToEnd = it?.endToEnd || "";
                   const checked = endToEnd ? Boolean(verif[endToEnd]) : false;
-                  const isSelected = endToEnd ? selected.has(endToEnd) : false;
+                  const isSelected = endToEnd ? selected.has(endToEnd) || checked : false;
 
                   const valueColor = isIN ? "text-green-700" : "text-red-700";
                   const prefix = isIN ? "+" : "-";
@@ -202,11 +213,7 @@ export const StatementRedisModal = ({ onClose }: { onClose: () => void }) => {
 
           {/* ✅ único botão abaixo da tabela */}
           <div className="mt-3 flex items-center justify-end gap-2">
-            <Button
-              className="rounded-6 bg-blue-600 px-4 py-2 text-white"
-              disabled={!selectedTrue.length || bulk.isPending}
-              onClick={verifySelectedTrue}
-            >
+            <Button disabled={!selectedTrue.length || bulk.isPending} onClick={verifySelectedTrue}>
               Verifique ({selectedTrue.length})
             </Button>
           </div>

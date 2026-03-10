@@ -24,19 +24,22 @@ export const UploadXLSButton = ({ setFormData, formData }: IUploadXLSButton) => 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files) {
+      const broker = selectedBroker;
       const fileArray = Array.from(files);
       const allData: any[] = [];
 
       for (const file of fileArray) {
-        const fileData = await readFile(file);
+        const fileData = await readFile(file, broker);
         allData.push(...fileData);
       }
+
       const combinedData = [...formData, ...allData];
       setFormData(combinedData);
+      setSelectedBroker("");
     }
   };
 
-  const readFile = (file: File): Promise<any[]> => {
+  const readFile = (file: File, broker: string): Promise<any[]> => {
     return new Promise((resolve, reject) => {
       const fileExtension = file.name.split(".").pop()?.toLowerCase();
 
@@ -62,8 +65,7 @@ export const UploadXLSButton = ({ setFormData, formData }: IUploadXLSButton) => 
           return;
         }
 
-        const result = processExcel(workbook);
-        setSelectedBroker("");
+        const result = processExcel(workbook, broker);
         resolve(result);
       };
 
@@ -80,26 +82,26 @@ export const UploadXLSButton = ({ setFormData, formData }: IUploadXLSButton) => 
     });
   };
 
-  const processExcel = (workbook: XLSX.WorkBook): any[] => {
-    switch (selectedBroker) {
+  const processExcel = (workbook: XLSX.WorkBook, broker: string): any[] => {
+    switch (broker) {
       case "Bybit https://www.bybit.com/ SG":
-        return processExcelBybit(workbook, selectedBroker);
+        return processExcelBybit(workbook, broker);
       case "Binance https://www.binance.com/ CN":
-        return processExcelBinance(workbook, selectedBroker);
+        return processExcelBinance(workbook, broker);
       case "Gate.IO https://www.gate.io/ AE":
-        return processExcelGateIO(workbook, selectedBroker);
+        return processExcelGateIO(workbook, broker);
       case "Kucoin https://www.kucoin.com/ SC":
-        return processExcelKucoin(workbook, selectedBroker);
+        return processExcelKucoin(workbook, broker);
       case "CoinEx https://www.coinex.com/ HK":
-        return processExcelCoinEx(workbook, selectedBroker);
+        return processExcelCoinEx(workbook, broker);
       case "Bitget https://www.bitget.com/ SC":
-        return processExcelBitget(workbook, selectedBroker);
+        return processExcelBitget(workbook, broker);
       case "Huobi https://www.htx.com/ CN":
-        return processExcelHuobi(workbook, selectedBroker);
+        return processExcelHuobi(workbook, broker);
       case "BingX https://www.bingx.com/ AU":
-        return processExcelBingX(workbook, selectedBroker);
+        return processExcelBingX(workbook, broker);
       case "MEXC https://www.mexc.com/ SC":
-        return processExcelMEXC(workbook, selectedBroker);
+        return processExcelMEXC(workbook, broker);
       default: {
         toast.error("Escolha uma Exchange Válida");
         return [];
