@@ -5,8 +5,6 @@ export const apiRoute = {
   logout: (token: string) => `/auth/logout/${token}`,
   token: (token: string) => `/user/${token}`,
   changePassword: "/auth/change-password",
-
-  multa: "send/multa",
   /* ORDENS */
   orders: "orders",
   tax: "orders/tax",

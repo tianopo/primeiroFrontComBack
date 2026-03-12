@@ -21,9 +21,22 @@ export const Header = ({ navbar }: IHeader) => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const navigate = useNavigate();
   const { name } = useAccessControl();
+
+  // ✅ use o novo hook quando estiver pronto:
+  // const prices = useBinanceReferencePrices();
   const prices = useBinancePrices();
 
   const toggleMenu = () => setMenuOpen((prev) => !prev);
+
+  const formatBRL = (value?: number) =>
+    Number.isFinite(value)
+      ? value!.toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+      : "—";
 
   return (
     <>
@@ -35,24 +48,26 @@ export const Header = ({ navbar }: IHeader) => {
           height={67.19}
           className="rounded-full border-1 border-edge-primary"
         />
+
         <div className="w-full md:w-96">
           <div className="flex flex-col items-start font-bold">
-            {prices ? (
+            {!prices ? (
+              <h6 className="text-gray-500">Carregando cotações...</h6>
+            ) : (
               <div className="flex flex-col gap-0.5">
                 <h6>
                   Dólar (USDT/BRL):{" "}
-                  <strong className="text-green-500">R$ {prices.USDTBRL || "-"}</strong>
+                  <strong className="text-green-500">{formatBRL(prices.USDTBRL)}</strong>
                 </h6>
                 <h6>
                   Bitcoin (BTC/BRL):{" "}
-                  <strong className="text-green-500">R$ {prices.BTCBRL || "-"}</strong>
+                  <strong className="text-green-500">{formatBRL(prices.BTCBRL)}</strong>
                 </h6>
               </div>
-            ) : (
-              <h6 className="text-red-500">Erro ao carregar cotações</h6>
             )}
           </div>
         </div>
+
         <div
           className="hidden cursor-pointer items-center gap-2 rounded-6 p-2.5 text-write-secundary hover:bg-secundary hover:text-write-primary md:flex"
           onClick={() => setShowPasswordModal(true)}
@@ -60,6 +75,7 @@ export const Header = ({ navbar }: IHeader) => {
           <Gear width={19.45} height={20} weight="fill" onClick={() => navigate("/usuarios")} />
           <h5>{name}</h5>
         </div>
+
         <div className="mr-2 w-fit">
           <List
             className="cursor-pointer text-write-secundary md:hidden"
@@ -68,6 +84,7 @@ export const Header = ({ navbar }: IHeader) => {
           />
         </div>
       </header>
+
       {menuOpen && (
         <div
           className="fixed inset-0 z-40 bg-black bg-opacity-25"
@@ -76,6 +93,7 @@ export const Header = ({ navbar }: IHeader) => {
           <SidebarX navbar={navbar} menuOpen />
         </div>
       )}
+
       <ModalPassword isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
     </>
   );
