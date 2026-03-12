@@ -61,7 +61,7 @@ export const BallonEditPrice = () => {
       coinexBuyOffset: parseNumber(form.coinexBuyOffset),
     };
 
-    const hasInvalid = Object.values(payload).some((value) => !Number.isFinite(value) || value < 0);
+    const hasInvalid = Object.values(payload).some((value) => !Number.isFinite(value));
 
     if (hasInvalid) return;
 
