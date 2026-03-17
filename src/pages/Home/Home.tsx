@@ -198,7 +198,7 @@ export const Home = () => {
   const end = new Date(endDate);
   const diffDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
 
-  const showFortnightButton = diffDays >= 13 && diffDays <= 16;
+  const showFortnightButton = diffDays >= 12 && diffDays <= 16;
   const showMonthlyButton = diffDays >= 27;
 
   const handleTransactions = async () => {
