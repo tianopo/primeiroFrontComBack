@@ -6,6 +6,7 @@ import { IconX } from "src/components/Icons/IconX";
 import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalButton";
 import { useAccessControl } from "src/routes/context/AccessControl";
 import { EditOrderModal } from "./components/EditOrderModal";
+import { GenerateContractButton } from "./components/GenerateContractButton";
 import { IN1888 } from "./components/IN1888";
 import { fortnigthlyFiduciaTable } from "./config/fortnigthlyFiduciaTable";
 import { handleCompraVendaIN1888 } from "./config/handleDownload";
@@ -15,7 +16,6 @@ import { mensalFiduciaTable } from "./config/mensalFiduciaTable";
 import { useDeleteOrder } from "./hooks/useDeleteOrder";
 import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
 import { useUpdateOrder } from "./hooks/useUpdateOrder";
-import { GenerateContractButton } from "./components/GenerateContractButton";
 
 export const Home = () => {
   const { acesso } = useAccessControl();
@@ -208,7 +208,7 @@ export const Home = () => {
     const hoje = new Date();
     const monthName = hoje.toLocaleDateString("pt-BR", { month: "long" });
     const comissaoFixa = 0.01; // % base para não-stable / fallback
-    const comissaoMargemErro = 3; // ajuste de margem
+    const comissaoMargemErro = 5; // ajuste de margem
     const codMunicipioServicoPrestado = 352440;
     const codAtividade = 6619399;
     const codListaServicos = 10.02;
