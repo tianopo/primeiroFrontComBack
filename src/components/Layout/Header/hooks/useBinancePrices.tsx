@@ -34,7 +34,6 @@ export const useBinancePrices = (): BinancePrices | null => {
       tradeType: "SELL",
     };
 
-    // axios response -> { data: <body> }
     const { data } = await api().post<ReferencePriceBody>(apiRoute.referencePrice, payload);
 
     const items = Array.isArray((data as any)?.data) ? (data as any).data : [];
@@ -55,9 +54,7 @@ export const useBinancePrices = (): BinancePrices | null => {
   const { data } = useQuery({
     queryKey: ["binance-reference-price", "USDT", "BTC", "BRL", "PIX", "SELL"],
     queryFn: fetcher,
-    refetchInterval: 60_000,
-    refetchOnWindowFocus: false,
-    staleTime: 0,
+    refetchInterval: 60000,
     retry: 1,
   });
 

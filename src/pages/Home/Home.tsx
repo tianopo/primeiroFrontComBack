@@ -199,7 +199,7 @@ export const Home = () => {
   const diffDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
 
   const showFortnightButton = diffDays >= 13 && diffDays <= 16;
-  const showMonthlyButton = diffDays >= 28;
+  const showMonthlyButton = diffDays >= 27;
 
   const handleTransactions = async () => {
     if (!filteredData) return;
@@ -208,7 +208,7 @@ export const Home = () => {
     const hoje = new Date();
     const monthName = hoje.toLocaleDateString("pt-BR", { month: "long" });
     const comissaoFixa = 0.01; // % base para não-stable / fallback
-    const comissaoMargemErro = 10; // ajuste de margem
+    const comissaoMargemErro = 3; // ajuste de margem
     const codMunicipioServicoPrestado = 352440;
     const codAtividade = 6619399;
     const codListaServicos = 10.02;
@@ -253,7 +253,7 @@ export const Home = () => {
       let comissao = comissaoFixa; // 0.1% mínimo
 
       if (ehBTCouETH) {
-        comissao = 3;
+        comissao = 9.5;
       } else if (ehStable) {
         if (t.tipo === "vendas") {
           const basePct =
