@@ -3,6 +3,7 @@ import { Fragment, useMemo, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { RefundModal } from "./Pix/RefundModal"; // ajuste o path
 import { StatusConsulta } from "./StatusConsulta";
+import { generateStatementReceipt } from "src/pages/Home/config/handleReceipt";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
@@ -186,6 +187,19 @@ export const StatementTab = (props: {
     setRefundOpen(true);
   };
 
+  const downloadReceipt = async (it: any) => {
+    const base64 = await generateStatementReceipt(it);
+    if (!base64) return;
+
+    const e2e = String(it?.endToEndId || it?.originalEndToEnd || "statement");
+    const safe = e2e.replace(/[^\w-]+/g, "_").slice(0, 50);
+
+    const a = document.createElement("a");
+    a.href = base64;
+    a.download = `recibo_${safe}.png`;
+    a.click();
+  };
+
   return (
     <div className="flex flex-col gap-3">
       <StatusConsulta
@@ -324,19 +338,30 @@ export const StatementTab = (props: {
                                 <div className="mb-2 flex items-center justify-between gap-2">
                                   <div className="text-sm font-semibold">Detalhes da transação</div>
 
-                                  {/* ✅ botão APENAS para IN */}
-                                  {String(it?.direction ?? "").toUpperCase() === "IN" && (
+                                  <div className="flex items-center gap-2">
                                     <Button
-                                      className="rounded-6 bg-orange-500 px-3 py-1.5 text-white"
-                                      disabled={!(it?.endToEndId || it?.originalEndToEnd)}
+                                      className="rounded-6 bg-blue-600 px-3 py-1.5 text-white"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        openRefundModal(it);
+                                        downloadReceipt(it);
                                       }}
                                     >
-                                      Reembolsar
+                                      Baixar recibo
                                     </Button>
-                                  )}
+
+                                    {String(it?.direction ?? "").toUpperCase() === "IN" && (
+                                      <Button
+                                        className="rounded-6 bg-orange-500 px-3 py-1.5 text-white"
+                                        disabled={!(it?.endToEndId || it?.originalEndToEnd)}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          openRefundModal(it);
+                                        }}
+                                      >
+                                        Reembolsar
+                                      </Button>
+                                    )}
+                                  </div>
                                 </div>
 
                                 {/* ✅ detalhes completos (sem JSON), com labels PT-BR */}

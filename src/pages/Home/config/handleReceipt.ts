@@ -1,4 +1,5 @@
 import JSZip from "jszip";
+import { formatBRL, formatTimestampBR, maskDocument } from "src/utils/formats";
 
 export const generateSingleReceipt = (item: any): Promise<string> => {
   return new Promise((resolve) => {
@@ -208,5 +209,143 @@ export const handleReceipt = (data: any[]) => {
       link.download = "recibos-cryptotech.zip";
       link.click();
     });
+  });
+};
+
+export const generateStatementReceipt = (tx: any): Promise<string> => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 1100;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return resolve("");
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const logo = new Image();
+    logo.src = "/logo.png";
+
+    const centerX = canvas.width / 2;
+
+    // ✅ bloco centralizado, mas texto alinhado à esquerda (todas as linhas começam no mesmo x)
+    const BLOCK_W = 680;
+    const BLOCK_X = centerX - BLOCK_W / 2;
+
+    const lineBlock = (text: string, y: number, font = "20px Arial", bold = false) => {
+      ctx.fillStyle = "#000";
+      ctx.font = `${bold ? "bold " : ""}${font}`;
+      ctx.textAlign = "left";
+      ctx.fillText(text, BLOCK_X, y);
+    };
+
+    const draw = () => {
+      // logo
+      try {
+        ctx.drawImage(logo, centerX - 90, 20, 180, 180);
+      } catch {}
+
+      // título
+      ctx.fillStyle = "#000";
+      ctx.font = "bold 30px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("RECIBO DE TRANSAÇÃO PIX", centerX, 240);
+
+      const e2e = String(tx?.endToEndId || tx?.originalEndToEnd || "-");
+      const timestamp = formatTimestampBR(String(tx?.timestamp || ""));
+      const description = String(tx?.description || "-");
+      const amount = typeof tx?.amount === "number" ? tx.amount : Number(tx?.amount || 0);
+
+      const direction = String(tx?.direction ?? "").toUpperCase();
+      const isIN = direction === "IN";
+
+      const counterpartyName = isIN ? tx?.payer?.name : tx?.payee?.name;
+      const counterpartyDoc = isIN ? tx?.payer?.document : tx?.payee?.document;
+
+      const bankNameRaw = isIN ? tx?.payer?.bankName : tx?.payee?.bankName;
+      const bankName = bankNameRaw ? String(bankNameRaw).trim() : ""; // ✅ vazio se não existir
+
+      const branch = isIN ? tx?.payer?.branch : tx?.payee?.branch;
+      const account = isIN ? tx?.payer?.account : tx?.payee?.account;
+      const counterpartyPixKey = isIN ? tx?.payer?.pixKey : tx?.payee?.pixKey;
+
+      // ✅ monta todas as linhas do “bloco de informações” (sem banco quando não existir)
+      const lines: Array<{ text: string; font?: string; bold?: boolean; gap?: number }> = [
+        { text: "CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA", font: "20px Arial", bold: true },
+        { text: "CNPJ: 55.636.113/0001-70", font: "20px Arial" },
+        { text: "Banco: CORPX BANK", font: "20px Arial" },
+        { text: "", gap: 10 },
+
+        { text: "DADOS DA TRANSAÇÃO", font: "22px Arial", bold: true },
+        { text: `EndToEnd (E2E): ${e2e}`, font: "20px Arial" },
+        { text: `Data/Hora: ${timestamp}`, font: "20px Arial" },
+        { text: `Descrição: ${description}`, font: "20px Arial" },
+        { text: "", gap: 10 },
+
+        { text: isIN ? "PAGADOR" : "RECEBEDOR", font: "22px Arial", bold: true },
+        { text: `Nome: ${counterpartyName ?? "-"}`, font: "20px Arial" },
+        { text: `Documento: ${maskDocument(counterpartyDoc)}`, font: "20px Arial" },
+
+        // ✅ banco só se existir
+        ...(bankName ? [{ text: `Banco: ${bankName}`, font: "20px Arial" }] : []),
+
+        { text: `Agência: ${branch ?? "-"}`, font: "20px Arial" },
+        { text: `Conta: ${account ?? "-"}`, font: "20px Arial" },
+
+        ...(counterpartyPixKey
+          ? [{ text: `Chave PIX: ${String(counterpartyPixKey)}`, font: "20px Arial" }]
+          : []),
+      ];
+
+      // ✅ valor MAIS GRANDE (destaque abaixo do título)
+      ctx.font = "bold 46px Arial";
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#000";
+      ctx.fillText(formatBRL(Math.abs(amount)), centerX, 305);
+
+      // ✅ centralização vertical do bloco:
+      // calcula altura total e posiciona para ficar “no meio” abaixo do valor
+      const lineH = 32; // altura padrão
+      const blockTopMin = 360; // começa depois do valor
+      const footerSafe = 90; // espaço pro rodapé
+
+      const totalHeight = lines.reduce(
+        (acc, l) => acc + (l.text === "" ? (l.gap ?? 10) : lineH),
+        0,
+      );
+
+      const availableTop = blockTopMin;
+      const availableBottom = canvas.height - footerSafe;
+      const availableH = availableBottom - availableTop;
+
+      const startY = availableTop + Math.max(0, (availableH - totalHeight) / 2);
+
+      // desenha o bloco
+      let y = startY;
+      for (const l of lines) {
+        if (l.text === "") {
+          y += l.gap ?? 10;
+          continue;
+        }
+        lineBlock(l.text, y, l.font ?? "20px Arial", Boolean(l.bold));
+        y += lineH;
+      }
+
+      // rodapé
+      ctx.font = "bold 16px Arial";
+      ctx.fillStyle = "#000";
+
+      ctx.textAlign = "left";
+      ctx.fillText("www.cryptotechdev.com", 50, canvas.height - 40);
+
+      ctx.textAlign = "right";
+      ctx.fillText("WhatsApp: (12) 99254-6355", canvas.width - 50, canvas.height - 40);
+
+      resolve(canvas.toDataURL("image/png"));
+    };
+
+    logo.onload = draw;
+    logo.onerror = draw;
   });
 };

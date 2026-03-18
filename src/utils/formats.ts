@@ -232,3 +232,46 @@ export const formatDateTime = (value: string): string => {
 
   return input;
 };
+
+export const maskDocument = (doc?: string) => {
+  const digits = String(doc ?? "").replace(/\D/g, "");
+
+  // ✅ máscara apenas para CPF
+  if (digits.length === 11) return `${digits.slice(0, 3)}.***.***-${digits.slice(-2)}`;
+
+  // ✅ CNPJ sem censura (só formata bonitinho se tiver 14 dígitos)
+  if (digits.length === 14) return formatCNPJ(digits);
+
+  return doc ?? "-";
+};
+
+export const formatBRL = (v: number) =>
+  Math.abs(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+export const formatTimestampBR = (iso?: string) => {
+  if (!iso) return "-";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+
+  // fuso SP e formato: DD/MM/YYYY, HH:MM:SS
+  const parts = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(d);
+
+  const pick = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  const dd = pick("day");
+  const mm = pick("month");
+  const yyyy = pick("year");
+  const hh = pick("hour");
+  const mi = pick("minute");
+  const ss = pick("second");
+
+  return `${dd}/${mm}/${yyyy}, ${hh}:${mi}:${ss}`;
+};
