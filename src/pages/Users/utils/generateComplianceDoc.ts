@@ -127,6 +127,127 @@ export const generateComplianceDoc = (responseData: any) => {
             `;
           })
           .join("") || "<p>-</p>";
+  // ✅ EUROPA detalhado
+  const europaArr: any[] = Array.isArray(responseData?.europa) ? responseData.europa : [];
+  const europaDetailsHtml =
+    europaArr.length === 0
+      ? "<p>-</p>"
+      : europaArr
+          .map((e, idx) => {
+            const fullName = clean(e?.fullName);
+            const similarity = e?.similarity;
+            const subjectType = clean(e?.subjectType);
+            const programme = clean(e?.programme);
+            const euRefNum = clean(e?.euRefNum);
+            const remark = clean(e?.remark);
+            const lebaNumtitle = clean(e?.lebaNumtitle);
+            const lebaUrl = clean(e?.lebaUrl);
+
+            const hasAny =
+              isFilled(fullName) ||
+              isFilled(similarity) ||
+              isFilled(subjectType) ||
+              isFilled(programme) ||
+              isFilled(euRefNum) ||
+              isFilled(remark) ||
+              isFilled(lebaNumtitle) ||
+              isFilled(lebaUrl);
+
+            if (!hasAny) return "";
+
+            return `
+            <div style="margin-top:8px; padding:10px; border:1px solid #eee; border-radius:8px; page-break-inside: avoid;">
+              <div style="font-weight:bold; margin-bottom:6px;">Match #${idx + 1}</div>
+              ${kvIf("Nome Completo", fullName)}
+              ${kvIf("Similaridade", similarity, (v) => `${v}%`)}
+              ${kvIf("Tipo", subjectType)}
+              ${kvIf("Programa", programme)}
+              ${kvIf("EU Ref", euRefNum)}
+              ${kvIf("Observação", remark)}
+              ${kvIf("Regulamento", lebaNumtitle)}
+              ${
+                isFilled(lebaUrl)
+                  ? kvHtml(
+                      "Link",
+                      `<a href="${esc(lebaUrl)}" target="_blank" rel="noopener noreferrer">Acessar</a>`,
+                    )
+                  : ""
+              }
+            </div>
+          `;
+          })
+          .join("") || "<p>-</p>";
+
+  // ✅ CSNU detalhado
+  const csnuArr: any[] = Array.isArray(responseData?.csnu) ? responseData.csnu : [];
+  const csnuDetailsHtml =
+    csnuArr.length === 0
+      ? "<p>-</p>"
+      : csnuArr
+          .map((e, idx) => {
+            const fullName = clean(e?.fullName);
+            const similarity = e?.similarity;
+            const ref = clean(e?.ref);
+            const sectionTxt = clean(e?.section);
+
+            const hasAny =
+              isFilled(fullName) || isFilled(similarity) || isFilled(ref) || isFilled(sectionTxt);
+            if (!hasAny) return "";
+
+            return `
+            <div style="margin-top:8px; padding:10px; border:1px solid #eee; border-radius:8px; page-break-inside: avoid;">
+              <div style="font-weight:bold; margin-bottom:6px;">Match #${idx + 1}</div>
+              ${kvIf("Nome", fullName)}
+              ${kvIf("Similaridade", similarity, (v) => `${v}%`)}
+              ${kvIf("Referência", ref)}
+              ${kvIf("Seção", sectionTxt)}
+            </div>
+          `;
+          })
+          .join("") || "<p>-</p>";
+
+  // ✅ Palestina Council detalhado
+  const palestinaArr: any[] = Array.isArray(responseData?.palestinaCouncil)
+    ? responseData.palestinaCouncil
+    : [];
+  const palestinaDetailsHtml =
+    palestinaArr.length === 0
+      ? "<p>-</p>"
+      : palestinaArr
+          .map((e, idx) => {
+            const englishName = clean(e?.englishName);
+            const arabicName = clean(e?.arabicName);
+            const similarity = e?.similarity;
+            const party = clean(e?.party);
+            const constituency = clean(e?.constituency);
+            const electionType = clean(e?.electionType);
+            const statusTxt = clean(e?.status);
+
+            const hasAny =
+              isFilled(englishName) ||
+              isFilled(arabicName) ||
+              isFilled(similarity) ||
+              isFilled(party) ||
+              isFilled(constituency) ||
+              isFilled(electionType) ||
+              isFilled(statusTxt);
+
+            if (!hasAny) return "";
+
+            return `
+            <div style="margin-top:8px; padding:10px; border:1px solid #eee; border-radius:8px; page-break-inside: avoid;">
+              <div style="font-weight:bold; margin-bottom:6px;">Match #${idx + 1}</div>
+              ${kvIf("Nome (EN)", englishName)}
+              ${kvIf("Nome (AR)", arabicName)}
+              ${kvIf("Similaridade", similarity, (v) => `${v}%`)}
+              ${kvIf("Partido", party)}
+              ${kvIf("Região", constituency)}
+              ${kvIf("Tipo", electionType)}
+              ${kvIf("Status", statusTxt)}
+            </div>
+          `;
+          })
+          .join("") || "<p>-</p>";
 
   // ✅ PDT (render “humano”)
   const pdt = responseData?.pdt ?? {};
@@ -651,14 +772,32 @@ export const generateComplianceDoc = (responseData: any) => {
     ${section(
       "Listas / Checagens",
       `
-        ${kv("OFAC", ofacArr.length ? `Possíveis matches: ${ofacArr.length}` : "Possíveis matches: 0")}
-        ${kv("Trabalho escravo", slaveTxt)}
+    ${kv("OFAC", ofacArr.length ? `Possíveis matches: ${ofacArr.length}` : "Possíveis matches: 0")}
+    ${kv("Europa (UE)", europaArr.length ? `Possíveis matches: ${europaArr.length}` : "Possíveis matches: 0")}
+    ${kv("CSNU (ONU)", csnuArr.length ? `Possíveis matches: ${csnuArr.length}` : "Possíveis matches: 0")}
+    ${kv("Conselho Palestina", palestinaArr.length ? `Possíveis matches: ${palestinaArr.length}` : "Possíveis matches: 0")}
+    ${kv("Trabalho escravo", slaveTxt)}
 
-        <div style="margin-top:10px;">
-          <h4 style="margin:0 0 6px 0;">Detalhes OFAC</h4>
-          ${ofacDetailsHtml}
-        </div>
-      `,
+    <div style="margin-top:10px;">
+      <h4 style="margin:0 0 6px 0;">Detalhes OFAC</h4>
+      ${ofacDetailsHtml}
+    </div>
+
+    <div style="margin-top:10px;">
+      <h4 style="margin:0 0 6px 0;">Detalhes Europa (UE)</h4>
+      ${europaDetailsHtml}
+    </div>
+
+    <div style="margin-top:10px;">
+      <h4 style="margin:0 0 6px 0;">Detalhes CSNU (ONU)</h4>
+      ${csnuDetailsHtml}
+    </div>
+
+    <div style="margin-top:10px;">
+      <h4 style="margin:0 0 6px 0;">Detalhes Conselho Palestina</h4>
+      ${palestinaDetailsHtml}
+    </div>
+  `,
     )}
 
     ${deskRelationshipsSection}

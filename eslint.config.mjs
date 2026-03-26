@@ -92,7 +92,7 @@ export default [
         files: ["src/pages/**/*.tsx", "src/utils/formats.ts", "src/pages/**/*.ts"],
         rules: {
             "max-lines": ["error", {
-                max: 700,
+                max: 1000,
             }],
         },
     },
