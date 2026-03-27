@@ -27,6 +27,7 @@ export const apiRoute = {
   binanceOrdersWithChats: "binance/order/detail-with-messages",
   referencePrice: "binance/reference-price",
   sendChatMessageBinance: "binance/chat/send",
+  binanceCheckAndReleaseCoin: "/binance/order/check-and-release-coin",
   /* EXCHANGES */
   pendingOrders: "exchanges/pending-orders",
   /* WHATSAPP */

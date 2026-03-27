@@ -1,6 +1,8 @@
 import { ArrowCircleRight, Copy, ImageSquare } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
-import { useSendChatMessageBinance } from "../../hooks/useSendChatMessageBinance";
+import { Button } from "src/components/Buttons/Button";
+import { useCheckAndReleaseCoinBinance } from "../../hooks/Binance/useCheckAndReleaseCoinBinance";
+import { useSendChatMessageBinance } from "../../hooks/Binance/useSendChatMessageBinance";
 import { OrderMessages } from "../OrderMessages";
 
 type BinanceMessage = {
@@ -66,6 +68,7 @@ function mapOrderStatus(status?: number) {
 
 export const BinanceOrders = ({ orders }: { orders: BinanceOrderItem[] }) => {
   if (!Array.isArray(orders) || orders.length === 0) return <p>Sem ordens Binance.</p>;
+  const { mutate, isPending } = useCheckAndReleaseCoinBinance();
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -229,6 +232,28 @@ export const BinanceOrders = ({ orders }: { orders: BinanceOrderItem[] }) => {
             <OrderMessages messages={normalizedForOrderMessages} />
 
             <ChatBox />
+            <Button
+              disabled={
+                isPending ||
+                order.orderStatus !== 2 ||
+                messagesTotal === 0 ||
+                String(order?.tradeType ?? "").toUpperCase() === "BUY" ||
+                normalizedForOrderMessages
+                  ?.slice(0)
+                  .reverse()
+                  .slice(-10)
+                  .some((msg: any) =>
+                    [
+                      "anular ordem",
+                      "CRYPTOTECH: anular ordem",
+                      "CRYPTOTECH: Anular ordem",
+                    ].includes(msg.message),
+                  )
+              }
+              onClick={() => mutate({ orderNumber: orderId })}
+            >
+              {mapOrderStatus(order?.orderStatus)}
+            </Button>
           </div>
         );
       })}

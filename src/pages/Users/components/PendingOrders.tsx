@@ -12,12 +12,12 @@ import { useSendChatMessageBybit } from "../hooks/useSendChatMessageBybit";
 import { confirmContract } from "../utils/confirmContract";
 import { toBRDate } from "../utils/helpers";
 import { ChatBox } from "./ChatBox";
+import { StatementRedisPanel } from "./Corpx/StatementRedisPanel";
 import { OrderMessages } from "./OrderMessages";
 import { BinanceOrders } from "./PendingOrders/BinanceOrders";
 import { CoinexOrders } from "./PendingOrders/CoinexOrders";
 import { CryptotechOrders } from "./PendingOrders/CryptotechOrders";
 import { PaymentTermsBox } from "./PendingOrders/PaymentTermsBox";
-import { StatementRedisPanel } from "./Corpx/StatementRedisPanel";
 
 interface IPendingOrders {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -293,6 +293,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                         "You have a new appeal. Please negotiate and communicate with the other party within the valid period.",
                         "anular ordem",
                         "CRYPTOTECH: anular ordem",
+                        "CRYPTOTECH: Anular ordem",
                         "usuário de risco inegociável, não podemos fazer a transação, contraparte cancele",
                       ].includes(msg.message),
                     )
