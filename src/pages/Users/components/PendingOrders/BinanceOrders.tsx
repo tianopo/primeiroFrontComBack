@@ -1,5 +1,5 @@
 import { ArrowCircleRight, Copy, ImageSquare } from "@phosphor-icons/react";
-import { useRef, useState } from "react";
+import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { useCheckAndReleaseCoinBinance } from "../../hooks/Binance/useCheckAndReleaseCoinBinance";
 import { useSendChatMessageBinance } from "../../hooks/Binance/useSendChatMessageBinance";
@@ -12,6 +12,11 @@ type BinanceMessage = {
   createTime: number;
   self: boolean;
   fromNickName: string;
+};
+
+type CounterpartyInfo = {
+  name: string;
+  document: string;
 };
 
 type BinanceOrder = {
@@ -34,6 +39,8 @@ type BinanceOrder = {
   takerCommission?: string;
 
   chatUnreadCount?: number;
+
+  counterparty: CounterpartyInfo;
 };
 
 type BinanceOrderItem = {
@@ -66,7 +73,21 @@ function mapOrderStatus(status?: number) {
   }
 }
 
-export const BinanceOrders = ({ orders }: { orders: BinanceOrderItem[] }) => {
+export const BinanceOrders = ({
+  orders,
+  setForm,
+  setInitialRegisterData,
+}: {
+  orders: BinanceOrderItem[];
+  setForm: Dispatch<SetStateAction<boolean>>;
+  setInitialRegisterData: Dispatch<
+    SetStateAction<{
+      apelido: string;
+      nome: string;
+      exchange: string;
+    }>
+  >;
+}) => {
   if (!Array.isArray(orders) || orders.length === 0) return <p>Sem ordens Binance.</p>;
   const { mutate, isPending } = useCheckAndReleaseCoinBinance();
 
@@ -175,10 +196,26 @@ export const BinanceOrders = ({ orders }: { orders: BinanceOrderItem[] }) => {
             <button
               className="absolute right-2 top-2 rounded-6 border border-gray-200 bg-white p-2 hover:bg-gray-100 hover:opacity-80"
               onClick={() => {
-                const textToCopy = (order?.buyerNickname || order?.sellerNickname || "").trim();
-                if (textToCopy) navigator.clipboard.writeText(textToCopy);
+                const tradeType = String(order?.tradeType ?? "").toUpperCase();
+                const apelido =
+                  tradeType === "SELL"
+                    ? String(order?.buyerNickname ?? "").trim() // SELL => comprador
+                    : String(order?.sellerNickname ?? "").trim(); // BUY  => vendedor
+
+                const nome = String(order?.counterparty?.name ?? "").trim();
+
+                setInitialRegisterData({
+                  apelido,
+                  nome,
+                  exchange: "Binance https://www.binance.com/ CN",
+                });
+
+                setForm(true);
+
+                // opcional: se quiser manter copiar para clipboard também
+                // if (apelido) navigator.clipboard.writeText(apelido);
               }}
-              title="Copiar apelido"
+              title="Copiar para cadastro"
             >
               <Copy width={20} height={20} weight="duotone" />
             </button>
@@ -200,6 +237,22 @@ export const BinanceOrders = ({ orders }: { orders: BinanceOrderItem[] }) => {
                 </span>
               )}
             </p>
+            {order?.counterparty && (
+              <>
+                <p>
+                  <strong>Nome:</strong> {order?.counterparty?.name}
+                </p>
+                <p>
+                  <strong>Documento:</strong> {order?.counterparty?.document}
+                </p>
+              </>
+            )}
+            <p>
+              <strong>Vendedor:</strong> {order?.sellerNickname || "N/A"}
+            </p>
+            <p>
+              <strong>Comprador:</strong> {order?.buyerNickname || "N/A"}
+            </p>
             <p>
               <strong>Tipo:</strong> {String(order?.tradeType || "N/A")}
             </p>
@@ -211,19 +264,6 @@ export const BinanceOrders = ({ orders }: { orders: BinanceOrderItem[] }) => {
             </p>
             <p>
               <strong>Total:</strong> {order?.totalPrice || "N/A"} {order?.fiat || ""}
-            </p>
-            <p>
-              <strong>Vendedor:</strong> {order?.sellerNickname || "N/A"}
-            </p>
-            <p>
-              <strong>Comprador:</strong> {order?.buyerNickname || "N/A"}
-            </p>
-            <p>
-              <strong>Comissão:</strong> {order?.commission || "0"} ({order?.commissionRate || "0"})
-            </p>
-            <p>
-              <strong>Taker:</strong> {order?.takerCommission || "0"} (
-              {order?.takerCommissionRate || "0"})
             </p>
             <p>
               <strong>Mensagens:</strong> {messagesTotal}

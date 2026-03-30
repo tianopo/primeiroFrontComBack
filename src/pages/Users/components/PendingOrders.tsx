@@ -203,7 +203,11 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
           title={activeTab === "coinexEmpresa" ? "Coinex Empresa" : "Coinex Pessoal"}
         />
       ) : activeTab === "binance" ? (
-        <BinanceOrders orders={orders} />
+        <BinanceOrders
+          orders={orders}
+          setForm={setForm}
+          setInitialRegisterData={setInitialRegisterData}
+        />
       ) : (
         <div className="flex flex-wrap gap-2">
           {orders.map((order: any) => (
