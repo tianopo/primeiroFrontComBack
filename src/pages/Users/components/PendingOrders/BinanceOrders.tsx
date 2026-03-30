@@ -47,6 +47,9 @@ type BinanceOrderItem = {
   order: BinanceOrder;
   messages: BinanceMessage[];
   messagesTotal: number;
+
+  endToEnd?: string;
+  pixInStatement?: any;
 };
 
 function formatDateMs(ms?: number) {
@@ -97,6 +100,7 @@ export const BinanceOrders = ({
         const order = item?.order;
         const messages = Array.isArray(item?.messages) ? item.messages : [];
         const messagesTotal = Number(item?.messagesTotal ?? 0);
+        const endToEnd = String((item as any)?.endToEnd ?? "").trim();
 
         const orderId = String(order?.orderNumber ?? "");
         if (!orderId) return null;
@@ -237,7 +241,7 @@ export const BinanceOrders = ({
                 </span>
               )}
             </p>
-            {order?.counterparty && (
+            {order?.counterparty?.document && (
               <>
                 <p>
                   <strong>Nome:</strong> {order?.counterparty?.name}
@@ -265,6 +269,11 @@ export const BinanceOrders = ({
             <p>
               <strong>Total:</strong> {order?.totalPrice || "N/A"} {order?.fiat || ""}
             </p>
+            {endToEnd && (
+              <p>
+                <strong>EndToEnd:</strong> {endToEnd}
+              </p>
+            )}
             <p>
               <strong>Mensagens:</strong> {messagesTotal}
             </p>
