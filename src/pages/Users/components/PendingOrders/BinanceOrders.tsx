@@ -285,6 +285,7 @@ export const BinanceOrders = ({
               disabled={
                 isPending ||
                 order.orderStatus !== 2 ||
+                order.counterparty.document.length === 0 ||
                 messagesTotal === 0 ||
                 String(order?.tradeType ?? "").toUpperCase() === "BUY" ||
                 normalizedForOrderMessages
