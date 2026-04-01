@@ -90,6 +90,9 @@ export const ResponseCompliance = ({ responseData }: IResponseCompliance) => {
               {typeof responseData?.slave === "boolean" && (
                 <Slave responseData={responseData?.slave} />
               )}
+
+              {responseData?.deskdata && <Deskdata responseData={responseData?.deskdata} />}
+
               {responseData?.ofac && <OFAC responseData={responseData?.ofac} />}
               {responseData?.europa && <Europa responseData={responseData?.europa} />}
               {responseData?.csnu && <CSNU responseData={responseData?.csnu} />}
@@ -110,8 +113,6 @@ export const ResponseCompliance = ({ responseData }: IResponseCompliance) => {
               {responseData?.pdt?.cepim && <CEPIM responseData={responseData?.pdt?.cepim} />}
               {responseData?.pdt?.ceis && <CEIS responseData={responseData?.pdt?.ceis} />}
               {responseData?.pdt?.ceaf && <CEAF responseData={responseData?.pdt?.ceaf} />}
-
-              {responseData?.deskdata && <Deskdata responseData={responseData?.deskdata} />}
             </div>
           </div>
 
