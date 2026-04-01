@@ -205,6 +205,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
       ) : activeTab === "binance" ? (
         <BinanceOrders
           orders={orders}
+          acesso={acesso ?? ""}
           setForm={setForm}
           setInitialRegisterData={setInitialRegisterData}
         />

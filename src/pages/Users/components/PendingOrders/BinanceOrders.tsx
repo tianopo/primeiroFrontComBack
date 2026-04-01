@@ -78,10 +78,12 @@ function mapOrderStatus(status?: number) {
 
 export const BinanceOrders = ({
   orders,
+  acesso,
   setForm,
   setInitialRegisterData,
 }: {
   orders: BinanceOrderItem[];
+  acesso: string;
   setForm: Dispatch<SetStateAction<boolean>>;
   setInitialRegisterData: Dispatch<
     SetStateAction<{
@@ -286,6 +288,7 @@ export const BinanceOrders = ({
                 isPending ||
                 order.orderStatus !== 2 ||
                 order.counterparty.document.length === 0 ||
+                acesso !== "Master" ||
                 messagesTotal === 0 ||
                 String(order?.tradeType ?? "").toUpperCase() === "BUY" ||
                 normalizedForOrderMessages
