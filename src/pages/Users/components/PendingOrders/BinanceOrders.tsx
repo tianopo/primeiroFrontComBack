@@ -121,8 +121,20 @@ export const BinanceOrders = ({
           const pdfInputRef = useRef<HTMLInputElement>(null);
 
           const handleSend = () => {
-            if (!message.trim()) return;
-            sendChatMessage({ orderNo: orderId, content: message.trim() });
+            const text = message.trim();
+            if (!text || isPending) return;
+
+            setMessage(""); // ✅ limpa na hora
+
+            sendChatMessage(
+              { orderNo: orderId, content: text, type: "text" },
+              {
+                onError: () => {
+                  // ✅ se falhar, devolve o texto pro input
+                  setMessage(text);
+                },
+              },
+            );
           };
 
           const fileToBase64 = (file: File): Promise<string> => {
