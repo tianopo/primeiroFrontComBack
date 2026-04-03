@@ -1,4 +1,4 @@
-import { ArrowCircleRight, Copy, ImageSquare } from "@phosphor-icons/react";
+import { ArrowCircleRight, Copy, FilePdf, ImageSquare } from "@phosphor-icons/react";
 import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { useCheckAndReleaseCoinBinance } from "../../hooks/Binance/useCheckAndReleaseCoinBinance";
@@ -118,6 +118,7 @@ export const BinanceOrders = ({
           const { mutate: sendChatMessage, isPending } = useSendChatMessageBinance();
 
           const imageInputRef = useRef<HTMLInputElement>(null);
+          const pdfInputRef = useRef<HTMLInputElement>(null);
 
           const handleSend = () => {
             if (!message.trim()) return;
@@ -127,22 +128,26 @@ export const BinanceOrders = ({
           const fileToBase64 = (file: File): Promise<string> => {
             return new Promise((resolve, reject) => {
               const reader = new FileReader();
-              reader.readAsDataURL(file); // gera data:*/*;base64,...
+              reader.readAsDataURL(file); // data:*/*;base64,...
               reader.onload = () => resolve(reader.result as string);
               reader.onerror = (error) => reject(error);
             });
           };
 
           const handleFileSend = async (file: File) => {
-            const base64 = await fileToBase64(file);
-            const isPdf = file.type === "application/pdf";
+            try {
+              const base64 = await fileToBase64(file);
+              const isPdf = file.type === "application/pdf";
 
-            sendChatMessage({
-              orderNo: orderId,
-              content: base64,
-              type: isPdf ? "pdf" : "pic",
-              fileName: file.name,
-            });
+              sendChatMessage({
+                orderNo: orderId,
+                content: base64,
+                type: isPdf ? "pdf" : "pic",
+                fileName: file.name,
+              });
+            } catch (err) {
+              console.error("Erro ao enviar arquivo:", err);
+            }
           };
 
           return (
@@ -163,20 +168,44 @@ export const BinanceOrders = ({
                 className="flex-1 rounded border-0 px-2 text-12 focus:outline-none"
               />
 
+              {/* Botão IMAGEM (mantido) */}
               <button
-                className="rounded-6 bg-blue-500 px-2 py-1.5 text-white hover:opacity-80"
+                className="rounded-6 bg-blue-500 px-2 py-1.5 text-white hover:opacity-80 disabled:cursor-not-allowed"
                 onClick={() => imageInputRef.current?.click()}
                 disabled={isPending}
+                title="Enviar imagem"
               >
                 <ImageSquare size={22} weight="duotone" />
               </button>
               <input
                 ref={imageInputRef}
                 type="file"
-                accept="image/*,application/pdf"
+                accept="image/*"
                 hidden
                 onChange={(e) => {
                   const file = e.target.files?.[0];
+                  e.target.value = ""; // permite escolher o mesmo arquivo novamente
+                  if (file) handleFileSend(file);
+                }}
+              />
+
+              {/* Botão PDF (novo) */}
+              <button
+                className="rounded-6 bg-gray-700 px-2 py-1.5 text-white hover:opacity-80 disabled:cursor-not-allowed"
+                onClick={() => pdfInputRef.current?.click()}
+                disabled={isPending}
+                title="Enviar PDF"
+              >
+                <FilePdf size={22} weight="duotone" />
+              </button>
+              <input
+                ref={pdfInputRef}
+                type="file"
+                accept="application/pdf"
+                hidden
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = ""; // permite escolher o mesmo arquivo novamente
                   if (file) handleFileSend(file);
                 }}
               />
