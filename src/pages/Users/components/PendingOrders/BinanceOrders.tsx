@@ -121,18 +121,13 @@ export const BinanceOrders = ({
 
           const handleSend = () => {
             if (!message.trim()) return;
-            sendChatMessage(
-              { orderNo: orderId, content: message.trim(), type: "text" },
-              {
-                onSuccess: () => setMessage(""),
-              },
-            );
+            sendChatMessage({ orderNo: orderId, content: message.trim() });
           };
 
           const fileToBase64 = (file: File): Promise<string> => {
             return new Promise((resolve, reject) => {
               const reader = new FileReader();
-              reader.readAsDataURL(file);
+              reader.readAsDataURL(file); // gera data:*/*;base64,...
               reader.onload = () => resolve(reader.result as string);
               reader.onerror = (error) => reject(error);
             });
@@ -140,7 +135,14 @@ export const BinanceOrders = ({
 
           const handleFileSend = async (file: File) => {
             const base64 = await fileToBase64(file);
-            sendChatMessage({ orderNo: orderId, content: base64, type: "pic" });
+            const isPdf = file.type === "application/pdf";
+
+            sendChatMessage({
+              orderNo: orderId,
+              content: base64,
+              type: isPdf ? "pdf" : "pic",
+              fileName: file.name,
+            });
           };
 
           return (
@@ -171,7 +173,7 @@ export const BinanceOrders = ({
               <input
                 ref={imageInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/*,application/pdf"
                 hidden
                 onChange={(e) => {
                   const file = e.target.files?.[0];

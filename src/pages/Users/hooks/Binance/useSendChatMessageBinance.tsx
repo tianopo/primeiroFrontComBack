@@ -4,10 +4,14 @@ import { api } from "src/config/api";
 import { responseError } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
 
+type SendType = "text" | "pic" | "pdf";
+
 interface ISendChatMessageBinance {
   orderNo: string;
-  content: string;
-  type?: "text" | "pic";
+  content: string; // texto OU dataURL base64
+  type?: SendType;
+  fileName?: string;
+  caption?: string;
 }
 
 export const useSendChatMessageBinance = () => {
