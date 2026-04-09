@@ -18,6 +18,7 @@ import { BinanceOrders } from "./PendingOrders/BinanceOrders";
 import { CoinexOrders } from "./PendingOrders/CoinexOrders";
 import { CryptotechOrders } from "./PendingOrders/CryptotechOrders";
 import { PaymentTermsBox } from "./PendingOrders/PaymentTermsBox";
+import { useMarkOrderAsPaidBybit } from "../hooks/useMarkOrderAsPaidBybit";
 
 interface IPendingOrders {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -42,6 +43,8 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
   const { data, isLoading, error } = useListPendingOrders();
   const { mutate: sendChatMessage } = useSendChatMessageBybit();
   const { mutate: releaseAssets } = useReleaseAssets();
+  const { mutate: markPaidBybitMutate, isPending: isMarkPaidBybitPending } =
+    useMarkOrderAsPaidBybit();
   const { acesso } = useAccessControl();
 
   const [showModal, setShowModal] = useState(false);
@@ -211,126 +214,143 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
         />
       ) : (
         <div className="flex flex-wrap gap-2">
-          {orders.map((order: any) => (
-            <div
-              key={order.id}
-              className="relative flex w-fit flex-col gap-0.5 rounded-xl border border-gray-200 p-4 shadow"
-            >
-              {order?.side === 0 &&
-                Array.isArray(order?.paymentTerms) &&
-                order.paymentTerms.length > 0 && (
-                  <PaymentTermsBox
-                    terms={order.paymentTerms}
-                    title="Dados para pagamento (vendedor)"
+          {orders.map((order: any) => {
+            const isBuy = Number(order?.side) === 0;
+            const isPendingAny = isMarkPaidBybitPending;
+            return (
+              <div
+                key={order.id}
+                className="relative flex w-fit flex-col gap-0.5 rounded-xl border border-gray-200 p-4 shadow"
+              >
+                {order?.side === 0 &&
+                  Array.isArray(order?.paymentTerms) &&
+                  order.paymentTerms.length > 0 && (
+                    <PaymentTermsBox
+                      terms={order.paymentTerms}
+                      title="Dados para pagamento (vendedor)"
+                    />
+                  )}
+                <button
+                  className="absolute right-2 top-2 rounded-6 border border-gray-200 bg-white p-2 hover:bg-gray-100 hover:opacity-80"
+                  onClick={() => {
+                    setInitialRegisterData({
+                      apelido: order.targetNickName || "",
+                      nome: order?.side === 0 ? order.sellerRealName : order.buyerRealName,
+                      exchange:
+                        activeTab === "empresa"
+                          ? "Bybit https://www.bybit.com/ SG"
+                          : "Bybit https://www.bybit.com/ SG",
+                    });
+                    setForm(true);
+                  }}
+                >
+                  <Copy width={20} height={20} weight="duotone" />
+                </button>
+
+                <p>
+                  <strong>ID da Ordem:</strong> {order.id}
+                </p>
+                <p>
+                  <strong>Data:</strong> {order.formattedDate || "N/A"}
+                </p>
+                <p>
+                  <strong>Status:</strong>{" "}
+                  {order.status === 10
+                    ? "Pendente"
+                    : order.status === 30
+                      ? "Apelando"
+                      : "À liberar"}
+                </p>
+                <p>
+                  <strong>Apelido:</strong> {order.targetNickName || "Não informado"}
+                </p>
+                <p>
+                  <strong>Nome:</strong>{" "}
+                  {order?.side === 0
+                    ? order.sellerRealName || "Não informado"
+                    : order.buyerRealName || "Não informado"}
+                </p>
+                <p>
+                  <strong>Tipo:</strong> {order.side === 0 ? "compras" : "vendas"}
+                </p>
+                <p>
+                  <strong>Quantidade:</strong> {order.notifyTokenQuantity} {order.tokenId}
+                </p>
+                <p>
+                  <strong>Valor:</strong> {order.amount} {order.currencyId}
+                </p>
+                <p>
+                  <strong>Preço Unitário:</strong> {order.price?.replace(".", ",")}{" "}
+                  {order.currencyId}
+                </p>
+                <p>
+                  <strong>CPF/CNPJ:</strong> {order.document || "Não informado"}
+                </p>
+                {hasRegisteredCpf(order.document) && order?.pixInStatement?.originalEndToEnd ? (
+                  <p>
+                    <strong>EndToEnd:</strong> {order.pixInStatement.originalEndToEnd}
+                  </p>
+                ) : null}
+                <OrderMessages messages={order.messages} />
+                <ChatBox orderId={order.id} keyType={activeTab} />
+                <Button
+                  disabled={
+                    isPendingAny ||
+                    acesso !== "Master" ||
+                    order.messages.length === 0 ||
+                    order.messages
+                      ?.slice(0)
+                      .reverse()
+                      .slice(-10)
+                      .some((msg: any) =>
+                        [
+                          "You have a new appeal. Please negotiate and communicate with the other party within the valid period.",
+                          "anular ordem",
+                          "CRYPTOTECH: anular ordem",
+                          "CRYPTOTECH: Anular ordem",
+                        ].includes(msg.message),
+                      ) ||
+                    // ✅ regra por tipo:
+                    (isBuy ? order.status !== 10 : order.status <= 10 || order.status === 30)
+                  }
+                  onClick={() => {
+                    if (isBuy) {
+                      markPaidBybitMutate({ orderId: String(order.id), keyType: activeTab as any });
+                    } else {
+                      handleSendReceipt(order);
+                    }
+                  }}
+                >
+                  {order.status === 8
+                    ? "Aceite a ordem"
+                    : order.status === 10
+                      ? "Confirmação da Contraparte"
+                      : "Enviar Recibo"}
+                </Button>
+                {showModal && orderToRelease && (
+                  <ConfirmationModalButton
+                    text={`${
+                      orderToRelease?.side === 1
+                        ? `Está certo que deseja liberar para ${orderToRelease?.buyerRealName} `
+                        : `Está certo que já fez o pagamento para ${orderToRelease?.sellerRealName} `
+                    }a quantidade de ${orderToRelease?.notifyTokenQuantity} ${orderToRelease?.tokenId} no valor de ${orderToRelease?.amount} ${orderToRelease?.currencyId}?`}
+                    onConfirm={handleConfirmRelease}
+                    onCancel={() => {
+                      setShowModal(false);
+                      setOrderToRelease(null);
+                    }}
+                    showExtra
+                    extra={
+                      <StatementRedisPanel
+                        autoSelectEndToEnd={orderToRelease?.pixInStatement?.originalEndToEnd}
+                      />
+                    }
                   />
                 )}
-              <button
-                className="absolute right-2 top-2 rounded-6 border border-gray-200 bg-white p-2 hover:bg-gray-100 hover:opacity-80"
-                onClick={() => {
-                  setInitialRegisterData({
-                    apelido: order.targetNickName || "",
-                    nome: order?.side === 0 ? order.sellerRealName : order.buyerRealName,
-                    exchange:
-                      activeTab === "empresa"
-                        ? "Bybit https://www.bybit.com/ SG"
-                        : "Bybit https://www.bybit.com/ SG",
-                  });
-                  setForm(true);
-                }}
-              >
-                <Copy width={20} height={20} weight="duotone" />
-              </button>
-
-              <p>
-                <strong>ID da Ordem:</strong> {order.id}
-              </p>
-              <p>
-                <strong>Data:</strong> {order.formattedDate || "N/A"}
-              </p>
-              <p>
-                <strong>Status:</strong>{" "}
-                {order.status === 10 ? "Pendente" : order.status === 30 ? "Apelando" : "À liberar"}
-              </p>
-              <p>
-                <strong>Apelido:</strong> {order.targetNickName || "Não informado"}
-              </p>
-              <p>
-                <strong>Nome:</strong>{" "}
-                {order?.side === 0
-                  ? order.sellerRealName || "Não informado"
-                  : order.buyerRealName || "Não informado"}
-              </p>
-              <p>
-                <strong>Tipo:</strong> {order.side === 0 ? "compras" : "vendas"}
-              </p>
-              <p>
-                <strong>Quantidade:</strong> {order.notifyTokenQuantity} {order.tokenId}
-              </p>
-              <p>
-                <strong>Valor:</strong> {order.amount} {order.currencyId}
-              </p>
-              <p>
-                <strong>Preço Unitário:</strong> {order.price?.replace(".", ",")} {order.currencyId}
-              </p>
-              <p>
-                <strong>CPF/CNPJ:</strong> {order.document || "Não informado"}
-              </p>
-              {hasRegisteredCpf(order.document) && order?.pixInStatement?.originalEndToEnd ? (
-                <p>
-                  <strong>EndToEnd:</strong> {order.pixInStatement.originalEndToEnd}
-                </p>
-              ) : null}
-              <OrderMessages messages={order.messages} />
-              <ChatBox orderId={order.id} keyType={activeTab} />
-              <Button
-                disabled={
-                  order.status <= 10 ||
-                  order.side === 0 ||
-                  acesso !== "Master" ||
-                  order.document === "documento não disponível" ||
-                  order.messages.length === 0 ||
-                  order.messages
-                    ?.slice(0)
-                    .reverse()
-                    .slice(-10)
-                    .some((msg: any) =>
-                      [
-                        "You have a new appeal. Please negotiate and communicate with the other party within the valid period.",
-                        "anular ordem",
-                        "CRYPTOTECH: anular ordem",
-                        "CRYPTOTECH: Anular ordem",
-                        "usuário de risco inegociável, não podemos fazer a transação, contraparte cancele",
-                      ].includes(msg.message),
-                    )
-                }
-                onClick={() => handleSendReceipt(order)}
-              >
-                {order.status === 8
-                  ? "Aceite a ordem"
-                  : order.status === 10
-                    ? "Confirmação da Contraparte"
-                    : "Enviar Recibo"}
-              </Button>
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
-      )}
-
-      {showModal && orderToRelease && activeTab !== "cryptotech" && (
-        <ConfirmationModalButton
-          text={`Você tem certeza que deseja liberar para ${orderToRelease.buyerRealName} a quantidade de ${orderToRelease.notifyTokenQuantity} ${orderToRelease.tokenId} no valor de ${orderToRelease.amount} ${orderToRelease.currencyId}?`}
-          onConfirm={handleConfirmRelease}
-          onCancel={() => {
-            setShowModal(false);
-            setOrderToRelease(null);
-          }}
-          showExtra
-          extra={
-            <StatementRedisPanel
-              autoSelectEndToEnd={orderToRelease?.pixInStatement?.originalEndToEnd}
-            />
-          }
-        />
       )}
     </CardContainer>
   );

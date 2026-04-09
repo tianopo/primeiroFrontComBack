@@ -23,6 +23,7 @@ export const apiRoute = {
   sendChatMessageBybit: "bybit/send-chat-message",
   releaseAssets: "bybit/release-assets",
   uploadChatMessage: "bybit/upload-chat-message",
+  bybitMarkOrderAsPaid: "bybit/mark-paid-auto",
   /* BINANCE */
   binanceOrdersWithChats: "binance/order/detail-with-messages",
   referencePrice: "binance/reference-price",
