@@ -7,6 +7,7 @@ import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalB
 import { generateSingleReceipt } from "src/pages/Home/config/handleReceipt";
 import { useAccessControl } from "src/routes/context/AccessControl";
 import { useListPendingOrders } from "../hooks/useListPendingOrders";
+import { useMarkOrderAsPaidBybit } from "../hooks/useMarkOrderAsPaidBybit";
 import { useReleaseAssets } from "../hooks/useReleaseAssets";
 import { useSendChatMessageBybit } from "../hooks/useSendChatMessageBybit";
 import { confirmContract } from "../utils/confirmContract";
@@ -18,7 +19,6 @@ import { BinanceOrders } from "./PendingOrders/BinanceOrders";
 import { CoinexOrders } from "./PendingOrders/CoinexOrders";
 import { CryptotechOrders } from "./PendingOrders/CryptotechOrders";
 import { PaymentTermsBox } from "./PendingOrders/PaymentTermsBox";
-import { useMarkOrderAsPaidBybit } from "../hooks/useMarkOrderAsPaidBybit";
 
 interface IPendingOrders {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -46,6 +46,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
   const { mutate: markPaidBybitMutate, isPending: isMarkPaidBybitPending } =
     useMarkOrderAsPaidBybit();
   const { acesso } = useAccessControl();
+  const [modalAction, setModalAction] = useState<"release" | "markPaid">("release");
 
   const [showModal, setShowModal] = useState(false);
   const [orderToRelease, setOrderToRelease] = useState<any>(null);
@@ -78,9 +79,42 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
     }
   };
 
-  const handleSendReceipt = (order: any) => {
+  const handleSendReceipt = (order: any, action: "release" | "markPaid") => {
     setOrderToRelease(order);
+    setModalAction(action);
     setShowModal(true);
+  };
+
+  const handleConfirmMarkPaid = async () => {
+    if (!orderToRelease) return;
+
+    const base64Image = await generateSingleReceipt(orderToRelease);
+    if (!base64Image) return;
+
+    // 1) Envia o recibo no chat
+    sendChatMessage(
+      {
+        message: base64Image,
+        contentType: "pic",
+        orderId: String(orderToRelease.id),
+        keyType: activeTab, // empresa | pessoal
+      },
+      {
+        onSuccess: () => {
+          // 2) Marca como pago automaticamente (backend resolve paymentType/paymentId)
+          markPaidBybitMutate({
+            orderId: String(orderToRelease.id),
+            keyType: activeTab as any,
+          });
+
+          setShowModal(false);
+          setOrderToRelease(null);
+        },
+        onError: () => {
+          toast.error("Falha ao enviar recibo no chat da Bybit");
+        },
+      },
+    );
   };
 
   const handleConfirmRelease = async () => {
@@ -298,6 +332,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                     isPendingAny ||
                     acesso !== "Master" ||
                     order.messages.length === 0 ||
+                    order.document === "documento não disponível" ||
                     order.messages
                       ?.slice(0)
                       .reverse()
@@ -311,30 +346,34 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                         ].includes(msg.message),
                       ) ||
                     // ✅ regra por tipo:
-                    (isBuy ? order.status !== 10 : order.status <= 10 || order.status === 30)
+                    (isBuy ? order.status !== 10 : order.status <= 10 || order.status >= 30)
                   }
                   onClick={() => {
                     if (isBuy) {
-                      markPaidBybitMutate({ orderId: String(order.id), keyType: activeTab as any });
+                      // ✅ compra (status 10): confirmação da contraparte -> envia recibo no chat + marca pago
+                      handleSendReceipt(order, "markPaid");
                     } else {
-                      handleSendReceipt(order);
+                      // ✅ venda: fluxo já existente (recibo + contrato + release)
+                      handleSendReceipt(order, "release");
                     }
                   }}
                 >
-                  {order.status === 8
-                    ? "Aceite a ordem"
-                    : order.status === 10
-                      ? "Confirmação da Contraparte"
-                      : "Enviar Recibo"}
+                  {order.status === 10
+                    ? "Aguardando pagamento"
+                    : order.status === 20
+                      ? "Pago / Aguardando liberação"
+                      : "Apelando"}
                 </Button>
                 {showModal && orderToRelease && (
                   <ConfirmationModalButton
                     text={`${
-                      orderToRelease?.side === 1
+                      modalAction === "release"
                         ? `Está certo que deseja liberar para ${orderToRelease?.buyerRealName} `
                         : `Está certo que já fez o pagamento para ${orderToRelease?.sellerRealName} `
                     }a quantidade de ${orderToRelease?.notifyTokenQuantity} ${orderToRelease?.tokenId} no valor de ${orderToRelease?.amount} ${orderToRelease?.currencyId}?`}
-                    onConfirm={handleConfirmRelease}
+                    onConfirm={
+                      modalAction === "release" ? handleConfirmRelease : handleConfirmMarkPaid
+                    }
                     onCancel={() => {
                       setShowModal(false);
                       setOrderToRelease(null);

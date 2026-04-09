@@ -46,17 +46,19 @@ export const generateSingleReceipt = (item: any): Promise<string> => {
       y += 70;
 
       ctx.font = "16px Arial";
+      const counterpartyName = item?.side === 0 ? item?.sellerRealName : item?.buyerRealName;
+
       const dataOrdem = [
         `ID da ordem: ${item.id}`,
         `Data da Ordem: ${item.formattedDate}`,
         `Exchange: Bybit`,
         `Apelido: ${item.targetNickName || "Não informado"}`,
-        `Nome: ${item.buyerRealName || "Não informado"}`,
+        `Nome: ${counterpartyName || "Não informado"}`,
         `Ativo: ${item.tokenId}`,
         `Moeda: ${item.currencyId}`,
         `Tipo: ${item.side === 0 ? "compras" : "vendas"}`,
-        `Valor: ${item.amount.replace(".", ",")}`,
-        `Preço unitário: ${item.price.replace(".", ",")}`,
+        `Valor: ${String(item.amount ?? "").replace(".", ",")}`,
+        `Preço unitário: ${String(item.price ?? "").replace(".", ",")}`,
         `Quantidade: ${item.notifyTokenQuantity}`,
         `CPF/CNPJ: ${item.document || "Não informado"}`,
       ];

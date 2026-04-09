@@ -2,10 +2,10 @@ import { ArrowCircleRight, Copy, FilePdf, ImageSquare } from "@phosphor-icons/re
 import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalButton";
-import { StatementRedisPanel } from "../Corpx/StatementRedisPanel";
 import { useCheckAndReleaseCoinBinance } from "../../hooks/Binance/useCheckAndReleaseCoinBinance";
 import { useMarkOrderAsPaidBinance } from "../../hooks/Binance/useMarkOrderAsPaidBinance";
 import { useSendChatMessageBinance } from "../../hooks/Binance/useSendChatMessageBinance";
+import { StatementRedisPanel } from "../Corpx/StatementRedisPanel";
 import { OrderMessages } from "../OrderMessages";
 
 type BinanceMessage = {
@@ -414,7 +414,7 @@ export const BinanceOrders = ({
                   // ✅ SELL precisa estar 2 (pago aguardando liberação)
                   // ✅ BUY precisa estar 1 (aguardando pagamento) para "marcar como pago"
                   (isBuy ? order.orderStatus !== 1 : order.orderStatus !== 2) ||
-                  (!isBuy && order.counterparty.document.length === 0) ||
+                  order.counterparty.document.length === 0 ||
                   acesso !== "Master" ||
                   messagesTotal === 0 ||
                   normalizedForOrderMessages
