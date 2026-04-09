@@ -14,6 +14,8 @@ export interface IConfirmContract {
   quantidade: string;
   valor: string;
   ativo: string;
+
+  cryptotechIsBuyer?: boolean;
 }
 
 const clean = (v: string) => String(v ?? "-").trim();
@@ -81,6 +83,7 @@ export const confirmContract = async ({
   quantidade,
   valor,
   ativo,
+  cryptotechIsBuyer = false,
 }: IConfirmContract) => {
   const uName = clean(usuario?.name);
   const uDoc = clean(usuario?.document);
@@ -119,11 +122,17 @@ export const confirmContract = async ({
     lines.push({ text: ln });
   spacer(1);
 
-  const parties = [
-    `${uName}, brasileira, inscrita no CPF/MF sob nº ${uDoc}, neste ato denominada simplesmente COMPRADORA; e de outro lado,`,
-    `CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA, pessoa jurídica de direito privado com sede na Estrada do Limoeiro, 495 - Jardim California, Jacarei - SP, 12305-810, inscrita no CNPJ/MF sob nº 55.636.113/0001-70, neste ato representada por ${representanteCryptotech.nome}, CPF/MF sob nº ${representanteCryptotech.cpf}, doravante denominada simplesmente VENDEDORA; e,`,
-    `tem entre si, justo e contratado, o presente CONTRATO DE COMPRA DE ATIVOS, que será realizado mediante as seguintes cláusulas e condições:`,
-  ];
+  const parties = cryptotechIsBuyer
+    ? [
+        `${uName}, brasileira, inscrita no documento sob nº ${uDoc}, neste ato denominada simplesmente VENDEDORA; e de outro lado,`,
+        `CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA, pessoa jurídica de direito privado com sede na Estrada do Limoeiro, 495 - Jardim California, Jacarei - SP, 12305-810, inscrita no CNPJ/MF sob nº 55.636.113/0001-70, neste ato representada por ${representanteCryptotech.nome}, documento sob nº ${representanteCryptotech.cpf}, doravante denominada simplesmente COMPRADORA; e,`,
+        `tem entre si, justo e contratado, o presente CONTRATO DE COMPRA DE ATIVOS, que será realizado mediante as seguintes cláusulas e condições:`,
+      ]
+    : [
+        `${uName}, brasileira, inscrita no documento sob nº ${uDoc}, neste ato denominada simplesmente COMPRADORA; e de outro lado,`,
+        `CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA, pessoa jurídica de direito privado com sede na Estrada do Limoeiro, 495 - Jardim California, Jacarei - SP, 12305-810, inscrita no CNPJ/MF sob nº 55.636.113/0001-70, neste ato representada por ${representanteCryptotech.nome}, documento sob nº ${representanteCryptotech.cpf}, doravante denominada simplesmente VENDEDORA; e,`,
+        `tem entre si, justo e contratado, o presente CONTRATO DE COMPRA DE ATIVOS, que será realizado mediante as seguintes cláusulas e condições:`,
+      ];
 
   for (const p of parties) {
     for (const ln of wrapParagraph(p, 11)) lines.push({ text: ln });
@@ -180,7 +189,9 @@ export const confirmContract = async ({
 
   addH("5. DA TRANSFERÊNCIA DE ATIVOS");
   addP(
-    `5.1 O Vendedor se compromete a transferir à carteira/conta do Comprador (apelido ${uNick} na corretora ${ex}) a quantidade de ${q} ${a} após a confirmação do pagamento.`,
+    cryptotechIsBuyer
+      ? `5.1 O Vendedor se compromete a transferir à carteira/conta da Compradora (conta CRYPTOTECH na corretora ${ex}) a quantidade de ${q} ${a} após a confirmação do pagamento.`
+      : `5.1 O Vendedor se compromete a transferir à carteira/conta do Comprador (apelido ${uNick} na corretora ${ex}) a quantidade de ${q} ${a} após a confirmação do pagamento.`,
   );
   addP("5.2 A transferência será realizada via P2P.");
   addP("5.3 O Vendedor declara legítima propriedade do ativo vendido, livre de ônus e restrições.");
@@ -232,56 +243,74 @@ export const confirmContract = async ({
   lines.push({ text: "ASSINATURA ELETRÔNICA", size: 14, font: "F1" });
   spacer(1);
 
-  // ===== VENDEDOR =====
-  lines.push({ text: "VENDEDOR: CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA", size: 11, font: "F1" });
-  lines.push({ text: "CNPJ: 55.636.113/0001-70" });
+  const addCompanySignature = (role: "VENDEDOR" | "COMPRADOR") => {
+    lines.push({
+      text: `${role}: CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA`,
+      size: 11,
+      font: "F1",
+    });
+    lines.push({ text: "CNPJ: 55.636.113/0001-70" });
+    spacer(1);
+
+    lines.push({ text: "Assinatura eletrônica:", size: 11, font: "F1" });
+    spacer(1);
+    lines.push({ text: representanteCryptotech.nome, size: 16, font: "F2" });
+    lines.push({
+      text: "_______________________________________________________________",
+      size: 11,
+      font: "F1",
+    });
+    spacer(1);
+
+    lines.push({
+      text: `CPF do representante: ${representanteCryptotech.cpf}`,
+      size: 11,
+      font: "F1",
+    });
+    lines.push({
+      text: `Registro: aceite eletrônico vinculado à ordem e ao evento no chat/plataforma.`,
+      size: 10,
+      font: "F1",
+    });
+    spacer(2);
+  };
+
+  const addUserSignature = (role: "VENDEDOR" | "COMPRADOR") => {
+    lines.push({ text: `${role}: ${uName}`, size: 11, font: "F1" });
+    lines.push({ text: `CPF/CNPJ: ${uDoc}` });
+    spacer(1);
+
+    lines.push({ text: "Assinatura eletrônica:", size: 11, font: "F1" });
+    spacer(1);
+    lines.push({ text: uName, size: 16, font: "F2" });
+    lines.push({
+      text: "_______________________________________________________________",
+      size: 11,
+      font: "F1",
+    });
+    spacer(1);
+
+    lines.push({
+      text: `Registro: aceite eletrônico do ${role.toLowerCase()} vinculado ao cadastro na corretora e à ordem ${o}.`,
+      size: 10,
+      font: "F1",
+    });
+    spacer(2);
+  };
+
+  // Página nova
+  lines.push({ text: "__PAGE_BREAK__" });
+  lines.push({ text: "ASSINATURA ELETRÔNICA", size: 14, font: "F1" });
   spacer(1);
 
-  lines.push({ text: "Assinatura eletrônica:", size: 11, font: "F1" });
-  // ✅ MAIS ESPAÇO antes do nome
-  spacer(1);
-  lines.push({ text: representanteCryptotech.nome, size: 16, font: "F2" });
-  lines.push({
-    text: "_______________________________________________________________",
-    size: 11,
-    font: "F1",
-  });
-  spacer(1);
-
-  lines.push({
-    text: `CPF do representante: ${representanteCryptotech.cpf}`,
-    size: 11,
-    font: "F1",
-  });
-  lines.push({
-    text: "Registro: aceite eletrônico vinculado à ordem e ao evento no chat/plataforma.",
-    size: 10,
-    font: "F1",
-  });
-
-  spacer(2);
-
-  // ===== COMPRADOR =====
-  lines.push({ text: `COMPRADOR: ${uName}`, size: 11, font: "F1" });
-  lines.push({ text: `CPF/CNPJ: ${uDoc}` });
-  spacer(1);
-
-  lines.push({ text: "Assinatura eletrônica:", size: 11, font: "F1" });
-  // ✅ MAIS ESPAÇO antes do nome
-  spacer(1);
-  lines.push({ text: uName, size: 16, font: "F2" });
-  lines.push({
-    text: "_______________________________________________________________",
-    size: 11,
-    font: "F1",
-  });
-  spacer(1);
-
-  lines.push({
-    text: `Registro: aceite eletrônico do comprador vinculado ao cadastro na corretora e à ordem ${o}.`,
-    size: 10,
-    font: "F1",
-  });
+  // ✅ ordem dos blocos varia conforme compra/venda
+  if (cryptotechIsBuyer) {
+    addUserSignature("VENDEDOR");
+    addCompanySignature("COMPRADOR");
+  } else {
+    addCompanySignature("VENDEDOR");
+    addUserSignature("COMPRADOR");
+  }
 
   // Gera PDF
   const pdfBytes = createPdfFromLines(lines);
