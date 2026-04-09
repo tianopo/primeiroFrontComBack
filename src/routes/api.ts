@@ -28,6 +28,7 @@ export const apiRoute = {
   referencePrice: "binance/reference-price",
   sendChatMessageBinance: "binance/chat/send",
   binanceCheckAndReleaseCoin: "/binance/order/check-and-release-coin",
+  binanceMarkOrderAsPaid: "binance/order/mark-paid-auto",
   /* EXCHANGES */
   pendingOrders: "exchanges/pending-orders",
   /* WHATSAPP */

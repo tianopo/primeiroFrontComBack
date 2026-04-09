@@ -2,6 +2,7 @@ import { ArrowCircleRight, Copy, FilePdf, ImageSquare } from "@phosphor-icons/re
 import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { useCheckAndReleaseCoinBinance } from "../../hooks/Binance/useCheckAndReleaseCoinBinance";
+import { useMarkOrderAsPaidBinance } from "../../hooks/Binance/useMarkOrderAsPaidBinance";
 import { useSendChatMessageBinance } from "../../hooks/Binance/useSendChatMessageBinance";
 import { OrderMessages } from "../OrderMessages";
 
@@ -94,7 +95,8 @@ export const BinanceOrders = ({
   >;
 }) => {
   if (!Array.isArray(orders) || orders.length === 0) return <p>Sem ordens Binance.</p>;
-  const { mutate, isPending } = useCheckAndReleaseCoinBinance();
+  const { mutate: releaseMutate, isPending: isReleasePending } = useCheckAndReleaseCoinBinance();
+  const { mutate: markPaidMutate, isPending: isMarkPaidPending } = useMarkOrderAsPaidBinance();
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -236,6 +238,9 @@ export const BinanceOrders = ({
             </div>
           );
         };
+        const tradeType = String(order?.tradeType ?? "").toUpperCase();
+        const isBuy = tradeType === "BUY";
+        const isPendingAny = isReleasePending || isMarkPaidPending;
 
         return (
           <div
@@ -328,12 +333,13 @@ export const BinanceOrders = ({
             <ChatBox />
             <Button
               disabled={
-                isPending ||
-                order.orderStatus !== 2 ||
-                order.counterparty.document.length === 0 ||
+                isPendingAny ||
+                // ✅ SELL precisa estar 2 (pago aguardando liberação)
+                // ✅ BUY precisa estar 1 (aguardando pagamento) para "marcar como pago"
+                (isBuy ? order.orderStatus !== 1 : order.orderStatus !== 2) ||
+                (!isBuy && order.counterparty.document.length === 0) ||
                 acesso !== "Master" ||
                 messagesTotal === 0 ||
-                String(order?.tradeType ?? "").toUpperCase() === "BUY" ||
                 normalizedForOrderMessages
                   ?.slice(0)
                   .reverse()
@@ -346,7 +352,13 @@ export const BinanceOrders = ({
                     ].includes(msg.message),
                   )
               }
-              onClick={() => mutate({ orderNumber: orderId })}
+              onClick={() => {
+                if (isBuy) {
+                  markPaidMutate({ orderNumber: orderId, advNo: String(order?.advNo ?? "") });
+                } else {
+                  releaseMutate({ orderNumber: orderId });
+                }
+              }}
             >
               {mapOrderStatus(order?.orderStatus)}
             </Button>

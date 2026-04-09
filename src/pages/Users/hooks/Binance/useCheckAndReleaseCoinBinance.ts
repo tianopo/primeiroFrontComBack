@@ -27,8 +27,7 @@ export const useCheckAndReleaseCoinBinance = () => {
     },
     onSuccess: () => {
       responseSuccess("Ativo liberado na Binance com sucesso");
-      queryClient.invalidateQueries({ queryKey: ["pending-orders"] }); // 🔄 força refetch
-      queryClient.invalidateQueries({ queryKey: ["binance-orders"] }); // (se você tiver essa query)
+      queryClient.invalidateQueries({ queryKey: ["pending-orders"] });
     },
     onError: (err: AxiosError) => responseError(err),
   });

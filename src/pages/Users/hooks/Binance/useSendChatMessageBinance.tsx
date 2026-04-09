@@ -76,7 +76,6 @@ export const useSendChatMessageBinance = () => {
     },
 
     onSuccess: () => {
-      // ✅ garante que a lista fique “oficial” (imagem/url real etc)
       queryClient.invalidateQueries({ queryKey: ["pending-orders"] });
     },
   });
