@@ -51,7 +51,7 @@ export const generateSingleReceipt = (item: any): Promise<string> => {
       const dataOrdem = [
         `ID da ordem: ${item.id}`,
         `Data da Ordem: ${item.formattedDate}`,
-        `Exchange: Bybit`,
+        `Exchange: ${item.exchange}`,
         `Apelido: ${item.targetNickName || "Não informado"}`,
         `Nome: ${counterpartyName || "Não informado"}`,
         `Ativo: ${item.tokenId}`,

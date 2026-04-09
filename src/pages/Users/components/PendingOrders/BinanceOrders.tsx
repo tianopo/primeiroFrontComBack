@@ -1,7 +1,8 @@
-import { ArrowCircleRight, Copy, FilePdf, ImageSquare } from "@phosphor-icons/react";
+import { ArrowCircleRight, Copy, ImageSquare } from "@phosphor-icons/react";
 import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalButton";
+import { generateSingleReceipt } from "src/pages/Home/config/handleReceipt";
 import { useCheckAndReleaseCoinBinance } from "../../hooks/Binance/useCheckAndReleaseCoinBinance";
 import { useMarkOrderAsPaidBinance } from "../../hooks/Binance/useMarkOrderAsPaidBinance";
 import { useSendChatMessageBinance } from "../../hooks/Binance/useSendChatMessageBinance";
@@ -102,6 +103,7 @@ export const BinanceOrders = ({
 
   const { mutate: releaseMutate, isPending: isReleasePending } = useCheckAndReleaseCoinBinance();
   const { mutate: markPaidMutate, isPending: isMarkPaidPending } = useMarkOrderAsPaidBinance();
+  const { mutate: sendChatBinance, isPending: isChatPending } = useSendChatMessageBinance();
 
   // ✅ Modal (igual Bybit)
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -111,8 +113,10 @@ export const BinanceOrders = ({
     advNo?: string;
     text: string;
     endToEnd?: string;
+    order: BinanceOrder; // ✅ NOVO
   } | null>(null);
 
+  const isPendingAny = isReleasePending || isMarkPaidPending || isChatPending;
   const closeConfirm = () => {
     setConfirmOpen(false);
     setConfirmPayload(null);
@@ -124,6 +128,7 @@ export const BinanceOrders = ({
     advNo?: string;
     text: string;
     endToEnd?: string;
+    order: BinanceOrder; // ✅ NOVO
   }) => {
     setConfirmAction(params.action);
     setConfirmPayload({
@@ -131,37 +136,116 @@ export const BinanceOrders = ({
       advNo: params.advNo,
       text: params.text,
       endToEnd: params.endToEnd,
+      order: params.order,
     });
     setConfirmOpen(true);
   };
 
-  const handleConfirm = () => {
+  const sendBinanceFile = (payload: {
+    orderNo: string;
+    content: string;
+    type: "pic" | "pdf";
+    fileName?: string;
+  }) =>
+    new Promise<void>((resolve, reject) => {
+      sendChatBinance(payload, {
+        onSuccess: () => resolve(),
+        onError: (e) => reject(e),
+      });
+    });
+
+  const mapBinanceToReceiptItem = (o: BinanceOrder, endToEnd?: string) => {
+    const tradeType = String(o.tradeType ?? "").toUpperCase();
+    const isBuy = tradeType === "BUY";
+
+    const qty = Number(String(o.amount ?? "0").replace(",", "."));
+    const total = Number(String(o.totalPrice ?? "0").replace(",", "."));
+    const unitPrice = qty > 0 && Number.isFinite(total) ? String((total / qty).toFixed(2)) : "0";
+
+    return {
+      id: o.orderNumber,
+      formattedDate: new Date(Number(o.createTime ?? Date.now())).toLocaleString("pt-BR"),
+      targetNickName: isBuy ? o.sellerNickname : o.buyerNickname,
+
+      // nomes: a função antiga usa buyerRealName, então jogamos o nome da contraparte aqui
+      buyerRealName: o.counterparty?.name ?? "Não informado",
+      sellerRealName: o.counterparty?.name ?? "Não informado",
+
+      exchange: "Binance",
+      tokenId: o.asset,
+      currencyId: o.fiat,
+      side: isBuy ? 0 : 1,
+
+      // no recibo: "Valor" deve ser FIAT
+      amount: String(o.totalPrice ?? ""),
+      // "Preço unitário"
+      price: unitPrice,
+      // "Quantidade" deve ser o token
+      notifyTokenQuantity: String(o.amount ?? ""),
+
+      document: o.counterparty?.document ?? "documento não disponível",
+
+      pixInStatement: endToEnd
+        ? {
+            originalEndToEnd: endToEnd,
+            timestamp: new Date().toLocaleString("pt-BR"),
+          }
+        : null,
+    };
+  };
+
+  const handleConfirm = async () => {
     if (!confirmPayload) return;
 
     const orderId = confirmPayload.orderId;
+    const order = confirmPayload.order;
 
+    // gera recibo + contrato
+    const receiptItem = mapBinanceToReceiptItem(order, confirmPayload.endToEnd);
+    const base64Image = await generateSingleReceipt(receiptItem);
+    if (!base64Image) return;
+
+    // ======== BUY (markPaid): envia docs -> marca pago ========
     if (confirmAction === "markPaid") {
-      markPaidMutate(
-        { orderNumber: orderId, advNo: String(confirmPayload.advNo ?? "") },
-        {
-          onSuccess: () => closeConfirm(),
-          onError: () => {
-            // mantém o modal aberto se quiser; aqui fecha pra não travar UX
-            closeConfirm();
+      try {
+        await sendBinanceFile({
+          orderNo: orderId,
+          content: base64Image,
+          type: "pic",
+          fileName: `recibo-${orderId}.png`,
+        });
+
+        markPaidMutate(
+          { orderNumber: orderId, advNo: String(confirmPayload.advNo ?? "") },
+          {
+            onSuccess: () => closeConfirm(),
+            onError: () => closeConfirm(),
           },
-        },
-      );
+        );
+      } catch (e) {
+        // se quiser: manter modal aberto pra tentar de novo
+        closeConfirm();
+      }
       return;
     }
 
-    // release
+    // ======== SELL (release): libera -> depois envia docs (igual Bybit) ========
     releaseMutate(
       { orderNumber: orderId },
       {
-        onSuccess: () => closeConfirm(),
-        onError: () => {
-          closeConfirm();
+        onSuccess: async () => {
+          try {
+            await sendBinanceFile({
+              orderNo: orderId,
+              content: base64Image,
+              type: "pic",
+              fileName: `recibo-${orderId}.png`,
+            });
+          } finally {
+            closeConfirm();
+          }
         },
+        onError: () => closeConfirm(),
       },
     );
   };
@@ -189,18 +273,16 @@ export const BinanceOrders = ({
 
           const ChatBox = () => {
             const [message, setMessage] = useState("");
-            const { mutate: sendChatMessage, isPending } = useSendChatMessageBinance();
 
             const imageInputRef = useRef<HTMLInputElement>(null);
-            const pdfInputRef = useRef<HTMLInputElement>(null);
 
             const handleSend = () => {
               const text = message.trim();
-              if (!text || isPending) return;
+              if (!text || isChatPending) return;
 
               setMessage("");
 
-              sendChatMessage(
+              sendChatBinance(
                 { orderNo: orderId, content: text, type: "text" },
                 {
                   onError: () => setMessage(text),
@@ -220,12 +302,11 @@ export const BinanceOrders = ({
             const handleFileSend = async (file: File) => {
               try {
                 const base64 = await fileToBase64(file);
-                const isPdf = file.type === "application/pdf";
 
-                sendChatMessage({
+                sendChatBinance({
                   orderNo: orderId,
                   content: base64,
-                  type: isPdf ? "pdf" : "pic",
+                  type: "pic",
                   fileName: file.name,
                 });
               } catch (err) {
@@ -243,7 +324,7 @@ export const BinanceOrders = ({
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && !isPending && message.trim()) {
+                    if (e.key === "Enter" && !isChatPending && message.trim()) {
                       e.preventDefault();
                       handleSend();
                     }
@@ -254,7 +335,7 @@ export const BinanceOrders = ({
                 <button
                   className="rounded-6 bg-blue-500 px-2 py-1.5 text-white hover:opacity-80 disabled:cursor-not-allowed"
                   onClick={() => imageInputRef.current?.click()}
-                  disabled={isPending}
+                  disabled={isChatPending}
                   title="Enviar imagem"
                 >
                   <ImageSquare size={22} weight="duotone" />
@@ -272,31 +353,11 @@ export const BinanceOrders = ({
                 />
 
                 <button
-                  className="rounded-6 bg-gray-700 px-2 py-1.5 text-white hover:opacity-80 disabled:cursor-not-allowed"
-                  onClick={() => pdfInputRef.current?.click()}
-                  disabled={isPending}
-                  title="Enviar PDF"
-                >
-                  <FilePdf size={22} weight="duotone" />
-                </button>
-                <input
-                  ref={pdfInputRef}
-                  type="file"
-                  accept="application/pdf"
-                  hidden
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    e.target.value = "";
-                    if (file) handleFileSend(file);
-                  }}
-                />
-
-                <button
                   className="rounded-6 bg-primary px-2 py-1.5 text-white hover:opacity-80 disabled:cursor-not-allowed"
                   onClick={handleSend}
-                  disabled={isPending || !message.trim()}
+                  disabled={isChatPending || !message.trim()}
                 >
-                  {isPending ? (
+                  {isChatPending ? (
                     "Enviando..."
                   ) : (
                     <ArrowCircleRight color="white" weight="duotone" width={24} height={24} />
@@ -436,6 +497,7 @@ export const BinanceOrders = ({
                     advNo: String(order?.advNo ?? ""),
                     text: modalText,
                     endToEnd: endToEnd || undefined,
+                    order, // ✅ aqui
                   });
                 }}
               >

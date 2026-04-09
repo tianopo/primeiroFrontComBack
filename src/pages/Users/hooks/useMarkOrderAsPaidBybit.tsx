@@ -18,7 +18,6 @@ export const useMarkOrderAsPaidBybit = () => {
     onSuccess: () => {
       responseSuccess("Ordem marcada como paga na Bybit.");
       queryClient.invalidateQueries({ queryKey: ["pending-orders"] });
-      queryClient.invalidateQueries({ queryKey: ["bybit-orders"] });
     },
     onError: (err: AxiosError) => responseError(err),
   });
