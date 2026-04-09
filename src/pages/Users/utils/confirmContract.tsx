@@ -298,11 +298,6 @@ export const confirmContract = async ({
     spacer(2);
   };
 
-  // Página nova
-  lines.push({ text: "__PAGE_BREAK__" });
-  lines.push({ text: "ASSINATURA ELETRÔNICA", size: 14, font: "F1" });
-  spacer(1);
-
   // ✅ ordem dos blocos varia conforme compra/venda
   if (cryptotechIsBuyer) {
     addUserSignature("VENDEDOR");
