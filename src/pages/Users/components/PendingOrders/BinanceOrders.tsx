@@ -200,36 +200,35 @@ export const BinanceOrders = ({
     const orderId = confirmPayload.orderId;
     const order = confirmPayload.order;
 
-    // gera recibo + contrato
+    // gera recibo (imagem)
     const receiptItem = mapBinanceToReceiptItem(order, confirmPayload.endToEnd);
     const base64Image = await generateSingleReceipt(receiptItem);
     if (!base64Image) return;
 
-    // ======== BUY (markPaid): envia docs -> marca pago ========
+    // ======== BUY (markPaid): marca pago -> depois envia recibo ========
     if (confirmAction === "markPaid") {
-      try {
-        await sendBinanceFile({
-          orderNo: orderId,
-          content: base64Image,
-          type: "pic",
-          fileName: `recibo-${orderId}.png`,
-        });
-
-        markPaidMutate(
-          { orderNumber: orderId, advNo: String(confirmPayload.advNo ?? "") },
-          {
-            onSuccess: () => closeConfirm(),
-            onError: () => closeConfirm(),
+      markPaidMutate(
+        { orderNumber: orderId, advNo: String(confirmPayload.advNo ?? "") },
+        {
+          onSuccess: async () => {
+            try {
+              await sendBinanceFile({
+                orderNo: orderId,
+                content: base64Image,
+                type: "pic",
+                fileName: `recibo-${orderId}.png`,
+              });
+            } finally {
+              closeConfirm();
+            }
           },
-        );
-      } catch (e) {
-        // se quiser: manter modal aberto pra tentar de novo
-        closeConfirm();
-      }
+          onError: () => closeConfirm(),
+        },
+      );
       return;
     }
 
-    // ======== SELL (release): libera -> depois envia docs (igual Bybit) ========
+    // ======== SELL (release): libera -> depois envia recibo ========
     releaseMutate(
       { orderNumber: orderId },
       {

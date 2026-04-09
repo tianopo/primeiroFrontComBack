@@ -88,20 +88,27 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
   const handleConfirmMarkPaid = async () => {
     if (!orderToRelease) return;
 
-    const base64Image = await generateSingleReceipt(orderToRelease);
-    if (!base64Image) return;
-
-    // 1) Envia o recibo no chat
-    sendChatMessage(
+    // 1) Primeiro marca como pago
+    markPaidBybitMutate(
       {
-        message: base64Image,
-        contentType: "pic",
         orderId: String(orderToRelease.id),
-        keyType: activeTab,
+        keyType: activeTab as any,
       },
       {
         onSuccess: async () => {
           try {
+            // 2) Depois gera e envia recibo (imagem)
+            const base64Image = await generateSingleReceipt(orderToRelease);
+            if (base64Image) {
+              sendChatMessage({
+                message: base64Image,
+                contentType: "pic",
+                orderId: String(orderToRelease.id),
+                keyType: activeTab,
+              });
+            }
+
+            // 3) Gera contrato (Cryptotech como COMPRADORA) e envia no chat
             const contract = await confirmContract({
               usuario: {
                 apelido: orderToRelease?.targetNickName ?? "-",
@@ -120,7 +127,6 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
               cryptotechIsBuyer: true,
             });
 
-            // 2) envia contrato (pdf) no chat
             sendChatMessage(
               {
                 message: contract.pdfBase64,
@@ -130,22 +136,19 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
               },
               {
                 onSuccess: () => {
-                  // 3) depois marca como pago
-                  markPaidBybitMutate({
-                    orderId: String(orderToRelease.id),
-                    keyType: activeTab as any,
-                  });
-
                   setShowModal(false);
                   setOrderToRelease(null);
                 },
+                onError: () => toast.error("Falha ao enviar contrato no chat"),
               },
             );
           } catch (e) {
-            toast.error("Falha ao gerar/enviar contrato");
+            toast.error("Falha ao gerar/enviar recibo e contrato");
+            setShowModal(false);
+            setOrderToRelease(null);
           }
         },
-        onError: () => toast.error("Falha ao enviar recibo no chat"),
+        onError: () => toast.error("Falha ao marcar como pago na Bybit"),
       },
     );
   };
