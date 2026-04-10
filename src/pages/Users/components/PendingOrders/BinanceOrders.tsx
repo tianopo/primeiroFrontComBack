@@ -193,7 +193,7 @@ export const BinanceOrders = ({
         : null,
     };
   };
-
+  console.log(orders);
   const handleConfirm = async () => {
     if (!confirmPayload) return;
 

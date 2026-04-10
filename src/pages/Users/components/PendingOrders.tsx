@@ -80,7 +80,10 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
   };
 
   const handleSendReceipt = (order: any, action: "release" | "markPaid") => {
-    setOrderToRelease(order);
+    setOrderToRelease({
+      ...order,
+      exchange: "Bybit",
+    });
     setModalAction(action);
     setShowModal(true);
   };
