@@ -116,7 +116,6 @@ export const BinanceOrders = ({
     order: BinanceOrder; // ✅ NOVO
   } | null>(null);
 
-  const isPendingAny = isReleasePending || isMarkPaidPending || isChatPending;
   const closeConfirm = () => {
     setConfirmOpen(false);
     setConfirmPayload(null);
@@ -193,7 +192,7 @@ export const BinanceOrders = ({
         : null,
     };
   };
-  console.log(orders);
+
   const handleConfirm = async () => {
     if (!confirmPayload) return;
 
