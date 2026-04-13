@@ -211,6 +211,7 @@ export const BinanceOrders = ({
         { orderNumber: orderId, advNo: String(confirmPayload.advNo ?? "") },
         {
           onSuccess: async () => {
+            closeConfirm();
             try {
               await sendBinanceFile({
                 orderNo: orderId,
@@ -219,7 +220,6 @@ export const BinanceOrders = ({
                 fileName: `recibo-${orderId}.png`,
               });
             } finally {
-              closeConfirm();
             }
           },
           onError: () => closeConfirm(),
@@ -233,6 +233,7 @@ export const BinanceOrders = ({
       { orderNumber: orderId },
       {
         onSuccess: async () => {
+          closeConfirm();
           try {
             await sendBinanceFile({
               orderNo: orderId,
@@ -241,7 +242,6 @@ export const BinanceOrders = ({
               fileName: `recibo-${orderId}.png`,
             });
           } finally {
-            closeConfirm();
           }
         },
         onError: () => closeConfirm(),

@@ -99,6 +99,8 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
       },
       {
         onSuccess: async () => {
+          setShowModal(false);
+          setOrderToRelease(null);
           try {
             // 2) Depois gera e envia recibo (imagem)
             const base64Image = await generateSingleReceipt(orderToRelease);
@@ -138,10 +140,6 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                 keyType: activeTab,
               },
               {
-                onSuccess: () => {
-                  setShowModal(false);
-                  setOrderToRelease(null);
-                },
                 onError: () => toast.error("Falha ao enviar contrato no chat"),
               },
             );
@@ -166,6 +164,8 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
       { orderId: orderToRelease.id, keyType: activeTab },
       {
         onSuccess: async () => {
+          setShowModal(false);
+          setOrderToRelease(null);
           try {
             sendChatMessage({
               message: base64Image,
@@ -207,8 +207,6 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
           } catch (e) {
             toast.error("falha em emitir o contrato assinado");
           }
-          setShowModal(false);
-          setOrderToRelease(null);
         },
         onError: () => {},
       },
