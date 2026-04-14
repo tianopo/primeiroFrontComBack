@@ -54,9 +54,6 @@ export const toBRDateTime = (value: string) => {
 export const GenerateContractButton: React.FC<{ transaction: Transaction }> = ({ transaction }) => {
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // ✅ apenas vendas
-  if (transaction.tipo !== "vendas") return null;
-
   const handleGenerateContract = async () => {
     try {
       setIsGenerating(true);
@@ -76,6 +73,7 @@ export const GenerateContractButton: React.FC<{ transaction: Transaction }> = ({
         quantidade: String(transaction.quantidade ?? "-"),
         valor: String(transaction.valor ?? "-"),
         ativo: String(transaction.ativo ?? "-"),
+        cryptotechIsBuyer: transaction.tipo === "compras",
       });
 
       // contract.pdfBase64 = base64 puro
