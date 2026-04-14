@@ -63,6 +63,10 @@ const detectPixKeyType = (value: string): PixKeyType => {
   if (!raw) return "EVP";
   if (raw.includes("@")) return "EMAIL";
 
+  // ✅ EVP: se tiver 3 ou mais traços "-"
+  const dashCount = (raw.match(/-/g) ?? []).length;
+  if (dashCount >= 3) return "EVP";
+
   if (/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(raw)) return "CPF";
   if (/^\d{2}\.\d{3}\.\d{3}-\d{4}-\d{2}$/.test(raw)) return "CNPJ";
 
