@@ -208,7 +208,7 @@ export const Home = () => {
     const hoje = new Date();
     const monthName = hoje.toLocaleDateString("pt-BR", { month: "long" });
     const comissaoFixa = 0.01; // % base para não-stable / fallback
-    const comissaoMargemErro = 5; // ajuste de margem
+    const comissaoMargemErro = 3; // ajuste de margem
     const codMunicipioServicoPrestado = 352440;
     const codAtividade = 6619399;
     const codListaServicos = 10.02;

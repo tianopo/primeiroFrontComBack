@@ -1,168 +1,103 @@
 import { toast } from "react-toastify";
-import { excelDateToJSDate } from "src/utils/formats";
 import * as XLSX from "xlsx";
-
-const normalizeHeaders = (arr: any[] = []) => arr.map((v) => String(v ?? "").trim());
-const headersMatch = (got: string[], expected: string[]) =>
-  expected.every((title, i) => (got[i] ?? "") === title);
-
-// Extrai o primeiro número (suporta 15000, 15,000.00, 15000.00 BRL, etc.)
-const extractNumber = (val: any): number | null => {
-  if (val === null || val === undefined) return null;
-  if (typeof val === "number" && Number.isFinite(val)) return val;
-  const s = String(val);
-  const m = s.match(/-?\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?|-?\d+(?:[.,]\d+)?/);
-  if (!m) return null;
-  let num = m[0];
-
-  // remove separador de milhar
-  // regra: se existir tanto "." quanto ",", assume "." como milhar e "," como decimal (pt-BR)
-  if (num.includes(".") && num.includes(",")) {
-    num = num.replace(/\./g, "").replace(",", ".");
-  } else {
-    // senão, apenas troca vírgula por ponto
-    num = num.replace(",", ".");
-  }
-  const n = Number(num);
-  return Number.isFinite(n) ? n : null;
-};
-
-const formatBRMoneyNoSep = (n: number): string => `R$ ${n.toFixed(2).replace(".", ",")}`;
-const formatDecimalComma = (n: number): string => n.toFixed(2).replace(".", ",");
 
 export const processExcelBinance = (workbook: XLSX.WorkBook, selectedBroker: string): any[] => {
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
 
-  const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
-  const [rawTitles = [], ...rows] = json;
-  const titles = normalizeHeaders(rawTitles);
+  const rows = XLSX.utils.sheet_to_json(worksheet, {
+    header: 1,
+    raw: false,
+    defval: "",
+  }) as Array<Array<string | number>>;
 
-  // CSV — ordens
-  const expectedCsv = [
-    "Order Number",
-    "Order Type",
-    "Asset Type",
-    "Fiat Type",
-    "Total Price",
-    "Price",
-    "Quantity",
-    "Exchange rate",
-    "Maker Fee",
-    "Taker Fee",
-    "Couterparty",
-    "Status",
-    "Created Time",
-  ];
+  const normalize = (value: string | number) =>
+    String(value ?? "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
 
-  // XLSX — depósitos
-  const expectedXlsx = [
-    "Date(UTC-3)",
-    "Method",
-    "Deposit Amount",
-    "Receive Amount",
-    "Fee",
-    "Status",
-    "Transaction ID",
-  ];
+  const formatToTwoDecimalPlaces = (value: string | number): string => {
+    const numericValue = parseFloat(String(value).replace(",", "."));
+    return Number.isNaN(numericValue) ? "" : numericValue.toFixed(2).replace(".", ",");
+  };
 
-  // -------- CSV (ordens) --------
-  if (headersMatch(titles, expectedCsv)) {
-    return rows
-      .map((row) => {
-        const [
-          orderNumber, // 0
-          orderType, // 1
-          assetType, // 2
-          // 3
-          ,
-          totalPrice, // 4
-          price, // 5
-          quantity, // 6
-          // 7
-          ,
-          makerFee, // 8
-          takerFee, // 9
-          counterparty, // 10
-          status, // 11
-          createdTime, // 12
-        ] = row;
+  // "26-03-01 12:23:29" -> "2026-03-01 12:23:29"
+  const adjustDateTimeBinance = (dateTime: string | number): string => {
+    const raw = String(dateTime ?? "").trim();
+    if (!raw) return "";
 
-        const st = String(status ?? "").toLowerCase();
-        if (!orderNumber || !orderType || !(st === "completed" || st === "successful")) {
-          return false;
-        }
+    const m = raw.match(/^(\d{2,4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})$/);
+    if (!m) return raw;
 
-        const tp = String(orderType).toLowerCase() === "buy" ? "compras" : "vendas";
-        const totalNum = extractNumber(totalPrice);
-        const createdNum = extractNumber(createdTime);
+    let year = m[1];
+    const month = m[2];
+    const day = m[3];
+    const hh = m[4];
+    const mm = m[5];
+    const ss = m[6];
 
-        const safeString = (v: any) => (v !== undefined && v !== null ? String(v) : "0");
+    // se vier "26" -> 2026
+    if (year.length === 2) year = `20${year}`;
 
-        return {
-          numeroOrdem: safeString(orderNumber),
-          tipo: tp,
-          dataHora:
-            typeof createdTime === "number" || createdNum !== null
-              ? excelDateToJSDate(createdNum ?? Number(createdTime))
-              : String(createdTime ?? ""),
-          exchange: selectedBroker,
-          ativo: safeString(assetType),
-          apelido: safeString(counterparty),
-          quantidade: safeString(quantity),
-          valor: totalNum !== null ? formatDecimalComma(totalNum) : "",
-          valorToken: safeString(price),
-          taxa: tp === "compras" ? safeString(takerFee * 5.3) : safeString(makerFee * 5.3),
-        };
-      })
-      .filter(Boolean) as any[];
+    return `${year}-${month}-${day} ${hh}:${mm}:${ss}`;
+  };
+
+  // acha a linha do header no CSV PT
+  const headerRowIndex = rows.findIndex(
+    (r) =>
+      normalize(r?.[0] ?? "") === "numero do pedido" && normalize(r?.[1] ?? "") === "tipo de ordem",
+  );
+
+  if (headerRowIndex === -1) {
+    toast.error(`Estrutura do CSV da ${selectedBroker.split(" ")[0]} não reconhecida.`);
+    return [];
   }
 
-  // -------- XLSX (depósitos) --------
-  if (headersMatch(titles, expectedXlsx)) {
-    const exchangeValue = selectedBroker || "Binance https://www.binance.com/ CN";
+  const header = rows[headerRowIndex].map((h) => normalize(h));
 
-    return rows
-      .map((row) => {
-        const [
-          dateUtc3, // 0: "2025-09-29 20:47:24" (string) ou número excel
-          method, // 1
-          depositAmount, // 2: "15000.00 BRL"
-          receiveAmount, // 3
-          fee, // 4: "0.00 BRL"
-          status, // 5: "Successful"
-          txId, // 6
-        ] = row;
+  const idx = (name: string) => header.findIndex((h) => h === normalize(name));
 
-        const st = String(status ?? "").toLowerCase();
-        if (!txId || !(st === "successful" || st === "completed")) return false;
+  const iOrderId = idx("Número do Pedido");
+  const iSide = idx("Tipo de Ordem");
+  const iAsset = idx("Ativo");
+  const iTotalPrice = idx("Preço Total");
+  const iPrice = idx("Preço");
+  const iQuantity = idx("Quantidade");
+  const iCounterparty = idx("Contraparte");
+  const iStatus = idx("Status");
+  const iCreateTime = idx("Hora de Criação");
 
-        const depNum = extractNumber(depositAmount);
-        if (depNum === null) return false;
+  return rows
+    .slice(headerRowIndex + 1)
+    .map((row) => {
+      const orderId = row[iOrderId];
+      if (!orderId) return false;
 
-        let dataHora = "";
-        if (typeof dateUtc3 === "number") {
-          dataHora = excelDateToJSDate(dateUtc3);
-        } else {
-          dataHora = String(dateUtc3 ?? "");
-        }
+      const status = row[iStatus];
+      if (normalize(status) !== "completed") return false; // ✅ só concluídas
 
-        return {
-          numeroOrdem: String(txId),
-          tipo: "compras",
-          dataHora,
-          exchange: exchangeValue,
-          ativo: "BRL",
-          apelido: "BINANCE DEPÓSITO",
-          quantidade: formatDecimalComma(depNum), // R$15000,00
-          valor: formatBRMoneyNoSep(depNum), // 15000,00
-          valorToken: "1.00",
-          taxa: "0",
-        };
-      })
-      .filter(Boolean) as any[];
-  }
+      const side = row[iSide];
+      const asset = row[iAsset];
+      const totalPrice = row[iTotalPrice];
+      const price = row[iPrice];
+      const quantity = row[iQuantity];
+      const counterparty = row[iCounterparty];
+      const createTime = row[iCreateTime];
 
-  toast.error(`Esta planilha não pertence a ${selectedBroker.split(" ")[0]}`);
-  return [];
+      return {
+        numeroOrdem: String(orderId).trim(),
+        tipo: normalize(side) === "buy" ? "compras" : "vendas",
+        dataHora: adjustDateTimeBinance(createTime),
+        exchange: selectedBroker,
+        ativo: String(asset ?? "").trim(),
+        apelido: String(counterparty ?? "").trim(),
+        quantidade: String(quantity ?? "").trim(),
+        valor: formatToTwoDecimalPlaces(totalPrice),
+        valorToken: formatToTwoDecimalPlaces(price),
+        taxa: "0",
+      };
+    })
+    .filter(Boolean);
 };

@@ -55,7 +55,7 @@ export const processExcelMEXC = (workbook: XLSX.WorkBook, selectedBroker: string
 
       return {
         numeroOrdem: idOrdem,
-        tipo: normalize(tipoAnuncio) === "vender" ? "compras" : "vendas",
+        tipo: normalize(tipoAnuncio) === "vender" ? "vendas" : "compras",
         dataHora: adjustDateTime(dataHora),
         exchange: selectedBroker,
         ativo: nomeMoeda,
