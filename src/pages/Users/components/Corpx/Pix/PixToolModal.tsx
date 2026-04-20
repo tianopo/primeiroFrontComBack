@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { Button } from "src/components/Buttons/Button";
 import { Modal } from "src/components/Modal/Modal";
@@ -21,9 +21,7 @@ const formatCpf = (value: string) => {
 
   if (digits.length <= 3) return digits;
   if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-  if (digits.length <= 9) {
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-  }
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
 
   return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
 };
@@ -34,11 +32,13 @@ const formatCnpj = (value: string) => {
   if (digits.length <= 2) return digits;
   if (digits.length <= 5) return `${digits.slice(0, 2)}.${digits.slice(2)}`;
   if (digits.length <= 8) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5)}`;
-  if (digits.length <= 12) {
+  if (digits.length <= 12)
     return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}-${digits.slice(8)}`;
-  }
 
-  return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}-${digits.slice(8, 12)}-${digits.slice(12, 14)}`;
+  return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}-${digits.slice(
+    8,
+    12,
+  )}-${digits.slice(12, 14)}`;
 };
 
 const looksLikePhone = (value: string) => {
@@ -80,22 +80,16 @@ const detectPixKeyType = (value: string): PixKeyType => {
 
 const formatPixInputValue = (value: string, type: PixKeyType) => {
   const raw = String(value ?? "");
-
   if (type === "CPF") return formatCpf(raw);
   if (type === "CNPJ") return formatCnpj(raw);
-
   return raw;
 };
 
 const normalizePhoneForBackend = (value: string) => {
   let digits = onlyDigits(value);
-
   if (!digits) return "";
 
-  if (!digits.startsWith("55")) {
-    digits = `55${digits}`;
-  }
-
+  if (!digits.startsWith("55")) digits = `55${digits}`;
   return `+${digits}`;
 };
 
@@ -103,23 +97,14 @@ const normalizePixKeyForBackend = (value: string, type: PixKeyType) => {
   const raw = String(value ?? "").trim();
 
   if (type === "CPF" || type === "CNPJ") {
-    return {
-      pixKeyType: type,
-      pixKey: onlyDigits(raw),
-    };
+    return { pixKeyType: type, pixKey: onlyDigits(raw) };
   }
 
   if (type === "PHONE") {
-    return {
-      pixKeyType: type,
-      pixKey: normalizePhoneForBackend(raw),
-    };
+    return { pixKeyType: type, pixKey: normalizePhoneForBackend(raw) };
   }
 
-  return {
-    pixKeyType: type,
-    pixKey: raw,
-  };
+  return { pixKeyType: type, pixKey: raw };
 };
 
 export const PixToolModal = ({
@@ -132,17 +117,16 @@ export const PixToolModal = ({
   const { mutate: lookup, isPending: lookupPending, data: lookupData } = useCorpxDictLookupPixKey();
   const { mutate: pixOut, isPending: outPending, data: outData } = useCorpxPixOut();
 
-  const [view, setView] = useState<"lookup" | "out">("lookup");
+  // ✅ ocultos (não aparecem na UI), mas enviados
+  const accountId = String(accountIdProp ?? "").trim();
+  const identifierRef = useRef(`order-${Date.now()}`);
 
-  const [accountId, setAccountId] = useState(accountIdProp ?? "");
   const [selectedKeyType, setSelectedKeyType] = useState<PixKeyTypeSelectable>("AUTO");
   const [key, setKey] = useState("");
   const [amount, setAmount] = useState("");
-  const [description, setDescription] = useState("Intermediação de ativos digitais");
-  const [identifier, setIdentifier] = useState(`order-${Date.now()}`);
+  const [description, setDescription] = useState("compra de ativos digitais");
 
   const detectedType = useMemo(() => detectPixKeyType(key), [key]);
-
   const effectiveKeyType: PixKeyType = selectedKeyType === "AUTO" ? detectedType : selectedKeyType;
 
   const normalized = useMemo(
@@ -150,13 +134,30 @@ export const PixToolModal = ({
     [key, effectiveKeyType],
   );
 
-  const canLookup = !!key.trim();
-  const canSend = !!accountId.trim() && !!key.trim() && !!amount.trim();
+  // ✅ lookup automático (debounce)
+  const lastLookupSig = useRef<string>("");
+  useEffect(() => {
+    const pixKey = String(normalized.pixKey ?? "").trim();
+    const keyType = normalized.pixKeyType;
+
+    if (!pixKey) return;
+
+    const sig = `${keyType}:${pixKey}`;
+    if (lastLookupSig.current === sig) return;
+
+    const t = setTimeout(() => {
+      lastLookupSig.current = sig;
+      lookup({ pixKey, keyType });
+    }, 450);
+
+    return () => clearTimeout(t);
+  }, [normalized.pixKey, normalized.pixKeyType, lookup]);
+
+  const canSend = !!accountId && !!String(normalized.pixKey ?? "").trim() && !!amount.trim();
 
   const handlePixKeyChange = (value: string) => {
     const typeForFormatting =
       selectedKeyType === "AUTO" ? detectPixKeyType(value) : selectedKeyType;
-
     setKey(formatPixInputValue(value, typeForFormatting));
   };
 
@@ -167,21 +168,19 @@ export const PixToolModal = ({
     setKey((prev) => formatPixInputValue(prev, typeForFormatting));
   };
 
-  const submitLookup = () => {
-    if (!canLookup) {
+  const submitOut = () => {
+    if (!accountId) {
+      toast.error("AccountId não configurado para envio.");
+      return;
+    }
+
+    if (!String(normalized.pixKey ?? "").trim()) {
       toast.error("Informe a chave PIX.");
       return;
     }
 
-    lookup({
-      pixKey: normalized.pixKey,
-      keyType: normalized.pixKeyType,
-    });
-  };
-
-  const submitOut = () => {
-    if (!canSend) {
-      toast.error("Preencha accountId, chave e valor.");
+    if (!amount.trim()) {
+      toast.error("Informe o valor.");
       return;
     }
 
@@ -190,6 +189,8 @@ export const PixToolModal = ({
       toast.error("Valor inválido.");
       return;
     }
+
+    const identifier = identifierRef.current;
 
     pixOut({
       idempotencyKey: identifier,
@@ -208,29 +209,7 @@ export const PixToolModal = ({
   return (
     <Modal onClose={onClose} fit>
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-xl font-semibold">PIX • Consulta DICT / Envio (Cash Out)</h3>
-      </div>
-
-      <div className="mt-3 flex gap-2">
-        <Button
-          onClick={() => setView("lookup")}
-          className={`rounded-6 px-4 py-2 ${
-            view === "lookup" ? "bg-primary text-white" : "bg-gray-200"
-          }`}
-          disabled={lookupPending || outPending}
-        >
-          Consultar chave
-        </Button>
-
-        <Button
-          onClick={() => setView("out")}
-          className={`rounded-6 px-4 py-2 ${
-            view === "out" ? "bg-primary text-white" : "bg-gray-200"
-          }`}
-          disabled={lookupPending || outPending}
-        >
-          Enviar PIX
-        </Button>
+        <h3 className="text-xl font-semibold">PIX • Consulta DICT e Envio (Cash Out)</h3>
       </div>
 
       <div className="mt-3 grid gap-3 md:grid-cols-2">
@@ -264,7 +243,7 @@ export const PixToolModal = ({
         </div>
 
         <label className="text-sm md:col-span-2">
-          Chave PIX
+          Chave PIX (ao digitar, consulta automaticamente)
           <input
             value={key}
             onChange={(e) => handlePixKeyChange(e.target.value)}
@@ -274,51 +253,26 @@ export const PixToolModal = ({
           />
         </label>
 
-        {view === "out" && (
-          <>
-            <label className="text-sm md:col-span-2">
-              AccountId
-              <input
-                value={accountId}
-                onChange={(e) => setAccountId(e.target.value)}
-                className="mt-1 w-full rounded-6 border border-gray-200 px-3 py-2"
-                placeholder="accountId"
-                disabled={lookupPending || outPending}
-              />
-            </label>
+        <label className="text-sm">
+          Valor (BRL)
+          <input
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="mt-1 w-full rounded-6 border border-gray-200 px-3 py-2"
+            placeholder="Ex: 500,00"
+            disabled={outPending}
+          />
+        </label>
 
-            <label className="text-sm">
-              Valor (BRL)
-              <input
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="mt-1 w-full rounded-6 border border-gray-200 px-3 py-2"
-                placeholder="Ex: 500,00"
-                disabled={lookupPending || outPending}
-              />
-            </label>
-
-            <label className="text-sm">
-              Identifier (Idempotency-Key)
-              <input
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                className="mt-1 w-full rounded-6 border border-gray-200 px-3 py-2"
-                disabled={lookupPending || outPending}
-              />
-            </label>
-
-            <label className="text-sm md:col-span-2">
-              Descrição (opcional)
-              <input
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="mt-1 w-full rounded-6 border border-gray-200 px-3 py-2"
-                disabled={lookupPending || outPending}
-              />
-            </label>
-          </>
-        )}
+        <label className="text-sm">
+          Descrição (opcional)
+          <input
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="mt-1 w-full rounded-6 border border-gray-200 px-3 py-2"
+            disabled={outPending}
+          />
+        </label>
       </div>
 
       <div className="mt-4 flex justify-end gap-2">
@@ -326,24 +280,19 @@ export const PixToolModal = ({
           Fechar
         </Button>
 
-        {view === "lookup" ? (
-          <Button onClick={submitLookup} disabled={!canLookup || lookupPending || outPending}>
-            {lookupPending ? "Consultando..." : "Consultar"}
-          </Button>
-        ) : (
-          <Button onClick={submitOut} disabled={!canSend || outPending || lookupPending}>
-            {outPending ? "Enviando..." : "Enviar PIX"}
-          </Button>
-        )}
+        <Button onClick={submitOut} disabled={!canSend || outPending}>
+          {outPending ? "Enviando..." : "Enviar PIX"}
+        </Button>
       </div>
 
       <div className="mt-4">
-        <div className="font-semibold">Resposta</div>
-        {view === "lookup" ? (
-          <DictLookupResponseView data={lookupData} />
-        ) : (
-          <PixOutResponse data={outData} />
-        )}
+        <div className="font-semibold">Resposta DICT</div>
+        <DictLookupResponseView data={lookupData} />
+      </div>
+
+      <div className="mt-4">
+        <div className="font-semibold">Resposta PIX</div>
+        <PixOutResponse data={outData} />
       </div>
     </Modal>
   );
