@@ -10,7 +10,7 @@ export const Label = ({ required, title, words, hidden }: ILabel) => {
   return (
     <div className={`flex flex-row items-center ${hidden ? "hidden" : ""}`}>
       <label htmlFor={words} className="flex w-fit flex-row">
-        <p className={`text-write-primary`}>
+        <p className={`text-write-secundary`}>
           {title} {required && <span className={`text-variation-error`}>*</span>}
         </p>
       </label>
