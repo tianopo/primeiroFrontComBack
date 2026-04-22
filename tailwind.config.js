@@ -17,10 +17,17 @@ module.exports = {
         "pattern": '1.2'
       },
       backgroundImage: {
-        'gradient-linear-primary': 'linear-gradient(90deg, #FF4444 0%, #AF49FF 34%, #3B37FF 69%, #FC4040 100%)',
-        'gradient-linear-secundary': 'linear-gradient(90deg, #FF2727 0%, #243AFF 50%, #FF12E7 98%)',
-        'gradient-conic-primary': 'conic-gradient(from 180deg at 51% -44%, #FF0000 0%, #00C2FF 51%, #FF00E5 100%)',
-        'gradient-conic-secundary': 'conic-gradient(from 0deg at 50% 50%, #FF0000 0%, #1400FF 100%)',
+        'gradient-linear-primary':
+          'linear-gradient(90deg, #FFC83D 0%, #FFD84D 35%, #FFB22C 70%, #FF8A1F 100%)',
+
+        'gradient-linear-secundary':
+          'linear-gradient(90deg, #FFCF40 0%, #FFC83D 30%, #FFA726 65%, #FF8A1F 100%)',
+
+        'gradient-conic-primary':
+          'conic-gradient(from 180deg at 50% 50%, #FFC83D 0deg, #FFD84D 90deg, #FFB22C 210deg, #FF8A1F 320deg, #FFC83D 360deg)',
+
+        'gradient-conic-secundary':
+          'conic-gradient(from 0deg at 50% 50%, #FF8A1F 0deg, #FFB22C 120deg, #FFD84D 240deg, #FFC83D 360deg)',
       },
       boxShadow: {
         primary: '0 4px 8px rgba(0, 0, 0, 0.5)'

@@ -74,9 +74,9 @@ export const AnimateSnake = () => {
         </path>
         <defs>
           <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" style={{ stopColor: "#FF2727", stopOpacity: 1 }} />
-            <stop offset="50%" style={{ stopColor: "#243AFF", stopOpacity: 1 }} />
-            <stop offset="98%" style={{ stopColor: "#FF12E7", stopOpacity: 1 }} />
+            <stop offset="0%" style={{ stopColor: "#FFC83D", stopOpacity: 1 }} />
+            <stop offset="50%" style={{ stopColor: "#FF8A1F", stopOpacity: 1 }} />
+            <stop offset="98%" style={{ stopColor: "#BFC7D1", stopOpacity: 1 }} />
           </linearGradient>
         </defs>
       </svg>

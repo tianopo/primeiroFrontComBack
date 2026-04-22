@@ -44,11 +44,11 @@
 }
 
 .button-colorido {
-  @apply w-full rounded-6 bg-gradient-linear-primary px-5 py-4 font-semibold text-white md:w-40;
+  @apply w-full rounded-6 bg-gradient-linear-primary px-5 py-4 font-semibold text-black md:w-40;
 }
 
 .button-colorido-buy {
-  @apply flex w-full items-center gap-2 rounded-6 bg-gradient-linear-primary px-5 py-4 font-semibold text-white md:w-40;
+  @apply flex w-full items-center gap-2 rounded-6 bg-gradient-linear-primary px-5 py-4 font-semibold text-black md:w-40;
 }
 
 .button-colorido-buy:disabled {
@@ -56,11 +56,11 @@
 }
 
 .button-colorido-services {
-  @apply w-full rounded-6 bg-gradient-linear-primary px-5 py-4 font-semibold text-white;
+  @apply w-full rounded-6 bg-gradient-linear-primary px-5 py-4 font-semibold text-black;
 }
 
 .button-colorido-carrossel {
-  @apply w-full rounded-full bg-gradient-linear-primary px-5 py-4 text-center font-semibold text-white md:w-16;
+  @apply w-full rounded-full bg-gradient-linear-primary px-5 py-4 text-center font-semibold text-black md:w-16;
 }
 
 .section-1-text {

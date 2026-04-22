@@ -1,20 +1,20 @@
 export const colors = {
-  primary: "#228BE5",
-  secundary: "#A3C5E2",
-  terciary: "#185A93",
+  primary: "#FFC83D",
+  secundary: "#BFC7D1",
+  terciary: "#FF8A1F",
   write: {
-    primary: "#202124",
-    secundary: "#6C757D",
-    placeholder: "#838890",
+    primary: "#CDD5DD",
+    secundary: "#85919D",
+    placeholder: "#8F99A3",
   },
   background: {
-    black: "#131313",
+    black: "#0A0A0A",
   },
   edge: {
-    primary: "#9CA3AF",
+    primary: "#6F7782",
   },
   selected: {
-    primary: "#F1F3F4",
+    primary: "#1A1A1A",
   },
   variation: {
     error: "#E52228",
@@ -22,6 +22,6 @@ export const colors = {
     confirmation: "#22E552",
   },
   strong: {
-    primary: "#623AFF",
+    primary: "#FFFFFF",
   },
 };

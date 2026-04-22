@@ -30,30 +30,30 @@ export const CryptoTech = () => {
       <AnimateSnake />
       <AnimateSnake />
       {/* Bolas Brilhando */}
-      <AnimateBlink color="#FF0000" ballSize={16} />
-      <AnimateBlink color="#FF0000" ballSize={16} />
-      <AnimateBlink color="#FF0000" ballSize={16} />
-      <AnimateBlink color="#FF0000" ballSize={24} />
-      <AnimateBlink color="#FF0000" ballSize={24} />
-      <AnimateBlink color="#FF0000" ballSize={40} />
-      <AnimateBlink color="#3300FF" ballSize={16} />
-      <AnimateBlink color="#3300FF" ballSize={16} />
-      <AnimateBlink color="#3300FF" ballSize={16} />
-      <AnimateBlink color="#3300FF" ballSize={24} />
-      <AnimateBlink color="#3300FF" ballSize={24} />
-      <AnimateBlink color="#3300FF" ballSize={40} />
-      <AnimateBlink color="#FF00E5" ballSize={16} />
-      <AnimateBlink color="#FF00E5" ballSize={16} />
-      <AnimateBlink color="#FF00E5" ballSize={16} />
-      <AnimateBlink color="#FF00E5" ballSize={24} />
-      <AnimateBlink color="#FF00E5" ballSize={24} />
-      <AnimateBlink color="#FF00E5" ballSize={40} />
-      <AnimateBlink color="#0085FF" ballSize={16} />
-      <AnimateBlink color="#0085FF" ballSize={16} />
-      <AnimateBlink color="#0085FF" ballSize={16} />
-      <AnimateBlink color="#0085FF" ballSize={24} />
-      <AnimateBlink color="#0085FF" ballSize={24} />
-      <AnimateBlink color="#0085FF" ballSize={40} />
+      <AnimateBlink color="#FFC83D" ballSize={16} />
+      <AnimateBlink color="#FFC83D" ballSize={16} />
+      <AnimateBlink color="#FFC83D" ballSize={16} />
+      <AnimateBlink color="#FFC83D" ballSize={24} />
+      <AnimateBlink color="#FFC83D" ballSize={24} />
+      <AnimateBlink color="#FFC83D" ballSize={40} />
+      <AnimateBlink color="#FF8A1F" ballSize={16} />
+      <AnimateBlink color="#FF8A1F" ballSize={16} />
+      <AnimateBlink color="#FF8A1F" ballSize={16} />
+      <AnimateBlink color="#FF8A1F" ballSize={24} />
+      <AnimateBlink color="#FF8A1F" ballSize={24} />
+      <AnimateBlink color="#FF8A1F" ballSize={40} />
+      <AnimateBlink color="#BFC7D1" ballSize={16} />
+      <AnimateBlink color="#BFC7D1" ballSize={16} />
+      <AnimateBlink color="#BFC7D1" ballSize={16} />
+      <AnimateBlink color="#BFC7D1" ballSize={24} />
+      <AnimateBlink color="#BFC7D1" ballSize={24} />
+      <AnimateBlink color="#BFC7D1" ballSize={40} />
+      <AnimateBlink color="#0A0A0A" ballSize={16} />
+      <AnimateBlink color="#0A0A0A" ballSize={16} />
+      <AnimateBlink color="#0A0A0A" ballSize={16} />
+      <AnimateBlink color="#0A0A0A" ballSize={24} />
+      <AnimateBlink color="#0A0A0A" ballSize={24} />
+      <AnimateBlink color="#0A0A0A" ballSize={40} />
       <AnimateBlink color="#FFF" ballSize={16} />
       <AnimateBlink color="#FFF" ballSize={16} />
       <header
@@ -65,7 +65,7 @@ export const CryptoTech = () => {
         <div className="flex gap-2">
           <ButtonChangeLanguage />
           <button
-            className="w-full rounded-6 bg-gradient-linear-primary px-3 py-1 font-semibold text-white"
+            className="w-full rounded-6 bg-gradient-linear-primary px-3 py-1 font-semibold text-black"
             onClick={() => navigate(app.auth)}
           >
             Login
