@@ -296,10 +296,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                 {order?.side === 0 &&
                   Array.isArray(order?.paymentTerms) &&
                   order.paymentTerms.length > 0 && (
-                    <PaymentTermsBox
-                      terms={order.paymentTerms}
-                      title="Dados para pagamento (vendedor)"
-                    />
+                    <PaymentTermsBox terms={order.paymentTerms} title="Dados para pagamento" />
                   )}
                 <button
                   className="absolute right-2 top-2 rounded-6 border border-gray-200 bg-white p-2 hover:bg-gray-100 hover:opacity-80"

@@ -4,7 +4,7 @@ import { Button } from "src/components/Buttons/Button";
 
 export type PaymentTermLite = {
   realName?: string;
-  paymentType?: number;
+  paymentType?: string | number;
   accountNo?: string;
   payMessage?: string;
   mobile?: string;
