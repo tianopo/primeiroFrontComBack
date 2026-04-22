@@ -248,7 +248,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
               <Button
                 onClick={() => handleChangeTab(key as KeyType)}
                 className={`rounded-6 p-2 ${
-                  activeTab === key ? "bg-blue-500 text-white" : "bg-gray-200"
+                  activeTab === key ? "bg-gray-400 text-white" : "bg-gray-200"
                 }`}
               >
                 {label}
