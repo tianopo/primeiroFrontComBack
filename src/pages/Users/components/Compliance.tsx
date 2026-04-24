@@ -7,13 +7,13 @@ import { InputX } from "src/components/Form/Input/InputX";
 import { CardContainer } from "src/components/Layout/CardContainer";
 import { formatCPFOrCNPJ } from "src/utils/formats";
 import { useCompliance } from "../hooks/useCompliance";
-import { ResponseCompliance } from "./Compliance/ResponseCompliance";
 import { ComplianceEditModal } from "./Compliance/ComplianceEditModal";
 
 export const Compliance = () => {
   const [documento, setDocumento] = useState<string>("");
   const [responseData, setResponseData] = useState<any>(null);
   const [openEditModal, setOpenEditModal] = useState(false);
+
   const { mutate, isPending, context } = useCompliance();
   const {
     formState: { errors },
@@ -31,6 +31,7 @@ export const Compliance = () => {
     mutate(data, {
       onSuccess: (data) => {
         setResponseData(data);
+        setOpenEditModal(true);
       },
     });
   };
@@ -52,6 +53,7 @@ export const Compliance = () => {
             <div className="flex w-full items-center justify-between">
               <h3 className="text-28 font-bold">COMPLIANCE</h3>
               <button
+                type="button"
                 onClick={handleClear}
                 className="rounded-6 bg-black p-2 text-white hover:bg-gray-300"
               >
@@ -66,14 +68,18 @@ export const Compliance = () => {
               onChange={handleDocumentChange}
               required
             />
-            <Button disabled={isPending || Object.keys(errors).length > 0}>Checar</Button>
+
+            <div className="flex gap-2">
+              <Button disabled={isPending || Object.keys(errors).length > 0}>Checar</Button>
+
+              <Button type="button" disabled={!responseData} onClick={() => setOpenEditModal(true)}>
+                Abrir compliance
+              </Button>
+            </div>
           </FormX>
-          <Button type="button" disabled={!responseData} onClick={() => setOpenEditModal(true)}>
-            Editar compliance
-          </Button>
-          <ResponseCompliance responseData={responseData} />
         </div>
       </FormProvider>
+
       <ComplianceEditModal
         open={openEditModal}
         onClose={() => setOpenEditModal(false)}

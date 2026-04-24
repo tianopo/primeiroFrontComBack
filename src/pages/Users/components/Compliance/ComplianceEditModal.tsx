@@ -4,6 +4,9 @@ import { Button } from "src/components/Buttons/Button";
 import { Modal } from "src/components/Modal/Modal";
 import { useUpdateCompliance } from "../../hooks/useUpdateCompliance";
 import { ComplianceProfileResponse } from "../../utils/complianceProfileTypes";
+import { CnpjTab } from "./CnpjTab";
+import { PortalDaTransparenciaTab } from "./PortalDaTransparenciaTab";
+import { SanctionsTab } from "./SanctionsTab";
 
 interface IComplianceEditModal {
   open: boolean;
@@ -45,7 +48,14 @@ type ComplianceEditForm = {
   requiresManualReview: boolean;
 };
 
-type EditTabKey = "analysis" | "limits" | "documents" | "summaries";
+type EditTabKey =
+  | "analysis"
+  | "limits"
+  | "documents"
+  | "portal"
+  | "cnpj"
+  | "sanctions"
+  | "summaries";
 
 const toDateInput = (value?: string | Date | null) => {
   if (!value) return "";
@@ -131,8 +141,6 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
       riskLevel: form.riskLevel,
       status: form.status,
       riskScore: Number(form.riskScore),
-      riskSummary: form.riskSummary?.trim() || null,
-      blockedReason: form.blockedReason?.trim() || null,
       internalNotes: form.internalNotes?.trim() || null,
       temporaryRestrictionUntil: form.temporaryRestrictionUntil || null,
       temporaryRestrictionReason: form.temporaryRestrictionReason?.trim() || null,
@@ -194,6 +202,28 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
               onClick={() => setActiveTab("documents")}
             >
               Documentos
+            </button>
+            <button
+              type="button"
+              className={tabBtnClass("portal")}
+              onClick={() => setActiveTab("portal")}
+            >
+              Portal da Transparência
+            </button>
+
+            <button
+              type="button"
+              className={tabBtnClass("cnpj")}
+              onClick={() => setActiveTab("cnpj")}
+            >
+              CNPJ
+            </button>
+            <button
+              type="button"
+              className={tabBtnClass("sanctions")}
+              onClick={() => setActiveTab("sanctions")}
+            >
+              Sanções
             </button>
             <button
               type="button"
@@ -302,8 +332,9 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
                   <div>
                     <label className="mb-1 block text-sm font-semibold">Resumo</label>
                     <textarea
-                      {...register("riskSummary")}
-                      className="min-h-[90px] w-full rounded border p-2"
+                      value={data.compliance.summary ?? ""}
+                      disabled
+                      className="min-h-[90px] w-full rounded border bg-gray-100 p-2"
                     />
                   </div>
 
@@ -515,6 +546,18 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
             </div>
           )}
 
+          {activeTab === "sanctions" && (
+            <SanctionsTab
+              sanctionsSummary={
+                data.compliance.sources.sanctionsSummary as
+                  | Record<string, unknown>
+                  | null
+                  | undefined
+              }
+              sanctions={data.compliance.sources.sanctions}
+            />
+          )}
+
           {activeTab === "summaries" && (
             <div className="flex flex-col gap-4">
               <section className="rounded-md border border-gray-200 p-4">
@@ -575,6 +618,13 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
                 </div>
               </section>
             </div>
+          )}
+          {activeTab === "portal" && (
+            <PortalDaTransparenciaTab portalData={data.compliance.sources.pdt} />
+          )}
+
+          {activeTab === "cnpj" && (
+            <CnpjTab responseData={data.compliance.sources.pdt?.cnpj ?? null} />
           )}
 
           <div className="flex justify-end gap-2 border-t border-gray-200 pt-3">

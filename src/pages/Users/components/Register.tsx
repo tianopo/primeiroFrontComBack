@@ -10,7 +10,6 @@ import { responseSuccess } from "src/config/responseErrors";
 import { formatCPFOrCNPJ } from "src/utils/formats";
 import { exchangeOptions } from "src/utils/selectsOptions";
 import { useRegisterUser } from "../hooks/useRegisterUser";
-import { ResponseCompliance } from "./Compliance/ResponseCompliance";
 import { ComplianceEditModal } from "./Compliance/ComplianceEditModal";
 
 interface IRegister {
@@ -157,7 +156,6 @@ export const Register = ({ setForm, initialData }: IRegister) => {
         <Button type="button" disabled={!responseData} onClick={() => setOpenEditModal(true)}>
           Editar compliance
         </Button>
-        <ResponseCompliance responseData={responseData} />
       </FormProvider>
       <ComplianceEditModal
         open={openEditModal}
