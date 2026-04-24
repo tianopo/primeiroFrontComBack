@@ -7,11 +7,13 @@ import { InputX } from "src/components/Form/Input/InputX";
 import { CardContainer } from "src/components/Layout/CardContainer";
 import { formatCPFOrCNPJ } from "src/utils/formats";
 import { useCompliance } from "../hooks/useCompliance";
-import { ResponseCompliance } from "./ResponseCompliance";
+import { ResponseCompliance } from "./Compliance/ResponseCompliance";
+import { ComplianceEditModal } from "./Compliance/ComplianceEditModal";
 
 export const Compliance = () => {
   const [documento, setDocumento] = useState<string>("");
   const [responseData, setResponseData] = useState<any>(null);
+  const [openEditModal, setOpenEditModal] = useState(false);
   const { mutate, isPending, context } = useCompliance();
   const {
     formState: { errors },
@@ -66,10 +68,18 @@ export const Compliance = () => {
             />
             <Button disabled={isPending || Object.keys(errors).length > 0}>Checar</Button>
           </FormX>
-
+          <Button type="button" disabled={!responseData} onClick={() => setOpenEditModal(true)}>
+            Editar compliance
+          </Button>
           <ResponseCompliance responseData={responseData} />
         </div>
       </FormProvider>
+      <ComplianceEditModal
+        open={openEditModal}
+        onClose={() => setOpenEditModal(false)}
+        data={responseData}
+        onSaved={setResponseData}
+      />
     </CardContainer>
   );
 };

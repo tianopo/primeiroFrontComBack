@@ -10,7 +10,8 @@ import { responseSuccess } from "src/config/responseErrors";
 import { formatCPFOrCNPJ } from "src/utils/formats";
 import { exchangeOptions } from "src/utils/selectsOptions";
 import { useRegisterUser } from "../hooks/useRegisterUser";
-import { ResponseCompliance } from "./ResponseCompliance";
+import { ResponseCompliance } from "./Compliance/ResponseCompliance";
+import { ComplianceEditModal } from "./Compliance/ComplianceEditModal";
 
 interface IRegister {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -33,6 +34,7 @@ export const Register = ({ setForm, initialData }: IRegister) => {
     reset,
   } = context;
   const [responseData, setResponseData] = useState<any>(null);
+  const [openEditModal, setOpenEditModal] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -152,8 +154,17 @@ export const Register = ({ setForm, initialData }: IRegister) => {
             {nome.length > 0 ? "Salvar" : "Procurar"}
           </Button>
         </FormX>
+        <Button type="button" disabled={!responseData} onClick={() => setOpenEditModal(true)}>
+          Editar compliance
+        </Button>
         <ResponseCompliance responseData={responseData} />
       </FormProvider>
+      <ComplianceEditModal
+        open={openEditModal}
+        onClose={() => setOpenEditModal(false)}
+        data={responseData}
+        onSaved={setResponseData}
+      />
     </CardContainer>
   );
 };

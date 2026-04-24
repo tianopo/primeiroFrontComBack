@@ -15,6 +15,7 @@ import { exchangeOptions } from "src/utils/selectsOptions";
 import { useDelUser } from "../hooks/useDelUser";
 import { useListUsers } from "../hooks/useListUsers";
 import { IUpdateUserPayload, useUpdateUser } from "../hooks/useUpdateUser";
+import { ComplianceEditModal } from "./Compliance/ComplianceEditModal";
 
 interface IEdit {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -28,6 +29,7 @@ export const Edit = ({ setForm }: IEdit) => {
   const [exchange, setExchange] = useState<string>("");
   const [isBlocked, setIsBlocked] = useState<boolean>(false);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [openEditModal, setOpenEditModal] = useState(false);
   const { data } = useListUsers();
   const { mutate, isPending, context } = useUpdateUser();
   const {
@@ -242,6 +244,13 @@ export const Edit = ({ setForm }: IEdit) => {
           <Checkbox title="Bloqueado" checked={isBlocked} onChange={handleBlockChange} />
           <Button disabled={isPending || Object.keys(errors).length > 0}>Salvar</Button>
         </FormX>
+        <Button
+          type="button"
+          disabled={!nome && !apelido && !documento && !exchange}
+          onClick={() => setOpenEditModal(true)}
+        >
+          Editar compliance
+        </Button>
       </FormProvider>
       {isConfirming && (
         <ConfirmationModalButton
@@ -250,6 +259,12 @@ export const Edit = ({ setForm }: IEdit) => {
           onCancel={() => setIsConfirming(false)}
         />
       )}
+      <ComplianceEditModal
+        open={openEditModal}
+        onClose={() => setOpenEditModal(false)}
+        data={data}
+        onSaved={(data: any) => data}
+      />
     </CardContainer>
   );
 };

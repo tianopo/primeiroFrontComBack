@@ -1,11 +1,4 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { generateComplianceDoc } from "../utils/generateComplianceDoc";
-import { Deskdata } from "./DeskData/Deskdata";
-import { CSNU } from "./QueryDataList/CSNU";
-import { Europa } from "./QueryDataList/Europa";
-import { OFAC } from "./QueryDataList/OFAC";
-import { PalestinaCouncil } from "./QueryDataList/PalestinaCouncil";
-import { Slave } from "./QueryDataList/Slave";
 import { AE } from "./QueryDataTransparencia/AE";
 import { BPC } from "./QueryDataTransparencia/BPC";
 import { CEAF } from "./QueryDataTransparencia/CEAF";
@@ -18,6 +11,13 @@ import { PETI } from "./QueryDataTransparencia/PETI";
 import { Safra } from "./QueryDataTransparencia/Safra";
 import { SDC } from "./QueryDataTransparencia/SDC";
 import { Viagens } from "./QueryDataTransparencia/Viagens";
+import { generateComplianceDoc } from "../../utils/generateComplianceDoc";
+import { Deskdata } from "../DeskData/Deskdata";
+import { CSNU } from "./QueryDataList/CSNU";
+import { Europa } from "./QueryDataList/Europa";
+import { OFAC } from "./QueryDataList/OFAC";
+import { PalestinaCouncil } from "./QueryDataList/PalestinaCouncil";
+import { Slave } from "./QueryDataList/Slave";
 
 interface IResponseCompliance {
   responseData: any;
@@ -32,6 +32,12 @@ export const ResponseCompliance = ({ responseData }: IResponseCompliance) => {
   const [expanded, setExpanded] = useState(false);
   const [showToggle, setShowToggle] = useState(false);
   const [contentHeight, setContentHeight] = useState<number>(COLLAPSED_HEIGHT);
+  const deskdataData =
+    responseData?.compliance?.sources?.deskdata ??
+    responseData?.compliance?.sources?.deskdataSummary ??
+    null;
+
+  const sanctionsSummary = responseData?.compliance?.sources?.sanctionsSummary ?? null;
 
   // Quando mudar a resposta, fecha novamente (opcional)
   useEffect(() => {
@@ -92,6 +98,14 @@ export const ResponseCompliance = ({ responseData }: IResponseCompliance) => {
               )}
 
               {responseData?.deskdata && <Deskdata responseData={responseData?.deskdata} />}
+              {sanctionsSummary && (
+                <div className="mt-4 rounded border border-gray-200 p-3">
+                  <h4 className="mb-2 font-bold">Resumo das sanções</h4>
+                  <pre className="whitespace-pre-wrap break-words text-xs">
+                    {JSON.stringify(sanctionsSummary, null, 2)}
+                  </pre>
+                </div>
+              )}
 
               {responseData?.ofac && <OFAC responseData={responseData?.ofac} />}
               {responseData?.europa && <Europa responseData={responseData?.europa} />}
