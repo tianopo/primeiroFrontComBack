@@ -24,6 +24,8 @@ type ComplianceEditForm = {
     | "ENHANCED_DUE_DILIGENCE"
     | "RESTRICTED"
     | "BLOCKED";
+  beneficialOwnerName: string;
+  beneficialOwnerDocument: string;
   riskScore: number;
   riskSummary: string;
   blockedReason: string;
@@ -72,6 +74,8 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
       riskLevel: "MEDIUM",
       status: "PENDING",
       riskScore: 0,
+      beneficialOwnerName: "",
+      beneficialOwnerDocument: "",
       riskSummary: "",
       blockedReason: "",
       internalNotes: "",
@@ -107,8 +111,6 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
       riskLevel: data.compliance.riskLevel,
       status: data.compliance.status,
       riskScore: data.compliance.riskScore,
-      riskSummary: data.compliance.summary ?? "",
-      blockedReason: data.compliance.blockedReason ?? "",
       internalNotes: data.compliance.internalNotes ?? "",
       temporaryRestrictionUntil: toDateInput(data.compliance.temporaryRestrictionUntil),
       temporaryRestrictionReason: data.compliance.temporaryRestrictionReason ?? "",
@@ -120,6 +122,8 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
           : "",
       capacitySource: data.compliance.limits.capacitySource ?? "",
       nextRescreenAt: toDateInput(data.compliance.persistence.nextRescreenAt),
+      beneficialOwnerName: data.compliance.sources.beneficialOwnerName ?? "",
+      beneficialOwnerDocument: data.compliance.sources.beneficialOwnerDocument ?? "",
       requiresDocument: data.compliance.flags.requiresDocument,
       requiresSelfieDocument: data.compliance.flags.requiresSelfieDocument,
       requiresAddressProof: data.compliance.flags.requiresAddressProof,
@@ -139,6 +143,8 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
     const result = await mutateAsync({
       documento: data.input.rawDocument,
       riskLevel: form.riskLevel,
+      beneficialOwnerName: form.beneficialOwnerName?.trim() || null,
+      beneficialOwnerDocument: form.beneficialOwnerDocument?.trim() || null,
       status: form.status,
       riskScore: Number(form.riskScore),
       internalNotes: form.internalNotes?.trim() || null,
@@ -273,9 +279,9 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
                       Beneficiário responsável
                     </label>
                     <input
-                      value={data.compliance.sources.beneficialOwnerName ?? ""}
-                      disabled
+                      {...register("beneficialOwnerName")}
                       className="w-full rounded border p-2"
+                      placeholder="Nome do responsável"
                     />
                   </div>
 
@@ -284,9 +290,9 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
                       Documento do responsável
                     </label>
                     <input
-                      value={data.compliance.sources.beneficialOwnerDocument ?? ""}
-                      disabled
+                      {...register("beneficialOwnerDocument")}
                       className="w-full rounded border p-2"
+                      placeholder="CPF/CNPJ do responsável"
                     />
                   </div>
                 </div>
@@ -298,7 +304,11 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                   <div>
                     <label className="mb-1 block text-sm font-semibold">Risk Level</label>
-                    <select {...register("riskLevel")} className="w-full rounded border p-2">
+                    <select
+                      {...register("riskLevel")}
+                      className="w-full cursor-not-allowed rounded border p-2"
+                      disabled
+                    >
                       <option value="LOW">LOW</option>
                       <option value="MEDIUM">MEDIUM</option>
                       <option value="HIGH">HIGH</option>
@@ -308,7 +318,11 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
 
                   <div>
                     <label className="mb-1 block text-sm font-semibold">Status</label>
-                    <select {...register("status")} className="w-full rounded border p-2">
+                    <select
+                      {...register("status")}
+                      className="w-full cursor-not-allowed rounded border p-2"
+                      disabled
+                    >
                       <option value="PENDING">PENDING</option>
                       <option value="APPROVED">APPROVED</option>
                       <option value="MONITORING">MONITORING</option>
@@ -323,7 +337,8 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
                     <input
                       type="number"
                       {...register("riskScore")}
-                      className="w-full rounded border p-2"
+                      className="w-full cursor-not-allowed rounded border p-2"
+                      disabled
                     />
                   </div>
                 </div>
@@ -334,7 +349,7 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
                     <textarea
                       value={data.compliance.summary ?? ""}
                       disabled
-                      className="min-h-[90px] w-full rounded border bg-gray-100 p-2"
+                      className="min-h-[90px] w-full cursor-not-allowed rounded border bg-gray-100 p-2"
                     />
                   </div>
 

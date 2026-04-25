@@ -7,6 +7,8 @@ import { apiRoute } from "src/routes/api";
 export interface IUpdateCompliancePayload {
   documento: string;
   riskLevel?: "LOW" | "MEDIUM" | "HIGH" | "BLOCKED";
+  beneficialOwnerName?: string | null;
+  beneficialOwnerDocument?: string | null;
   status?:
     | "PENDING"
     | "APPROVED"
@@ -40,8 +42,8 @@ export interface IUpdateCompliancePayload {
 
 export const useUpdateCompliance = () => {
   const mutation = useMutation({
-    mutationFn: async ({ documento, ...body }: IUpdateCompliancePayload) => {
-      const result = await api().patch(apiRoute.complianceUpdate(documento), body);
+    mutationFn: async (payload: IUpdateCompliancePayload) => {
+      const result = await api().patch(apiRoute.complianceUpdate, payload);
       return result.data;
     },
     onSuccess: () => {

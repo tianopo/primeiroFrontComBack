@@ -15,7 +15,7 @@ export const apiRoute = {
   compliance: "compliance",
   operation: "compliance/operation",
   operationId: (id: string) => `compliance/operation/delete/${id}`,
-  complianceUpdate: (documento: string) => `/compliance/document/${documento}`,
+  complianceUpdate: `/compliance/document`,
   /* USER */
   user: "user",
   account: "user/account",
