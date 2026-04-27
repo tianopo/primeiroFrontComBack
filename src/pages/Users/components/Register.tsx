@@ -39,10 +39,10 @@ export const Register = ({ setForm, initialData }: IRegister) => {
   const [openEditModal, setOpenEditModal] = useState(false);
   // deskdata
   const [deskdataEnabled, setDeskdataEnabled] = useState(false);
-  const [deskdataStrategy, setDeskdataStrategy] = useState<DeskdataStrategy>("auto");
   const [deskdataDatasets, setDeskdataDatasets] = useState<DeskdataDataset[]>([]);
+  const [deskdataOwnerDatasets, setDeskdataOwnerDatasets] = useState<DeskdataDataset[]>([]);
 
-  const { mutateAsync: syncDeskdata, isPending: isSyncingDeskdata } = useSyncDeskdata();
+  const { mutateAsync: syncDeskdata } = useSyncDeskdata();
 
   const canUseDeskdata = Boolean(nome && apelido && exchange && documento);
 
@@ -96,7 +96,7 @@ export const Register = ({ setForm, initialData }: IRegister) => {
           await syncDeskdata({
             documento,
             datasets: deskdataDatasets,
-            strategy: deskdataStrategy,
+            ownerDatasets: deskdataOwnerDatasets,
           });
         }
       },
@@ -164,11 +164,11 @@ export const Register = ({ setForm, initialData }: IRegister) => {
             documento={documento}
             canShow={canUseDeskdata}
             enabled={deskdataEnabled}
-            strategy={deskdataStrategy}
             selectedDatasets={deskdataDatasets}
+            ownerDatasets={deskdataOwnerDatasets}
             onEnabledChange={setDeskdataEnabled}
-            onStrategyChange={setDeskdataStrategy}
             onSelectedDatasetsChange={setDeskdataDatasets}
+            onOwnerDatasetsChange={setDeskdataOwnerDatasets}
           />
           <div className="flex w-full flex-col gap-2">
             <Button

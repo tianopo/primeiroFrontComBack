@@ -19,6 +19,12 @@ export interface DeskdataStoredDataset {
   data: unknown;
 }
 
+export interface DeskdataOwnerSummary {
+  document: string | null;
+  datasets: Partial<Record<DeskdataDataset, DeskdataStoredDataset>>;
+  lastFetchedAt: string | null;
+}
+
 export interface DeskdataSummary {
   version: 1;
   subject: {
@@ -30,6 +36,7 @@ export interface DeskdataSummary {
     key_value: string;
   };
   datasets: Partial<Record<DeskdataDataset, DeskdataStoredDataset>>;
+  owner?: DeskdataOwnerSummary | null;
   lastRequest: {
     requested: DeskdataDataset[];
     fetchedNow: DeskdataDataset[];
@@ -42,7 +49,7 @@ export interface DeskdataSummary {
 export interface SyncDeskdataPayload {
   documento: string;
   datasets: DeskdataDataset[];
-  strategy?: DeskdataStrategy;
+  ownerDatasets?: DeskdataDataset[];
 }
 
 export interface SyncDeskdataResponse {

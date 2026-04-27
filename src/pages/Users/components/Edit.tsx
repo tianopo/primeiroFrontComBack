@@ -17,7 +17,7 @@ import { useDelUser } from "../hooks/useDelUser";
 import { useListUsers } from "../hooks/useListUsers";
 import { useSyncDeskdata } from "../hooks/useSyncDeskdata";
 import { IUpdateUserPayload, useUpdateUser } from "../hooks/useUpdateUser";
-import { DeskdataDataset, DeskdataStrategy } from "../utils/deskdataTypes";
+import { DeskdataDataset } from "../utils/deskdataTypes";
 import { ComplianceEditModal } from "./Compliance/ComplianceEditModal";
 import { DeskdataSelector } from "./Compliance/DeskdataSelector";
 
@@ -49,8 +49,8 @@ export const Edit = ({ setForm }: IEdit) => {
   const { mutate: deletar } = useDelUser(id);
   // deskdata
   const [deskdataEnabled, setDeskdataEnabled] = useState(false);
-  const [deskdataStrategy, setDeskdataStrategy] = useState<DeskdataStrategy>("auto");
   const [deskdataDatasets, setDeskdataDatasets] = useState<DeskdataDataset[]>([]);
+  const [deskdataOwnerDatasets, setDeskdataOwnerDatasets] = useState<DeskdataDataset[]>([]);
 
   const { mutateAsync: syncDeskdata, isPending: isSyncingDeskdata } = useSyncDeskdata();
 
@@ -173,7 +173,7 @@ export const Edit = ({ setForm }: IEdit) => {
             await syncDeskdata({
               documento,
               datasets: deskdataDatasets,
-              strategy: deskdataStrategy,
+              ownerDatasets: deskdataOwnerDatasets,
             });
           }
         },
@@ -306,11 +306,11 @@ export const Edit = ({ setForm }: IEdit) => {
             documento={documento}
             canShow={canUseDeskdata}
             enabled={deskdataEnabled}
-            strategy={deskdataStrategy}
             selectedDatasets={deskdataDatasets}
+            ownerDatasets={deskdataOwnerDatasets}
             onEnabledChange={setDeskdataEnabled}
-            onStrategyChange={setDeskdataStrategy}
             onSelectedDatasetsChange={setDeskdataDatasets}
+            onOwnerDatasetsChange={setDeskdataOwnerDatasets}
           />
 
           <div className="flex w-full flex-col gap-2">

@@ -1,44 +1,52 @@
-import { DESKDATA_OPTIONS_BY_KIND } from "../../config/deskdataCatalog";
-import { DeskdataDataset, DeskdataStrategy, resolveDeskdataKind } from "../../utils/deskdataTypes";
+import {
+  DESKDATA_OPTIONS_BY_KIND,
+  DESKDATA_OWNER_OPTIONS_FOR_COMPANY,
+} from "../../config/deskdataCatalog";
+import { DeskdataDataset, resolveDeskdataKind } from "../../utils/deskdataTypes";
 
 interface IDeskdataSelector {
   documento: string;
   canShow: boolean;
   enabled: boolean;
-  strategy: DeskdataStrategy;
   selectedDatasets: DeskdataDataset[];
+  ownerDatasets: DeskdataDataset[];
   onEnabledChange: (value: boolean) => void;
-  onStrategyChange: (value: DeskdataStrategy) => void;
   onSelectedDatasetsChange: (value: DeskdataDataset[]) => void;
+  onOwnerDatasetsChange: (value: DeskdataDataset[]) => void;
 }
 
 export const DeskdataSelector = ({
   documento,
   canShow,
   enabled,
-  strategy,
   selectedDatasets,
+  ownerDatasets,
   onEnabledChange,
-  onStrategyChange,
   onSelectedDatasetsChange,
+  onOwnerDatasetsChange,
 }: IDeskdataSelector) => {
   const kind = resolveDeskdataKind(documento);
 
   if (!canShow) return null;
 
   const options = kind ? DESKDATA_OPTIONS_BY_KIND[kind] : [];
+  const shouldShowOwnerOptions = kind === "CNPJ" && selectedDatasets.includes("relationships");
 
-  const toggleDataset = (dataset: DeskdataDataset) => {
-    if (selectedDatasets.includes(dataset)) {
-      onSelectedDatasetsChange(selectedDatasets.filter((item) => item !== dataset));
+  const toggleDataset = (
+    dataset: DeskdataDataset,
+    current: DeskdataDataset[],
+    setter: (value: DeskdataDataset[]) => void,
+  ) => {
+    if (current.includes(dataset)) {
+      setter(current.filter((item) => item !== dataset));
       return;
     }
 
-    onSelectedDatasetsChange([...selectedDatasets, dataset]);
+    setter([...current, dataset]);
   };
 
   return (
-    <div className="mt-2 flex w-full flex-col gap-3 rounded-md border border-gray-200 p-3">
+    <div className="flex w-full flex-col gap-3 rounded-md border border-gray-200 p-3">
       <label className="flex items-center gap-2">
         <input
           type="checkbox"
@@ -50,22 +58,13 @@ export const DeskdataSelector = ({
 
       {enabled && (
         <>
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-semibold">Estratégia</label>
-            <select
-              value={strategy}
-              onChange={(e) => onStrategyChange(e.target.value as DeskdataStrategy)}
-              className="rounded border p-2"
-            >
-              <option value="auto">Auto</option>
-              <option value="missing_only">Apenas faltantes</option>
-              <option value="refresh_union">Atualizar união</option>
-            </select>
+          <div className="text-sm text-gray-500">
+            Estratégia fixa: <strong>auto</strong>
           </div>
 
           <div className="flex flex-col gap-2">
             <div className="text-sm font-semibold">
-              Consultas disponíveis para {kind ?? "documento inválido"}
+              Datasets para {kind ?? "documento inválido"}
             </div>
 
             <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
@@ -74,7 +73,9 @@ export const DeskdataSelector = ({
                   <input
                     type="checkbox"
                     checked={selectedDatasets.includes(option.value)}
-                    onChange={() => toggleDataset(option.value)}
+                    onChange={() =>
+                      toggleDataset(option.value, selectedDatasets, onSelectedDatasetsChange)
+                    }
                   />
                   <div>
                     <div className="font-medium">{option.label}</div>
@@ -84,6 +85,33 @@ export const DeskdataSelector = ({
               ))}
             </div>
           </div>
+
+          {shouldShowOwnerOptions && (
+            <div className="flex flex-col gap-2 rounded-md border border-gray-200 p-3">
+              <div className="text-sm font-semibold">Dados do CPF do primeiro sócio</div>
+
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                {DESKDATA_OWNER_OPTIONS_FOR_COMPANY.map((option) => (
+                  <label
+                    key={`owner-${option.value}`}
+                    className="flex items-start gap-2 rounded border p-2"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={ownerDatasets.includes(option.value)}
+                      onChange={() =>
+                        toggleDataset(option.value, ownerDatasets, onOwnerDatasetsChange)
+                      }
+                    />
+                    <div>
+                      <div className="font-medium">{option.label}</div>
+                      <div className="text-xs text-gray-500">{option.description}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

@@ -8,7 +8,10 @@ import { SyncDeskdataPayload, SyncDeskdataResponse } from "../utils/deskdataType
 export const useSyncDeskdata = () => {
   const mutation = useMutation({
     mutationFn: async (payload: SyncDeskdataPayload): Promise<SyncDeskdataResponse> => {
-      const result = await api().post(apiRoute.complianceDeskdataSync, payload);
+      const result = await api().post(apiRoute.complianceDeskdataSync, {
+        ...payload,
+        strategy: "auto",
+      });
       return result.data;
     },
     onSuccess: () => {

@@ -6,6 +6,50 @@ export interface DeskdataOption {
   description: string;
 }
 
+export const DESKDATA_OWNER_OPTIONS_FOR_COMPANY: DeskdataOption[] = [
+  {
+    value: "basic",
+    label: "Dados básicos do sócio",
+    description: "Dados básicos do CPF do primeiro sócio.",
+  },
+  {
+    value: "phones",
+    label: "Telefones do sócio",
+    description: "Telefones do CPF do primeiro sócio.",
+  },
+  {
+    value: "addresses",
+    label: "Endereços do sócio",
+    description: "Endereços do CPF do primeiro sócio.",
+  },
+  { value: "emails", label: "E-mails do sócio", description: "E-mails do CPF do primeiro sócio." },
+  {
+    value: "relationships",
+    label: "Relacionamentos do sócio",
+    description: "Relacionamentos do CPF do primeiro sócio.",
+  },
+  {
+    value: "relationships_phones",
+    label: "Telefones de relacionamentos do sócio",
+    description: "Telefones dos relacionados ao primeiro sócio.",
+  },
+  {
+    value: "relationships_addresses",
+    label: "Endereços de relacionamentos do sócio",
+    description: "Endereços dos relacionados ao primeiro sócio.",
+  },
+  {
+    value: "relationships_emails",
+    label: "E-mails de relacionamentos do sócio",
+    description: "E-mails dos relacionados ao primeiro sócio.",
+  },
+  {
+    value: "lawsuits",
+    label: "Processos do sócio",
+    description: "Processos do CPF do primeiro sócio.",
+  },
+];
+
 export const DESKDATA_OPTIONS_BY_KIND: Record<DeskdataKind, DeskdataOption[]> = {
   CPF: [
     {

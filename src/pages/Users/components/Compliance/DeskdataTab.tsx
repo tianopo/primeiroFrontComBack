@@ -165,6 +165,36 @@ export const DeskdataTab = ({ summary }: IDeskdataTab) => {
           </section>
         ))
       )}
+      {summary.owner?.document && (
+        <section className="rounded-md border border-gray-200 p-4">
+          <h4 className="mb-3 text-lg font-bold">CPF do primeiro sócio</h4>
+
+          <div className="mb-3">
+            <label className="mb-1 block text-sm font-semibold">Documento</label>
+            <input value={summary.owner.document} disabled className="w-full rounded border p-2" />
+          </div>
+
+          {Object.entries(summary.owner.datasets ?? {}).length === 0 ? (
+            <p className="text-sm text-gray-500">Nenhum dataset do sócio salvo.</p>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {Object.entries(summary.owner.datasets ?? {}).map(([dataset, payload]) => (
+                <div key={`owner-${dataset}`} className="rounded border p-3">
+                  <h5 className="mb-2 font-semibold">
+                    {DESKDATA_LABELS[dataset as keyof typeof DESKDATA_LABELS] ?? dataset}
+                  </h5>
+
+                  <textarea
+                    disabled
+                    value={JSON.stringify(payload?.data ?? null, null, 2)}
+                    className="min-h-[220px] w-full rounded border p-2 text-xs"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 };
