@@ -516,6 +516,20 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
                       <li>
                         Ordens altas em 30 dias: {data.compliance.behavior.highValueOrders30d}
                       </li>
+                      <li>
+                        Soma das ordens em 30 dias:{" "}
+                        {data.compliance.behavior.monthlyVolumeBrl.toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        })}
+                      </li>
+                      <li>
+                        Ordem mais alta em 30 dias:{" "}
+                        {data.compliance.behavior.highestOrder30d.toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        })}
+                      </li>
                     </ul>
                   </div>
 
