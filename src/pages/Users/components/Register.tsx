@@ -10,7 +10,10 @@ import { responseSuccess } from "src/config/responseErrors";
 import { formatCPFOrCNPJ } from "src/utils/formats";
 import { exchangeOptions } from "src/utils/selectsOptions";
 import { useRegisterUser } from "../hooks/useRegisterUser";
+import { useSyncDeskdata } from "../hooks/useSyncDeskdata";
+import { DeskdataDataset, DeskdataStrategy } from "../utils/deskdataTypes";
 import { ComplianceEditModal } from "./Compliance/ComplianceEditModal";
+import { DeskdataSelector } from "./Compliance/DeskdataSelector";
 
 interface IRegister {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -34,6 +37,14 @@ export const Register = ({ setForm, initialData }: IRegister) => {
   } = context;
   const [responseData, setResponseData] = useState<any>(null);
   const [openEditModal, setOpenEditModal] = useState(false);
+  // deskdata
+  const [deskdataEnabled, setDeskdataEnabled] = useState(false);
+  const [deskdataStrategy, setDeskdataStrategy] = useState<DeskdataStrategy>("auto");
+  const [deskdataDatasets, setDeskdataDatasets] = useState<DeskdataDataset[]>([]);
+
+  const { mutateAsync: syncDeskdata, isPending: isSyncingDeskdata } = useSyncDeskdata();
+
+  const canUseDeskdata = Boolean(nome && apelido && exchange && documento);
 
   useEffect(() => {
     if (initialData) {
@@ -70,7 +81,7 @@ export const Register = ({ setForm, initialData }: IRegister) => {
 
   const handleSubmit = (data: any) => {
     mutate(data, {
-      onSuccess: (response) => {
+      onSuccess: async (response) => {
         setResponseData(response);
         if (nome && apelido) {
           responseSuccess(`${nome} / ${documento} foi cadastrado`);
@@ -81,6 +92,13 @@ export const Register = ({ setForm, initialData }: IRegister) => {
           setValue("documento", "");
           if (documento !== "") setDocumento("");
         } else responseSuccess("Usuário encontrado");
+        if (deskdataEnabled && deskdataDatasets.length > 0 && documento) {
+          await syncDeskdata({
+            documento,
+            datasets: deskdataDatasets,
+            strategy: deskdataStrategy,
+          });
+        }
       },
     });
   };
@@ -141,6 +159,16 @@ export const Register = ({ setForm, initialData }: IRegister) => {
             value={documento}
             onChange={handleDocumentoChange}
             required
+          />
+          <DeskdataSelector
+            documento={documento}
+            canShow={canUseDeskdata}
+            enabled={deskdataEnabled}
+            strategy={deskdataStrategy}
+            selectedDatasets={deskdataDatasets}
+            onEnabledChange={setDeskdataEnabled}
+            onStrategyChange={setDeskdataStrategy}
+            onSelectedDatasetsChange={setDeskdataDatasets}
           />
           <div className="flex w-full flex-col gap-2">
             <Button

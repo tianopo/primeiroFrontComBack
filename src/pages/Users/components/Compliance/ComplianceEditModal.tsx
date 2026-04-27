@@ -7,6 +7,7 @@ import { ComplianceProfileResponse } from "../../utils/complianceProfileTypes";
 import { CnpjTab } from "./CnpjTab";
 import { PortalDaTransparenciaTab } from "./PortalDaTransparenciaTab";
 import { SanctionsTab } from "./SanctionsTab";
+import { DeskdataTab } from "./DeskdataTab";
 
 interface IComplianceEditModal {
   open: boolean;
@@ -57,6 +58,7 @@ type EditTabKey =
   | "portal"
   | "cnpj"
   | "sanctions"
+  | "deskdata"
   | "summaries";
 
 const toDateInput = (value?: string | Date | null) => {
@@ -193,6 +195,8 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
         : "border border-gray-300 bg-white text-black hover:bg-gray-100"
     }`;
 
+  const formatSourceLabel = (value: string) => value.replace(/_/g, " ");
+
   return (
     <Modal onClose={onClose} title="Editar compliance">
       <FormProvider {...methods}>
@@ -245,6 +249,13 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
             </button>
             <button
               type="button"
+              className={tabBtnClass("deskdata")}
+              onClick={() => setActiveTab("deskdata")}
+            >
+              Deskdata
+            </button>
+            <button
+              type="button"
               className={tabBtnClass("summaries")}
               onClick={() => setActiveTab("summaries")}
             >
@@ -286,31 +297,27 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
                     />
                   </div>
 
-                  {data.input.documentType === "CNPJ" && (
-                    <>
-                      <div>
-                        <label className="mb-1 block text-sm font-semibold">
-                          Beneficiário responsável
-                        </label>
-                        <input
-                          {...register("beneficialOwnerName")}
-                          className="w-full rounded border p-2"
-                          placeholder="Nome do responsável"
-                        />
-                      </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold">
+                      Beneficiário responsável
+                    </label>
+                    <input
+                      {...register("beneficialOwnerName")}
+                      className="w-full rounded border p-2"
+                      placeholder="Nome do responsável"
+                    />
+                  </div>
 
-                      <div>
-                        <label className="mb-1 block text-sm font-semibold">
-                          Documento do responsável
-                        </label>
-                        <input
-                          {...register("beneficialOwnerDocument")}
-                          className="w-full rounded border p-2"
-                          placeholder="CPF/CNPJ do responsável"
-                        />
-                      </div>
-                    </>
-                  )}
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold">
+                      Documento do responsável
+                    </label>
+                    <input
+                      {...register("beneficialOwnerDocument")}
+                      className="w-full rounded border p-2"
+                      placeholder="CPF/CNPJ do responsável"
+                    />
+                  </div>
                 </div>
               </section>
 
@@ -320,11 +327,7 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                   <div>
                     <label className="mb-1 block text-sm font-semibold">Risk Level</label>
-                    <select
-                      {...register("riskLevel")}
-                      className="w-full cursor-not-allowed rounded border p-2"
-                      disabled
-                    >
+                    <select {...register("riskLevel")} className="w-full rounded border p-2">
                       <option value="LOW">LOW</option>
                       <option value="MEDIUM">MEDIUM</option>
                       <option value="HIGH">HIGH</option>
@@ -334,11 +337,7 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
 
                   <div>
                     <label className="mb-1 block text-sm font-semibold">Status</label>
-                    <select
-                      {...register("status")}
-                      className="w-full cursor-not-allowed rounded border p-2"
-                      disabled
-                    >
+                    <select {...register("status")} className="w-full rounded border p-2">
                       <option value="PENDING">PENDING</option>
                       <option value="APPROVED">APPROVED</option>
                       <option value="MONITORING">MONITORING</option>
@@ -353,8 +352,7 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
                     <input
                       type="number"
                       {...register("riskScore")}
-                      className="w-full cursor-not-allowed rounded border p-2"
-                      disabled
+                      className="w-full rounded border p-2"
                     />
                   </div>
                 </div>
@@ -365,13 +363,17 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
                     <textarea
                       value={data.compliance.summary ?? ""}
                       disabled
-                      className="min-h-[90px] w-full cursor-not-allowed rounded border bg-gray-100 p-2"
+                      className="min-h-[90px] w-full rounded border bg-gray-100 p-2"
                     />
                   </div>
 
                   <div>
                     <label className="mb-1 block text-sm font-semibold">Motivo do bloqueio</label>
-                    <input {...register("blockedReason")} className="w-full rounded border p-2" />
+                    <input
+                      value={data.compliance.blockedReason ?? ""}
+                      disabled
+                      className="w-full rounded border bg-gray-100 p-2"
+                    />
                   </div>
 
                   <div>
@@ -409,6 +411,26 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
                     </div>
                   </div>
                 </div>
+              </section>
+
+              <section className="rounded-md border border-gray-200 p-4">
+                <h4 className="mb-3 text-lg font-bold">Fontes consultadas</h4>
+
+                {Array.isArray(data.compliance.sources.sourceSummary) &&
+                data.compliance.sources.sourceSummary.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {data.compliance.sources.sourceSummary.map((item, index) => (
+                      <span
+                        key={`${String(item)}-${index}`}
+                        className="rounded-full border border-gray-300 bg-gray-100 px-3 py-1 text-sm"
+                      >
+                        {formatSourceLabel(String(item))}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">Nenhuma fonte registrada.</p>
+                )}
               </section>
             </div>
           )}
@@ -587,6 +609,10 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
               }
               sanctions={data.compliance.sources.sanctions}
             />
+          )}
+
+          {activeTab === "deskdata" && (
+            <DeskdataTab summary={data.compliance.sources.deskdataSummary} />
           )}
 
           {activeTab === "summaries" && (

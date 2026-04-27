@@ -1,3 +1,5 @@
+import { DeskdataSummary } from "./deskdataTypes";
+
 export type ComplianceRiskLevel = "LOW" | "MEDIUM" | "HIGH" | "BLOCKED";
 export type ComplianceStatus =
   | "PENDING"
@@ -122,7 +124,7 @@ export interface ComplianceProfileResponse {
       beneficialOwnerName: string | null;
       beneficialOwnerDocument: string | null;
       sanctionsSummary: any;
-      deskdataSummary: any;
+      deskdataSummary: DeskdataSummary | null;
       pdt: any;
       sanctions: {
         maxSimilarity: number;

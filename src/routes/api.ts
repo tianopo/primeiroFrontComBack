@@ -16,6 +16,8 @@ export const apiRoute = {
   operation: "compliance/operation",
   operationId: (id: string) => `compliance/operation/delete/${id}`,
   complianceUpdate: `/compliance/document`,
+  /* DESKDATA */
+  complianceDeskdataSync: "/deskdata/sync",
   /* USER */
   user: "user",
   account: "user/account",

@@ -15,8 +15,11 @@ import { exchangeOptions } from "src/utils/selectsOptions";
 import { useCompliance } from "../hooks/useCompliance";
 import { useDelUser } from "../hooks/useDelUser";
 import { useListUsers } from "../hooks/useListUsers";
+import { useSyncDeskdata } from "../hooks/useSyncDeskdata";
 import { IUpdateUserPayload, useUpdateUser } from "../hooks/useUpdateUser";
+import { DeskdataDataset, DeskdataStrategy } from "../utils/deskdataTypes";
 import { ComplianceEditModal } from "./Compliance/ComplianceEditModal";
+import { DeskdataSelector } from "./Compliance/DeskdataSelector";
 
 interface IEdit {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -44,6 +47,14 @@ export const Edit = ({ setForm }: IEdit) => {
   } = context;
 
   const { mutate: deletar } = useDelUser(id);
+  // deskdata
+  const [deskdataEnabled, setDeskdataEnabled] = useState(false);
+  const [deskdataStrategy, setDeskdataStrategy] = useState<DeskdataStrategy>("auto");
+  const [deskdataDatasets, setDeskdataDatasets] = useState<DeskdataDataset[]>([]);
+
+  const { mutateAsync: syncDeskdata, isPending: isSyncingDeskdata } = useSyncDeskdata();
+
+  const canUseDeskdata = Boolean(nome && apelido && exchange && documento);
 
   const handleNomeChange = (e: ChangeEvent<HTMLInputElement>) => {
     const fullValue = e.target.value;
@@ -154,7 +165,20 @@ export const Edit = ({ setForm }: IEdit) => {
       return;
     }
 
-    mutate({ id, payload: formData });
+    mutate(
+      { id, payload: formData },
+      {
+        onSuccess: async () => {
+          if (deskdataEnabled && deskdataDatasets.length > 0 && documento) {
+            await syncDeskdata({
+              documento,
+              datasets: deskdataDatasets,
+              strategy: deskdataStrategy,
+            });
+          }
+        },
+      },
+    );
   };
 
   const handleOpenCompliance = () => {
@@ -278,12 +302,31 @@ export const Edit = ({ setForm }: IEdit) => {
 
           <Checkbox title="Bloqueado" checked={isBlocked} onChange={handleBlockChange} />
 
+          <DeskdataSelector
+            documento={documento}
+            canShow={canUseDeskdata}
+            enabled={deskdataEnabled}
+            strategy={deskdataStrategy}
+            selectedDatasets={deskdataDatasets}
+            onEnabledChange={setDeskdataEnabled}
+            onStrategyChange={setDeskdataStrategy}
+            onSelectedDatasetsChange={setDeskdataDatasets}
+          />
+
           <div className="flex w-full flex-col gap-2">
             <Button disabled={isPending || Object.keys(errors).length > 0}>Salvar</Button>
 
             {apelido && nome && exchange && documento && (
-              <Button type="button" disabled={isLoadingCompliance} onClick={handleOpenCompliance}>
-                {isLoadingCompliance ? "Carregando compliance..." : "Compliance"}
+              <Button
+                type="button"
+                disabled={isSyncingDeskdata || isLoadingCompliance}
+                onClick={handleOpenCompliance}
+              >
+                {isLoadingCompliance
+                  ? "Carregando compliance..."
+                  : isSyncingDeskdata
+                    ? "Salvando compliance ..."
+                    : "Compliance"}
               </Button>
             )}
           </div>

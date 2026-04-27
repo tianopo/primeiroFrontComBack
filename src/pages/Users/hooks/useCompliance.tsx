@@ -27,7 +27,7 @@ export const useCompliance = () => {
   const { mutate, isPending } = useMutation({
     mutationFn: path,
     onSuccess: () => {
-      responseSuccess("Transações enviadas com sucesso");
+      responseSuccess("Compliance Encontrado");
     },
     onError: (erro: AxiosError) => responseError(erro),
   });
