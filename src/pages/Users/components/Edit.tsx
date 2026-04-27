@@ -12,6 +12,7 @@ import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalB
 import { responseError } from "src/config/responseErrors";
 import { formatCPFOrCNPJ } from "src/utils/formats";
 import { exchangeOptions } from "src/utils/selectsOptions";
+import { useCompliance } from "../hooks/useCompliance";
 import { useDelUser } from "../hooks/useDelUser";
 import { useListUsers } from "../hooks/useListUsers";
 import { IUpdateUserPayload, useUpdateUser } from "../hooks/useUpdateUser";
@@ -29,14 +30,21 @@ export const Edit = ({ setForm }: IEdit) => {
   const [exchange, setExchange] = useState<string>("");
   const [isBlocked, setIsBlocked] = useState<boolean>(false);
   const [isConfirming, setIsConfirming] = useState(false);
+
   const [openEditModal, setOpenEditModal] = useState(false);
+  const [complianceData, setComplianceData] = useState<any>(null);
+
   const { data } = useListUsers();
   const { mutate, isPending, context } = useUpdateUser();
+  const { mutate: fetchCompliance, isPending: isLoadingCompliance } = useCompliance();
+
   const {
     formState: { errors },
     setValue,
   } = context;
+
   const { mutate: deletar } = useDelUser(id);
+
   const handleNomeChange = (e: ChangeEvent<HTMLInputElement>) => {
     const fullValue = e.target.value;
 
@@ -77,7 +85,6 @@ export const Edit = ({ setForm }: IEdit) => {
     setDocumento(formattedDocumento);
     setValue("documento", formattedDocumento);
 
-    // Só atualiza a exchange se o valor for uma opção válida da lista
     const isFromOptions = data?.some(
       (user: any) =>
         `${user?.User.document} - ${user?.exchange.split(" ")[0]}` === fullValue.trim(),
@@ -92,7 +99,6 @@ export const Edit = ({ setForm }: IEdit) => {
   const handleBlockChange = (e: ChangeEvent<HTMLInputElement>) => {
     const checked = e.target.checked;
     setIsBlocked(checked);
-
     setValue("nome", nome);
     setNome(nome);
   };
@@ -151,7 +157,25 @@ export const Edit = ({ setForm }: IEdit) => {
     mutate({ id, payload: formData });
   };
 
+  const handleOpenCompliance = () => {
+    if (!documento) {
+      responseError("Selecione um usuário com documento antes de abrir o compliance.");
+      return;
+    }
+
+    fetchCompliance(
+      { documento },
+      {
+        onSuccess: (result) => {
+          setComplianceData(result);
+          setOpenEditModal(true);
+        },
+      },
+    );
+  };
+
   const handleDelete = () => setIsConfirming(!isConfirming);
+
   const handleConfirmDelete = () => {
     deletar(data, {
       onSuccess: () => {
@@ -165,6 +189,7 @@ export const Edit = ({ setForm }: IEdit) => {
         setValue("exchange", "");
         setExchange("");
         setIsBlocked(false);
+        setComplianceData(null);
       },
     });
   };
@@ -176,9 +201,14 @@ export const Edit = ({ setForm }: IEdit) => {
           onSubmit={handleSubmit}
           className="flex h-fit w-full flex-col flex-wrap justify-between gap-2 md:flex-row"
         >
-          <button onClick={() => setForm(true)} className="hover:cursor-pointer hover:underline">
+          <button
+            type="button"
+            onClick={() => setForm(true)}
+            className="hover:cursor-pointer hover:underline"
+          >
             <h3 className="text-28 font-bold">ATUALIZE O USUÁRIO</h3>
           </button>
+
           {id && apelido && nome && (
             <IconX
               name="Excluir"
@@ -193,6 +223,7 @@ export const Edit = ({ setForm }: IEdit) => {
               }
             />
           )}
+
           <InputX
             title="Apelido"
             placeholder="User9855-54d4df"
@@ -204,6 +235,7 @@ export const Edit = ({ setForm }: IEdit) => {
               .map((user: any) => user?.counterparty)}
             required
           />
+
           <InputX
             title="Nome"
             placeholder="Fulano Ciclano"
@@ -218,6 +250,7 @@ export const Edit = ({ setForm }: IEdit) => {
             )}
             required
           />
+
           <Select
             title="Exchange"
             placeholder="Bybit https://www.bybit.com/ SG"
@@ -226,6 +259,7 @@ export const Edit = ({ setForm }: IEdit) => {
             onChange={handleExchangeChange}
             required
           />
+
           <InputX
             title="Documento"
             placeholder="CPF/CNPJ"
@@ -241,17 +275,28 @@ export const Edit = ({ setForm }: IEdit) => {
             )}
             required
           />
+
           <Checkbox title="Bloqueado" checked={isBlocked} onChange={handleBlockChange} />
-          <Button disabled={isPending || Object.keys(errors).length > 0}>Salvar</Button>
+
+          <div className="flex w-full flex-col gap-2">
+            <Button disabled={isPending || Object.keys(errors).length > 0}>Salvar</Button>
+
+            {apelido && nome && exchange && documento && (
+              <Button type="button" disabled={isLoadingCompliance} onClick={handleOpenCompliance}>
+                {isLoadingCompliance ? "Carregando compliance..." : "Compliance"}
+              </Button>
+            )}
+          </div>
         </FormX>
-        <Button
-          type="button"
-          disabled={!nome && !apelido && !documento && !exchange}
-          onClick={() => setOpenEditModal(true)}
-        >
-          Editar compliance
-        </Button>
       </FormProvider>
+
+      <ComplianceEditModal
+        open={openEditModal}
+        onClose={() => setOpenEditModal(false)}
+        data={complianceData}
+        onSaved={setComplianceData}
+      />
+
       {isConfirming && (
         <ConfirmationModalButton
           text="Você tem certeza que deseja excluir este dado ?"
@@ -259,12 +304,6 @@ export const Edit = ({ setForm }: IEdit) => {
           onCancel={() => setIsConfirming(false)}
         />
       )}
-      <ComplianceEditModal
-        open={openEditModal}
-        onClose={() => setOpenEditModal(false)}
-        data={data}
-        onSaved={(data: any) => data}
-      />
     </CardContainer>
   );
 };

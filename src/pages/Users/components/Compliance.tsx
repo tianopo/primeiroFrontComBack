@@ -69,12 +69,18 @@ export const Compliance = () => {
               required
             />
 
-            <div className="flex flex-col gap-2">
+            <div className="flex w-full flex-col gap-2">
               <Button disabled={isPending || Object.keys(errors).length > 0}>Checar</Button>
 
-              <Button type="button" disabled={!responseData} onClick={() => setOpenEditModal(true)}>
-                Abrir compliance
-              </Button>
+              {responseData && (
+                <Button
+                  type="button"
+                  disabled={!responseData}
+                  onClick={() => setOpenEditModal(true)}
+                >
+                  Compliance
+                </Button>
+              )}
             </div>
           </FormX>
         </div>

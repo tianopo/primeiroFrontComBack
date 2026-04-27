@@ -142,20 +142,24 @@ export const Register = ({ setForm, initialData }: IRegister) => {
             onChange={handleDocumentoChange}
             required
           />
-          <Button
-            disabled={
-              apelido.length === 0 ||
-              exchange.length === 0 ||
-              isPending ||
-              Object.keys(errors).length > 0
-            }
-          >
-            {nome.length > 0 ? "Salvar" : "Procurar"}
-          </Button>
+          <div className="flex w-full flex-col gap-2">
+            <Button
+              disabled={
+                apelido.length === 0 ||
+                exchange.length === 0 ||
+                isPending ||
+                Object.keys(errors).length > 0
+              }
+            >
+              {nome.length > 0 ? "Salvar" : "Procurar"}
+            </Button>
+            {responseData && (
+              <Button type="button" disabled={!responseData} onClick={() => setOpenEditModal(true)}>
+                Compliance
+              </Button>
+            )}
+          </div>
         </FormX>
-        <Button type="button" disabled={!responseData} onClick={() => setOpenEditModal(true)}>
-          Editar compliance
-        </Button>
       </FormProvider>
       <ComplianceEditModal
         open={openEditModal}

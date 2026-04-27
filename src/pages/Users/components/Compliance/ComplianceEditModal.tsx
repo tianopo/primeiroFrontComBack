@@ -173,8 +173,18 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
 
   if (!open || !data) return null;
 
-  const userName = "id" in data.user ? data.user.name : (data.user.name ?? "Sem nome");
-  const userDocument = "id" in data.user ? data.user.document : data.input.rawDocument;
+  if (!open || !data || !data.input || !data.user || !data.compliance) return null;
+
+  const userObj = data.user as Record<string, unknown>;
+  const hasFullUser = "id" in userObj;
+
+  const userName =
+    hasFullUser && typeof userObj.name === "string"
+      ? userObj.name
+      : ((data.user as any)?.name ?? "Sem nome");
+
+  const userDocument =
+    hasFullUser && typeof userObj.document === "string" ? userObj.document : data.input.rawDocument;
 
   const tabBtnClass = (tab: EditTabKey) =>
     `rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
@@ -217,13 +227,15 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
               Portal da Transparência
             </button>
 
-            <button
-              type="button"
-              className={tabBtnClass("cnpj")}
-              onClick={() => setActiveTab("cnpj")}
-            >
-              CNPJ
-            </button>
+            {data.input.documentType === "CNPJ" && (
+              <button
+                type="button"
+                className={tabBtnClass("cnpj")}
+                onClick={() => setActiveTab("cnpj")}
+              >
+                CNPJ
+              </button>
+            )}
             <button
               type="button"
               className={tabBtnClass("sanctions")}
@@ -274,27 +286,31 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
                     />
                   </div>
 
-                  <div>
-                    <label className="mb-1 block text-sm font-semibold">
-                      Beneficiário responsável
-                    </label>
-                    <input
-                      {...register("beneficialOwnerName")}
-                      className="w-full rounded border p-2"
-                      placeholder="Nome do responsável"
-                    />
-                  </div>
+                  {data.input.documentType === "CNPJ" && (
+                    <>
+                      <div>
+                        <label className="mb-1 block text-sm font-semibold">
+                          Beneficiário responsável
+                        </label>
+                        <input
+                          {...register("beneficialOwnerName")}
+                          className="w-full rounded border p-2"
+                          placeholder="Nome do responsável"
+                        />
+                      </div>
 
-                  <div>
-                    <label className="mb-1 block text-sm font-semibold">
-                      Documento do responsável
-                    </label>
-                    <input
-                      {...register("beneficialOwnerDocument")}
-                      className="w-full rounded border p-2"
-                      placeholder="CPF/CNPJ do responsável"
-                    />
-                  </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-semibold">
+                          Documento do responsável
+                        </label>
+                        <input
+                          {...register("beneficialOwnerDocument")}
+                          className="w-full rounded border p-2"
+                          placeholder="CPF/CNPJ do responsável"
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               </section>
 
