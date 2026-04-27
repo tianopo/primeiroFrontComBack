@@ -314,7 +314,9 @@ export const Edit = ({ setForm }: IEdit) => {
           />
 
           <div className="flex w-full flex-col gap-2">
-            <Button disabled={isPending || Object.keys(errors).length > 0}>Salvar</Button>
+            <Button disabled={isPending || isSyncingDeskdata || Object.keys(errors).length > 0}>
+              Salvar
+            </Button>
 
             {apelido && nome && exchange && documento && (
               <Button

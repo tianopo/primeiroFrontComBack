@@ -5,9 +5,9 @@ import { Modal } from "src/components/Modal/Modal";
 import { useUpdateCompliance } from "../../hooks/useUpdateCompliance";
 import { ComplianceProfileResponse } from "../../utils/complianceProfileTypes";
 import { CnpjTab } from "./CnpjTab";
+import { DeskdataTab } from "./DeskdataTab";
 import { PortalDaTransparenciaTab } from "./PortalDaTransparenciaTab";
 import { SanctionsTab } from "./SanctionsTab";
-import { DeskdataTab } from "./DeskdataTab";
 
 interface IComplianceEditModal {
   open: boolean;
@@ -297,27 +297,31 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
                     />
                   </div>
 
-                  <div>
-                    <label className="mb-1 block text-sm font-semibold">
-                      Beneficiário responsável
-                    </label>
-                    <input
-                      {...register("beneficialOwnerName")}
-                      className="w-full rounded border p-2"
-                      placeholder="Nome do responsável"
-                    />
-                  </div>
+                  {data.input.documentType === "CNPJ" && (
+                    <>
+                      <div>
+                        <label className="mb-1 block text-sm font-semibold">
+                          Beneficiário responsável
+                        </label>
+                        <input
+                          {...register("beneficialOwnerName")}
+                          className="w-full rounded border p-2"
+                          placeholder="Nome do responsável"
+                        />
+                      </div>
 
-                  <div>
-                    <label className="mb-1 block text-sm font-semibold">
-                      Documento do responsável
-                    </label>
-                    <input
-                      {...register("beneficialOwnerDocument")}
-                      className="w-full rounded border p-2"
-                      placeholder="CPF/CNPJ do responsável"
-                    />
-                  </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-semibold">
+                          Documento do responsável
+                        </label>
+                        <input
+                          {...register("beneficialOwnerDocument")}
+                          className="w-full rounded border p-2"
+                          placeholder="CPF/CNPJ do responsável"
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               </section>
 
