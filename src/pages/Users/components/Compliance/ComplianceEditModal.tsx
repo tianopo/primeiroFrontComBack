@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "src/components/Buttons/Button";
 import { Modal } from "src/components/Modal/Modal";
-import { useUpdateCompliance } from "../../hooks/useUpdateCompliance";
+import { useUpdateCompliance } from "../../hooks/Compliance/useUpdateCompliance";
 import { ComplianceProfileResponse } from "../../utils/complianceProfileTypes";
 import { CnpjTab } from "./CnpjTab";
 import { DeskdataTab } from "./DeskdataTab";

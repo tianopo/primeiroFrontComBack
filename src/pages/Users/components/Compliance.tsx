@@ -6,7 +6,7 @@ import { FormX } from "src/components/Form/FormX";
 import { InputX } from "src/components/Form/Input/InputX";
 import { CardContainer } from "src/components/Layout/CardContainer";
 import { formatCPFOrCNPJ } from "src/utils/formats";
-import { useCompliance } from "../hooks/useCompliance";
+import { useCompliance } from "../hooks/Compliance/useCompliance";
 import { ComplianceEditModal } from "./Compliance/ComplianceEditModal";
 
 export const Compliance = () => {

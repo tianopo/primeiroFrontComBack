@@ -3,7 +3,7 @@ import { AxiosError } from "axios";
 import { api, queryClient } from "src/config/api";
 import { responseError, responseSuccess } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
-import { SyncDeskdataPayload, SyncDeskdataResponse } from "../utils/deskdataTypes";
+import { SyncDeskdataPayload, SyncDeskdataResponse } from "../../utils/deskdataTypes";
 
 export const useSyncDeskdata = () => {
   const mutation = useMutation({

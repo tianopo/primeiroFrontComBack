@@ -1,7 +1,7 @@
 import { ArrowCircleRight, FilePdf, ImageSquare } from "@phosphor-icons/react/dist/ssr";
 import { useRef, useState } from "react";
 import { useAccessControl } from "src/routes/context/AccessControl";
-import { useSendChatMessageBybit } from "../hooks/useSendChatMessageBybit";
+import { useSendChatMessageBybit } from "../hooks/Bybit/useSendChatMessageBybit";
 import { KeyType } from "./PendingOrders";
 
 interface ChatBoxProps {

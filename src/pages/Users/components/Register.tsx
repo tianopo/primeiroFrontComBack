@@ -9,9 +9,9 @@ import { CardContainer } from "src/components/Layout/CardContainer";
 import { responseSuccess } from "src/config/responseErrors";
 import { formatCPFOrCNPJ } from "src/utils/formats";
 import { exchangeOptions } from "src/utils/selectsOptions";
-import { useRegisterUser } from "../hooks/useRegisterUser";
-import { useSyncDeskdata } from "../hooks/useSyncDeskdata";
-import { DeskdataDataset, DeskdataStrategy } from "../utils/deskdataTypes";
+import { useSyncDeskdata } from "../hooks/Compliance/useSyncDeskdata";
+import { useRegisterUser } from "../hooks/User/useRegisterUser";
+import { DeskdataDataset } from "../utils/deskdataTypes";
 import { ComplianceEditModal } from "./Compliance/ComplianceEditModal";
 import { DeskdataSelector } from "./Compliance/DeskdataSelector";
 

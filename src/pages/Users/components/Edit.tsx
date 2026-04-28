@@ -12,11 +12,11 @@ import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalB
 import { responseError } from "src/config/responseErrors";
 import { formatCPFOrCNPJ } from "src/utils/formats";
 import { exchangeOptions } from "src/utils/selectsOptions";
-import { useCompliance } from "../hooks/useCompliance";
-import { useDelUser } from "../hooks/useDelUser";
-import { useListUsers } from "../hooks/useListUsers";
-import { useSyncDeskdata } from "../hooks/useSyncDeskdata";
-import { IUpdateUserPayload, useUpdateUser } from "../hooks/useUpdateUser";
+import { useCompliance } from "../hooks/Compliance/useCompliance";
+import { useSyncDeskdata } from "../hooks/Compliance/useSyncDeskdata";
+import { useDelUser } from "../hooks/User/useDelUser";
+import { useListUsers } from "../hooks/User/useListUsers";
+import { IUpdateUserPayload, useUpdateUser } from "../hooks/User/useUpdateUser";
 import { DeskdataDataset } from "../utils/deskdataTypes";
 import { ComplianceEditModal } from "./Compliance/ComplianceEditModal";
 import { DeskdataSelector } from "./Compliance/DeskdataSelector";

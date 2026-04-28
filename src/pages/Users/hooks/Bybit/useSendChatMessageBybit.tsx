@@ -3,7 +3,7 @@ import { AxiosError } from "axios";
 import { api } from "src/config/api";
 import { responseError } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
-import { KeyType } from "../components/PendingOrders";
+import { KeyType } from "../../components/PendingOrders";
 
 interface ISendChatMessageBybit {
   message: string;

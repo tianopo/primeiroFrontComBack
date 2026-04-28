@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalButton";
 import { useAccessControl } from "src/routes/context/AccessControl";
-import { useAdvanceOrderStatus } from "../../hooks/useAdvanceOrderStatus";
+import { useAdvanceOrderStatus } from "../../hooks/Bybit/useAdvanceOrderStatus";
 
 type KeyType = "empresa" | "pessoal" | "cryptotech";
 
