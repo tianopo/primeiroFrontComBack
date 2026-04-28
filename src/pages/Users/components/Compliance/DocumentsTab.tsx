@@ -83,20 +83,26 @@ export const DocumentsTab = ({ data, onSaved }: IDocumentsTab) => {
     return mimeType === "application/pdf" || /\.pdf$/i.test(String(storageKey ?? ""));
   };
 
-  const activeRequirements = useMemo(() => {
-    const requiredNow = data?.compliance?.evidence?.requiredNow ?? [];
-    const stored = data?.compliance?.evidence?.stored ?? [];
+  const requiredNow = data?.compliance?.evidence?.requiredNow ?? [];
+  const storedEvidence = data?.compliance?.evidence?.stored ?? [];
 
-    return requiredNow.filter((item: any) => {
-      const existing = stored.find((doc: any) => doc.type === item.type);
+  const requiredTypes = new Set(requiredNow.map((item: { type: string }) => item.type));
+
+  const visibleStoredEvidence = storedEvidence.filter((item: { type: string }) =>
+    requiredTypes.has(item.type),
+  );
+
+  const activeRequirements = useMemo(() => {
+    return requiredNow.filter((item: { type: string }) => {
+      const existing = visibleStoredEvidence.find(
+        (doc: { type: string; status: string }) => doc.type === item.type,
+      );
 
       if (!existing) return true;
 
-      return existing.status !== "APPROVED" && existing.status !== "WAIVED";
+      return existing.status !== "APPROVED";
     });
-  }, [data]);
-
-  const storedEvidence = data?.compliance?.evidence?.stored ?? [];
+  }, [requiredNow, visibleStoredEvidence]);
 
   const getEvidenceByType = (type: string) =>
     storedEvidence.find((item: any) => item.type === type);
@@ -134,6 +140,14 @@ export const DocumentsTab = ({ data, onSaved }: IDocumentsTab) => {
 
     onSaved?.(result);
   };
+
+  if (requiredNow.length === 0) {
+    return (
+      <div className="rounded-md border border-gray-200 p-4 text-sm text-gray-500">
+        Nenhum documento exigido no momento.
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">
