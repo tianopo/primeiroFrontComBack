@@ -88,13 +88,14 @@ export const DocumentsTab = ({ data, onSaved }: IDocumentsTab) => {
 
   const requiredTypes = new Set(requiredNow.map((item: { type: string }) => item.type));
 
-  const visibleStoredEvidence = storedEvidence.filter((item: { type: string }) =>
-    requiredTypes.has(item.type),
+  const visibleStoredEvidence = storedEvidence.filter(
+    (item: { type: string; status: string }) =>
+      requiredTypes.has(item.type) || item.status === "APPROVED" || item.status === "WAIVED",
   );
 
   const activeRequirements = useMemo(() => {
     return requiredNow.filter((item: { type: string }) => {
-      const existing = visibleStoredEvidence.find(
+      const existing = storedEvidence.find(
         (doc: { type: string; status: string }) => doc.type === item.type,
       );
 
@@ -102,7 +103,7 @@ export const DocumentsTab = ({ data, onSaved }: IDocumentsTab) => {
 
       return existing.status !== "APPROVED";
     });
-  }, [requiredNow, visibleStoredEvidence]);
+  }, [requiredNow, storedEvidence]);
 
   const getEvidenceByType = (type: string) =>
     storedEvidence.find((item: any) => item.type === type);
@@ -141,7 +142,7 @@ export const DocumentsTab = ({ data, onSaved }: IDocumentsTab) => {
     onSaved?.(result);
   };
 
-  if (requiredNow.length === 0) {
+  if (requiredNow.length === 0 && visibleStoredEvidence.length === 0) {
     return (
       <div className="rounded-md border border-gray-200 p-4 text-sm text-gray-500">
         Nenhum documento exigido no momento.
@@ -195,7 +196,7 @@ export const DocumentsTab = ({ data, onSaved }: IDocumentsTab) => {
                                 onSaved?.(result);
                               }}
                             >
-                              Expirado
+                              Expirar
                             </button>
                           )}
                         </div>
