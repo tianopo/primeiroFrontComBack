@@ -10,6 +10,7 @@ import { DocumentsTab } from "./DocumentsTab";
 import { MedsTab } from "./MedsTab";
 import { PortalDaTransparenciaTab } from "./PortalDaTransparenciaTab";
 import { SanctionsTab } from "./SanctionsTab";
+import { generateComplianceFullReport } from "../../utils/generateComplianceFullReport";
 
 interface IComplianceEditModal {
   open: boolean;
@@ -662,6 +663,17 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
           <div className="flex justify-end gap-2 border-t border-gray-200 pt-3">
             <Button type="button" onClick={onClose}>
               Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={() =>
+                generateComplianceFullReport(data, {
+                  portalData: data.compliance.sources.pdt,
+                  cnpjData: data.compliance.sources.pdt?.cnpj,
+                })
+              }
+            >
+              Gerar relatório
             </Button>
             <Button disabled={isPending}>Salvar compliance</Button>
           </div>
