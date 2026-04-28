@@ -16,8 +16,11 @@ export const apiRoute = {
   operation: "compliance/operation",
   operationId: (id: string) => `compliance/operation/delete/${id}`,
   complianceUpdate: `/compliance/document`,
+  complianceEvidenceUpload: (document: string) =>
+    `/compliance/document/${encodeURIComponent(document)}/evidence`,
+  complianceEvidenceReview: (evidenceId: string) => `/compliance/evidence/${evidenceId}/status`,
   /* DESKDATA */
-  complianceDeskdataSync: "/deskdata/sync",
+  deskdataSync: "/deskdata/sync",
   /* USER */
   user: "user",
   account: "user/account",

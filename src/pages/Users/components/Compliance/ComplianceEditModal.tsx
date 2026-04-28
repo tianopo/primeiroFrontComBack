@@ -8,6 +8,7 @@ import { CnpjTab } from "./CnpjTab";
 import { DeskdataTab } from "./DeskdataTab";
 import { PortalDaTransparenciaTab } from "./PortalDaTransparenciaTab";
 import { SanctionsTab } from "./SanctionsTab";
+import { DocumentsTab } from "./DocumentsTab";
 
 interface IComplianceEditModal {
   open: boolean;
@@ -517,14 +518,14 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
                         Ordens altas em 30 dias: {data.compliance.behavior.highValueOrders30d}
                       </li>
                       <li>
-                        Soma das ordens em 30 dias:{" "}
+                        Soma total das ordens nos últimos 30 dias:{" "}
                         {data.compliance.behavior.monthlyVolumeBrl.toLocaleString("pt-BR", {
                           style: "currency",
                           currency: "BRL",
                         })}
                       </li>
                       <li>
-                        Ordem mais alta em 30 dias:{" "}
+                        Valor da ordem mais alta nos últimos 30 dias:{" "}
                         {data.compliance.behavior.highestOrder30d.toLocaleString("pt-BR", {
                           style: "currency",
                           currency: "BRL",
@@ -551,71 +552,7 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
             </div>
           )}
 
-          {activeTab === "documents" && (
-            <div className="flex flex-col gap-4">
-              <section className="rounded-md border border-gray-200 p-4">
-                <h4 className="mb-3 text-lg font-bold">Documentos e exigências</h4>
-
-                <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                  {[
-                    ["requiresDocument", "Exige documentos"],
-                    ["requiresSelfieDocument", "Exige selfie com documento"],
-                    ["requiresAddressProof", "Exige comprovante de endereço"],
-                    ["requiresIncomeProof", "Exige comprovante de renda"],
-                    ["requiresBankStatement", "Exige extrato bancário"],
-                    ["requiresCorporateDocs", "Exige documentos societários"],
-                    ["requiresResponsibilityTerm", "Exige termo de responsabilidade"],
-                    ["requiresEnhancedKyc", "Exige KYC reforçado"],
-                    ["requiresPldForm", "Exige formulário PLD"],
-                    ["requiresManualReview", "Exige revisão manual"],
-                  ].map(([field, label]) => (
-                    <label key={field} className="flex items-center gap-2 rounded border p-2">
-                      <input type="checkbox" {...register(field as keyof ComplianceEditForm)} />
-                      <span>{label}</span>
-                    </label>
-                  ))}
-                </div>
-              </section>
-
-              <section className="rounded-md border border-gray-200 p-4">
-                <h4 className="mb-3 text-lg font-bold">Documentos exigidos agora</h4>
-
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                  <div className="rounded border p-3">
-                    <strong>Required Now</strong>
-                    {data.compliance.evidence.requiredNow.length === 0 ? (
-                      <p className="mt-2 text-sm">Nenhum documento exigido no momento.</p>
-                    ) : (
-                      <ul className="mt-2 list-disc pl-5 text-sm">
-                        {data.compliance.evidence.requiredNow.map((item) => (
-                          <li key={`${item.type}-${item.label}`}>
-                            {item.label} — {item.reason}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-
-                  <div className="rounded border p-3">
-                    <strong>Documentos armazenados</strong>
-                    {data.compliance.evidence.stored.length === 0 ? (
-                      <p className="mt-2 text-sm">Nenhum documento armazenado.</p>
-                    ) : (
-                      <div className="mt-2 max-h-48 space-y-2 overflow-y-auto text-sm">
-                        {data.compliance.evidence.stored.map((item) => (
-                          <div key={item.id} className="rounded border p-2">
-                            <div className="font-semibold">{item.label}</div>
-                            <div>Tipo: {item.type}</div>
-                            <div>Status: {item.status}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </section>
-            </div>
-          )}
+          {activeTab === "documents" && <DocumentsTab data={data} onSaved={onSaved} />}
 
           {activeTab === "sanctions" && (
             <SanctionsTab
