@@ -84,7 +84,16 @@ export const DocumentsTab = ({ data, onSaved }: IDocumentsTab) => {
   };
 
   const activeRequirements = useMemo(() => {
-    return data?.compliance?.evidence?.requiredNow ?? [];
+    const requiredNow = data?.compliance?.evidence?.requiredNow ?? [];
+    const stored = data?.compliance?.evidence?.stored ?? [];
+
+    return requiredNow.filter((item: any) => {
+      const existing = stored.find((doc: any) => doc.type === item.type);
+
+      if (!existing) return true;
+
+      return existing.status !== "APPROVED" && existing.status !== "WAIVED";
+    });
   }, [data]);
 
   const storedEvidence = data?.compliance?.evidence?.stored ?? [];
@@ -153,19 +162,36 @@ export const DocumentsTab = ({ data, onSaved }: IDocumentsTab) => {
 
                     return (
                       <div className="mt-2 rounded border bg-gray-50 p-2 text-sm">
-                        <div>
-                          <strong>Status:</strong> {evidence.status}
+                        <div className="flex items-center gap-2">
+                          <strong>Status:</strong>
+                          <span>{evidence.status}</span>
+
+                          {evidence.status === "APPROVED" && (
+                            <button
+                              type="button"
+                              disabled={isReviewing}
+                              className="rounded bg-gray-500 px-2 py-0.5 text-white hover:bg-gray-600 disabled:opacity-50"
+                              onClick={async () => {
+                                const result = await reviewEvidence({
+                                  evidenceId: evidence.id,
+                                  status: "WAIVED",
+                                  validatedBy: "Master",
+                                });
+
+                                onSaved?.(result);
+                              }}
+                            >
+                              Expirado
+                            </button>
+                          )}
                         </div>
+
                         <div>
                           <strong>Arquivo:</strong> {evidence.label}
                         </div>
                         <div>
                           <strong>Descrição:</strong> {evidence.description || "-"}
                         </div>
-
-                        {evidence.storageKey && acesso === "Master" && (
-                          <div className="mt-2 break-all text-xs text-gray-500">{fileUrl}</div>
-                        )}
 
                         {isImageFile(evidence.mimeType, evidence.storageKey) && fileUrl && (
                           <div className="mt-2">
@@ -174,10 +200,6 @@ export const DocumentsTab = ({ data, onSaved }: IDocumentsTab) => {
                               alt={evidence.label}
                               className="h-20 w-20 cursor-pointer rounded border object-cover"
                               onClick={() => setPreviewUrl(fileUrl)}
-                              onError={(e) => {
-                                console.error("Erro ao carregar imagem:", fileUrl);
-                                e.currentTarget.style.display = "none";
-                              }}
                             />
                           </div>
                         )}
