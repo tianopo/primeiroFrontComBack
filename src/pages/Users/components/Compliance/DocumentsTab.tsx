@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
+import { Modal } from "src/components/Modal/Modal";
+import { publicFileUrl } from "src/config/api";
+import { useAccessControl } from "src/routes/context/AccessControl";
 import { useReviewComplianceEvidence } from "../../hooks/Compliance/useReviewComplianceEvidence";
 import { useUploadComplianceEvidence } from "../../hooks/Compliance/useUploadComplianceEvidence";
 
@@ -15,6 +18,11 @@ type RequirementConfig = {
 };
 
 const REQUIREMENT_CONFIGS: RequirementConfig[] = [
+  {
+    key: "requiresDocument",
+    label: "Exige documento frente e verso",
+    type: "ID_FRONT_BACK",
+  },
   {
     key: "requiresSelfieDocument",
     label: "Exige selfie com documento",
@@ -60,9 +68,20 @@ const REQUIREMENT_CONFIGS: RequirementConfig[] = [
 export const DocumentsTab = ({ data, onSaved }: IDocumentsTab) => {
   const [files, setFiles] = useState<Record<string, File | null>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const { acesso } = useAccessControl();
 
   const { mutateAsync: uploadEvidence, isPending: isUploading } = useUploadComplianceEvidence();
   const { mutateAsync: reviewEvidence, isPending: isReviewing } = useReviewComplianceEvidence();
+
+  const isImageFile = (mimeType?: string | null, storageKey?: string | null) => {
+    if (mimeType?.startsWith("image/")) return true;
+    return /\.(png|jpg|jpeg|webp|gif|bmp|svg)$/i.test(String(storageKey ?? ""));
+  };
+
+  const isPdfFile = (mimeType?: string | null, storageKey?: string | null) => {
+    return mimeType === "application/pdf" || /\.pdf$/i.test(String(storageKey ?? ""));
+  };
 
   const activeRequirements = useMemo(() => {
     return data?.compliance?.evidence?.requiredNow ?? [];
@@ -120,21 +139,63 @@ export const DocumentsTab = ({ data, onSaved }: IDocumentsTab) => {
             return (
               <div key={item.type} className="rounded border p-3">
                 <div className="font-semibold">{item.label}</div>
-                <div className="mt-1 text-sm">{active ? "Pendente / exigido" : "Não exigido"}</div>
+                <div className="mt-1 text-sm">
+                  {evidence && evidence.status === "APPROVED"
+                    ? ""
+                    : active
+                      ? "Pendente / exigido"
+                      : "Não exigido"}
+                </div>
 
-                {evidence && (
-                  <div className="mt-2 rounded border bg-gray-50 p-2 text-sm">
-                    <div>
-                      <strong>Status:</strong> {evidence.status}
-                    </div>
-                    <div>
-                      <strong>Arquivo:</strong> {evidence.label}
-                    </div>
-                    <div>
-                      <strong>Descrição:</strong> {evidence.description || "-"}
-                    </div>
-                  </div>
-                )}
+                {evidence &&
+                  (() => {
+                    const fileUrl = publicFileUrl(evidence.storageKey);
+
+                    return (
+                      <div className="mt-2 rounded border bg-gray-50 p-2 text-sm">
+                        <div>
+                          <strong>Status:</strong> {evidence.status}
+                        </div>
+                        <div>
+                          <strong>Arquivo:</strong> {evidence.label}
+                        </div>
+                        <div>
+                          <strong>Descrição:</strong> {evidence.description || "-"}
+                        </div>
+
+                        {evidence.storageKey && acesso === "Master" && (
+                          <div className="mt-2 break-all text-xs text-gray-500">{fileUrl}</div>
+                        )}
+
+                        {isImageFile(evidence.mimeType, evidence.storageKey) && fileUrl && (
+                          <div className="mt-2">
+                            <img
+                              src={fileUrl}
+                              alt={evidence.label}
+                              className="h-20 w-20 cursor-pointer rounded border object-cover"
+                              onClick={() => setPreviewUrl(fileUrl)}
+                              onError={(e) => {
+                                console.error("Erro ao carregar imagem:", fileUrl);
+                                e.currentTarget.style.display = "none";
+                              }}
+                            />
+                          </div>
+                        )}
+
+                        {isPdfFile(evidence.mimeType, evidence.storageKey) && fileUrl && (
+                          <div className="mt-2">
+                            <button
+                              type="button"
+                              className="rounded border px-3 py-1 text-sm"
+                              onClick={() => setPreviewUrl(fileUrl)}
+                            >
+                              Visualizar PDF
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
               </div>
             );
           })}
@@ -201,6 +262,28 @@ export const DocumentsTab = ({ data, onSaved }: IDocumentsTab) => {
               );
             })}
           </div>
+          {previewUrl && (
+            <Modal onClose={() => setPreviewUrl(null)}>
+              <div className="flex h-full w-full flex-col gap-3">
+                {/\.pdf(\?|#|$)/i.test(previewUrl) ? (
+                  <iframe
+                    src={previewUrl}
+                    title="Preview PDF"
+                    className="h-[75vh] w-full rounded border"
+                  />
+                ) : (
+                  <img
+                    src={previewUrl}
+                    alt="Preview documento"
+                    className="max-h-[75vh] w-full rounded border object-contain"
+                    onError={() => {
+                      console.error("Erro ao carregar preview:", previewUrl);
+                    }}
+                  />
+                )}
+              </div>
+            </Modal>
+          )}
         </section>
       )}
     </div>

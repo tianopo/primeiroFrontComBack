@@ -14,10 +14,6 @@ export const BASE_ORIGIN = NODE_ENV === "dev" ? `${HOST}${PORT}` : HOST;
 // baseURL final das APIs
 export const BASE_API = `${BASE_ORIGIN}${API_PREFIX}`;
 
-// arquivos estáticos
-export const fileBase = (fileUrl: string) =>
-  `${BASE_ORIGIN}${process.env.REACT_APP_BACK_PATH_ARQUIVO || "/static"}/${fileUrl.replace(/^\/+/, "")}`;
-
 const timeOut = 1000 * 30;
 const authHeader = () => ({ authorization: `Bearer ${localStorage.getItem("token")}` });
 
@@ -40,10 +36,19 @@ export const api = () =>
 // upload
 export const apiUpload = () =>
   axios.create({
-    baseURL: BASE_API, // <-- sempre com /api
+    baseURL: BASE_API,
     timeout: timeOut,
     headers: {
       ...authHeader(),
-      "Content-Type": "multipart/form-data",
     },
   });
+
+export const publicFileUrl = (fileUrl?: string | null) => {
+  if (!fileUrl) return "";
+
+  if (/^https?:\/\//i.test(fileUrl)) {
+    return fileUrl;
+  }
+
+  return `${BASE_ORIGIN}${fileUrl.startsWith("/") ? fileUrl : `/${fileUrl}`}`;
+};

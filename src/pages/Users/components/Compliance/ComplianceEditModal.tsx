@@ -6,9 +6,9 @@ import { useUpdateCompliance } from "../../hooks/Compliance/useUpdateCompliance"
 import { ComplianceProfileResponse } from "../../utils/complianceProfileTypes";
 import { CnpjTab } from "./CnpjTab";
 import { DeskdataTab } from "./DeskdataTab";
+import { DocumentsTab } from "./DocumentsTab";
 import { PortalDaTransparenciaTab } from "./PortalDaTransparenciaTab";
 import { SanctionsTab } from "./SanctionsTab";
-import { DocumentsTab } from "./DocumentsTab";
 
 interface IComplianceEditModal {
   open: boolean;
@@ -108,7 +108,7 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
   useEffect(() => {
     if (!data || !open) return;
 
-    setActiveTab("analysis");
+    if (activeTab !== "documents") setActiveTab("analysis");
 
     reset({
       riskLevel: data.compliance.riskLevel,
@@ -199,7 +199,7 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
   const formatSourceLabel = (value: string) => value.replace(/_/g, " ");
 
   return (
-    <Modal onClose={onClose} title="Editar compliance">
+    <Modal onClose={onClose} title="Compliance">
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="flex flex-wrap gap-2 border-b border-gray-200 pb-3">
