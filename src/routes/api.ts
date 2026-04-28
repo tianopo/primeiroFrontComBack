@@ -19,6 +19,9 @@ export const apiRoute = {
   complianceEvidenceUpload: (document: string) =>
     `/compliance/document/${encodeURIComponent(document)}/evidence`,
   complianceEvidenceReview: (evidenceId: string) => `/compliance/evidence/${evidenceId}/status`,
+  complianceCreateMed: (document: string) =>
+    `/compliance/document/${encodeURIComponent(document)}/med`,
+  complianceDeleteMed: (eventId: string) => `/compliance/med/${eventId}/delete`,
   /* DESKDATA */
   deskdataSync: "/deskdata/sync",
   /* USER */

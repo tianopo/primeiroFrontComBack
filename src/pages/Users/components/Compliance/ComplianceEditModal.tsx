@@ -7,6 +7,7 @@ import { ComplianceProfileResponse } from "../../utils/complianceProfileTypes";
 import { CnpjTab } from "./CnpjTab";
 import { DeskdataTab } from "./DeskdataTab";
 import { DocumentsTab } from "./DocumentsTab";
+import { MedsTab } from "./MedsTab";
 import { PortalDaTransparenciaTab } from "./PortalDaTransparenciaTab";
 import { SanctionsTab } from "./SanctionsTab";
 
@@ -55,6 +56,7 @@ type ComplianceEditForm = {
 type EditTabKey =
   | "analysis"
   | "limits"
+  | "meds"
   | "documents"
   | "portal"
   | "cnpj"
@@ -219,6 +221,13 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
             </button>
             <button
               type="button"
+              className={tabBtnClass("meds")}
+              onClick={() => setActiveTab("meds")}
+            >
+              MEDs
+            </button>
+            <button
+              type="button"
               className={tabBtnClass("documents")}
               onClick={() => setActiveTab("documents")}
             >
@@ -332,7 +341,11 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                   <div>
                     <label className="mb-1 block text-sm font-semibold">Risk Level</label>
-                    <select {...register("riskLevel")} className="w-full rounded border p-2">
+                    <select
+                      {...register("riskLevel")}
+                      className="w-full cursor-not-allowed rounded border p-2"
+                      disabled
+                    >
                       <option value="LOW">LOW</option>
                       <option value="MEDIUM">MEDIUM</option>
                       <option value="HIGH">HIGH</option>
@@ -342,7 +355,11 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
 
                   <div>
                     <label className="mb-1 block text-sm font-semibold">Status</label>
-                    <select {...register("status")} className="w-full rounded border p-2">
+                    <select
+                      {...register("status")}
+                      className="w-full cursor-not-allowed rounded border p-2"
+                      disabled
+                    >
                       <option value="PENDING">PENDING</option>
                       <option value="APPROVED">APPROVED</option>
                       <option value="MONITORING">MONITORING</option>
@@ -357,7 +374,8 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
                     <input
                       type="number"
                       {...register("riskScore")}
-                      className="w-full rounded border p-2"
+                      className="w-full cursor-not-allowed rounded border p-2"
+                      disabled
                     />
                   </div>
                 </div>
@@ -551,6 +569,8 @@ export const ComplianceEditModal = ({ open, onClose, data, onSaved }: IComplianc
               </section>
             </div>
           )}
+
+          {activeTab === "meds" && <MedsTab data={data} onSaved={onSaved} />}
 
           {activeTab === "documents" && <DocumentsTab data={data} onSaved={onSaved} />}
 
