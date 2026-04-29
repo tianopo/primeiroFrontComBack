@@ -1,5 +1,5 @@
 import { CopySimple, DoorOpen, Gear, SlidersHorizontal } from "@phosphor-icons/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useLogout } from "src/hooks/API/useLogout";
 import { app } from "src/routes/app";
@@ -27,8 +27,8 @@ export const SidebarX = ({ navbar, menuOpen }: ISidebarX) => {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const copyTexts = [
-    { label: "PIX CNPJ", text: "55.636.113/0001-70" },
-    { label: "PIX Aleatório", text: "f8f46a30-7175-4ac1-8bf4-98ec4a022a0c" },
+    { label: "PIX CNPJ", text: "ab512de6-aa7b-4750-8321-914416061baa" },
+    { label: "PIX Aleatório", text: "ab512de6-aa7b-4750-8321-914416061baa" },
     {
       label: "Transferência",
       text: `Não há para Corpx`,
