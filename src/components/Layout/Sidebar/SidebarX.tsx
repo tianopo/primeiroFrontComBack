@@ -1,11 +1,10 @@
-import { CopySimple, DoorOpen, Gear, SlidersHorizontal } from "@phosphor-icons/react";
+import { CopySimple, DoorOpen, Gear } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useLogout } from "src/hooks/API/useLogout";
 import { app } from "src/routes/app";
 import { useAccessControl } from "src/routes/context/AccessControl";
 import "./Sidebar.css";
-import { useUpdateExchangeOffsets } from "../LayoutX/UseUpdateExchangesOffsets";
 
 interface INavbar {
   icon?: JSX.Element;
@@ -40,8 +39,8 @@ Whatsapp: 55+ 12 99254-6355
 Telegram: @Tianopo`,
     },
     {
-      label: "Terceiros",
-      text: `Sem terceiros / No third party / Proibido terceiros / se for terceiros cancele / cancel now if you are third party / nome banco = corretora nome / holder bank name = exchange name`,
+      label: "Compliance",
+      text: `Para aceitar a ordem é necessário enviar os documentos: selfie com documento, identidade frente e verso, comprovante de endereço, extrato bancário, comprovante de renda (IRPF, IRPJ, holerite ou outros), para CNPJ enviar mais, contrato social, balancete assinado por contador`,
     },
   ];
 
