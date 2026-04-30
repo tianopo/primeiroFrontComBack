@@ -16,6 +16,7 @@ import { ChatBox } from "./ChatBox";
 import { StatementRedisPanel } from "./Corpx/StatementRedisPanel";
 import { OrderMessages } from "./OrderMessages";
 import { BinanceOrders } from "./PendingOrders/BinanceOrders";
+import { BybitCompliancePopover } from "./PendingOrders/BybitCompliancePopover";
 import { CoinexOrders } from "./PendingOrders/CoinexOrders";
 import { CryptotechOrders } from "./PendingOrders/CryptotechOrders";
 import { PaymentTermsBox } from "./PendingOrders/PaymentTermsBox";
@@ -50,6 +51,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
 
   const [showModal, setShowModal] = useState(false);
   const [orderToRelease, setOrderToRelease] = useState<any>(null);
+  const [openedComplianceOrderId, setOpenedComplianceOrderId] = useState<string | null>(null);
 
   // 🔹 activeTab persistido no localStorage
   const [activeTab, setActiveTab] = useState<KeyType>(() => {
@@ -284,7 +286,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
           setInitialRegisterData={setInitialRegisterData}
         />
       ) : (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 overflow-visible">
           {orders.map((order: any) => {
             const isBuy = Number(order?.side) === 0;
             const isPendingAny = isMarkPaidBybitPending;
@@ -298,21 +300,31 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                   order.paymentTerms.length > 0 && (
                     <PaymentTermsBox terms={order.paymentTerms} title="Dados para pagamento" />
                   )}
+
                 <button
                   className="absolute right-2 top-2 rounded-6 border border-gray-200 bg-white p-2 hover:bg-gray-100 hover:opacity-80"
                   onClick={() => {
                     setInitialRegisterData({
                       apelido: order.targetNickName || "",
                       nome: order?.side === 0 ? order.sellerRealName : order.buyerRealName,
-                      exchange:
-                        activeTab === "empresa"
-                          ? "Bybit https://www.bybit.com/ SG"
-                          : "Bybit https://www.bybit.com/ SG",
+                      exchange: "Bybit https://www.bybit.com/ SG",
                     });
                     setForm(true);
                   }}
                 >
                   <Copy width={20} height={20} weight="duotone" />
+                </button>
+
+                <button
+                  type="button"
+                  className="absolute right-14 top-2 rounded-6 border border-gray-200 bg-white px-2 py-1 text-xs hover:bg-gray-100"
+                  onClick={() =>
+                    setOpenedComplianceOrderId((prev) =>
+                      prev === String(order.id) ? null : String(order.id),
+                    )
+                  }
+                >
+                  Compliance
                 </button>
 
                 <p>
@@ -354,13 +366,16 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                 <p>
                   <strong>CPF/CNPJ:</strong> {order.document || "Não informado"}
                 </p>
+
                 {hasRegisteredCpf(order.document) && order?.pixInStatement?.originalEndToEnd ? (
                   <p>
                     <strong>EndToEnd:</strong> {order.pixInStatement.originalEndToEnd}
                   </p>
                 ) : null}
+
                 <OrderMessages messages={order.messages} />
                 <ChatBox orderId={order.id} keyType={activeTab} />
+
                 <Button
                   disabled={
                     isPendingAny ||
@@ -379,15 +394,12 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                           "CRYPTOTECH: Anular ordem",
                         ].includes(msg.message),
                       ) ||
-                    // ✅ regra por tipo:
                     (isBuy ? order.status !== 10 : order.status <= 10 || order.status >= 30)
                   }
                   onClick={() => {
                     if (isBuy) {
-                      // ✅ compra (status 10): confirmação da contraparte -> envia recibo no chat + marca pago
                       handleSendReceipt(order, "markPaid");
                     } else {
-                      // ✅ venda: fluxo já existente (recibo + contrato + release)
                       handleSendReceipt(order, "release");
                     }
                   }}
@@ -398,6 +410,16 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                       ? "Pago / Aguardando liberação"
                       : "Apelando"}
                 </Button>
+
+                {openedComplianceOrderId === String(order.id) && order?.compliance && (
+                  <div className="absolute left-[calc(100%+12px)] top-0 z-50">
+                    <BybitCompliancePopover
+                      data={order.compliance}
+                      onClose={() => setOpenedComplianceOrderId(null)}
+                    />
+                  </div>
+                )}
+
                 {showModal && orderToRelease && (
                   <ConfirmationModalButton
                     text={`${
