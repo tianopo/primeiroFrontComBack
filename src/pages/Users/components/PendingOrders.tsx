@@ -215,6 +215,37 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
     );
   };
 
+  const hasAvailableDocument = (order: any) => {
+    const digits = onlyDigits(order?.document);
+    return digits.length === 11 || digits.length === 14;
+  };
+
+  const getComplianceVisualState = (order: any) => {
+    const complianceStatus = order?.compliance?.status;
+
+    if (order?.compliance?.blocked || complianceStatus === "BLOCKED") {
+      return {
+        cardClass: "bg-red-50 border-red-300 shadow-red-100",
+        badgeClass: "bg-red-100 text-red-800 border border-red-300",
+        badgeLabel: "Compliance bloqueado",
+      };
+    }
+
+    if (complianceStatus === "RESTRICTED") {
+      return {
+        cardClass: "bg-amber-50 border-amber-300 shadow-amber-100",
+        badgeClass: "bg-amber-100 text-amber-800 border border-amber-300",
+        badgeLabel: "Compliance restrito",
+      };
+    }
+
+    return {
+      cardClass: "bg-white border-gray-200 shadow",
+      badgeClass: "",
+      badgeLabel: "",
+    };
+  };
+
   if (isLoading) return <p>Carregando ordens...</p>;
   if (error) return <p>Erro ao carregar ordens.</p>;
   if (!data) return <p>Sem ordens pendentes.</p>;
@@ -293,7 +324,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
             return (
               <div
                 key={order.id}
-                className="relative flex w-fit flex-col gap-0.5 rounded-xl border border-gray-200 p-4 shadow"
+                className={`relative flex w-fit flex-col gap-0.5 rounded-xl border p-4 shadow ${getComplianceVisualState(order).cardClass}`}
               >
                 {order?.side === 0 &&
                   Array.isArray(order?.paymentTerms) &&
@@ -315,17 +346,19 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                   <Copy width={20} height={20} weight="duotone" />
                 </button>
 
-                <button
-                  type="button"
-                  className="absolute right-14 top-2 rounded-6 border border-gray-200 bg-white px-2 py-1 text-xs hover:bg-gray-100"
-                  onClick={() =>
-                    setOpenedComplianceOrderId((prev) =>
-                      prev === String(order.id) ? null : String(order.id),
-                    )
-                  }
-                >
-                  Compliance
-                </button>
+                {hasAvailableDocument(order) && (
+                  <button
+                    type="button"
+                    className="absolute right-14 top-2 rounded-6 border border-gray-200 bg-white px-2 py-1 text-xs hover:bg-gray-100"
+                    onClick={() =>
+                      setOpenedComplianceOrderId((prev) =>
+                        prev === String(order.id) ? null : String(order.id),
+                      )
+                    }
+                  >
+                    Compliance
+                  </button>
+                )}
 
                 <p>
                   <strong>ID da Ordem:</strong> {order.id}
@@ -411,14 +444,16 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                       : "Apelando"}
                 </Button>
 
-                {openedComplianceOrderId === String(order.id) && order?.compliance && (
-                  <div className="absolute left-[calc(100%+12px)] top-0 z-50">
-                    <BybitCompliancePopover
-                      data={order.compliance}
-                      onClose={() => setOpenedComplianceOrderId(null)}
-                    />
-                  </div>
-                )}
+                {openedComplianceOrderId === String(order.id) &&
+                  hasAvailableDocument(order) &&
+                  order?.compliance && (
+                    <div className="absolute left-[calc(100%+12px)] top-0 z-50">
+                      <BybitCompliancePopover
+                        data={order.compliance}
+                        onClose={() => setOpenedComplianceOrderId(null)}
+                      />
+                    </div>
+                  )}
 
                 {showModal && orderToRelease && (
                   <ConfirmationModalButton
