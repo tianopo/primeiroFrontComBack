@@ -1,16 +1,14 @@
 import { useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { CardContainer } from "src/components/Layout/CardContainer";
-import { useCorpxBalance } from "../../hooks/Corpx/useCorpxBalance";
-import { useCorpxListMeds } from "../../hooks/Corpx/useCorpxListMeds";
 import { useCorpxStatement } from "../../hooks/Corpx/useCorpxStatement";
-import { MedTab } from "./MedTab";
+import { useGowdBalance } from "../../hooks/Gowd/useGowdBalance";
 import { PixToolModal } from "./Pix/PixToolModal";
 import { RefundModal } from "./Pix/RefundModal";
 import { StatementRedisModal } from "./StatementRedisModal";
 import { StatementTab } from "./StatementTab";
 
-type TabKey = "extrato" | "med";
+type TabKey = "extrato";
 
 // helper: yyyy-mm-dd (para input date)
 const todayYMD = () => new Date().toISOString().slice(0, 10);
@@ -23,6 +21,11 @@ export const Extrato = () => {
     return (window.localStorage.getItem("corpxExtratoActiveTab") as TabKey) ?? "extrato";
   });
   const [open, setOpen] = useState(false);
+  const { data: gowdBalance, isLoading } = useGowdBalance();
+  const formattedBalance = Number(gowdBalance ?? 0).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
 
   const switchTab = (tab: TabKey) => {
     setActiveTab(tab);
@@ -50,10 +53,6 @@ export const Extrato = () => {
     size: 50,
   }));
 
-  // queries gerais
-  const balanceQ = useCorpxBalance();
-  const medsQ = useCorpxListMeds("OPEN");
-
   // ✅ extrato via statement hook
   const statementQ = useCorpxStatement({
     accountId,
@@ -75,18 +74,9 @@ export const Extrato = () => {
     <div className="flex w-full flex-col gap-4 px-4">
       <CardContainer full>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h4 className="text-28 font-bold">EXTRATO (CorpX)</h4>
+          <h4 className="text-28 font-bold">EXTRATO (GOWD)</h4>
           <div className="mb-4 grid gap-3 md:grid-cols-2">
-            {balanceQ.isLoading ? (
-              <h6>Carregando...</h6>
-            ) : balanceQ.error ? (
-              <h6>Erro ao carregar saldo</h6>
-            ) : (
-              <h6>
-                {" "}
-                Saldo: {balanceQ.data.total} {balanceQ.data.currency}
-              </h6>
-            )}
+            Saldo: {isLoading ? "Carregando..." : formattedBalance + " BRL"}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button onClick={() => setOpen(true)}>Checar</Button>
@@ -99,9 +89,6 @@ export const Extrato = () => {
         <div className="mb-3 flex w-full gap-2 border-b border-gray-200 font-bold lg:w-[calc(50%-1rem)]">
           <button className={tabBtnClass("extrato")} onClick={() => switchTab("extrato")}>
             Extrato
-          </button>
-          <button className={tabBtnClass("med")} onClick={() => switchTab("med")}>
-            MED
           </button>
         </div>
 
@@ -126,15 +113,6 @@ export const Extrato = () => {
             size={applied.size}
             onPrev={() => setApplied((p) => ({ ...p, page: Math.max(0, p.page - 1) }))}
             onNext={() => setApplied((p) => ({ ...p, page: p.page + 1 }))}
-          />
-        )}
-
-        {activeTab === "med" && (
-          <MedTab
-            accountId={accountId}
-            data={medsQ.data}
-            isLoading={medsQ.isLoading}
-            error={!!medsQ.error}
           />
         )}
       </CardContainer>

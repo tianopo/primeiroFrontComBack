@@ -62,4 +62,9 @@ export const apiRoute = {
     statementRedis: `/corpx/accounts/statement/redis`,
     statementRedisVerificationBulk: "/corpx/accounts/statement/redis/verification/bulk",
   },
+  /* GOWD */
+  gowd: {
+    balance: "/gowd/balance",
+    refunds: "/gowd/refunds",
+  },
 };

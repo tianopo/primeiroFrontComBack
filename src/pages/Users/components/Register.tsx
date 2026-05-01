@@ -10,10 +10,12 @@ import { responseSuccess } from "src/config/responseErrors";
 import { formatCPFOrCNPJ } from "src/utils/formats";
 import { exchangeOptions } from "src/utils/selectsOptions";
 import { useSyncDeskdata } from "../hooks/Compliance/useSyncDeskdata";
-import { useRegisterUser } from "../hooks/User/useRegisterUser";
+import { IRegisterUser, useRegisterUser } from "../hooks/User/useRegisterUser";
+import { ComplianceProfileResponse } from "../utils/complianceProfileTypes";
 import { DeskdataDataset } from "../utils/deskdataTypes";
 import { ComplianceEditModal } from "./Compliance/ComplianceEditModal";
 import { DeskdataSelector } from "./Compliance/DeskdataSelector";
+import { useCompliance } from "../hooks/Compliance/useCompliance";
 
 interface IRegister {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -35,14 +37,15 @@ export const Register = ({ setForm, initialData }: IRegister) => {
     setValue,
     reset,
   } = context;
-  const [responseData, setResponseData] = useState<any>(null);
+  const [responseData, setResponseData] = useState<ComplianceProfileResponse | null>(null);
   const [openEditModal, setOpenEditModal] = useState(false);
   // deskdata
   const [deskdataEnabled, setDeskdataEnabled] = useState(false);
   const [deskdataDatasets, setDeskdataDatasets] = useState<DeskdataDataset[]>([]);
   const [deskdataOwnerDatasets, setDeskdataOwnerDatasets] = useState<DeskdataDataset[]>([]);
 
-  const { mutateAsync: syncDeskdata } = useSyncDeskdata();
+  const { mutateAsync: syncDeskdata, isPending: isSyncingDeskdata } = useSyncDeskdata();
+  const { mutateAsync: fetchCompliance, isPending: isLoadingCompliance } = useCompliance();
 
   const canUseDeskdata = Boolean(nome && apelido && exchange && documento);
 
@@ -79,26 +82,48 @@ export const Register = ({ setForm, initialData }: IRegister) => {
     setDocumento(formattedDocumento);
   };
 
-  const handleSubmit = (data: any) => {
-    mutate(data, {
-      onSuccess: async (response) => {
-        setResponseData(response);
-        if (nome && apelido) {
-          responseSuccess(`${nome} / ${documento} foi cadastrado`);
-          setValue("apelido", "");
-          setApelido("");
-          setValue("nome", "");
-          setNome("");
-          setValue("documento", "");
-          if (documento !== "") setDocumento("");
-        } else responseSuccess("Usuário encontrado");
-        if (deskdataEnabled && deskdataDatasets.length > 0 && documento) {
+  const handleSubmit = (formData: IRegisterUser) => {
+    const submittedDocument = String(formData?.documento ?? documento ?? "").trim();
+
+    mutate(formData, {
+      onSuccess: async () => {
+        if (!submittedDocument) {
+          responseSuccess("Usuário cadastrado");
+          return;
+        }
+
+        if (deskdataEnabled && deskdataDatasets.length > 0) {
           await syncDeskdata({
-            documento,
+            documento: submittedDocument,
             datasets: deskdataDatasets,
             ownerDatasets: deskdataOwnerDatasets,
           });
         }
+
+        const compliance = await fetchCompliance({
+          documento: submittedDocument,
+        });
+
+        setResponseData(compliance);
+
+        if (nome && apelido) {
+          responseSuccess(`${nome} / ${submittedDocument} foi cadastrado`);
+        } else {
+          responseSuccess("Usuário encontrado");
+        }
+
+        setValue("apelido", "");
+        setApelido("");
+        setValue("nome", "");
+        setNome("");
+        setValue("documento", "");
+        setDocumento("");
+        setValue("exchange", "");
+        setExchange("");
+
+        setDeskdataEnabled(false);
+        setDeskdataDatasets([]);
+        setDeskdataOwnerDatasets([]);
       },
     });
   };
@@ -176,14 +201,19 @@ export const Register = ({ setForm, initialData }: IRegister) => {
                 apelido.length === 0 ||
                 exchange.length === 0 ||
                 isPending ||
+                isLoadingCompliance ||
                 Object.keys(errors).length > 0
               }
             >
-              {nome.length > 0 ? "Salvar" : "Procurar"}
+              {isPending || isLoadingCompliance ? "Salvando..." : nome.length > 0 ? "Salvar" : "Procurar"}
             </Button>
             {responseData && (
-              <Button type="button" disabled={!responseData} onClick={() => setOpenEditModal(true)}>
-                Compliance
+              <Button
+                type="button"
+                disabled={!responseData || isSyncingDeskdata || isLoadingCompliance}
+                onClick={() => setOpenEditModal(true)}
+              >
+                {isSyncingDeskdata || isLoadingCompliance ? "Carregando compliance..." : "Compliance"}
               </Button>
             )}
           </div>

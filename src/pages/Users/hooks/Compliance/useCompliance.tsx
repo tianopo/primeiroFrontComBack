@@ -7,6 +7,7 @@ import { responseError, responseSuccess } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
 import { Regex } from "src/utils/Regex";
 import * as Yup from "yup";
+import { ComplianceProfileResponse } from "../../utils/complianceProfileTypes";
 
 export interface ICompliance {
   documento: string;
@@ -24,7 +25,11 @@ const schema = Yup.object({
 });
 
 export const useCompliance = () => {
-  const { mutate, isPending } = useMutation({
+  const { mutate, mutateAsync, isPending } = useMutation<
+    ComplianceProfileResponse,
+    AxiosError,
+    ICompliance
+  >({
     mutationFn: path,
     onSuccess: () => {
       responseSuccess("Compliance Encontrado");
@@ -37,10 +42,10 @@ export const useCompliance = () => {
     reValidateMode: "onChange",
   });
 
-  async function path(data: ICompliance): Promise<ICompliance> {
+  async function path(data: ICompliance): Promise<ComplianceProfileResponse> {
     const result = await api().post(apiRoute.compliance, data);
-    return result.data;
+    return result.data as ComplianceProfileResponse;
   }
 
-  return { mutate, isPending, context };
+  return { mutate, mutateAsync, isPending, context };
 };
