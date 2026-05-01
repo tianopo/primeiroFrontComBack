@@ -259,24 +259,23 @@ export const generateStatementReceipt = (tx: any): Promise<string> => {
       const description = String(tx?.description || "-");
       const amount = typeof tx?.amount === "number" ? tx.amount : Number(tx?.amount || 0);
 
-      const direction = String(tx?.direction ?? "").toUpperCase();
-      const isIN = direction === "IN";
+      const isIN = tx?.operation === "LOAD";
+      console.log(tx);
+      const counterpartyName = tx?.payer?.name;
+      const counterpartyDoc = tx?.payer?.document;
 
-      const counterpartyName = isIN ? tx?.payer?.name : tx?.payee?.name;
-      const counterpartyDoc = isIN ? tx?.payer?.document : tx?.payee?.document;
-
-      const bankNameRaw = isIN ? tx?.payer?.bankName : tx?.payee?.bankName;
+      const bankNameRaw = tx?.payer?.bankName;
       const bankName = bankNameRaw ? String(bankNameRaw).trim() : ""; // ✅ vazio se não existir
 
-      const branch = isIN ? tx?.payer?.branch : tx?.payee?.branch;
-      const account = isIN ? tx?.payer?.account : tx?.payee?.account;
-      const counterpartyPixKey = isIN ? tx?.payer?.pixKey : tx?.payee?.pixKey;
+      const branch = tx?.payer?.branch;
+      const account = tx?.payer?.account;
+      const counterpartyPixKey = tx?.payer?.pixKey;
 
       // ✅ monta todas as linhas do “bloco de informações” (sem banco quando não existir)
       const lines: Array<{ text: string; font?: string; bold?: boolean; gap?: number }> = [
         { text: "CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA", font: "20px Arial", bold: true },
         { text: "CNPJ: 55.636.113/0001-70", font: "20px Arial" },
-        { text: "Banco: CORPX BANK", font: "20px Arial" },
+        { text: "Banco: GOWD", font: "20px Arial" },
         { text: "", gap: 10 },
 
         { text: "DADOS DA TRANSAÇÃO", font: "22px Arial", bold: true },
@@ -292,7 +291,7 @@ export const generateStatementReceipt = (tx: any): Promise<string> => {
         // ✅ banco só se existir
         ...(bankName ? [{ text: `Banco: ${bankName}`, font: "20px Arial" }] : []),
 
-        { text: `Agência: ${branch ?? "-"}`, font: "20px Arial" },
+        { text: `${branch && "Agência: " + branch}`, font: "20px Arial" },
         { text: `Conta: ${account ?? "-"}`, font: "20px Arial" },
 
         ...(counterpartyPixKey

@@ -65,6 +65,7 @@ export const apiRoute = {
   /* GOWD */
   gowd: {
     balance: "/gowd/balance",
+    statement: "/gowd/statement",
     refunds: "/gowd/refunds",
   },
 };
