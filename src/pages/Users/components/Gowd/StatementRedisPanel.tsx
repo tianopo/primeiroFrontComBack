@@ -195,8 +195,8 @@ export const StatementRedisPanel = ({
 
               <tbody>
                 {items.map((it: GowdStatementRedisItem, idx: number) => {
-                  const direction = String(it?.direction ?? "").toUpperCase();
-                  const isIN = direction === "IN";
+                  const op = String(it?.operation ?? "").toUpperCase();
+                  const isIN = op === "LOAD";
                   const amount = typeof it?.amount === "number" ? it.amount : 0;
 
                   const endToEnd = it?.endToEnd || "";

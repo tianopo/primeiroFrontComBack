@@ -11,6 +11,7 @@ export interface GowdStatementRedisItem {
   verification: boolean;
   endToEnd: string;
   direction: "IN" | "OUT" | string;
+  operation: string;
 }
 
 export interface GowdStatementRedisResponse {
