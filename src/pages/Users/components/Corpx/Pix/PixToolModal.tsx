@@ -1,15 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { Button } from "src/components/Buttons/Button";
 import { Modal } from "src/components/Modal/Modal";
 import { parseBRL } from "src/pages/Home/config/helpers";
-import { useCorpxDictLookupPixKey } from "src/pages/Users/hooks/Corpx/useCorpxDictLookupPixKey";
-import { useCorpxPixOut } from "src/pages/Users/hooks/Corpx/useCorpxPixOut";
+import { useGowdPixOut } from "src/pages/Users/hooks/Gowd/useGowdPixOut";
 import { PixKeyType } from "src/pages/Users/utils/Interface";
-import { DictLookupResponseView } from "./DictLookupResponse";
 import { PixOutResponse } from "./PixOutResponse";
 
-const KEY_TYPES: PixKeyType[] = ["CPF", "CNPJ", "EMAIL", "PHONE", "EVP"];
+const KEY_TYPES: PixKeyType[] = ["CPF", "CNPJ", "EMAIL", "PHONE", "RANDOM"];
 const KEY_TYPES_WITH_AUTO = ["AUTO", ...KEY_TYPES] as const;
 
 type PixKeyTypeSelectable = PixKeyType | "AUTO";
@@ -32,13 +30,11 @@ const formatCnpj = (value: string) => {
   if (digits.length <= 2) return digits;
   if (digits.length <= 5) return `${digits.slice(0, 2)}.${digits.slice(2)}`;
   if (digits.length <= 8) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5)}`;
-  if (digits.length <= 12)
+  if (digits.length <= 12) {
     return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}-${digits.slice(8)}`;
+  }
 
-  return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}-${digits.slice(
-    8,
-    12,
-  )}-${digits.slice(12, 14)}`;
+  return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}-${digits.slice(8, 12)}-${digits.slice(12, 14)}`;
 };
 
 const looksLikePhone = (value: string) => {
@@ -48,8 +44,8 @@ const looksLikePhone = (value: string) => {
   if (!digits) return false;
   if (raw.includes("@")) return false;
 
-  if (digits.length === 10 || digits.length === 11) return true; // sem +55
-  if (digits.length === 12 || digits.length === 13) return true; // com 55
+  if (digits.length === 10 || digits.length === 11) return true;
+  if (digits.length === 12 || digits.length === 13) return true;
   if (raw.startsWith("+")) return true;
   if (/[()\-\s]/.test(raw)) return true;
 
@@ -60,12 +56,11 @@ const detectPixKeyType = (value: string): PixKeyType => {
   const raw = String(value ?? "").trim();
   const digits = onlyDigits(raw);
 
-  if (!raw) return "EVP";
+  if (!raw) return "RANDOM";
   if (raw.includes("@")) return "EMAIL";
 
-  // ✅ EVP: se tiver 3 ou mais traços "-"
   const dashCount = (raw.match(/-/g) ?? []).length;
-  if (dashCount >= 3) return "EVP";
+  if (dashCount >= 3) return "RANDOM";
 
   if (/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(raw)) return "CPF";
   if (/^\d{2}\.\d{3}\.\d{3}-\d{4}-\d{2}$/.test(raw)) return "CNPJ";
@@ -75,7 +70,7 @@ const detectPixKeyType = (value: string): PixKeyType => {
 
   if (looksLikePhone(raw)) return "PHONE";
 
-  return "EVP";
+  return "RANDOM";
 };
 
 const formatPixInputValue = (value: string, type: PixKeyType) => {
@@ -107,24 +102,24 @@ const normalizePixKeyForBackend = (value: string, type: PixKeyType) => {
   return { pixKeyType: type, pixKey: raw };
 };
 
-export const PixToolModal = ({
-  accountId: accountIdProp,
-  onClose,
-}: {
-  accountId?: string;
-  onClose: () => void;
-}) => {
-  const { mutate: lookup, isPending: lookupPending, data: lookupData } = useCorpxDictLookupPixKey();
-  const { mutate: pixOut, isPending: outPending, data: outData } = useCorpxPixOut();
+const mapPixTypeForGowd = (type: PixKeyType): "CPF" | "CNPJ" | "EMAIL" | "PHONE" | "RANDOM" => {
+  if (type === "RANDOM") return "RANDOM";
+  return type;
+};
 
-  // ✅ ocultos (não aparecem na UI), mas enviados
-  const accountId = String(accountIdProp ?? "").trim();
-  const identifierRef = useRef(`order-${Date.now()}`);
+export const PixToolModal = ({ onClose }: { onClose: () => void }) => {
+  const { mutate: pixOut, isPending: outPending, data: outData } = useGowdPixOut();
+
+  const identifierRef = useRef(`pixout-${Date.now()}`);
 
   const [selectedKeyType, setSelectedKeyType] = useState<PixKeyTypeSelectable>("AUTO");
   const [key, setKey] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [documentType, setDocumentType] = useState<"CPF" | "CNPJ">("CPF");
+  const [documentNumber, setDocumentNumber] = useState("");
   const [amount, setAmount] = useState("");
-  const [description, setDescription] = useState("compra de ativos digitais");
+  const [description, setDescription] = useState("Pix para chave");
+  const [webhookUrl, setWebhookUrl] = useState("https://SEU-DOMINIO.com/api/gowd/webhooks/order");
 
   const detectedType = useMemo(() => detectPixKeyType(key), [key]);
   const effectiveKeyType: PixKeyType = selectedKeyType === "AUTO" ? detectedType : selectedKeyType;
@@ -134,26 +129,12 @@ export const PixToolModal = ({
     [key, effectiveKeyType],
   );
 
-  // ✅ lookup automático (debounce)
-  const lastLookupSig = useRef<string>("");
-  useEffect(() => {
-    const pixKey = String(normalized.pixKey ?? "").trim();
-    const keyType = normalized.pixKeyType;
-
-    if (!pixKey) return;
-
-    const sig = `${keyType}:${pixKey}`;
-    if (lastLookupSig.current === sig) return;
-
-    const t = setTimeout(() => {
-      lastLookupSig.current = sig;
-      lookup({ pixKey, keyType });
-    }, 450);
-
-    return () => clearTimeout(t);
-  }, [normalized.pixKey, normalized.pixKeyType, lookup]);
-
-  const canSend = !!accountId && !!String(normalized.pixKey ?? "").trim() && !!amount.trim();
+  const canSend =
+    !!String(normalized.pixKey ?? "").trim() &&
+    !!String(fullName ?? "").trim() &&
+    !!String(documentNumber ?? "").trim() &&
+    !!amount.trim() &&
+    !!String(webhookUrl ?? "").trim();
 
   const handlePixKeyChange = (value: string) => {
     const typeForFormatting =
@@ -168,19 +149,38 @@ export const PixToolModal = ({
     setKey((prev) => formatPixInputValue(prev, typeForFormatting));
   };
 
-  const submitOut = () => {
-    if (!accountId) {
-      toast.error("AccountId não configurado para envio.");
+  const handleDocumentChange = (value: string) => {
+    const raw = String(value ?? "");
+    if (documentType === "CPF") {
+      setDocumentNumber(formatCpf(raw));
       return;
     }
+    setDocumentNumber(formatCnpj(raw));
+  };
 
+  const submitOut = () => {
     if (!String(normalized.pixKey ?? "").trim()) {
       toast.error("Informe a chave PIX.");
       return;
     }
 
+    if (!fullName.trim()) {
+      toast.error("Informe o nome completo.");
+      return;
+    }
+
+    if (!documentNumber.trim()) {
+      toast.error("Informe o documento.");
+      return;
+    }
+
     if (!amount.trim()) {
       toast.error("Informe o valor.");
+      return;
+    }
+
+    if (!webhookUrl.trim()) {
+      toast.error("Informe o webhookUrl.");
       return;
     }
 
@@ -195,31 +195,43 @@ export const PixToolModal = ({
     pixOut({
       idempotencyKey: identifier,
       body: {
-        accountId,
-        amount: parsed,
-        currency: "BRL",
-        keyType: normalized.pixKeyType,
-        key: normalized.pixKey,
-        description,
-        identifier,
+        amount: {
+          currency: "BRL",
+          value: parsed.toFixed(2),
+        },
+        paymentMethod: "PIX",
+        customer: {
+          fullName: fullName.trim(),
+          document: {
+            type: documentType,
+            number: onlyDigits(documentNumber),
+          },
+        },
+        bank: {
+          pix: {
+            type: mapPixTypeForGowd(normalized.pixKeyType),
+            key: String(normalized.pixKey ?? "").trim(),
+          },
+        },
+        description: description.trim() || "Pix para chave",
+        webhookUrl: webhookUrl.trim(),
+        code: identifier,
       },
     });
   };
 
   return (
     <Modal onClose={onClose} fit>
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="text-xl font-semibold">PIX • Consulta DICT e Envio (Cash Out)</h3>
-      </div>
+      <h3 className="text-xl font-semibold">Fazer PIX (GOWD)</h3>
 
       <div className="mt-3 grid gap-3 md:grid-cols-2">
         <label className="text-sm">
-          Tipo de chave
+          Tipo da chave
           <select
             value={selectedKeyType}
             onChange={(e) => handleTypeChange(e.target.value as PixKeyTypeSelectable)}
             className="mt-1 w-full rounded-6 border border-gray-200 px-3 py-2"
-            disabled={lookupPending || outPending}
+            disabled={outPending}
           >
             {KEY_TYPES_WITH_AUTO.map((t) => (
               <option key={t} value={t}>
@@ -243,13 +255,48 @@ export const PixToolModal = ({
         </div>
 
         <label className="text-sm md:col-span-2">
-          Chave PIX (ao digitar, consulta automaticamente)
+          Chave PIX
           <input
             value={key}
             onChange={(e) => handlePixKeyChange(e.target.value)}
             className="mt-1 w-full rounded-6 border border-gray-200 px-3 py-2"
-            placeholder="CPF / CNPJ / EMAIL / telefone / EVP"
-            disabled={lookupPending || outPending}
+            placeholder="CPF / CNPJ / EMAIL / telefone / RANDOM"
+            disabled={outPending}
+          />
+        </label>
+
+        <label className="text-sm md:col-span-2">
+          Nome completo
+          <input
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="mt-1 w-full rounded-6 border border-gray-200 px-3 py-2"
+            placeholder="Nome do recebedor"
+            disabled={outPending}
+          />
+        </label>
+
+        <label className="text-sm">
+          Tipo do documento
+          <select
+            value={documentType}
+            onChange={(e) => setDocumentType(e.target.value as "CPF" | "CNPJ")}
+            className="mt-1 w-full rounded-6 border border-gray-200 px-3 py-2"
+            disabled={outPending}
+          >
+            <option value="CPF">CPF</option>
+            <option value="CNPJ">CNPJ</option>
+          </select>
+        </label>
+
+        <label className="text-sm">
+          Documento
+          <input
+            value={documentNumber}
+            onChange={(e) => handleDocumentChange(e.target.value)}
+            className="mt-1 w-full rounded-6 border border-gray-200 px-3 py-2"
+            placeholder={documentType === "CPF" ? "000.000.000-00" : "00.000.000-0000-00"}
+            disabled={outPending}
           />
         </label>
 
@@ -265,7 +312,7 @@ export const PixToolModal = ({
         </label>
 
         <label className="text-sm">
-          Descrição (opcional)
+          Descrição
           <input
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -273,21 +320,27 @@ export const PixToolModal = ({
             disabled={outPending}
           />
         </label>
+
+        <label className="text-sm md:col-span-2">
+          Webhook URL
+          <input
+            value={webhookUrl}
+            onChange={(e) => setWebhookUrl(e.target.value)}
+            className="mt-1 w-full rounded-6 border border-gray-200 px-3 py-2"
+            placeholder="https://SEU-DOMINIO.com/api/gowd/webhooks/order"
+            disabled={outPending}
+          />
+        </label>
       </div>
 
       <div className="mt-4 flex justify-end gap-2">
-        <Button onClick={onClose} disabled={lookupPending || outPending}>
+        <Button onClick={onClose} disabled={outPending}>
           Fechar
         </Button>
 
         <Button onClick={submitOut} disabled={!canSend || outPending}>
           {outPending ? "Enviando..." : "Enviar PIX"}
         </Button>
-      </div>
-
-      <div className="mt-4">
-        <div className="font-semibold">Resposta DICT</div>
-        <DictLookupResponseView data={lookupData} />
       </div>
 
       <div className="mt-4">

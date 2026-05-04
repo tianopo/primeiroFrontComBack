@@ -30,7 +30,7 @@ export const useGowdStatementRedis = (params?: { date?: string }) => {
       const res = await api().get(url);
       return res.data as GowdStatementRedisResponse;
     },
-    refetchInterval: 10000,
+    refetchInterval: 20000,
     retry: 1,
   });
 };

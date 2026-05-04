@@ -1,34 +1,45 @@
-export type PixKeyType = "CPF" | "CNPJ" | "EMAIL" | "PHONE" | "EVP";
+export type PixKeyType = "CPF" | "CNPJ" | "EMAIL" | "PHONE" | "RANDOM";
 
-export type DictLookupResponse = {
-  cached: boolean;
-  key: string;
-  keyType: PixKeyType;
-  ownerName: string;
-  ownerDocument: string;
-  personType: "PF" | "PJ" | string;
-  bankName: string;
-  bankCode: string;
-  bankIspb: string;
-  branch: string;
-  accountNumber: string;
-  accountType: string;
-  status: string;
-  createdAt: string;
-  cachedAt: string;
-};
-
-export type PixOutBody = {
-  accountId: string;
-  amount: number;
-  currency: "BRL";
-  keyType: PixKeyType;
-  key: string;
+export type GowdPixOutBody = {
+  amount: {
+    currency: "BRL" | string;
+    value: string;
+  };
+  paymentMethod: "PIX";
+  customer: {
+    fullName: string;
+    email?: string;
+    phone?: string;
+    birth?: string;
+    document?: {
+      type?: "CPF" | "CNPJ";
+      number?: string;
+    };
+  };
+  bank: {
+    pix: {
+      type: PixKeyType;
+      key: string;
+    };
+  };
   description?: string;
-  identifier?: string;
+  webhookUrl: string;
+  code: string;
 };
 
-export type PixOutResponse = Record<string, any>;
+export type GowdPixOutResponse = {
+  id?: string;
+  amount?: string;
+  status?: string;
+  fee?: {
+    fixed?: string;
+    variable?: string;
+    additional?: string;
+  };
+  errorMessage?: string;
+  createdAt?: string;
+  [key: string]: any;
+};
 
 export const querystringPixOut = (params?: Record<string, any>) => {
   if (!params) return "";

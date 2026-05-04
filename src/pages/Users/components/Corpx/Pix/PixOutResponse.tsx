@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Button } from "src/components/Buttons/Button";
 
 const Row = ({ label, value }: { label: string; value?: any }) => (
   <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 py-2 last:border-b-0">
@@ -12,15 +11,13 @@ const StatusBadge = ({ status }: { status?: string }) => {
   const s = String(status ?? "").toLowerCase();
 
   const cls =
-    s === "success" || s === "completed" || s === "approved"
+    s === "paid" || s === "success" || s === "completed" || s === "approved"
       ? "bg-green-100 text-green-700 border-green-200"
-      : s === "failed" || s === "rejected"
+      : s === "error" || s === "failed" || s === "rejected"
         ? "bg-red-100 text-red-700 border-red-200"
         : s === "pending" || s === "processing"
           ? "bg-yellow-100 text-yellow-800 border-yellow-200"
-          : s === "created"
-            ? "bg-blue-100 text-blue-700 border-blue-200"
-            : "bg-gray-100 text-gray-700 border-gray-200";
+          : "bg-gray-100 text-gray-700 border-gray-200";
 
   return (
     <span
@@ -40,9 +37,7 @@ const CopyBtn = ({ value }: { value?: string }) => {
       await navigator.clipboard.writeText(value);
       setCopied(true);
       setTimeout(() => setCopied(false), 1200);
-    } catch {
-      // se clipboard falhar, não quebra UI
-    }
+    } catch {}
   };
 
   return (
@@ -56,15 +51,23 @@ const CopyBtn = ({ value }: { value?: string }) => {
   );
 };
 
-const formatBRL = (v?: number, currency?: string) => {
-  if (typeof v !== "number") return "-";
-  // aqui o amount já está em reais com decimais (0.01), então formatamos normal.
-  const cur = currency ?? "BRL";
-  const brl = v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  return cur === "BRL" ? brl : `${v} ${cur}`;
+const formatBRL = (value?: string | number) => {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "-";
+
+  return n.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
 };
 
-// ✅ Use dentro do seu modal
+const formatDateTime = (value?: string) => {
+  if (!value) return "-";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleString("pt-BR");
+};
+
 export const PixOutResponse = ({ data }: { data?: any }) => {
   if (!data) {
     return (
@@ -74,40 +77,40 @@ export const PixOutResponse = ({ data }: { data?: any }) => {
     );
   }
 
-  const transactionId = data.transactionId;
-  const status = data.status;
-  const endToEndId = data.endToEndId;
-  const amount = data.amount;
-  const currency = data.currency;
+  const amountValue =
+    typeof data?.amount === "object" && data?.amount !== null ? data.amount?.value : data?.amount;
+
+  const amountCurrency =
+    typeof data?.amount === "object" && data?.amount !== null
+      ? data.amount?.currency
+      : (data?.currency ?? "BRL");
 
   return (
     <div className="mt-3 rounded-xl border border-gray-200 p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
         <div className="text-sm font-semibold text-gray-900">
-          Resposta da Transferência (PIX OUT)
+          Resposta da Transferência (PIX OUT - GOWD)
         </div>
-        <StatusBadge status={status} />
+        <StatusBadge status={data.status} />
       </div>
 
       <div className="flex flex-col">
         <div className="flex items-center justify-between gap-2 border-b border-gray-100 py-2">
-          <span className="text-xs font-semibold text-gray-600">Transaction ID</span>
+          <span className="text-xs font-semibold text-gray-600">ID</span>
           <div className="flex items-center gap-2">
-            <span className="break-all text-sm text-gray-900">{transactionId ?? "-"}</span>
-            <CopyBtn value={transactionId} />
+            <span className="break-all text-sm text-gray-900">{data.id ?? "-"}</span>
+            <CopyBtn value={data.id} />
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-2 border-b border-gray-100 py-2">
-          <span className="text-xs font-semibold text-gray-600">EndToEnd ID (E2E)</span>
-          <div className="flex items-center gap-2">
-            <span className="break-all text-sm text-gray-900">{endToEndId ?? "-"}</span>
-            <CopyBtn value={endToEndId} />
-          </div>
-        </div>
-
-        <Row label="Valor" value={formatBRL(amount, currency)} />
-        <Row label="Moeda" value={currency ?? "-"} />
+        <Row label="Valor" value={formatBRL(amountValue)} />
+        <Row label="Moeda" value={amountCurrency} />
+        <Row label="Status" value={data.status} />
+        <Row label="Erro" value={data.errorMessage ?? "-"} />
+        <Row label="Criado em" value={formatDateTime(data.createdAt)} />
+        <Row label="Fee fixa" value={formatBRL(data.fee?.fixed)} />
+        <Row label="Fee variável" value={formatBRL(data.fee?.variable)} />
+        <Row label="Fee adicional" value={formatBRL(data.fee?.additional)} />
       </div>
     </div>
   );

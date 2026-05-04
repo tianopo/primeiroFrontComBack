@@ -65,6 +65,7 @@ export const apiRoute = {
     balance: "/gowd/balance",
     statement: "/gowd/statement",
     refunds: "/gowd/refunds",
+    pixOut: "/gowd/payouts/brazil/pix",
     statementRedis: `/gowd/statement/redis`,
     statementRedisVerificationBulk: "/gowd/statement/redis/verification/bulk",
   },

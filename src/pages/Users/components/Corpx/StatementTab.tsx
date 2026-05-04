@@ -196,7 +196,7 @@ export const StatementTab = ({
         <Modal onClose={() => setSelected(null)} fit>
           <div className="flex flex-row justify-between">
             <h3 className="w-full text-xl font-semibold">Detalhes da transação</h3>
-            <Button onClick={() => downloadReceipt(selected)}>Baixar recibo</Button>
+            <Button onClick={() => downloadReceipt(selected)}>Recibo</Button>
           </div>
 
           <div className="mt-4 rounded-xl border border-gray-200 p-2">
