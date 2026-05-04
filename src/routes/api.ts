@@ -59,13 +59,13 @@ export const apiRoute = {
     qrcodeDynamic: `/corpx/qrcode/dynamic`,
     meds: `/corpx/med`,
     respondMed: (medId: string) => `/corpx/med/${medId}/response`,
-    statementRedis: `/corpx/accounts/statement/redis`,
-    statementRedisVerificationBulk: "/corpx/accounts/statement/redis/verification/bulk",
   },
   /* GOWD */
   gowd: {
     balance: "/gowd/balance",
     statement: "/gowd/statement",
     refunds: "/gowd/refunds",
+    statementRedis: `/gowd/statement/redis`,
+    statementRedisVerificationBulk: "/gowd/statement/redis/verification/bulk",
   },
 };

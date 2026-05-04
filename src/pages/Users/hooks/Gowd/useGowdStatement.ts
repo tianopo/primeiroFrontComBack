@@ -43,7 +43,6 @@ export interface GowdStatementItem {
 }
 
 export interface GowdStatementResponse {
-  accountId: string;
   count: number;
   page: number;
   items: GowdStatementItem[];

@@ -57,7 +57,7 @@ export const StatementTab = ({
     const rawItems = statementQ.data?.items ?? [];
 
     return rawItems.filter((item: GowdStatementItem) =>
-      ["LOAD", "TRANSFER"].includes(String(item?.operation ?? "").toUpperCase()),
+      ["LOAD", "TRANSFER", "PAYOUT"].includes(String(item?.operation ?? "").toUpperCase()),
     );
   }, [statementQ.data]);
 
@@ -74,26 +74,19 @@ export const StatementTab = ({
     a.click();
   };
 
-  const getDirectionStyles = (operation?: string) => {
-    const op = String(operation ?? "").toUpperCase();
+  const getAmountStyles = (amount?: number) => {
+    const value = Number(amount ?? 0);
 
-    if (op === "TRANSFER") {
+    if (value < 0) {
       return {
         rowClass: "bg-red-50 hover:bg-red-100",
         amountClass: "text-red-700",
       };
     }
 
-    if (op === "LOAD") {
-      return {
-        rowClass: "bg-green-50 hover:bg-green-100",
-        amountClass: "text-green-700",
-      };
-    }
-
     return {
-      rowClass: "hover:bg-gray-50",
-      amountClass: "text-gray-900",
+      rowClass: "bg-green-50 hover:bg-green-100",
+      amountClass: "text-green-700",
     };
   };
 
@@ -151,7 +144,7 @@ export const StatementTab = ({
               </tr>
             ) : (
               items.map((item: GowdStatementItem) => {
-                const { rowClass, amountClass } = getDirectionStyles(item.operation);
+                const { rowClass, amountClass } = getAmountStyles(item?.amount);
 
                 return (
                   <tr

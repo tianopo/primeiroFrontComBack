@@ -260,7 +260,7 @@ export const generateStatementReceipt = (tx: any): Promise<string> => {
       const amount = typeof tx?.amount === "number" ? tx.amount : Number(tx?.amount || 0);
 
       const isIN = tx?.operation === "LOAD";
-      console.log(tx);
+
       const counterpartyName = tx?.payer?.name;
       const counterpartyDoc = tx?.payer?.document;
 

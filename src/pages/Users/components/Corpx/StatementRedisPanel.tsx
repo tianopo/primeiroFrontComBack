@@ -2,11 +2,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { Button } from "src/components/Buttons/Button";
-import { useCorpxSetStatementsVerificationBulk } from "../../hooks/Corpx/useCorpxSetStatementVerification";
+import { useGowdSetStatementsVerificationBulk } from "../../hooks/Corpx/useCorpxSetStatementVerification";
 import {
-  useCorpxStatementRedis,
-  CorpxStatementRedisItem,
-} from "../../hooks/Corpx/useCorpxStatementRedis";
+  GowdStatementRedisItem,
+  useGowdStatementRedis,
+} from "../../hooks/Corpx/useGowdStatementRedis";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
@@ -66,8 +66,8 @@ export const StatementRedisPanel = ({
   onVerifiedSuccess?: () => void;
   closeOnSuccess?: boolean; // se quiser fechar modal pai, passe onVerifiedSuccess + closeOnSuccess
 }) => {
-  const q = useCorpxStatementRedis();
-  const bulk = useCorpxSetStatementsVerificationBulk();
+  const q = useGowdStatementRedis();
+  const bulk = useGowdSetStatementsVerificationBulk();
 
   const items = useMemo(() => {
     const data = q.data;
@@ -194,7 +194,7 @@ export const StatementRedisPanel = ({
               </thead>
 
               <tbody>
-                {items.map((it: CorpxStatementRedisItem, idx: number) => {
+                {items.map((it: GowdStatementRedisItem, idx: number) => {
                   const direction = String(it?.direction ?? "").toUpperCase();
                   const isIN = direction === "IN";
                   const amount = typeof it?.amount === "number" ? it.amount : 0;

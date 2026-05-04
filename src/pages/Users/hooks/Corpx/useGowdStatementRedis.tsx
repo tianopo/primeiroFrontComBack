@@ -3,7 +3,7 @@ import { api } from "src/config/api";
 import { apiRoute } from "src/routes/api";
 import { querystring } from "../../utils/Interface";
 
-export interface CorpxStatementRedisItem {
+export interface GowdStatementRedisItem {
   timestamp: string;
   amount: number;
   name: string;
@@ -13,25 +13,24 @@ export interface CorpxStatementRedisItem {
   direction: "IN" | "OUT" | string;
 }
 
-export interface CorpxStatementRedisResponse {
-  accountId: string;
+export interface GowdStatementRedisResponse {
   date?: string;
-  items: CorpxStatementRedisItem[];
+  items: GowdStatementRedisItem[];
 }
 
-export const useCorpxStatementRedis = (params?: { date?: string }) => {
+export const useGowdStatementRedis = (params?: { date?: string }) => {
   const date = params?.date;
 
   return useQuery({
-    queryKey: ["corpx-statement-redis", date ?? "today"],
+    queryKey: ["gowd-statement-redis", date ?? "today"],
     queryFn: async () => {
-      const base = apiRoute.corpxPix.statementRedis;
+      const base = apiRoute.gowd.statementRedis;
       const url = date ? base + querystring({ date }) : base;
 
       const res = await api().get(url);
-      return res.data as CorpxStatementRedisResponse;
+      return res.data as GowdStatementRedisResponse;
     },
-    refetchInterval: 30000,
+    refetchInterval: 10000,
     retry: 1,
   });
 };
