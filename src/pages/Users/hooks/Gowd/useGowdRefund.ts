@@ -10,26 +10,22 @@ import { apiRoute } from "src/routes/api";
 
 export interface IGowdRefundForm {
   orderId: string;
-  externalId: string;
-  amount: {
-    currency: "BRL";
-    value: string;
+  reason: string;
+  requestedBy: {
+    name: string;
+    email: string;
   };
-  refundCode: string;
-  refundReason?: string | null;
-  description?: string | null;
+  amount: string;
 }
 
 const schema = Yup.object({
   orderId: Yup.string().uuid("OrderId inválido").required("OrderId é obrigatório"),
-  externalId: Yup.string().required("ExternalId é obrigatório"),
-  amount: Yup.object({
-    currency: Yup.mixed<"BRL">().oneOf(["BRL"]).required(),
-    value: Yup.string().required("Valor é obrigatório"),
+  reason: Yup.string().required("Motivo é obrigatório"),
+  requestedBy: Yup.object({
+    name: Yup.string().required("Nome é obrigatório"),
+    email: Yup.string().email("Email inválido").required("Email é obrigatório"),
   }).required(),
-  refundCode: Yup.string().required("RefundCode é obrigatório"),
-  refundReason: Yup.string().nullable(),
-  description: Yup.string().nullable(),
+  amount: Yup.string().required("Valor é obrigatório"),
 });
 
 export const useGowdRefund = () => {
@@ -37,14 +33,12 @@ export const useGowdRefund = () => {
     resolver: yupResolver(schema),
     defaultValues: {
       orderId: "",
-      externalId: "",
-      amount: {
-        currency: "BRL",
-        value: "25000.00",
+      reason: "Customer requested or sold was not done",
+      requestedBy: {
+        name: "",
+        email: "matheuslink18@hotmail.com",
       },
-      refundCode: "RECEIVER_REQUEST",
-      refundReason: "Solicitação do cliente",
-      description: "Reembolso integral",
+      amount: "0.00",
     },
     reValidateMode: "onChange",
   });
@@ -53,9 +47,9 @@ export const useGowdRefund = () => {
     mutationFn: async (data: IGowdRefundForm) => {
       const idempotencyKey = `refund-${data.orderId}-${Date.now()}`;
 
-      const response = await api().post(apiRoute.gowd.refunds, data, {
+      const response = await api().put(apiRoute.gowd.refund, data, {
         headers: {
-          "x-idempotency-key": idempotencyKey,
+          "idempotency-key": idempotencyKey,
         },
       });
 

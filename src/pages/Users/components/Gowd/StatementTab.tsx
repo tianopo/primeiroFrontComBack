@@ -3,6 +3,7 @@ import { Button } from "src/components/Buttons/Button";
 import { Modal } from "src/components/Modal/Modal";
 import { generateStatementReceipt } from "src/pages/Home/config/handleReceipt";
 import { GowdStatementItem } from "../../hooks/Gowd/useGowdStatement";
+import { RefundModal } from "./Pix/RefundModal";
 
 const formatBRL = (v: number) =>
   Number(v).toLocaleString("pt-BR", {
@@ -52,6 +53,7 @@ export const StatementTab = ({
   onNext,
 }: Props) => {
   const [selected, setSelected] = useState<GowdStatementItem | null>(null);
+  const [showRefundModal, setShowRefundModal] = useState(false);
 
   const items = useMemo(() => {
     const rawItems = statementQ.data?.items ?? [];
@@ -196,7 +198,11 @@ export const StatementTab = ({
         <Modal onClose={() => setSelected(null)} fit>
           <div className="flex flex-row justify-between">
             <h3 className="w-full text-xl font-semibold">Detalhes da transação</h3>
-            <Button onClick={() => downloadReceipt(selected)}>Recibo</Button>
+            <div className="mt-4 flex justify-end gap-2">
+              <Button onClick={() => downloadReceipt(selected)}>Recibo</Button>
+
+              <Button onClick={() => setShowRefundModal(true)}>Estorno</Button>
+            </div>
           </div>
 
           <div className="mt-4 rounded-xl border border-gray-200 p-2">
@@ -215,6 +221,15 @@ export const StatementTab = ({
             <Row label="Conta" value={selected.payer?.account} />
           </div>
         </Modal>
+      )}
+      {showRefundModal && selected && (
+        <RefundModal
+          orderId={selected.orderId}
+          defaultAmount={Math.abs(Number(selected.amount ?? 0))}
+          counterpartyName={selected.payer?.name}
+          counterpartyDocument={selected.payer?.document}
+          onClose={() => setShowRefundModal(false)}
+        />
       )}
     </div>
   );

@@ -13,7 +13,7 @@ import { useSendChatMessageBybit } from "../hooks/Bybit/useSendChatMessageBybit"
 import { confirmContract } from "../utils/confirmContract";
 import { toBRDate } from "../utils/helpers";
 import { ChatBox } from "./ChatBox";
-import { StatementRedisPanel } from "./Corpx/StatementRedisPanel";
+import { StatementRedisPanel } from "./Gowd/StatementRedisPanel";
 import { OrderMessages } from "./OrderMessages";
 import { BinanceOrders } from "./PendingOrders/BinanceOrders";
 import { BybitCompliancePopover } from "./PendingOrders/BybitCompliancePopover";

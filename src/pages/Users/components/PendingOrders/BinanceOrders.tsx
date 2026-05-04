@@ -1,13 +1,12 @@
 import { ArrowCircleRight, Copy, ImageSquare } from "@phosphor-icons/react";
 import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
-import { FlexRow } from "src/components/Flex/FlexRow";
 import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalButton";
 import { generateSingleReceipt } from "src/pages/Home/config/handleReceipt";
 import { useCheckAndReleaseCoinBinance } from "../../hooks/Binance/useCheckAndReleaseCoinBinance";
 import { useMarkOrderAsPaidBinance } from "../../hooks/Binance/useMarkOrderAsPaidBinance";
 import { useSendChatMessageBinance } from "../../hooks/Binance/useSendChatMessageBinance";
-import { StatementRedisPanel } from "../Corpx/StatementRedisPanel";
+import { StatementRedisPanel } from "../Gowd/StatementRedisPanel";
 import { OrderMessages } from "../OrderMessages";
 
 type BinanceMessage = {

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalButton";
 import { Modal } from "src/components/Modal/Modal";
-import { useCorpxRefundPix } from "../../../hooks/Corpx/useCorpxRefundPix";
+import { useGowdRefund } from "../../../hooks/Gowd/useGowdRefund";
 
 const formatBRL = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -14,61 +14,69 @@ const Row = ({ label, value }: { label: string; value?: any }) => (
 );
 
 export const RefundModal = ({
-  accountId,
-  endToEndId,
+  orderId,
   defaultAmount,
   counterpartyName,
   counterpartyDocument,
   onClose,
 }: {
-  accountId: string;
-  endToEndId?: string;
-  defaultAmount?: number;
+  orderId?: string;
+  defaultAmount?: number | string;
   counterpartyName?: string;
   counterpartyDocument?: string;
   onClose: () => void;
 }) => {
-  const { mutate: refund, isPending, data } = useCorpxRefundPix();
+  const { sendRefund, isPending, data } = useGowdRefund();
 
-  const [amount, setAmount] = useState(String(defaultAmount ?? 0));
-  const [reason, setReason] = useState("USER_REQUESTED");
-
+  const [amount, setAmount] = useState(String(Math.abs(Number(defaultAmount ?? 0)).toFixed(2)));
+  const [reason, setReason] = useState("Customer requested or sold was not done");
+  const [requestedByName, setRequestedByName] = useState(counterpartyName ?? "");
+  const [requestedByEmail, setRequestedByEmail] = useState("matheuslink18@hotmail.com");
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const canRefund = !!accountId && !!endToEndId && Number(amount) > 0;
+  const canRefund = !!orderId && Number(amount) > 0 && !!requestedByName && !!requestedByEmail;
 
   const confirmText = useMemo(() => {
     const a = Number(amount);
     const valueText = Number.isFinite(a) ? formatBRL(a) : "-";
-    return `Confirmar reembolso de ${valueText} para ${counterpartyName ?? "-"} (CPF/CNPJ: ${counterpartyDocument ?? "-"})?`;
+
+    return `Confirmar reembolso de ${valueText} para ${
+      counterpartyName ?? "-"
+    } (CPF/CNPJ: ${counterpartyDocument ?? "-"})?`;
   }, [amount, counterpartyName, counterpartyDocument]);
 
   const doSubmit = () => {
-    if (!endToEndId) return;
+    if (!orderId) return;
 
-    refund({
-      idempotencyKey: `refund-${Date.now()}`,
-      body: {
-        accountId,
-        originalEndToEnd: endToEndId,
-        amount: Number(amount),
-        currency: "BRL",
-        reason,
+    sendRefund({
+      orderId,
+      reason,
+      requestedBy: {
+        name: requestedByName,
+        email: requestedByEmail,
       },
+      amount: String(Number(amount)),
     });
 
     setConfirmOpen(false);
   };
 
-  // ✅ tenta deixar a resposta mais profissional (sem JSON)
   const refundResponse = data as any;
 
   return (
     <Modal onClose={onClose} fit>
-      <h3 className="text-xl font-semibold">Devolver PIX (Refund)</h3>
+      <h3 className="text-xl font-semibold">Devolver PIX (Refund - GOWD)</h3>
 
       <div className="mt-2 rounded bg-gray-50 p-2 text-sm">
-        <strong>E2E:</strong> {endToEndId ?? "-"}
+        <div>
+          <strong>OrderId:</strong> {orderId ?? "-"}
+        </div>
+        <div>
+          <strong>Nome:</strong> {counterpartyName ?? "-"}
+        </div>
+        <div>
+          <strong>Documento:</strong> {counterpartyDocument ?? "-"}
+        </div>
       </div>
 
       <div className="mt-3 grid gap-3">
@@ -86,6 +94,24 @@ export const RefundModal = ({
           <input
             value={reason}
             onChange={(e) => setReason(e.target.value)}
+            className="mt-1 w-full rounded-6 border border-gray-200 px-3 py-2"
+          />
+        </label>
+
+        <label className="text-sm">
+          Nome
+          <input
+            value={requestedByName}
+            onChange={(e) => setRequestedByName(e.target.value)}
+            className="mt-1 w-full rounded-6 border border-gray-200 px-3 py-2"
+          />
+        </label>
+
+        <label className="text-sm">
+          Email
+          <input
+            value={requestedByEmail}
+            onChange={(e) => setRequestedByEmail(e.target.value)}
             className="mt-1 w-full rounded-6 border border-gray-200 px-3 py-2"
           />
         </label>
@@ -109,7 +135,6 @@ export const RefundModal = ({
         </Button>
       </div>
 
-      {/* ✅ Resposta mais “profissional” */}
       <div className="mt-4 rounded-xl border border-gray-200 p-2">
         <div className="mb-2 text-sm font-semibold">Resposta</div>
 
@@ -117,23 +142,17 @@ export const RefundModal = ({
           <div className="text-sm text-gray-600">Nenhuma solicitação ainda.</div>
         ) : (
           <div className="flex flex-col">
-            <Row label="AccountId" value={refundResponse.accountId} />
-            <Row label="E2E Original" value={refundResponse.originalEndToEnd} />
-            <Row
-              label="Valor"
-              value={
-                typeof refundResponse.amount === "number"
-                  ? formatBRL(refundResponse.amount)
-                  : refundResponse.amount
-              }
-            />
-            <Row label="Moeda" value={refundResponse.currency} />
-            <Row label="Motivo" value={refundResponse.reason} />
+            <Row label="OrderId" value={refundResponse.orderId ?? orderId} />
+            <Row label="Valor" value={amount ? formatBRL(Number(amount)) : "-"} />
+            <Row label="Motivo" value={reason} />
+            <Row label="Nome" value={requestedByName} />
+            <Row label="Email" value={requestedByEmail} />
+            <Row label="Status" value={refundResponse.status} />
+            <Row label="Id" value={refundResponse.id} />
           </div>
         )}
       </div>
 
-      {/* ✅ confirmação final */}
       {confirmOpen && (
         <ConfirmationModalButton
           text={confirmText}
