@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { Select } from "src/components/Form/Select/Select";
 import { exchangeOptions } from "src/utils/selectsOptions";
 import * as XLSX from "xlsx";
+import { useListUsers } from "../hooks/useListUsers";
 import { processExcelBinance } from "./ProcessExcel/Binance";
 import { processExcelBingX } from "./ProcessExcel/BingX";
 import { processExcelBitget } from "./ProcessExcel/Bitget";
@@ -12,6 +13,7 @@ import { processExcelGateIO } from "./ProcessExcel/Gate.IO";
 import { processExcelHuobi } from "./ProcessExcel/Huobi";
 import { processExcelKucoin } from "./ProcessExcel/Kucoin";
 import { processExcelMEXC } from "./ProcessExcel/MEXC";
+import { autoFillApelidoFromUsers } from "../Utils/autoFillApelidoFromUsers";
 
 interface IUploadXLSButton {
   setFormData: Dispatch<SetStateAction<any[]>>;
@@ -20,6 +22,7 @@ interface IUploadXLSButton {
 
 export const UploadXLSButton = ({ setFormData, formData }: IUploadXLSButton) => {
   const [selectedBroker, setSelectedBroker] = useState<string>("");
+  const { data } = useListUsers();
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -33,9 +36,26 @@ export const UploadXLSButton = ({ setFormData, formData }: IUploadXLSButton) => 
         allData.push(...fileData);
       }
 
-      const combinedData = [...formData, ...allData];
+      // ✅ autopreenche apelido importado quando:
+      // - contém @
+      // - encontra exatamente 1 match em useListUsers
+      const enrichedData = autoFillApelidoFromUsers(allData, data ?? []);
+
+      const preenchidosAutomaticamente = enrichedData.filter(
+        (item) => item?.apelidoAutoPreenchido === true,
+      ).length;
+
+      const combinedData = [...formData, ...enrichedData];
       setFormData(combinedData);
+
+      if (preenchidosAutomaticamente > 0) {
+        toast.success(
+          `${preenchidosAutomaticamente} apelido(s) foram preenchidos automaticamente.`,
+        );
+      }
+
       setSelectedBroker("");
+      event.target.value = "";
     }
   };
 
