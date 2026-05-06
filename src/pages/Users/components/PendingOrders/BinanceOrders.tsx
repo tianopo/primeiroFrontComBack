@@ -8,6 +8,7 @@ import { useMarkOrderAsPaidBinance } from "../../hooks/Binance/useMarkOrderAsPai
 import { useSendChatMessageBinance } from "../../hooks/Binance/useSendChatMessageBinance";
 import { StatementRedisPanel } from "../Gowd/StatementRedisPanel";
 import { OrderMessages } from "../OrderMessages";
+import { CompliancePopover } from "./CompliancePopover";
 
 type BinanceMessage = {
   orderNo: string;
@@ -54,6 +55,8 @@ type BinanceOrder = {
     price: string;
     paymentFieldValues: string[];
   };
+
+  compliance?: any;
 };
 
 type BinanceOrderItem = {
@@ -114,6 +117,7 @@ export const BinanceOrders = ({
   const { mutate: markPaidMutate, isPending: isMarkPaidPending } = useMarkOrderAsPaidBinance();
   const { mutate: sendChatBinance, isPending: isChatPending } = useSendChatMessageBinance();
 
+  const [openedComplianceOrderNo, setOpenedComplianceOrderNo] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>("markPaid");
   const [confirmPayload, setConfirmPayload] = useState<{
@@ -272,6 +276,37 @@ export const BinanceOrders = ({
     );
   };
 
+  const hasAvailableDocument = (order: BinanceOrder) => {
+    const digits = String(order?.counterparty?.document ?? "").replace(/\D/g, "");
+    return digits.length === 11 || digits.length === 14;
+  };
+
+  const getComplianceVisualState = (order: BinanceOrder) => {
+    const complianceStatus = order?.compliance?.status;
+
+    if (order?.compliance?.blocked || complianceStatus === "BLOCKED") {
+      return {
+        cardClass: "bg-red-50 border-red-300 shadow-red-100",
+        badgeClass: "bg-red-100 text-red-800 border border-red-300",
+        badgeLabel: "Compliance bloqueado",
+      };
+    }
+
+    if (complianceStatus === "RESTRICTED") {
+      return {
+        cardClass: "bg-amber-50 border-amber-300 shadow-amber-100",
+        badgeClass: "bg-amber-100 text-amber-800 border border-amber-300",
+        badgeLabel: "Compliance restrito",
+      };
+    }
+
+    return {
+      cardClass: "bg-white border-gray-200 shadow",
+      badgeClass: "",
+      badgeLabel: "",
+    };
+  };
+
   return (
     <>
       <div className="flex flex-wrap gap-2">
@@ -292,6 +327,8 @@ export const BinanceOrders = ({
             message: m?.content ?? "",
             time: m?.createTime,
           }));
+
+          const complianceUi = getComplianceVisualState(order);
 
           const tradeType = String(order?.tradeType ?? "").toUpperCase();
           const isBuy = tradeType === "BUY";
@@ -400,8 +437,15 @@ export const BinanceOrders = ({
           return (
             <div
               key={orderId}
-              className="relative flex w-fit flex-col gap-0.5 rounded-xl border border-gray-200 p-4 shadow"
+              className={`relative rounded-2xl border p-4 ${complianceUi.cardClass}`}
             >
+              {complianceUi.badgeLabel && (
+                <div
+                  className={`mb-2 inline-flex rounded-full px-2 py-1 text-xs font-semibold ${complianceUi.badgeClass}`}
+                >
+                  {complianceUi.badgeLabel}
+                </div>
+              )}
               {isBuy && fieldValues.length > 0 && (
                 <div className="mt-2 rounded-xl border border-gray-200 p-3">
                   <p className="mb-2 text-14 font-semibold">Dados PIX</p>
@@ -435,7 +479,19 @@ export const BinanceOrders = ({
               >
                 <Copy width={20} height={20} weight="duotone" />
               </button>
-
+              {hasAvailableDocument(order) && (
+                <button
+                  type="button"
+                  className="absolute right-14 top-2 rounded-6 border border-gray-200 bg-white px-2 py-1 text-xs hover:bg-gray-100"
+                  onClick={() =>
+                    setOpenedComplianceOrderNo((prev) =>
+                      prev === String(order.orderNumber) ? null : String(order.orderNumber),
+                    )
+                  }
+                >
+                  Compliance
+                </button>
+              )}
               <p>
                 <strong>Order No:</strong> {orderId}
               </p>
@@ -526,6 +582,14 @@ export const BinanceOrders = ({
               >
                 {mapOrderStatus(order?.orderStatus)}
               </Button>
+              {openedComplianceOrderNo === String(order.orderNumber) && order?.compliance && (
+                <div className="absolute left-[calc(100%+12px)] top-0 z-50">
+                  <CompliancePopover
+                    data={order.compliance}
+                    onClose={() => setOpenedComplianceOrderNo(null)}
+                  />
+                </div>
+              )}
             </div>
           );
         })}

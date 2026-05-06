@@ -1,15 +1,16 @@
-interface IBybitCompliancePopover {
+interface ICompliancePopover {
   data: any;
   onClose: () => void;
+  title?: string;
 }
 
-export const BybitCompliancePopover = ({ data, onClose }: IBybitCompliancePopover) => {
+export const CompliancePopover = ({ data, onClose, title = "Compliance" }: ICompliancePopover) => {
   if (!data) return null;
 
   return (
     <div className="absolute right-0 top-0 z-50 w-[380px] rounded-lg border bg-white p-4 shadow-xl">
       <div className="mb-3 flex items-center justify-between">
-        <h4 className="font-bold">Compliance</h4>
+        <h4 className="font-bold">{title}</h4>
         <button type="button" onClick={onClose}>
           Fechar
         </button>
@@ -20,7 +21,7 @@ export const BybitCompliancePopover = ({ data, onClose }: IBybitCompliancePopove
           <strong>Resumo:</strong> {data.summary || "-"}
         </div>
         <div>
-          <strong>Status:</strong> {data.status}
+          <strong>Status:</strong> {data.status || "-"}
         </div>
         <div>
           <strong>Bloqueado:</strong> {data.blocked ? "Sim" : "Não"}
@@ -29,10 +30,10 @@ export const BybitCompliancePopover = ({ data, onClose }: IBybitCompliancePopove
           <strong>Motivo do bloqueio:</strong> {data.blockedReason || "-"}
         </div>
         <div>
-          <strong>Limite mensal:</strong> {data.monthlyLimitBrl}
+          <strong>Limite mensal:</strong> {data.monthlyLimitBrl ?? "-"}
         </div>
         <div>
-          <strong>Limite por ordem:</strong> {data.maxSingleOrderBrl}
+          <strong>Limite por ordem:</strong> {data.maxSingleOrderBrl ?? "-"}
         </div>
         <div>
           <strong>Restrição até:</strong> {data.temporaryRestrictionUntil || "-"}

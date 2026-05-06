@@ -16,8 +16,8 @@ import { ChatBox } from "./ChatBox";
 import { StatementRedisPanel } from "./Gowd/StatementRedisPanel";
 import { OrderMessages } from "./OrderMessages";
 import { BinanceOrders } from "./PendingOrders/BinanceOrders";
-import { BybitCompliancePopover } from "./PendingOrders/BybitCompliancePopover";
 import { CoinexOrders } from "./PendingOrders/CoinexOrders";
+import { CompliancePopover } from "./PendingOrders/CompliancePopover";
 import { CryptotechOrders } from "./PendingOrders/CryptotechOrders";
 import { PaymentTermsBox } from "./PendingOrders/PaymentTermsBox";
 
@@ -448,7 +448,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                   hasAvailableDocument(order) &&
                   order?.compliance && (
                     <div className="absolute left-[calc(100%+12px)] top-0 z-50">
-                      <BybitCompliancePopover
+                      <CompliancePopover
                         data={order.compliance}
                         onClose={() => setOpenedComplianceOrderId(null)}
                       />
