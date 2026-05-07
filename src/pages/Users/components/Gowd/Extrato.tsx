@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { CardContainer } from "src/components/Layout/CardContainer";
 import { useGowdBalance } from "../../hooks/Gowd/useGowdBalance";
@@ -10,6 +10,12 @@ import { StatementTab } from "./StatementTab";
 type TabKey = "extrato";
 
 const todayYMD = () => new Date().toISOString().slice(0, 10);
+
+const formatBRL = (value: number) =>
+  value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
 
 export const Extrato = () => {
   const [activeTab, setActiveTab] = useState<TabKey>(() => {
@@ -56,6 +62,27 @@ export const Extrato = () => {
     size: applied.size,
   });
 
+  const totals = useMemo(() => {
+    const items = statementQ.data?.items ?? [];
+
+    return items.reduce(
+      (acc: { entradas: number; saidas: number }, item: any) => {
+        const amount = Number(item?.amount ?? 0);
+
+        if (!Number.isFinite(amount)) return acc;
+
+        if (amount > 0) {
+          acc.entradas += amount;
+        } else if (amount < 0) {
+          acc.saidas += Math.abs(amount);
+        }
+
+        return acc;
+      },
+      { entradas: 0, saidas: 0 },
+    );
+  }, [statementQ.data?.items]);
+
   const [showPixModal, setShowPixModal] = useState(false);
 
   return (
@@ -64,8 +91,10 @@ export const Extrato = () => {
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h4 className="text-28 font-bold">EXTRATO (GOWD)</h4>
 
-          <div className="mb-4 grid gap-3 md:grid-cols-2">
+          <div className="mb-4 grid gap-3 md:grid-cols-3">
             <strong>Saldo: {isLoading ? "Carregando..." : formattedBalance}</strong>
+            <strong className="text-green-700">Entradas: {formatBRL(totals.entradas)}</strong>
+            <strong className="text-red-700">Saídas: {formatBRL(totals.saidas)}</strong>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
