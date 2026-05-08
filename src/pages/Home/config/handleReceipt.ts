@@ -29,7 +29,7 @@ export const generateSingleReceipt = (item: any): Promise<string> => {
         `${item?.pixInStatement ? `Data da transação: ${item?.pixInStatement?.timestamp}` : `Data da impressão: ${now}`}`,
         `CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA`,
         `CPF/CNPJ: 55.636.113/0001-70`,
-        `Banco: CORPX BANK`,
+        `Banco: GOWD / LATAM / LINA LTDA`,
       ];
 
       ctx.textAlign = "left";
@@ -130,7 +130,7 @@ export const handleReceipt = (data: any[]) => {
           `Data da impressão: ${now}`,
           `CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA`,
           `CPF/CNPJ: 55.636.113/0001-70`,
-          `Banco: CORPX BANK`,
+          `Banco: GOWD / LATAM / LINA LTDA`,
         ];
 
         ctx.textAlign = "left";
