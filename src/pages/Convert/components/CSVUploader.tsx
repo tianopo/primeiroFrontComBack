@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { convertGowdXlsxToOfx } from "../helper/convertGowdXlsxToOfx";
 import { parseDateToYYYYMMDD } from "../helper/parseDateToYYYYMMDD";
 
 export const CSVUploader = () => {
@@ -6,7 +7,7 @@ export const CSVUploader = () => {
   const [rows, setRows] = useState<string[][]>([]);
   const [tarifaTotal, setTarifaTotal] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [sourceFileName, setSourceFileName] = useState<string>("");
+  const xlsxInputRef = useRef<HTMLInputElement>(null);
 
   // Conta delimitadores fora de aspas
   const countCharOutsideQuotes = (line: string, ch: string) => {
@@ -608,6 +609,25 @@ NEWFILEUID:NONE
     document.body.removeChild(link);
   };
 
+  // .xlsx
+  const triggerXlsxInput = () => {
+    xlsxInputRef.current?.click();
+  };
+
+  const handleXlsxToOfx = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    try {
+      await convertGowdXlsxToOfx(file);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Erro ao converter XLSX para OFX.");
+    } finally {
+      e.target.value = "";
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-4">
@@ -618,27 +638,34 @@ NEWFILEUID:NONE
           Importar CSV
         </button>
 
+        <button
+          onClick={triggerXlsxInput}
+          className="rounded bg-slate-700 px-4 py-2 font-semibold text-white hover:bg-slate-800"
+        >
+          Importar XLSX para OFX (GOWD)
+        </button>
+
         {headers.length > 0 && (
           <>
             <button
               onClick={exportToOFXFiducia}
               className="rounded bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700"
             >
-              Exportar OFX (Fidúcia)
+              OFX (Fidúcia)
             </button>
 
             <button
               onClick={exportToOFXCorpx}
               className="rounded bg-purple-600 px-4 py-2 font-semibold text-white hover:bg-purple-700"
             >
-              Exportar OFX (Corpx)
+              OFX (Corpx)
             </button>
 
             <button
               onClick={exportToOFXPinbank}
               className="rounded bg-orange-600 px-4 py-2 font-semibold text-white hover:bg-orange-700"
             >
-              Exportar OFX (Pinbank)
+              OFX (Pinbank)
             </button>
           </>
         )}
@@ -662,6 +689,13 @@ NEWFILEUID:NONE
         accept=".csv"
         ref={fileInputRef}
         onChange={handleFileUpload}
+        className="hidden"
+      />
+      <input
+        type="file"
+        accept=".xlsx,.xls"
+        ref={xlsxInputRef}
+        onChange={handleXlsxToOfx}
         className="hidden"
       />
 
