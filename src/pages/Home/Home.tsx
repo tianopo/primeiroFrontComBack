@@ -16,6 +16,7 @@ import { mensalFiduciaTable } from "./config/mensalFiduciaTable";
 import { useDeleteOrder } from "./hooks/useDeleteOrder";
 import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
 import { useUpdateOrder } from "./hooks/useUpdateOrder";
+import { generateSalesInvoiceCsv } from "./components/generateSalesInvoiceCsv";
 
 export const Home = () => {
   const { acesso } = useAccessControl();
@@ -331,6 +332,25 @@ Suporte de Dúvidas
     document.body.removeChild(linkCsv);
   };
 
+  const exportSalesInvoiceCsv = () => {
+    if (!filteredData || filteredData.length === 0) {
+      alert("Nenhuma ordem filtrada para gerar o CSV de notas fiscais.");
+      return;
+    }
+
+    generateSalesInvoiceCsv({
+      transactions: filteredData,
+      precoMedioVenda,
+      fileName: `notas-fiscais-vendas-${filterDates.startDate}_${filterDates.endDate}.csv`,
+      modeloNf: "nfse",
+      produtoCod: "S100",
+      produtoDescricao: "Venda de Ativos Digitais",
+      commissionMode: "dinamica",
+      comissaoFixaPercentual: 0.01,
+      margemErroPorToken: 0.03,
+    });
+  };
+
   return (
     <div className="flex h-fit w-full flex-col gap-3 rounded-16 bg-white p-4 shadow-2xl">
       <div className="flex items-center gap-5">
@@ -385,7 +405,11 @@ Suporte de Dúvidas
           </>
         )}
         {validationDates && acesso === "Master" && (
-          <Button onClick={handleTransactions}>Emitir NFE</Button>
+          <>
+            <Button onClick={handleTransactions}>Emitir NFE</Button>
+
+            <Button onClick={exportSalesInvoiceCsv}>Exportar CSV Nota Fiscal Vendas</Button>
+          </>
         )}
         {validationDates && <Button onClick={() => handleReceipt(filteredData)}>Recibo</Button>}
       </div>

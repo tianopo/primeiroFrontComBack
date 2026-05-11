@@ -64,6 +64,9 @@ type BinanceOrderItem = {
   messages: BinanceMessage[];
   messagesTotal: number;
 
+  document?: string;
+  compliance?: any;
+
   endToEnd?: string;
   pixInStatement?: any;
 };
@@ -276,15 +279,23 @@ export const BinanceOrders = ({
     );
   };
 
-  const hasAvailableDocument = (order: BinanceOrder) => {
-    const digits = String(order?.counterparty?.document ?? "").replace(/\D/g, "");
-    return digits.length === 11 || digits.length === 14;
+  const getItemCompliance = (item: BinanceOrderItem) => {
+    return item?.compliance ?? item?.order?.compliance ?? null;
   };
 
-  const getComplianceVisualState = (order: BinanceOrder) => {
-    const complianceStatus = order?.compliance?.status;
+  const getItemDocument = (item: BinanceOrderItem) => {
+    return (
+      String(item?.document ?? "").trim() ||
+      String(item?.order?.counterparty?.document ?? "").trim() ||
+      String(item?.order?.compliance?.document ?? "").trim() ||
+      String(item?.compliance?.document ?? "").trim()
+    );
+  };
 
-    if (order?.compliance?.blocked || complianceStatus === "BLOCKED") {
+  const getComplianceVisualState = (compliance: any) => {
+    const complianceStatus = compliance?.status;
+
+    if (compliance?.blocked || complianceStatus === "BLOCKED") {
       return {
         cardClass: "bg-red-50 border-red-300 shadow-red-100",
         badgeClass: "bg-red-100 text-red-800 border border-red-300",
@@ -300,6 +311,14 @@ export const BinanceOrders = ({
       };
     }
 
+    if (complianceStatus === "APPROVED") {
+      return {
+        cardClass: "bg-green-50 border-green-300 shadow-green-100",
+        badgeClass: "bg-green-100 text-green-800 border border-green-300",
+        badgeLabel: "Compliance aprovado",
+      };
+    }
+
     return {
       cardClass: "bg-white border-gray-200 shadow",
       badgeClass: "",
@@ -307,11 +326,27 @@ export const BinanceOrders = ({
     };
   };
 
+  const hasAvailableDocument = (document?: string) => {
+    const digits = String(document ?? "").replace(/\D/g, "");
+    return digits.length === 11 || digits.length === 14;
+  };
+
   return (
     <>
       <div className="flex flex-wrap gap-2">
         {orders.map((item) => {
-          const order = item?.order;
+          const rawOrder = item?.order;
+          const compliance = getItemCompliance(item);
+          const document = getItemDocument(item);
+
+          const order: BinanceOrder = {
+            ...rawOrder,
+            compliance,
+            counterparty: {
+              ...rawOrder?.counterparty,
+              document: document || rawOrder?.counterparty?.document || "",
+            },
+          };
           const messages = Array.isArray(item?.messages) ? item.messages : [];
           const messagesTotal = Number(item?.messagesTotal ?? 0);
 
@@ -332,7 +367,7 @@ export const BinanceOrders = ({
 
           const tradeType = String(order?.tradeType ?? "").toUpperCase();
           const isBuy = tradeType === "BUY";
-          const fieldValues = Array.isArray((order as any)?.paymentDetails.paymentFieldValues)
+          const fieldValues = Array.isArray((order as any)?.paymentDetails?.paymentFieldValues)
             ? (order as any).paymentDetails.paymentFieldValues
             : [];
 
@@ -479,7 +514,7 @@ export const BinanceOrders = ({
               >
                 <Copy width={20} height={20} weight="duotone" />
               </button>
-              {hasAvailableDocument(order) && (
+              {hasAvailableDocument(document) && compliance && (
                 <button
                   type="button"
                   className="absolute right-14 top-2 rounded-6 border border-gray-200 bg-white px-2 py-1 text-xs hover:bg-gray-100"
@@ -513,13 +548,14 @@ export const BinanceOrders = ({
               <p>
                 <strong>Nome:</strong> {order.counterparty.name}
               </p>
-              {String(order?.counterparty?.document ?? "").trim() && (
+              {String(document ?? "").trim() && (
                 <p>
-                  <strong>Documento:</strong> {order.counterparty.document}
+                  <strong>Documento:</strong> {document}
                 </p>
               )}
               <p>
-                <strong>Apelido:</strong> {order?.buyerNickname || "N/A"}
+                <strong>Apelido:</strong>{" "}
+                {isBuy ? order?.sellerNickname : order?.buyerNickname || "N/A"}
               </p>
               <p>
                 <strong>Tipo:</strong> {String(order?.tradeType || "N/A")}
@@ -582,10 +618,10 @@ export const BinanceOrders = ({
               >
                 {mapOrderStatus(order?.orderStatus)}
               </Button>
-              {openedComplianceOrderNo === String(order.orderNumber) && order?.compliance && (
+              {openedComplianceOrderNo === String(order.orderNumber) && compliance && (
                 <div className="absolute left-[calc(100%+12px)] top-0 z-50">
                   <CompliancePopover
-                    data={order.compliance}
+                    data={compliance}
                     onClose={() => setOpenedComplianceOrderNo(null)}
                   />
                 </div>
