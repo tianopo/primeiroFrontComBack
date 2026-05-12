@@ -5,6 +5,7 @@ type CommissionMode = "fixa" | "dinamica";
 type GenerateSalesInvoiceCsvParams = {
   transactions: any[];
   precoMedioVenda: number;
+  endDate: string;
   fileName?: string;
   modeloNf?: "nfse" | "nfe";
   produtoCod?: string;
@@ -229,9 +230,29 @@ Suporte de Dúvidas
 - Para informações do P2P, consulte a documentação ou o suporte da corretora, ou entre em contato no whatsapp: (12) 992546355`;
 };
 
+const resolveInvoiceDate = (
+  transactionDate: string | Date | null | undefined,
+  fallbackEndDate: string,
+) => {
+  const transactionDateBr = transactionDate ? toBRDate(transactionDate) : "Invalid Date";
+
+  if (transactionDateBr && transactionDateBr !== "Invalid Date") {
+    return transactionDateBr;
+  }
+
+  const endDateBr = fallbackEndDate ? toBRDate(fallbackEndDate) : "Invalid Date";
+
+  if (endDateBr && endDateBr !== "Invalid Date") {
+    return endDateBr;
+  }
+
+  return fallbackEndDate;
+};
+
 export const generateSalesInvoiceCsv = ({
   transactions,
   precoMedioVenda,
+  endDate,
   fileName = `notas-fiscais-vendas-${Date.now()}.csv`,
   modeloNf = "nfse",
   produtoCod = "S100",
@@ -260,8 +281,10 @@ export const generateSalesInvoiceCsv = ({
     const vendaCodigo =
       String(transaction?.numeroOrdem ?? "").trim() || `VEN${String(index + 1).padStart(6, "0")}`;
 
-    const dataBr = toBRDate(transaction?.dataHora);
-    const vendaData = dataBr === "Invalid Date" ? toBRDate(new Date()) : dataBr;
+    const vendaData = resolveInvoiceDate(
+      transaction?.dataHora as string | Date | null | undefined,
+      endDate,
+    );
 
     const valorBRL = parseBRL(transaction?.valor);
 

@@ -7,6 +7,7 @@ import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalB
 import { useAccessControl } from "src/routes/context/AccessControl";
 import { EditOrderModal } from "./components/EditOrderModal";
 import { GenerateContractButton } from "./components/GenerateContractButton";
+import { generateSalesInvoiceCsv } from "./components/generateSalesInvoiceCsv";
 import { IN1888 } from "./components/IN1888";
 import { fortnigthlyFiduciaTable } from "./config/fortnigthlyFiduciaTable";
 import { handleCompraVendaIN1888 } from "./config/handleDownload";
@@ -16,7 +17,6 @@ import { mensalFiduciaTable } from "./config/mensalFiduciaTable";
 import { useDeleteOrder } from "./hooks/useDeleteOrder";
 import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
 import { useUpdateOrder } from "./hooks/useUpdateOrder";
-import { generateSalesInvoiceCsv } from "./components/generateSalesInvoiceCsv";
 
 export const Home = () => {
   const { acesso } = useAccessControl();
@@ -341,6 +341,7 @@ Suporte de Dúvidas
     generateSalesInvoiceCsv({
       transactions: filteredData,
       precoMedioVenda,
+      endDate: filterDates.endDate,
       fileName: `notas-fiscais-vendas-${filterDates.startDate}_${filterDates.endDate}.csv`,
       modeloNf: "nfse",
       produtoCod: "S100",

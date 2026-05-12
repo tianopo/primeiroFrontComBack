@@ -8,11 +8,11 @@ import { ModalInstitutional } from "../components/ModalInstitutional";
 import { Step1 } from "../components/SectionSellSteps/Step1";
 import { Step2 } from "../components/SectionSellSteps/Step2";
 import { Step3 } from "../components/SectionSellSteps/Step3";
-import { Step4PixPayment } from "../components/SectionSellSteps/Step4PixPayment";
 import "../cryptoTech.css";
 
 export const SectionSell = () => {
   const [step, setStep] = useState(1);
+
   // step 1
   const [blockchain, setBlockchain] = useState("BSC (BEP20)");
   const [quantidadeFiat, setQuantidadeFiat] = useState("");
@@ -21,14 +21,54 @@ export const SectionSell = () => {
   const [ativo, setAtivo] = useState("USDT");
   const [dolar, setDolar] = useState(6);
   const [taxaPercentual, setTaxaPercentual] = useState(3);
+
   // step 2
   const [nomeCompleto, setNomeCompleto] = useState("");
   const [CPFouCNPJ, setCPFouCNPJ] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [enderecoDaCarteira, setEnderecoDaCarteira] = useState("");
+
   // step 3
   const [confirmado, setConfirmado] = useState(false);
   const [showModal, setShowModal] = useState(false);
+
+  // ===== WhatsApp =====
+  const WHATSAPP_PHONE = "5512992546355"; // +55 12 99254-6355
+
+  const openWhatsApp = (text: string) => {
+    const url = `https://api.whatsapp.com/send?phone=${WHATSAPP_PHONE}&text=${encodeURIComponent(
+      text,
+    )}`;
+    window.open(url, "_blank");
+  };
+
+  const buildWhatsAppMessage = () => {
+    return [
+      "Olá! Gostaria de comprar ativos digitais.",
+      "Estou aguardando o contrato para assinatura pelo gov.br.",
+      "",
+      "DADOS DA COMPRA:",
+      `• Rede Blockchain: ${blockchain || "-"}`,
+      `• Pagar (BRL): ${quantidadeFiat || "-"} ${moeda || "BRL"}`,
+      `• Receber (aprox.): ${quantidadeAtivo || "-"} ${ativo || "-"}`,
+      `• Taxa de processamento: ${taxaPercentual}%`,
+      `• Cotação usada (referência): ${dolar} (USD/BRL ou BTC/BRL conforme ativo)`,
+      "",
+      "DADOS PESSOAIS:",
+      `• Nome completo: ${nomeCompleto || "-"}`,
+      `• CPF/CNPJ: ${CPFouCNPJ || "-"}`,
+      `• WhatsApp: ${whatsapp || "-"}`,
+      `• Endereço da carteira: ${enderecoDaCarteira || "-"}`,
+      "",
+      `Aceitou Termos de Uso e Política de Privacidade: ${confirmado ? "SIM" : "NÃO"}`,
+    ].join("\n");
+  };
+
+  const sendToWhatsApp = () => {
+    const msg = buildWhatsAppMessage();
+    openWhatsApp(msg);
+  };
+
   // ===== Helpers =====
   useEffect(() => {
     (async () => {
@@ -38,6 +78,7 @@ export const SectionSell = () => {
           parseFloat(ativo === "BTC" ? data.BTCBRL?.bid || "1000000" : data.USDBRL?.bid || "6"),
         );
       } catch (e) {
+        // se quiser manter sem console, pode trocar por toast.error
         console.error("cotação", e);
       }
     })();
@@ -224,8 +265,6 @@ export const SectionSell = () => {
             </p>
           </div>
         )}
-
-        {step === 4 && <Step4PixPayment />}
       </div>
 
       {showModal && (
@@ -251,6 +290,7 @@ export const SectionSell = () => {
             </p>
 
             <div className="flex flex-col gap-4 rounded-12 border-1 bg-gray-400 p-4">
+              <Row lbl="Rede Blockchain:" val={blockchain} />
               <Row
                 lbl="Carteira de Recebimento:"
                 val={
@@ -259,19 +299,24 @@ export const SectionSell = () => {
                     : enderecoDaCarteira
                 }
               />
+              <Row lbl="Nome completo:" val={nomeCompleto} />
               <Row lbl="Documento:" val={CPFouCNPJ} />
+              <Row lbl="WhatsApp:" val={whatsapp} />
               <Row lbl="Pagar com:" val={`${quantidadeFiat} ${moeda}`} />
-              <Row lbl="Receber:" val={`${quantidadeAtivo} ${ativo}`} />
+              <Row lbl="Receber (aprox.):" val={`${quantidadeAtivo} ${ativo}`} />
+              <Row lbl="Taxa de processamento:" val={`${taxaPercentual}%`} />
+              <Row lbl="Aceitou Termos/Privacidade:" val={confirmado ? "SIM" : "NÃO"} />
             </div>
 
             <button
               className="button-colorido-buy"
               onClick={() => {
                 setShowModal(false);
-                setStep(4);
+                // ✅ ao invés de setStep(4), envia WhatsApp
+                sendToWhatsApp();
               }}
             >
-              Prosseguir <ArrowRight weight="bold" />
+              Solicitar contrato no WhatsApp <ArrowRight weight="bold" />
             </button>
           </div>
         </ModalInstitutional>
