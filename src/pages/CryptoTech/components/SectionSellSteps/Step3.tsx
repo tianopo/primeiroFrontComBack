@@ -63,7 +63,7 @@ export const Step3 = ({
         <p>
           Eu li e concordo com os{" "}
           <a
-            href="/policy/pld.pdf"
+            href="/policy/tu.pdf"
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary underline hover:opacity-80"
@@ -72,7 +72,7 @@ export const Step3 = ({
           </a>{" "}
           e{" "}
           <a
-            href="/policy/pld.pdf"
+            href="/policy/pp.pdf"
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary underline hover:opacity-80"

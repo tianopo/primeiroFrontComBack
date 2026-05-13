@@ -1,6 +1,7 @@
 import { CardContainer } from "src/components/Layout/CardContainer";
 import { CSVUploader } from "./components/CSVUploader";
 import { OFXUploader } from "./components/OFXUploader";
+import { GowdOFXUploader } from "./components/GowdOFXUploader";
 
 export const Convert = () => {
   return (
@@ -9,6 +10,7 @@ export const Convert = () => {
         <CSVUploader />
         <OFXUploader />
       </div>
+      <GowdOFXUploader />
     </CardContainer>
   );
 };
