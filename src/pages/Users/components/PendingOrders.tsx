@@ -13,6 +13,7 @@ import { useSendChatMessageBybit } from "../hooks/Bybit/useSendChatMessageBybit"
 import { confirmContract } from "../utils/confirmContract";
 import { toBRDate } from "../utils/helpers";
 import { ChatBox } from "./ChatBox";
+import { PixToolInitialValues, PixToolModal } from "./Gowd/Pix/PixToolModal";
 import { StatementRedisPanel } from "./Gowd/StatementRedisPanel";
 import { OrderMessages } from "./OrderMessages";
 import { BinanceOrders } from "./PendingOrders/BinanceOrders";
@@ -53,6 +54,10 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
   const [orderToRelease, setOrderToRelease] = useState<any>(null);
   const [openedComplianceOrderId, setOpenedComplianceOrderId] = useState<string | null>(null);
 
+  const [pixModalInitialValues, setPixModalInitialValues] = useState<PixToolInitialValues | null>(
+    null,
+  );
+
   // 🔹 activeTab persistido no localStorage
   const [activeTab, setActiveTab] = useState<KeyType>(() => {
     if (typeof window === "undefined") return "empresa";
@@ -73,6 +78,16 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
 
     return "empresa";
   });
+
+  const openPendingOrderPixModal = (order: any) => {
+    setPixModalInitialValues({
+      pixKey: "",
+      fullName: String(order?.sellerRealName ?? ""),
+      documentNumber: String(order?.document ?? ""),
+      amount: String(order?.amount ?? ""),
+      orderId: String(order?.id ?? ""),
+    });
+  };
 
   const handleChangeTab = (key: KeyType) => {
     setActiveTab(key);
@@ -360,6 +375,17 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                   </button>
                 )}
 
+                {hasAvailableDocument(order) && (
+                  <button
+                    type="button"
+                    className="absolute right-2 top-12 rounded-6 border border-green-200 bg-green-50 px-2 py-1 text-xs font-semibold text-green-700 hover:bg-green-100"
+                    onClick={() => openPendingOrderPixModal(order)}
+                    title="Fazer PIX pela GOWD"
+                  >
+                    Pix
+                  </button>
+                )}
+
                 <p>
                   <strong>ID da Ordem:</strong> {order.id}
                 </p>
@@ -481,6 +507,12 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
             );
           })}
         </div>
+      )}
+      {pixModalInitialValues && (
+        <PixToolModal
+          initialValues={pixModalInitialValues}
+          onClose={() => setPixModalInitialValues(null)}
+        />
       )}
     </CardContainer>
   );

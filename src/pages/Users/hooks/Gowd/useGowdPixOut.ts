@@ -6,7 +6,7 @@ import { apiRoute } from "src/routes/api";
 
 export type GowdPixOutBody = {
   amount: {
-    currency: "BRL" | string;
+    currency: string;
     value: string;
   };
   paymentMethod: "PIX";
@@ -15,19 +15,20 @@ export type GowdPixOutBody = {
     email?: string;
     phone?: string;
     birth?: string;
-    document?: {
-      type?: "CPF" | "CNPJ";
-      number?: string;
-    };
+    document: string;
   };
+
   bank: {
     pix: {
       type: "CPF" | "CNPJ" | "EMAIL" | "PHONE" | "RANDOM";
       key: string;
+      qrcodeData?: string;
     };
+    account?: Record<string, unknown>;
   };
+
+  crypto?: Record<string, unknown>;
   description: string;
-  webhookUrl: string;
   code: string;
 };
 

@@ -6,6 +6,7 @@ import { generateSingleReceipt } from "src/pages/Home/config/handleReceipt";
 import { useCheckAndReleaseCoinBinance } from "../../hooks/Binance/useCheckAndReleaseCoinBinance";
 import { useMarkOrderAsPaidBinance } from "../../hooks/Binance/useMarkOrderAsPaidBinance";
 import { useSendChatMessageBinance } from "../../hooks/Binance/useSendChatMessageBinance";
+import { PixToolInitialValues, PixToolModal } from "../Gowd/Pix/PixToolModal";
 import { StatementRedisPanel } from "../Gowd/StatementRedisPanel";
 import { OrderMessages } from "../OrderMessages";
 import { CompliancePopover } from "./CompliancePopover";
@@ -130,6 +131,26 @@ export const BinanceOrders = ({
     endToEnd?: string;
     order: BinanceOrder;
   } | null>(null);
+  const [pixModalInitialValues, setPixModalInitialValues] = useState<PixToolInitialValues | null>(
+    null,
+  );
+
+  const openBinancePixModal = (params: {
+    order: BinanceOrder;
+    orderId: string;
+    document: string;
+    fieldValues: string[];
+  }) => {
+    const { order, orderId, document, fieldValues } = params;
+
+    setPixModalInitialValues({
+      pixKey: String(fieldValues?.[1] ?? ""),
+      fullName: String(order?.counterparty?.name ?? ""),
+      documentNumber: String(document ?? ""),
+      amount: String(order?.totalPrice ?? ""),
+      orderId,
+    });
+  };
 
   const closeConfirm = () => {
     setConfirmOpen(false);
@@ -514,6 +535,23 @@ export const BinanceOrders = ({
               >
                 <Copy width={20} height={20} weight="duotone" />
               </button>
+              {hasAvailableDocument(document) && (
+                <button
+                  type="button"
+                  className="absolute right-2 top-12 rounded-6 border border-green-200 bg-green-50 px-2 py-1 text-xs font-semibold text-green-700 hover:bg-green-100"
+                  onClick={() =>
+                    openBinancePixModal({
+                      order,
+                      orderId,
+                      document,
+                      fieldValues,
+                    })
+                  }
+                  title="Fazer PIX pela GOWD"
+                >
+                  Pix
+                </button>
+              )}
               {hasAvailableDocument(document) && compliance && (
                 <button
                   type="button"
@@ -642,6 +680,12 @@ export const BinanceOrders = ({
               <StatementRedisPanel autoSelectEndToEnd={confirmPayload.endToEnd} />
             ) : undefined
           }
+        />
+      )}
+      {pixModalInitialValues && (
+        <PixToolModal
+          initialValues={pixModalInitialValues}
+          onClose={() => setPixModalInitialValues(null)}
         />
       )}
     </>
