@@ -340,9 +340,10 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
         paymentMethod: "PIX",
         customer: {
           fullName: fullName.trim(),
-
-          // O backend identifica CPF/CNPJ automaticamente.
-          document: documentDigits,
+          document: {
+            type: documentType as "CPF" | "CNPJ",
+            number: documentDigits,
+          },
         },
         bank: {
           pix: {

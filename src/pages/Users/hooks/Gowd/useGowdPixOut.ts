@@ -15,19 +15,19 @@ export type GowdPixOutBody = {
     email?: string;
     phone?: string;
     birth?: string;
-    document: string;
+    document?: {
+      type?: "CPF" | "CNPJ";
+      number?: string;
+    };
   };
 
   bank: {
     pix: {
       type: "CPF" | "CNPJ" | "EMAIL" | "PHONE" | "RANDOM";
       key: string;
-      qrcodeData?: string;
     };
-    account?: Record<string, unknown>;
   };
 
-  crypto?: Record<string, unknown>;
   description: string;
   code: string;
 };

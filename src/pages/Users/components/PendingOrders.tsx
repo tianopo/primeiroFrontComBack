@@ -375,7 +375,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                   </button>
                 )}
 
-                {hasAvailableDocument(order) && (
+                {hasAvailableDocument(order) && order?.side === 0 && (
                   <button
                     type="button"
                     className="absolute right-2 top-12 rounded-6 border border-green-200 bg-green-50 px-2 py-1 text-xs font-semibold text-green-700 hover:bg-green-100"
