@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { Modal } from "src/components/Modal/Modal";
 import { publicFileUrl } from "src/config/api";
-import { useAccessControl } from "src/routes/context/AccessControl";
 import { useReviewComplianceEvidence } from "../../hooks/Compliance/useReviewComplianceEvidence";
 import { useUploadComplianceEvidence } from "../../hooks/Compliance/useUploadComplianceEvidence";
 
@@ -15,53 +14,57 @@ type RequirementConfig = {
   key: string;
   label: string;
   type: string;
+  appliesTo?: Array<"CPF" | "CNPJ">;
 };
 
 const REQUIREMENT_CONFIGS: RequirementConfig[] = [
   {
     key: "requiresDocument",
-    label: "Exige documento frente e verso",
+    label: "documento aberto",
     type: "ID_FRONT_BACK",
   },
   {
     key: "requiresSelfieDocument",
-    label: "Exige selfie com documento",
+    label: "selfie com documento",
     type: "SELFIE_WITH_DOCUMENT",
   },
   {
     key: "requiresAddressProof",
-    label: "Exige comprovante de endereço",
+    label: "comprovante de endereço",
     type: "ADDRESS_PROOF",
   },
   {
     key: "requiresIncomeProof",
-    label: "Exige comprovante de renda",
+    label: "comprovante de renda",
     type: "PAYSLIP",
   },
   {
     key: "requiresBankStatement",
-    label: "Exige extrato bancário",
+    label: "extrato bancário",
     type: "BANK_STATEMENT",
   },
   {
     key: "requiresCorporateDocs",
-    label: "Exige documentos societários",
+    label: "contrato social",
     type: "CORPORATE_ARTICLES",
+    appliesTo: ["CNPJ"],
   },
   {
     key: "requiresResponsibilityTerm",
-    label: "Exige termo de responsabilidade",
+    label: "termo de responsabilidade",
     type: "RESPONSIBILITY_TERM",
   },
   {
     key: "requiresEnhancedKyc",
-    label: "Exige KYC reforçado",
+    label: "KYC reforçado",
     type: "KYC_FORM",
+    appliesTo: ["CNPJ"],
   },
   {
     key: "requiresPldForm",
-    label: "Exige formulário PLD",
+    label: "formulário PLD",
     type: "PLD_FORM",
+    appliesTo: ["CNPJ"],
   },
 ];
 
@@ -69,7 +72,6 @@ export const DocumentsTab = ({ data, onSaved }: IDocumentsTab) => {
   const [files, setFiles] = useState<Record<string, File | null>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const { acesso } = useAccessControl();
 
   const { mutateAsync: uploadEvidence, isPending: isUploading } = useUploadComplianceEvidence();
   const { mutateAsync: reviewEvidence, isPending: isReviewing } = useReviewComplianceEvidence();
@@ -82,28 +84,110 @@ export const DocumentsTab = ({ data, onSaved }: IDocumentsTab) => {
   const isPdfFile = (mimeType?: string | null, storageKey?: string | null) => {
     return mimeType === "application/pdf" || /\.pdf$/i.test(String(storageKey ?? ""));
   };
-
+  console.log(data);
   const requiredNow = data?.compliance?.evidence?.requiredNow ?? [];
   const storedEvidence = data?.compliance?.evidence?.stored ?? [];
 
+  const documentType = String(data?.input?.documentType ?? "").toUpperCase();
+  const normalizedDocumentType = documentType === "CNPJ" ? "CNPJ" : "CPF";
+
   const requiredTypes = new Set(requiredNow.map((item: { type: string }) => item.type));
 
-  const visibleStoredEvidence = storedEvidence.filter(
-    (item: { type: string; status: string }) =>
-      requiredTypes.has(item.type) || item.status === "APPROVED" || item.status === "WAIVED",
+  const requiredByType = new Map<string, any>(
+    requiredNow.map((item: any) => [String(item.type), item]),
   );
 
-  const activeRequirements = useMemo(() => {
-    return requiredNow.filter((item: { type: string }) => {
-      const existing = storedEvidence.find(
-        (doc: { type: string; status: string }) => doc.type === item.type,
-      );
+  const allowedRequirementConfigs = REQUIREMENT_CONFIGS.filter((item) => {
+    if (!item.appliesTo?.length) return true;
+    return item.appliesTo.includes(normalizedDocumentType);
+  });
 
-      if (!existing) return true;
+  const evidenceIsStored = (evidence: any) => {
+    if (!evidence) return false;
 
-      return existing.status !== "APPROVED";
+    const status = String(evidence.status ?? "");
+
+    if (status === "WAIVED") {
+      return false;
+    }
+
+    if (status === "EXPIRED") {
+      return false;
+    }
+
+    if (status === "REJECTED") {
+      return false;
+    }
+
+    if (status === "PENDING") {
+      return false;
+    }
+
+    if (evidence.storageKey || evidence.fileHash) {
+      return true;
+    }
+
+    return ["RECEIVED", "APPROVED"].includes(status);
+  };
+
+  const formatRequirementLabel = (label: string, active: boolean) => {
+    const cleanLabel = String(label ?? "")
+      .replace(/^exige\s+/i, "")
+      .replace(/^não exige\s+/i, "")
+      .trim();
+
+    return `${active ? "Exige" : "Não exige"} ${cleanLabel}`;
+  };
+
+  const displayRequirements = useMemo(() => {
+    const baseItems = allowedRequirementConfigs.map((config) => {
+      const required = requiredByType.get(config.type);
+      const active = requiredTypes.has(config.type);
+
+      return {
+        ...config,
+        active,
+        originalLabel: required?.label ?? config.label,
+        label: formatRequirementLabel(required?.label ?? config.label, active),
+        reason: required?.reason ?? (active ? "Documento exigido." : "Documento não exigido."),
+      };
     });
-  }, [requiredNow, storedEvidence]);
+
+    const extraRequiredItems = requiredNow
+      .filter((item: any) => {
+        return !baseItems.some((base) => base.type === item.type);
+      })
+      .map((item: any) => ({
+        key: item.type,
+        type: item.type,
+        active: true,
+        originalLabel: item.label,
+        label: formatRequirementLabel(item.label, true),
+        reason: item.reason ?? "Documento exigido.",
+      }));
+
+    return [...baseItems, ...extraRequiredItems];
+  }, [allowedRequirementConfigs, requiredNow, requiredTypes, requiredByType]);
+
+  const displayTypes = new Set(displayRequirements.map((item) => item.type));
+
+  const visibleStoredEvidence = storedEvidence.filter((item: { type: string; status: string }) => {
+    return (
+      displayTypes.has(item.type) ||
+      requiredTypes.has(item.type) ||
+      item.status === "APPROVED" ||
+      item.status === "WAIVED" ||
+      item.status === "RECEIVED"
+    );
+  });
+
+  const uploadRequirements = useMemo(() => {
+    return displayRequirements.filter((item) => {
+      const evidence = storedEvidence.find((doc: any) => doc.type === item.type);
+
+      return !evidenceIsStored(evidence);
+    });
+  }, [displayRequirements, storedEvidence]);
 
   const getEvidenceByType = (type: string) =>
     storedEvidence.find((item: any) => item.type === type);
@@ -142,10 +226,10 @@ export const DocumentsTab = ({ data, onSaved }: IDocumentsTab) => {
     onSaved?.(result);
   };
 
-  if (requiredNow.length === 0 && visibleStoredEvidence.length === 0) {
+  if (displayRequirements.length === 0 && visibleStoredEvidence.length === 0) {
     return (
       <div className="rounded-md border border-gray-200 p-4 text-sm text-gray-500">
-        Nenhum documento exigido no momento.
+        Nenhum documento disponível para este perfil.
       </div>
     );
   }
@@ -156,9 +240,9 @@ export const DocumentsTab = ({ data, onSaved }: IDocumentsTab) => {
         <h4 className="mb-3 text-lg font-bold">Documentos e exigências</h4>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          {REQUIREMENT_CONFIGS.map((item) => {
+          {displayRequirements.map((item) => {
             const evidence = getEvidenceByType(item.type);
-            const active = activeRequirements.some((req: any) => req.type === item.type);
+            const active = item.active;
 
             return (
               <div key={item.type} className="rounded border p-3">
@@ -239,12 +323,12 @@ export const DocumentsTab = ({ data, onSaved }: IDocumentsTab) => {
         </div>
       </section>
 
-      {activeRequirements.length > 0 && (
+      {uploadRequirements.length > 0 && (
         <section className="rounded-md border border-gray-200 p-4">
-          <h4 className="mb-3 text-lg font-bold">Enviar documentos exigidos</h4>
+          <h4 className="mb-3 text-lg font-bold">Enviar documentos</h4>
 
           <div className="flex flex-col gap-4">
-            {activeRequirements.map((item: any) => {
+            {uploadRequirements.map((item: any) => {
               const evidence = getEvidenceByType(item.type);
 
               return (
