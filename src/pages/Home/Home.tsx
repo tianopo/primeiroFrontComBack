@@ -338,7 +338,7 @@ Suporte de Dúvidas
       return;
     }
 
-    generateSalesInvoiceCsv({
+    const result = generateSalesInvoiceCsv({
       transactions: filteredData,
       precoMedioVenda,
       endDate: filterDates.endDate,
@@ -350,6 +350,10 @@ Suporte de Dúvidas
       comissaoFixaPercentual: 0.01,
       margemErroPorToken: 0.03,
     });
+
+    if (!result) return;
+
+    setValorTotalNFE(result.totalValorNotas);
   };
 
   return (
@@ -430,9 +434,13 @@ Suporte de Dúvidas
             </>
           )}
           {valorTotalNFE > 0 && (
-            <h6 className="font-semibold text-green-700">
-              Valor Total das NFE Emitidas: R$ {valorTotalNFE.toFixed(2)}
-            </h6>
+            <div className="rounded bg-green-50 px-3 py-2 text-sm font-semibold text-green-700">
+              Total das notas fiscais geradas:{" "}
+              {valorTotalNFE.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
+            </div>
           )}
           {/* Listar as ordens agrupadas por exchange */}
           {Object.keys(groupedTransactions).map((exchange) => (

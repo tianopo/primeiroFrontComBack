@@ -230,15 +230,36 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
     );
   };
 
-  const hasAvailableDocument = (order: any) => {
-    const digits = onlyDigits(order?.document);
+  const onlyDigits = (value?: string) => String(value ?? "").replace(/\D/g, "");
+
+  const isValidCpfOrCnpj = (value?: string) => {
+    const digits = onlyDigits(value);
     return digits.length === 11 || digits.length === 14;
   };
 
-  const getComplianceVisualState = (order: any) => {
-    const complianceStatus = order?.compliance?.status;
+  const getOrderCompliance = (order: any) => {
+    return order?.compliance ?? order?.order?.compliance ?? null;
+  };
 
-    if (order?.compliance?.blocked || complianceStatus === "BLOCKED") {
+  const getOrderDocument = (order: any) => {
+    return (
+      String(order?.document ?? "").trim() ||
+      String(order?.compliance?.document ?? "").trim() ||
+      String(order?.order?.counterparty?.document ?? "").trim() ||
+      String(order?.order?.compliance?.document ?? "").trim()
+    );
+  };
+
+  const hasAvailableDocument = (order: any) => {
+    return isValidCpfOrCnpj(getOrderDocument(order));
+  };
+
+  const getComplianceVisualState = (input: any) => {
+    const compliance = input?.status ? input : input?.compliance;
+
+    const complianceStatus = String(compliance?.status ?? "").toUpperCase();
+
+    if (compliance?.blocked || complianceStatus === "BLOCKED") {
       return {
         cardClass: "bg-red-50 border-red-300 shadow-red-100",
         badgeClass: "bg-red-100 text-red-800 border border-red-300",
@@ -254,12 +275,38 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
       };
     }
 
+    if (complianceStatus === "PENDING" || complianceStatus === "ENHANCED_DUE_DILIGENCE") {
+      return {
+        cardClass: "bg-yellow-50 border-yellow-300 shadow-yellow-100",
+        badgeClass: "bg-yellow-100 text-yellow-800 border border-yellow-300",
+        badgeLabel: "Compliance pendente",
+      };
+    }
+
+    if (complianceStatus === "MONITORING") {
+      return {
+        cardClass: "bg-blue-50 border-blue-300 shadow-blue-100",
+        badgeClass: "bg-blue-100 text-blue-800 border border-blue-300",
+        badgeLabel: "Compliance monitorado",
+      };
+    }
+
+    if (complianceStatus === "APPROVED") {
+      return {
+        cardClass: "bg-green-50 border-green-300 shadow-green-100",
+        badgeClass: "bg-green-100 text-green-800 border border-green-300",
+        badgeLabel: "Compliance aprovado",
+      };
+    }
+
     return {
       cardClass: "bg-white border-gray-200 shadow",
       badgeClass: "",
       badgeLabel: "",
     };
   };
+
+  const hasRegisteredCpf = (doc?: string) => onlyDigits(doc).length === 11;
 
   if (isLoading) return <p>Carregando ordens...</p>;
   if (error) return <p>Erro ao carregar ordens.</p>;
@@ -269,9 +316,6 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
     activeTab === "binance"
       ? ((data as any)?.binance?.items ?? [])
       : (((data as any)[activeTab] as any[]) ?? []);
-
-  const onlyDigits = (v?: string) => String(v ?? "").replace(/\D/g, "");
-  const hasRegisteredCpf = (doc?: string) => onlyDigits(doc).length === 11;
 
   return (
     <CardContainer full>
@@ -336,10 +380,13 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
           {orders.map((order: any) => {
             const isBuy = Number(order?.side) === 0;
             const isPendingAny = isMarkPaidBybitPending;
+            const compliance = getOrderCompliance(order);
+            const documentForCompliance = getOrderDocument(order);
+            const complianceUi = getComplianceVisualState(compliance);
             return (
               <div
                 key={order.id}
-                className={`relative flex w-fit flex-col gap-0.5 rounded-xl border p-4 shadow ${getComplianceVisualState(order).cardClass}`}
+                className={`relative flex w-fit flex-col gap-0.5 rounded-xl border p-4 pt-10 shadow ${complianceUi.cardClass}`}
               >
                 {order?.side === 0 &&
                   Array.isArray(order?.paymentTerms) &&
@@ -360,8 +407,14 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                 >
                   <Copy width={20} height={20} weight="duotone" />
                 </button>
-
-                {hasAvailableDocument(order) && (
+                {complianceUi.badgeLabel && (
+                  <span
+                    className={`absolute left-2 top-2 rounded-full px-2 py-1 text-xs font-semibold ${complianceUi.badgeClass}`}
+                  >
+                    {complianceUi.badgeLabel}
+                  </span>
+                )}
+                {hasAvailableDocument(order) && compliance && (
                   <button
                     type="button"
                     className="absolute right-14 top-2 rounded-6 border border-gray-200 bg-white px-2 py-1 text-xs hover:bg-gray-100"
@@ -470,16 +523,15 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                       : "Apelando"}
                 </Button>
 
-                {openedComplianceOrderId === String(order.id) &&
-                  hasAvailableDocument(order) &&
-                  order?.compliance && (
-                    <div className="absolute left-[calc(100%+12px)] top-0 z-50">
-                      <CompliancePopover
-                        data={order.compliance}
-                        onClose={() => setOpenedComplianceOrderId(null)}
-                      />
-                    </div>
-                  )}
+                {openedComplianceOrderId === String(order.id) && compliance && (
+                  <div className="absolute left-[calc(100%+12px)] top-0 z-50">
+                    <CompliancePopover
+                      data={compliance}
+                      documento={documentForCompliance}
+                      onClose={() => setOpenedComplianceOrderId(null)}
+                    />
+                  </div>
+                )}
 
                 {showModal && orderToRelease && (
                   <ConfirmationModalButton

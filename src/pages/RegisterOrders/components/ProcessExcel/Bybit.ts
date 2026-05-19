@@ -5,86 +5,152 @@ export const processExcelBybit = (workbook: XLSX.WorkBook, selectedBroker: strin
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
 
-  const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
-  const [titlesRaw, ...rows] = json;
+  const json = XLSX.utils.sheet_to_json(worksheet, {
+    header: 1,
+    defval: "",
+  }) as any[][];
 
-  const norm = (v: any) =>
-    String(v ?? "")
+  const norm = (value: any) =>
+    String(value ?? "")
       .trim()
       .toLowerCase();
 
-  const titles = (titlesRaw ?? []).map(norm);
+  const normalizeHeader = (value: any) =>
+    norm(value)
+      .replace(/\s+/g, " ")
+      .replace(/\ufeff/g, "");
 
-  // ✅ valida os títulos sem quebrar com "Time (UTC-03:00)"
-  const expected = [
-    "order no.",
-    "p2p-convert",
-    "type",
-    "fiat amount",
-    "currency",
-    "price",
-    "currency",
-    "coin amount",
-    "cryptocurrency",
-    "transaction fees",
-    "cryptocurrency",
-    "counterparty",
-    "status",
+  const findHeaderRowIndex = () => {
+    return json.findIndex((row) => {
+      const headers = (row ?? []).map(normalizeHeader);
+
+      return (
+        headers.includes("order no.") &&
+        headers.includes("direction") &&
+        headers.includes("fiat amount") &&
+        headers.includes("status") &&
+        headers.some((header) => header.startsWith("time"))
+      );
+    });
+  };
+
+  const headerRowIndex = findHeaderRowIndex();
+
+  if (headerRowIndex === -1) {
+    toast.error(`Esta planilha não pertence a ${selectedBroker.split(" ")[0]}`);
+    return [];
+  }
+
+  const titlesRaw = json[headerRowIndex] ?? [];
+  const rows = json.slice(headerRowIndex + 1);
+
+  const titles = titlesRaw.map(normalizeHeader);
+
+  const findColumnIndex = (aliases: string[]) => {
+    const normalizedAliases = aliases.map(normalizeHeader);
+
+    return titles.findIndex((title) => {
+      return normalizedAliases.some((alias) => {
+        return title === alias || title.startsWith(alias);
+      });
+    });
+  };
+
+  const orderNoIndex = findColumnIndex(["order no.", "order no", "order id"]);
+  const directionIndex = findColumnIndex(["direction", "type"]);
+  const fiatAmountIndex = findColumnIndex(["fiat amount"]);
+  const fiatCurrencyIndex = findColumnIndex(["fiat currency"]);
+  const unitPriceIndex = findColumnIndex(["unit price", "price"]);
+  const coinAmountIndex = findColumnIndex(["coin amount"]);
+  const coinTypeIndex = findColumnIndex(["coin type", "cryptocurrency"]);
+  const transactionFeesIndex = findColumnIndex(["transaction fees", "fee", "fees"]);
+  const counterpartyIndex = findColumnIndex(["counterparty", "trader name", "name"]);
+  const statusIndex = findColumnIndex(["status"]);
+  const timeIndex = titles.findIndex((title) => title.startsWith("time"));
+
+  const requiredIndexes = [
+    orderNoIndex,
+    directionIndex,
+    fiatAmountIndex,
+    fiatCurrencyIndex,
+    unitPriceIndex,
+    coinAmountIndex,
+    coinTypeIndex,
+    statusIndex,
+    timeIndex,
   ];
 
-  const isValid =
-    expected.every((t, i) => titles[i] === t) &&
-    // último cabeçalho pode ser "time" ou "time (utc-03:00)"
-    titles[13]?.startsWith("time");
+  const isValid = requiredIndexes.every((index) => index >= 0);
 
   if (!isValid) {
     toast.error(`Esta planilha não pertence a ${selectedBroker.split(" ")[0]}`);
     return [];
   }
 
+  const parseNumber = (value: any): number => {
+    const text = String(value ?? "").trim();
+
+    if (!text) return 0;
+
+    const hasComma = text.includes(",");
+    const hasDot = text.includes(".");
+
+    let normalized = text.replace(/[^\d,.-]/g, "");
+
+    if (hasComma && hasDot) {
+      normalized = normalized.replace(/\./g, "").replace(",", ".");
+    } else if (hasComma) {
+      normalized = normalized.replace(",", ".");
+    }
+
+    const parsed = Number(normalized);
+
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
   const toBRL2 = (value: any): string => {
-    const n = parseFloat(String(value));
-    return Number.isFinite(n) ? n.toFixed(2).replace(".", ",") : "";
+    const parsed = parseNumber(value);
+
+    return parsed.toFixed(2).replace(".", ",");
+  };
+
+  const toStringValue = (value: any): string => {
+    return String(value ?? "").trim();
   };
 
   return rows
     .map((row) => {
-      const [
-        numeroOrdem, // 0
-        // 1 p2p-convert
-        ,
-        type, // 2 BUY/SELL
-        fiatAmount, // 3
-        currency, // 4
-        price, // 5
-        // 6 currency (repetido)
-        ,
-        coinAmount, // 7
-        cryptocurrency, // 8
-        transactionFees, // 9
-        // 10 crypto (repetido)
-        ,
-        counterparty, // 11
-        status, // 12
-        timeStr, // 13 Time (UTC-03:00)
-      ] = row ?? [];
+      const numeroOrdem = row?.[orderNoIndex];
+      const direction = row?.[directionIndex];
+      const fiatAmount = row?.[fiatAmountIndex];
+      const fiatCurrency = row?.[fiatCurrencyIndex];
+      const unitPrice = row?.[unitPriceIndex];
+      const coinAmount = row?.[coinAmountIndex];
+      const coinType = row?.[coinTypeIndex];
+      const transactionFees = transactionFeesIndex >= 0 ? row?.[transactionFeesIndex] : "0";
+      const counterparty = counterpartyIndex >= 0 ? row?.[counterpartyIndex] : "";
+      const status = row?.[statusIndex];
+      const timeStr = row?.[timeIndex];
 
-      // ✅ pegar só BUY e Completed (exclui canceladas e SELL)
+      if (!toStringValue(numeroOrdem)) return false;
       if (norm(status) !== "completed") return false;
-      if (norm(type) !== "buy") return false;
-      if (String(currency ?? "").trim() !== "BRL") return false;
+      if (toStringValue(fiatCurrency).toUpperCase() !== "BRL") return false;
+
+      const normalizedDirection = toStringValue(direction).toUpperCase();
+
+      if (normalizedDirection !== "BUY") return false;
 
       return {
-        numeroOrdem: String(numeroOrdem),
-        tipo: "compras",
-        dataHora: String(timeStr ?? ""), // já vem em UTC-03:00
+        numeroOrdem: toStringValue(numeroOrdem),
+        tipo: normalizedDirection === "BUY" ? "compras" : "vendas",
+        dataHora: toStringValue(timeStr),
         exchange: selectedBroker,
-        ativo: String(cryptocurrency ?? ""),
-        apelido: String(counterparty ?? ""),
-        quantidade: String(coinAmount ?? ""),
+        ativo: toStringValue(coinType),
+        apelido: toStringValue(counterparty),
+        quantidade: toStringValue(coinAmount),
         valor: toBRL2(fiatAmount),
-        valorToken: String(price ?? ""),
-        taxa: String(transactionFees ?? "0"),
+        valorToken: toStringValue(unitPrice),
+        taxa: toStringValue(transactionFees || "0"),
       };
     })
     .filter(Boolean) as any[];

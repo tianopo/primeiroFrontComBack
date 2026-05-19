@@ -2,6 +2,12 @@ import { parseBRL, parseNum, toBRDate } from "../config/helpers";
 
 type CommissionMode = "fixa" | "dinamica";
 
+type GenerateSalesInvoiceCsvResult = {
+  totalValorNotas: number;
+  totalValorNotasFormatado: string;
+  quantidadeNotas: number;
+};
+
 type GenerateSalesInvoiceCsvParams = {
   transactions: any[];
   precoMedioVenda: number;
@@ -65,12 +71,6 @@ const escapeCsv = (value: unknown) => {
 const formatMoneyForCsv = (value: number) => {
   return Number(value || 0)
     .toFixed(2)
-    .replace(".", ",");
-};
-
-const formatNumberBr = (value: number, decimals = 2) => {
-  return Number(value || 0)
-    .toFixed(decimals)
     .replace(".", ",");
 };
 
@@ -260,10 +260,10 @@ export const generateSalesInvoiceCsv = ({
   commissionMode = "dinamica",
   comissaoFixaPercentual = 0.01,
   margemErroPorToken = 0.03,
-}: GenerateSalesInvoiceCsvParams) => {
+}: GenerateSalesInvoiceCsvParams): GenerateSalesInvoiceCsvResult | null => {
   if (!transactions || transactions.length === 0) {
     alert("Nenhuma transação encontrada para gerar o CSV de notas fiscais.");
-    return;
+    return null;
   }
 
   const salesTransactions = transactions.filter((transaction) => {
@@ -272,8 +272,10 @@ export const generateSalesInvoiceCsv = ({
 
   if (salesTransactions.length === 0) {
     alert("Nenhuma venda encontrada para gerar o CSV de notas fiscais.");
-    return;
+    return null;
   }
+
+  let totalValorNotas = 0;
 
   const invoiceRows = salesTransactions.map((transaction, index) => {
     const user = transaction?.User;
@@ -297,6 +299,8 @@ export const generateSalesInvoiceCsv = ({
     });
 
     const valorNota = Number((valorBRL * (comissao / 100)).toFixed(2));
+
+    totalValorNotas += Number.isFinite(valorNota) ? valorNota : 0;
 
     const clienteDocumento = onlyDigits(user?.document);
     const clienteNome = String(user?.name ?? "Consumidor Final").trim();
@@ -348,4 +352,10 @@ export const generateSalesInvoiceCsv = ({
     .join("\n");
 
   downloadCsv(csvContent, fileName);
+
+  return {
+    totalValorNotas: Number(totalValorNotas.toFixed(2)),
+    totalValorNotasFormatado: formatMoneyForCsv(totalValorNotas),
+    quantidadeNotas: invoiceRows.length,
+  };
 };

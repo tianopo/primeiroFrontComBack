@@ -7,6 +7,7 @@ export const processExcelCoinEx = (workbook: XLSX.WorkBook, selectedBroker: stri
 
   const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
   const [titles, ...rows] = json;
+
   const expectedTitles = [
     "Order ID",
     "Time Created",
@@ -21,30 +22,52 @@ export const processExcelCoinEx = (workbook: XLSX.WorkBook, selectedBroker: stri
   ];
 
   const isValid = expectedTitles.every((title, index) => titles[index] === title);
+
   if (!isValid) {
     toast.error(`Esta planilha não pertence a ${selectedBroker.split(" ")[0]}`);
     return [];
   }
-  const formatNumber = (value: string): string => {
-    return parseFloat(value.split(" ")[0]).toFixed(2).replace(".", ",");
+
+  const parseNumber = (value: unknown): number => {
+    const raw = String(value ?? "")
+      .replace(/[^\d,.-]/g, "")
+      .replace(/\./g, "")
+      .replace(",", ".");
+
+    const parsed = Number(raw);
+
+    return Number.isFinite(parsed) ? parsed : 0;
   };
+
+  const formatNumber = (value: unknown): string => {
+    return parseNumber(value).toFixed(2).replace(".", ",");
+  };
+
+  const calculateFee = (valueInBrl: unknown): string => {
+    const valor = parseNumber(valueInBrl);
+
+    const taxa = valor * 0.002; // 0.2%
+
+    return taxa.toFixed(2).replace(".", ",");
+  };
+
   return rows
     .map((row) => {
       const [
-        orderId, // "ORDER ID"
-        createdAt, // "CREATED AT"
-        side, // "SIDE"
-        legalCurrency, // "CURRENCY"
-        legalAmount, // "AMOUNT"
-        price, // "PRICE"
-        total, // "TOTAL"
-        traderName, // "TRADER NAME"
+        orderId,
+        createdAt,
+        side,
+        legalCurrency,
+        legalAmount,
+        price,
+        total,
+        traderName,
         ,
-        // "PAYMENT METHOD"
-        status, // "STATUS"
+        status,
       ] = row;
 
       if (status?.trim().toLowerCase() !== "finished") return false;
+
       return {
         numeroOrdem: orderId,
         tipo: side === "BUY" ? "compras" : "vendas",
@@ -55,7 +78,9 @@ export const processExcelCoinEx = (workbook: XLSX.WorkBook, selectedBroker: stri
         quantidade: total,
         valor: formatNumber(price),
         valorToken: legalAmount,
-        taxa: "0",
+
+        // Taxa de 0,2% sobre o valor total em reais
+        taxa: calculateFee(price),
       };
     })
     .filter(Boolean);

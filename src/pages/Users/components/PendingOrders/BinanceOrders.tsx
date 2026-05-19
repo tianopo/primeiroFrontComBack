@@ -115,8 +115,6 @@ export const BinanceOrders = ({
     }>
   >;
 }) => {
-  if (!Array.isArray(orders) || orders.length === 0) return <p>Sem ordens Binance.</p>;
-
   const { mutate: releaseMutate, isPending: isReleasePending } = useCheckAndReleaseCoinBinance();
   const { mutate: markPaidMutate, isPending: isMarkPaidPending } = useMarkOrderAsPaidBinance();
   const { mutate: sendChatBinance, isPending: isChatPending } = useSendChatMessageBinance();
@@ -134,6 +132,7 @@ export const BinanceOrders = ({
   const [pixModalInitialValues, setPixModalInitialValues] = useState<PixToolInitialValues | null>(
     null,
   );
+  if (!Array.isArray(orders) || orders.length === 0) return <p>Sem ordens Binance.</p>;
 
   const openBinancePixModal = (params: {
     order: BinanceOrder;
@@ -384,7 +383,7 @@ export const BinanceOrders = ({
             time: m?.createTime,
           }));
 
-          const complianceUi = getComplianceVisualState(order);
+          const complianceUi = getComplianceVisualState(compliance);
 
           const tradeType = String(order?.tradeType ?? "").toUpperCase();
           const isBuy = tradeType === "BUY";
@@ -660,6 +659,7 @@ export const BinanceOrders = ({
                 <div className="absolute left-[calc(100%+12px)] top-0 z-50">
                   <CompliancePopover
                     data={compliance}
+                    documento={document}
                     onClose={() => setOpenedComplianceOrderNo(null)}
                   />
                 </div>
