@@ -5,14 +5,35 @@ interface OrderMessagesProps {
   messages: any[];
 }
 
-const HOSTS = ["https://api.bybit.com", "https://api.bytick.com"];
+const BYBIT_HOSTS = ["https://api.bybit.com", "https://api.bytick.com"];
 
-const buildBybitMediaUrl = (pathOrUrl: string, hostIndex = 0) => {
-  const u = String(pathOrUrl ?? "").trim();
-  if (!u) return "";
-  if (/^https?:\/\//i.test(u)) return u;
-  const host = HOSTS[Math.min(hostIndex, HOSTS.length - 1)];
-  return `${host}${u.startsWith("/") ? "" : "/"}${u}`;
+const buildMediaUrl = (pathOrUrl: string, hostIndex = 0) => {
+  const value = String(pathOrUrl ?? "").trim();
+
+  if (!value) return "";
+
+  // Binance já vem com URL completa
+  if (/^https?:\/\//i.test(value)) return value;
+
+  // Bybit costuma vir como path relativo
+  const host = BYBIT_HOSTS[Math.min(hostIndex, BYBIT_HOSTS.length - 1)];
+
+  return `${host}${value.startsWith("/") ? "" : "/"}${value}`;
+};
+
+const getMessageText = (msg: any) => {
+  return String(msg?.message ?? msg?.content ?? "");
+};
+
+const isImageMessage = (msg: any) => {
+  const type = String(msg?.type ?? "").toLowerCase();
+  const contentType = String(msg?.contentType ?? "").toLowerCase();
+
+  return type === "image" || contentType === "pic" || Boolean(msg?.imageUrl);
+};
+
+const getImageRaw = (msg: any) => {
+  return String(msg?.imageUrl || msg?.thumbnailUrl || msg?.message || msg?.content || "").trim();
 };
 
 export const OrderMessages = ({ messages }: OrderMessagesProps) => {
@@ -28,7 +49,7 @@ export const OrderMessages = ({ messages }: OrderMessagesProps) => {
   ];
 
   const hasPreview = !!previewSrc;
-  const modalSrc = hasPreview ? buildBybitMediaUrl(previewSrc, previewHostIdx) : "";
+  const modalSrc = hasPreview ? buildMediaUrl(previewSrc, previewHostIdx) : "";
 
   return (
     <>
@@ -47,31 +68,33 @@ export const OrderMessages = ({ messages }: OrderMessagesProps) => {
 
         <div className="flex flex-col gap-1">
           {messages.map((msg: any, i: number) => {
-            const sender = (msg?.fromNickName || msg?.nickName || "")?.toLowerCase();
+            const sender = String(msg?.fromNickName || msg?.nickName || "").toLowerCase();
+
             const isFromCryptotech = cryptotechAliases.includes(sender);
 
-            const isPic = msg?.contentType === "pic";
-            const raw = msg?.message;
+            const isImage = isImageMessage(msg);
+            const rawImage = getImageRaw(msg);
+            const imgSrc = isImage ? buildMediaUrl(rawImage, 0) : "";
 
-            // ✅ quando read/isRead == 1 => negrito
-            const isRead = Number(msg?.read ?? msg?.isRead ?? 0) === 1;
+            const isRead =
+              String(msg?.status ?? "").toLowerCase() === "unread" ||
+              Number(msg?.read ?? msg?.isRead ?? 0) === 1;
+
             const readCls = isRead ? "font-bold" : "font-normal";
-
-            const imgSrc = isPic ? buildBybitMediaUrl(raw, 0) : "";
 
             return (
               <div
-                key={i}
+                key={`${msg?.id ?? msg?.uuid ?? msg?.createTime ?? i}-${i}`}
                 className={`rounded p-2 text-sm shadow-inner ${
                   isFromCryptotech ? "bg-gray-100" : "bg-red-100"
                 }`}
               >
-                {isPic ? (
+                {isImage && rawImage ? (
                   <button
                     type="button"
-                    className="group flex h-16 w-full flex-col items-start gap-2 text-left"
+                    className="group flex w-full flex-col items-start gap-2 text-left"
                     onClick={() => {
-                      setPreviewSrc(raw);
+                      setPreviewSrc(rawImage);
                       setPreviewHostIdx(0);
                     }}
                     title="Clique para ampliar"
@@ -83,16 +106,20 @@ export const OrderMessages = ({ messages }: OrderMessagesProps) => {
                       loading="lazy"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
-                        const next = buildBybitMediaUrl(raw, 1);
-                        (e.currentTarget as HTMLImageElement).src = next;
+                        // fallback apenas para Bybit path relativo
+                        if (/^https?:\/\//i.test(rawImage)) return;
+
+                        const next = buildMediaUrl(rawImage, 1);
+                        e.currentTarget.src = next;
                       }}
                     />
+
                     <span className={`text-xs text-gray-600 group-hover:underline ${readCls}`}>
                       Clique para ampliar
                     </span>
                   </button>
                 ) : (
-                  <p className={`whitespace-pre-wrap ${readCls}`}>{msg?.message}</p>
+                  <p className={`whitespace-pre-wrap ${readCls}`}>{getMessageText(msg) || "-"}</p>
                 )}
               </div>
             );
