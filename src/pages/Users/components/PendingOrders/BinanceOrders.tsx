@@ -195,24 +195,62 @@ export const BinanceOrders = ({
     });
 
   // ✅ Nome exibido na UI (não altera backend)
-  const getDisplayName = (o: BinanceOrder) => {
+  const CRYPTOTECH_NAME = "CRYPTOTECH DESENVOLVIMENTO E TRADING LTDA";
+
+  const getCounterpartyNickname = (o: BinanceOrder) => {
     const tradeType = String(o?.tradeType ?? "").toUpperCase();
-    const isBuy = tradeType === "BUY";
 
-    const paymentDetails = Array.isArray(o?.paymentDetails) ? o.paymentDetails : [];
-    const receiverName = String(paymentDetails?.[0]?.sellerName ?? "").trim(); // BUY -> quem recebe
-    const registeredName = String(o?.counterparty?.name ?? "").trim(); // do cadastro
-    const payerFallback = String(o?.buyerNickname ?? "").trim(); // SELL -> quem paga (fallback)
+    return tradeType === "BUY"
+      ? String(o?.sellerNickname ?? "").trim()
+      : String(o?.buyerNickname ?? "").trim();
+  };
 
-    if (isBuy) {
-      // ✅ BUY: mostrar nome de quem recebe (payee). Se não vier, cai no sellerNickname/cadastro.
-      return (
-        receiverName || String(o?.sellerNickname ?? "").trim() || registeredName || "Não informado"
-      );
+  const getCounterpartyRealName = (o: BinanceOrder) => {
+    const tradeType = String(o?.tradeType ?? "").toUpperCase();
+
+    /*
+     * BUY: a Cryptotech compra ativos; a contraparte é o vendedor.
+     * SELL: a Cryptotech vende ativos; a contraparte é o comprador.
+     */
+    const paymentName =
+      tradeType === "BUY"
+        ? String(o?.paymentDetails?.sellerName ?? "").trim()
+        : String(o?.paymentDetails?.buyerName ?? "").trim();
+
+    return (
+      paymentName ||
+      String(o?.counterparty?.name ?? "").trim() ||
+      getCounterpartyNickname(o) ||
+      "Não informado"
+    );
+  };
+
+  const getBuyerRealName = (o: BinanceOrder) => {
+    const tradeType = String(o?.tradeType ?? "").toUpperCase();
+
+    if (tradeType === "BUY") {
+      return String(o?.paymentDetails?.buyerName ?? "").trim() || CRYPTOTECH_NAME;
     }
 
-    // ✅ SELL: mostrar nome de quem paga (buyer). Se cadastrado, usa cadastro; senão nickname.
-    return registeredName || payerFallback || "Não informado";
+    return (
+      String(o?.paymentDetails?.buyerName ?? "").trim() ||
+      String(o?.counterparty?.name ?? "").trim() ||
+      "Não informado"
+    );
+  };
+
+  const getSellerRealName = (o: BinanceOrder) => {
+    const tradeType = String(o?.tradeType ?? "").toUpperCase();
+
+    if (tradeType === "SELL") {
+      return String(o?.paymentDetails?.sellerName ?? "").trim() || CRYPTOTECH_NAME;
+    }
+
+    return (
+      String(o?.paymentDetails?.sellerName ?? "").trim() ||
+      String(o?.counterparty?.name ?? "").trim() ||
+      "Não informado"
+    );
   };
 
   const mapBinanceToReceiptItem = (o: BinanceOrder, endToEnd?: string) => {
@@ -221,22 +259,29 @@ export const BinanceOrders = ({
 
     const qty = Number(String(o.amount ?? "0").replace(",", "."));
     const total = Number(String(o.totalPrice ?? "0").replace(",", "."));
-    const unitPrice = qty > 0 && Number.isFinite(total) ? String((total / qty).toFixed(2)) : "0";
 
-    const displayName = getDisplayName(o);
+    const unitPrice =
+      qty > 0 && Number.isFinite(total) ? String((total / qty).toFixed(2)) : String(o.price ?? "0");
 
     return {
       id: o.orderNumber,
       formattedDate: new Date(Number(o.createTime ?? Date.now())).toLocaleString("pt-BR"),
-      targetNickName: isBuy ? o.sellerNickname : o.buyerNickname,
 
-      // recibo usa buyerRealName/sellerRealName no canvas; então preenche com o nome "correto"
-      buyerRealName: displayName,
-      sellerRealName: displayName,
+      // Somente o apelido utilizado dentro da Binance.
+      targetNickName: getCounterpartyNickname(o),
+
+      // Nomes reais de comprador e vendedor, separados.
+      buyerRealName: getBuyerRealName(o),
+      sellerRealName: getSellerRealName(o),
 
       exchange: "Binance",
       tokenId: o.asset,
       currencyId: o.fiat,
+
+      /*
+       * side === 0: Cryptotech comprando ativos.
+       * side === 1: Cryptotech vendendo ativos.
+       */
       side: isBuy ? 0 : 1,
 
       amount: String(o.totalPrice ?? ""),
@@ -449,7 +494,7 @@ export const BinanceOrders = ({
           const isPendingAny = isReleasePending || isMarkPaidPending;
 
           // ✅ payment terms vindo do backend (no order)
-          const displayName = getDisplayName(order);
+          const displayName = getCounterpartyRealName(order);
 
           const modalText = isBuy
             ? `Você confirma que já efetuou o pagamento e deseja marcar como PAGO na Binance?\n\nOrdem: ${orderId}\nRecebedor: ${displayName}\nValor: ${order?.totalPrice ?? "-"} ${order?.fiat ?? ""}`
