@@ -105,7 +105,7 @@ export const BallonEditPrice = () => {
   );
 
   return (
-    <div className="fixed right-4 top-4 z-50 flex max-w-[460px] flex-col gap-2 rounded-10 bg-gray-50 p-2 text-32 text-gray-700 shadow-lg">
+    <div className="fixed bottom-4 right-4 z-50 flex max-w-[460px] flex-col gap-2 rounded-10 bg-gray-50 p-2 text-32 text-gray-700 shadow-lg">
       {!editingOffsets ? (
         <button
           type="button"
@@ -114,9 +114,15 @@ export const BallonEditPrice = () => {
           className="flex items-center gap-2 rounded-6 bg-blue-600 p-2 font-medium text-white hover:bg-blue-700 disabled:opacity-60"
         >
           <SlidersHorizontal size={18} />
-          <div className="flex w-28 flex-col flex-wrap gap-2 text-left leading-tight">
+
+          <div className="flex flex-col gap-2 text-left leading-tight md:w-28">
             <h6>Editar offsets</h6>
-            <span className="text-16">{summary}</span>
+
+            {/* Abaixo de md: esconde os preços enquanto o balão estiver fechado */}
+            <span className="text-16 md:hidden">...</span>
+
+            {/* A partir de md: exibe normalmente os preços */}
+            <span className="hidden text-16 md:block">{summary}</span>
           </div>
         </button>
       ) : (

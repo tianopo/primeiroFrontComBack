@@ -1,292 +1,294 @@
-import { ChangeEvent, useState } from "react";
-import { FormProvider } from "react-hook-form";
+import { ChangeEvent } from "react";
+import { FormProvider, type FieldPath, type FieldPathValue } from "react-hook-form";
 import { toast } from "react-toastify";
 import { Button } from "src/components/Buttons/Button";
 import { FormX } from "src/components/Form/FormX";
 import { InputX } from "src/components/Form/Input/InputX";
 import { Select } from "src/components/Form/Select/Select";
 import { useAddressByCep } from "src/hooks/AddressByCep";
-import { formatCep, formatCurrency, formatState } from "src/utils/formats";
-import {
-  assetsOptions,
-  blockchainsOptions,
-  estadoCivilOptions,
-  limitDateOptions,
-  paymentOptions,
-  walletOptions,
-} from "src/utils/selectsOptions";
+import { formatCep, formatState } from "src/utils/formats";
+import { blockchainsOptions, estadoCivilOptions, walletOptions } from "src/utils/selectsOptions";
 import { services } from "../config/contractPdfs/services";
 import { useListUsers } from "../hooks/useListBuyers";
-import { IUsuario, useService } from "../hooks/useServices";
+import { inferDocumentType, type IService, useService } from "../hooks/useServices";
 
 export const Services = () => {
-  const [usuario, setUsuario] = useState<IUsuario>({ name: "", document: "" });
-  const [quantidade, setQuantidade] = useState<string>("");
-  const [valor, setValor] = useState<string>("");
-  const [ativo, setativo] = useState<string>("");
-  const [pagamento, setPagamento] = useState<string>("");
-  const [tempoLimite, setTempoLimite] = useState<string>("");
-  const [blockchain, setBlockchain] = useState<string>("");
-  const [enderecoComprador, setEnderecoComprador] = useState<string>("");
-  const [uid, setUid] = useState<string>("");
-  const [wallet, setWallet] = useState<string>("");
-  const [tipo, setTipo] = useState<string>("");
-  // info pessoais
   const { data } = useListUsers();
   const { context } = useService();
+
   const {
-    formState: { errors },
+    formState: { isValid, isSubmitting },
     setValue,
     reset,
     clearErrors,
+    handleSubmit,
+    watch,
   } = context;
-  const [estadoCivil, setEstadoCivil] = useState("");
-  // endereço
-  const [cep, setCep] = useState("");
-  const [rua, setRua] = useState("");
-  const [cidade, setCidade] = useState("");
-  const [estado, setEstado] = useState("");
-  const [bairro, setBairro] = useState("");
-  const [numero, setNumero] = useState("");
-  const [complemento, setComplemento] = useState("");
 
-  const handleQuantidadeChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const quantidade = e.target.value;
-    setValue("quantidade", quantidade);
-    setQuantidade(quantidade);
+  const form = watch();
+  const isCnpj = form.tipoDocumento === "CNPJ";
+
+  const setValidatedValue = <TField extends FieldPath<IService>>(
+    field: TField,
+    value: FieldPathValue<IService, TField>,
+  ) => {
+    setValue(field, value, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
   };
 
-  const handleValorChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const formattedValor = formatCurrency(e.target.value);
-    setValor(formattedValor);
-  };
+  const handleUsuarioChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value;
+    const separator = rawValue.lastIndexOf(" - ");
 
-  const handleCepChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const cepValue = e.target.value;
+    if (separator < 0) {
+      setValidatedValue("usuario.name", rawValue);
+      setValidatedValue("usuario.document", "");
+      return;
+    }
 
-    const formattedCEP = formatCep(cepValue);
-    setValue("cep", formattedCEP);
-    setCep(formattedCEP);
-    const cleanCep = cepValue.replace(/\D/g, "");
+    const name = rawValue.slice(0, separator).trim();
+    const document = rawValue.slice(separator + 3).trim();
+    const inferredType = inferDocumentType(document);
 
-    if (cleanCep.length === 8) {
-      const addressData = await useAddressByCep(cleanCep);
-      if (addressData && addressData.erro !== "true") {
-        clearErrors();
-        const { logradouro, bairro, uf, localidade } = addressData;
-        setRua(logradouro);
-        setValue("rua", logradouro);
-        setCidade(localidade);
-        setValue("cidade", localidade);
-        setBairro(bairro);
-        setValue("bairro", bairro);
-        setEstado(formatState(uf));
-        setValue("estado", formatState(uf));
-      }
+    setValidatedValue("usuario.name", name);
+    setValidatedValue("usuario.document", document);
+
+    if (inferredType) {
+      setValidatedValue("tipoDocumento", inferredType);
     }
   };
 
-  const handleStateFormat = (e: { target: { value: string } }) => {
-    const formattedState = formatState(e.target.value);
-    setValue("estado", formattedState);
-    setEstado(formattedState);
+  const handleCepChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const formattedCep = formatCep(e.target.value);
+    setValidatedValue("cep", formattedCep);
+
+    const cleanCep = formattedCep.replace(/\D/g, "");
+
+    if (cleanCep.length !== 8) return;
+
+    const addressData = await useAddressByCep(cleanCep);
+
+    if (!addressData || addressData.erro === "true") return;
+
+    clearErrors(["cep", "rua", "cidade", "bairro", "estado"]);
+
+    const { logradouro, bairro, uf, localidade } = addressData;
+
+    setValidatedValue("rua", logradouro);
+    setValidatedValue("cidade", localidade);
+    setValidatedValue("bairro", bairro);
+    setValidatedValue("estado", formatState(uf));
   };
 
-  const handleSubmit = () => {
+  const handleStateFormat = (e: ChangeEvent<HTMLInputElement>) => {
+    setValidatedValue("estado", formatState(e.target.value));
+  };
+
+  const handleCreateContract = (values: IService) => {
+    services(values);
+    toast.success("Contrato de prestação de serviços criado.");
     reset();
-    toast.success("Contrato Criado");
   };
 
   return (
     <FormProvider {...context}>
       <FormX
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit(handleCreateContract)}
         className="flex max-w-4xl flex-col gap-2 rounded-lg border p-4 text-center"
       >
-        <h3 className="text-28 font-bold">Serviços</h3>
+        <h3 className="text-28 font-bold">
+          Contrato de prestação de serviços: compra e venda de ativos
+        </h3>
+
         <InputX
-          title="Usuário"
-          placeholder="Registro do usuário na Exchange"
-          value={usuario?.name || ""}
-          onChange={(e) =>
-            setUsuario((prev) => ({
-              ...prev,
-              name: e.target.value.split(" - ")[0],
-              document: e.target.value.split(" - ")[1],
-            }))
-          }
+          title="Contratante"
+          placeholder="Selecione a pessoa cadastrada"
+          value={form.usuario.name}
+          onChange={handleUsuarioChange}
           busca
           options={data
-            ?.filter((user: any) => user && user?.name?.includes(usuario.name))
-            .map((user: any) => `${user.name} - ${user.document}`)}
-        />
-        <Select
-          title="Tipo"
-          placeholder="UID"
-          options={["UID", "endereco"]}
-          value={tipo}
-          onChange={(e) => setTipo(e.target.value)}
+            ?.filter((user: IUsuarioFromApi) =>
+              user?.name?.toLowerCase().includes(form.usuario.name.toLowerCase()),
+            )
+            .map((user: IUsuarioFromApi) => `${user.name} - ${user.document}`)}
           required
         />
+
         <InputX
-          title="Quantidade"
-          placeholder="45.55"
-          value={quantidade}
-          onChange={handleQuantidadeChange}
+          title="Documento vinculado ao contrato"
+          placeholder="CPF ou CNPJ"
+          value={form.usuario.document}
+          onChange={() => undefined}
+          readOnly
           required
         />
-        <InputX
-          title="Valor"
-          placeholder="R$ 5.000,01"
-          value={valor}
-          onChange={handleValorChange}
-          required
-        />
+
         <Select
-          title="Ativo"
-          placeholder="USDT"
-          options={assetsOptions}
-          value={ativo}
-          onChange={(e) => setativo(e.target.value)}
+          title="Tipo de documento da CONTRATANTE"
+          placeholder="CPF ou CNPJ"
+          options={["CPF", "CNPJ"]}
+          value={form.tipoDocumento}
+          onChange={(e) =>
+            setValidatedValue("tipoDocumento", e.target.value as IService["tipoDocumento"])
+          }
           required
         />
-        <Select
-          title="Pagamento"
-          placeholder="Pix"
-          options={paymentOptions}
-          value={pagamento}
-          onChange={(e) => setPagamento(e.target.value)}
-          required
-        />
-        <Select
-          title="Tempo Limite"
-          placeholder="Tempo em horas"
-          options={limitDateOptions}
-          value={tempoLimite}
-          onChange={(e) => setTempoLimite(e.target.value)}
-          required
-        />
-        {tipo === "UID" ? (
-          <InputX
-            title="Uid"
-            placeholder="524865433"
-            value={uid}
-            onChange={(e) => setUid(e.target.value)}
-          />
-        ) : (
+
+        {isCnpj ? (
           <>
-            <Select
-              title="Blockchain"
-              placeholder="BSC (BEP20)"
-              options={blockchainsOptions}
-              value={blockchain}
-              onChange={(e) => setBlockchain(e.target.value)}
-            />
             <InputX
-              title="Endereço Comprador"
-              placeholder="EQ1BIZ8qYmskDzJmkGodYRTf_b9hckj6dZl"
-              value={enderecoComprador}
-              onChange={(e) => setEnderecoComprador(e.target.value)}
+              title="Nome do responsável pela contratação"
+              placeholder="Nome completo do representante"
+              value={form.responsavelNome ?? ""}
+              onChange={(e) => setValidatedValue("responsavelNome", e.target.value)}
+              required
+            />
+
+            <InputX
+              title="CPF do responsável pela contratação"
+              placeholder="000.000.000-00"
+              value={form.responsavelCpf ?? ""}
+              onChange={(e) => setValidatedValue("responsavelCpf", e.target.value)}
+              required
+            />
+
+            <Select
+              title="Estado civil do responsável"
+              placeholder="Selecione"
+              options={estadoCivilOptions}
+              value={form.responsavelEstadoCivil ?? ""}
+              onChange={(e) => setValidatedValue("responsavelEstadoCivil", e.target.value)}
+              required
+            />
+
+            <InputX
+              title="Cargo/qualidade do responsável"
+              placeholder="Ex.: Sócio-administrador"
+              value={form.responsavelCargo ?? ""}
+              onChange={(e) => setValidatedValue("responsavelCargo", e.target.value)}
             />
           </>
+        ) : (
+          <Select
+            title="Estado civil da CONTRATANTE"
+            placeholder="Selecione"
+            options={estadoCivilOptions}
+            value={form.estadoCivil ?? ""}
+            onChange={(e) => setValidatedValue("estadoCivil", e.target.value)}
+            required
+          />
         )}
+
+        <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-left">
+          <h4 className="font-bold text-blue-800">
+            Destino fixo vinculado ao CPF/CNPJ para compras da CONTRATANTE
+          </h4>
+          <p className="mt-1 text-sm text-blue-700">
+            Quando a CONTRATANTE comprar ativos, a CRYPTOTECH somente enviará para o endereço
+            cadastrado abaixo e na mesma rede selecionada. Alterações exigem novo vínculo ou
+            aditamento contratual.
+          </p>
+        </div>
+
         <Select
-          title="Wallet"
-          placeholder="Metamask"
+          title="Rede blockchain vinculada"
+          placeholder="BSC (BEP20)"
+          options={blockchainsOptions}
+          value={form.blockchain}
+          onChange={(e) => setValidatedValue("blockchain", e.target.value)}
+          required
+        />
+
+        <Select
+          title="Carteira ou corretora da CONTRATANTE"
+          placeholder="Selecione a plataforma de destino"
           options={walletOptions}
-          value={wallet}
-          onChange={(e) => setWallet(e.target.value)}
+          value={form.wallet}
+          onChange={(e) => setValidatedValue("wallet", e.target.value)}
           required
         />
-        <Select
-          title="Estado Civil"
-          placeholder="Solteiro"
-          options={estadoCivilOptions}
-          value={estadoCivil}
-          onChange={(e) => setEstadoCivil(e.target.value)}
+
+        <InputX
+          title="Endereço cadastrado para recebimento"
+          placeholder="Endereço da carteira na rede selecionada"
+          value={form.enderecoCadastrado}
+          onChange={(e) => setValidatedValue("enderecoCadastrado", e.target.value.trim())}
           required
         />
+
+        <h4 className="mt-4 text-left font-bold">Endereço cadastral da CONTRATANTE</h4>
+
         <InputX
           title="CEP"
           placeholder="XX.XXX-XXX"
           onChange={handleCepChange}
-          value={cep}
+          value={form.cep}
           required
         />
+
         <InputX
-          title="Rua"
+          title={isCnpj ? "Logradouro da sede" : "Rua"}
           placeholder="Rua Salvador"
-          value={rua}
-          onChange={(e) => setRua(e.target.value)}
-          readOnly={cep.length > 9}
+          value={form.rua}
+          onChange={(e) => setValidatedValue("rua", e.target.value)}
+          readOnly={form.cep.replace(/\D/g, "").length === 8}
           required
         />
+
         <InputX
           title="Cidade"
           placeholder="Jacareí"
-          value={cidade}
-          onChange={(e) => setCidade(e.target.value)}
-          readOnly={cep.length > 9}
+          value={form.cidade}
+          onChange={(e) => setValidatedValue("cidade", e.target.value)}
+          readOnly={form.cep.replace(/\D/g, "").length === 8}
           required
         />
+
         <InputX
           title="Número"
           placeholder="100"
-          value={numero}
-          onChange={(e) => setNumero(e.target.value)}
+          value={form.numero}
+          onChange={(e) => setValidatedValue("numero", e.target.value)}
           required
         />
+
         <InputX
           title="Bairro"
           placeholder="Jardim Colinas"
-          value={bairro}
-          onChange={(e) => setBairro(e.target.value)}
-          readOnly={cep.length > 9}
+          value={form.bairro}
+          onChange={(e) => setValidatedValue("bairro", e.target.value)}
+          readOnly={form.cep.replace(/\D/g, "").length === 8}
           required
         />
+
         <InputX
           title="Complemento"
           placeholder="BL 8 apto 805"
-          value={complemento}
-          onChange={(e) => setComplemento(e.target.value)}
+          value={form.complemento ?? ""}
+          onChange={(e) => setValidatedValue("complemento", e.target.value)}
         />
+
         <InputX
           title="Estado"
           placeholder="SP"
-          value={estado}
+          value={form.estado}
           onChange={handleStateFormat}
-          readOnly={cep.length > 9}
+          readOnly={form.cep.replace(/\D/g, "").length === 8}
           required
         />
-        <Button
-          disabled={Object.keys(errors).length > 0}
-          onClick={() =>
-            services({
-              usuario,
-              tipo,
-              quantidade,
-              valor,
-              ativo: ativo,
-              pagamento,
-              tempoLimite,
-              blockchain,
-              enderecoComprador,
-              uid,
-              wallet,
-              cep,
-              rua,
-              cidade,
-              numero,
-              bairro,
-              complemento,
-              estado,
-              estadoCivil,
-            })
-          }
-        >
+
+        <Button type="submit" disabled={!isValid || isSubmitting}>
           Criar Contrato
         </Button>
       </FormX>
     </FormProvider>
   );
 };
+
+interface IUsuarioFromApi {
+  name: string;
+  document: string;
+}

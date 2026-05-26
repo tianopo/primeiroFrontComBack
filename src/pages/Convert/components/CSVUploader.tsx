@@ -6,8 +6,114 @@ export const CSVUploader = () => {
   const [headers, setHeaders] = useState<string[]>([]);
   const [rows, setRows] = useState<string[][]>([]);
   const [tarifaTotal, setTarifaTotal] = useState<number>(0);
+  const [entradaTotal, setEntradaTotal] = useState<number>(0);
+  const [saidaTotal, setSaidaTotal] = useState<number>(0);
+  const [saidaSemTarifaTotal, setSaidaSemTarifaTotal] = useState<number>(0);
+  const [saldoCalculado, setSaldoCalculado] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const xlsxInputRef = useRef<HTMLInputElement>(null);
+
+  const normalizeText = (value: unknown) => {
+    return String(value ?? "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .toLowerCase();
+  };
+
+  const parseMoney = (value: unknown): number => {
+    const raw = String(value ?? "")
+      .replace(/[R$\s]/gi, "")
+      .replace(/\./g, "")
+      .replace(",", ".");
+
+    const parsed = Number(raw);
+
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  const formatCurrencyBRL = (value: number) => {
+    return Number(value || 0).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  };
+
+  const isTarifaCorpx = (descricao: unknown) => {
+    const text = normalizeText(descricao);
+
+    return (
+      text.includes("tarifa") ||
+      text.includes("transacao bancaria") ||
+      text.includes("transação bancária") ||
+      text.includes("fee")
+    );
+  };
+
+  const calculateCorpxTotals = (headersInput: string[], rowsInput: string[][]) => {
+    const lowerHeaders = headersInput.map((header) => normalizeText(header));
+
+    const descricaoIndex = lowerHeaders.findIndex(
+      (header) =>
+        header.includes("descricao") ||
+        header.includes("descri") ||
+        header.includes("historico") ||
+        header.includes("histor"),
+    );
+
+    const valorIndex = lowerHeaders.findIndex((header) => header.includes("valor"));
+
+    const tipoIndex = lowerHeaders.findIndex(
+      (header) => header === "tipo" || header.includes("tipo"),
+    );
+
+    let entradas = 0;
+    let saidas = 0;
+    let tarifas = 0;
+
+    if (valorIndex === -1) {
+      return {
+        entradas: 0,
+        saidas: 0,
+        tarifas: 0,
+        saidasSemTarifa: 0,
+        saldo: 0,
+      };
+    }
+
+    rowsInput.forEach((row) => {
+      const descricao = descricaoIndex >= 0 ? row[descricaoIndex] : "";
+      const tipo = tipoIndex >= 0 ? normalizeText(row[tipoIndex]).toUpperCase() : "";
+      const valor = parseMoney(row[valorIndex]);
+
+      const isEntrada = tipo === "C" || valor > 0;
+      const isSaida = tipo === "D" || valor < 0;
+      const isTarifa = isTarifaCorpx(descricao);
+
+      if (isEntrada) {
+        entradas += Math.abs(valor);
+      }
+
+      if (isSaida) {
+        saidas += Math.abs(valor);
+      }
+
+      if (isTarifa) {
+        tarifas += Math.abs(valor);
+      }
+    });
+
+    const saidasSemTarifa = saidas - tarifas;
+    const saldo = entradas - saidas;
+
+    return {
+      entradas,
+      saidas,
+      tarifas,
+      saidasSemTarifa,
+      saldo,
+    };
+  };
 
   // Conta delimitadores fora de aspas
   const countCharOutsideQuotes = (line: string, ch: string) => {
@@ -161,7 +267,13 @@ export const CSVUploader = () => {
       });
     }
 
-    setTarifaTotal(total);
+    const totals = calculateCorpxTotals(finalHeaders, finalRows);
+
+    setEntradaTotal(totals.entradas);
+    setSaidaTotal(totals.saidas);
+    setTarifaTotal(totals.tarifas);
+    setSaidaSemTarifaTotal(totals.saidasSemTarifa);
+    setSaldoCalculado(totals.saldo);
   };
 
   const triggerFileInput = () => fileInputRef.current?.click();
@@ -680,6 +792,33 @@ NEWFILEUID:NONE
           <p className="text-sm text-gray-700">
             Total de linhas (transações carregadas): <strong>{rows.length}</strong>
           </p>
+        </div>
+      )}
+
+      {headers.length > 0 && (
+        <div className="mt-4 grid gap-2 rounded border bg-gray-50 p-4 text-sm md:grid-cols-2">
+          <div>
+            <strong>Entradas:</strong> {formatCurrencyBRL(entradaTotal)}
+          </div>
+
+          <div>
+            <strong>Saídas totais:</strong> {formatCurrencyBRL(saidaTotal)}
+          </div>
+
+          <div>
+            <strong>Tarifas:</strong> {formatCurrencyBRL(tarifaTotal)}
+          </div>
+
+          <div>
+            <strong>Saídas sem tarifas:</strong> {formatCurrencyBRL(saidaSemTarifaTotal)}
+          </div>
+
+          <div className="md:col-span-2">
+            <strong>Saldo calculado:</strong>{" "}
+            <span className={saldoCalculado < 0 ? "text-red-600" : "text-green-700"}>
+              {formatCurrencyBRL(saldoCalculado)}
+            </span>
+          </div>
         </div>
       )}
 
