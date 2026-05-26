@@ -3,7 +3,10 @@ import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalButton";
 import { generateSingleReceipt } from "src/pages/Home/config/handleReceipt";
-import { useCheckAndReleaseCoinBinance } from "../../hooks/Binance/useCheckAndReleaseCoinBinance";
+import {
+  BinancePostReleaseOrderContext,
+  useCheckAndReleaseCoinBinance,
+} from "../../hooks/Binance/useCheckAndReleaseCoinBinance";
 import { useMarkOrderAsPaidBinance } from "../../hooks/Binance/useMarkOrderAsPaidBinance";
 import { useSendChatMessageBinance } from "../../hooks/Binance/useSendChatMessageBinance";
 import { PixToolInitialValues, PixToolModal } from "../Gowd/Pix/PixToolModal";
@@ -254,45 +257,97 @@ export const BinanceOrders = ({
   const handleConfirm = async () => {
     if (!confirmPayload) return;
 
-    const orderId = confirmPayload.orderId;
+    const orderId = String(confirmPayload.orderId);
     const order = confirmPayload.order;
 
-    const receiptItem = mapBinanceToReceiptItem(order, confirmPayload.endToEnd);
-    const base64Image = await generateSingleReceipt(receiptItem);
-    if (!base64Image) return;
-
+    /*
+     * BUY:
+     * a Cryptotech está comprando ativos e marca o pagamento como efetuado.
+     * O envio do comprovante continua sendo feito pelo frontend neste fluxo.
+     */
     if (confirmAction === "markPaid") {
+      const receiptItem = mapBinanceToReceiptItem(order, confirmPayload.endToEnd);
+      const base64Image = await generateSingleReceipt(receiptItem);
+
+      if (!base64Image) return;
+
       markPaidMutate(
-        { orderNumber: orderId, advNo: String(confirmPayload.advNo ?? "") },
+        {
+          orderNumber: orderId,
+          advNo: String(confirmPayload.advNo ?? ""),
+        },
         {
           onSuccess: async () => {
             closeConfirm();
+
             try {
               await sendBinancePic({
                 orderNo: orderId,
                 content: base64Image,
                 fileName: `recibo-${orderId}.png`,
               });
-            } catch {}
+            } catch (e) {
+              console.error(
+                `[BINANCE][MARK_PAID][RECEIPT] Falha ao enviar comprovante da ordem ${orderId}:`,
+                e,
+              );
+            }
           },
           onError: () => closeConfirm(),
         },
       );
+
       return;
     }
 
+    /*
+     * SELL:
+     * a Cryptotech está vendendo ativos e fará a liberação.
+     * O backend será responsável por:
+     * - salvar a ordem liberada;
+     * - atualizar o complianceProfile;
+     * - enviar o comprovante quando existir EndToEnd.
+     *
+     * Não gere nem envie recibo novamente pelo frontend neste fluxo,
+     * evitando duplicidade no chat.
+     */
+    const documentDigits = String(order?.counterparty?.document ?? "").replace(/\D/g, "");
+
+    const document =
+      documentDigits.length === 11 || documentDigits.length === 14 ? documentDigits : undefined;
+
+    const orderContext: BinancePostReleaseOrderContext = {
+      orderNumber: orderId,
+      createTime: order.createTime,
+      asset: order.asset,
+      fiat: order.fiat,
+      amount: order.amount,
+      totalPrice: order.totalPrice,
+      unitPrice: order.price,
+      tradeType: order.tradeType,
+      buyerNickname: order.buyerNickname,
+      sellerNickname: order.sellerNickname,
+      counterpartyName: order.counterparty?.name,
+    };
+
     releaseMutate(
-      { orderNumber: orderId },
       {
-        onSuccess: async () => {
+        orderNumber: orderId,
+        document,
+        endToEnd: confirmPayload.endToEnd,
+        orderContext,
+      },
+      {
+        onSuccess: (response) => {
           closeConfirm();
-          try {
-            await sendBinancePic({
-              orderNo: orderId,
-              content: base64Image,
-              fileName: `recibo-${orderId}.png`,
-            });
-          } catch {}
+
+          if (response?.postRelease?.orderSaved === false) {
+            console.error(
+              `[BINANCE][RELEASE] Ordem ${orderId} foi liberada, mas não foi cadastrada: ${
+                response.postRelease.warning ?? "motivo não informado"
+              }`,
+            );
+          }
         },
         onError: () => closeConfirm(),
       },
