@@ -96,6 +96,12 @@ export const confirmContract = async ({
   const v = clean(valor);
   const a = clean(ativo);
 
+  const isOutsideExchange = ex.toUpperCase() === "CRYPTOTECH";
+
+  const ambienteOperacao = isOutsideExchange
+    ? "em operação direta registrada nos sistemas da Cryptotech, fora do ambiente P2P de corretora"
+    : `no P2P da corretora ${ex}`;
+
   const { dia, mesExtenso, ano } = safeParseDateParts(data);
   const dataExtenso = `${dia} de ${mesExtenso} de ${ano}`;
 
@@ -154,7 +160,7 @@ export const confirmContract = async ({
     "1.1 O objeto do presente contrato é a compra e venda de ativos nas condições do presente contrato.",
   );
   addP(
-    `1.2 O VENDEDOR compromete-se a vender e a COMPRADORA compromete-se a comprar a quantia de ${q} ${a}, por meio da transferência do ativo ${a} na ordem de número ${o}, em ${d}, no P2P da corretora ${ex}, conforme acordado entre as partes.`,
+    `1.2 O VENDEDOR compromete-se a vender e a COMPRADORA compromete-se a comprar a quantia de ${q} ${a}, por meio da transferência do ativo ${a} na ordem de número ${o}, em ${d}, ${ambienteOperacao}, conforme acordado entre as partes.`,
   );
 
   addH("2. DA RESPONSABILIDADE DAS PARTES");
@@ -184,16 +190,29 @@ export const confirmContract = async ({
     "4.2 O pagamento será efetuado via transferência bancária (Pix ou TED), conforme combinado entre as partes.",
   );
   addP(
-    "4.3 O pagamento deverá ser realizado dentro do prazo da ordem no P2P da corretora, sendo rescindido automaticamente em caso de descumprimento.",
+    isOutsideExchange
+      ? "4.3 O pagamento deverá ser realizado dentro do prazo acordado para a operação e registrado nos sistemas da Cryptotech, sendo o contrato rescindido automaticamente em caso de descumprimento."
+      : "4.3 O pagamento deverá ser realizado dentro do prazo da ordem no P2P da corretora, sendo rescindido automaticamente em caso de descumprimento.",
   );
 
   addH("5. DA TRANSFERÊNCIA DE ATIVOS");
+
   addP(
-    cryptotechIsBuyer
-      ? `5.1 O Vendedor se compromete a transferir à carteira/conta da Compradora (conta CRYPTOTECH na corretora ${ex}) a quantidade de ${q} ${a} após a confirmação do pagamento.`
-      : `5.1 O Vendedor se compromete a transferir à carteira/conta do Comprador (apelido ${uNick} na corretora ${ex}) a quantidade de ${q} ${a} após a confirmação do pagamento.`,
+    isOutsideExchange
+      ? cryptotechIsBuyer
+        ? `5.1 O Vendedor se compromete a transferir à carteira/conta digital indicada pela Compradora (CRYPTOTECH) a quantidade de ${q} ${a} após a confirmação do pagamento.`
+        : `5.1 O Vendedor se compromete a transferir à carteira/conta digital indicada pelo Comprador a quantidade de ${q} ${a} após a confirmação do pagamento.`
+      : cryptotechIsBuyer
+        ? `5.1 O Vendedor se compromete a transferir à carteira/conta da Compradora (conta CRYPTOTECH na corretora ${ex}) a quantidade de ${q} ${a} após a confirmação do pagamento.`
+        : `5.1 O Vendedor se compromete a transferir à carteira/conta do Comprador (apelido ${uNick} na corretora ${ex}) a quantidade de ${q} ${a} após a confirmação do pagamento.`,
   );
-  addP("5.2 A transferência será realizada via P2P.");
+
+  addP(
+    isOutsideExchange
+      ? "5.2 A transferência do ativo será realizada diretamente entre as carteiras/contas digitais indicadas pelas partes, fora do ambiente P2P de corretora, com registro da operação nos sistemas da Cryptotech."
+      : "5.2 A transferência será realizada via P2P.",
+  );
+
   addP("5.3 O Vendedor declara legítima propriedade do ativo vendido, livre de ônus e restrições.");
 
   addH("6. DOS RISCOS ASSUMIDOS");
@@ -218,10 +237,15 @@ export const confirmContract = async ({
   addP("8.3 Este contrato representa o acordo integral, substituindo entendimentos anteriores.");
   addP("8.4 Alterações/aditamentos somente por escrito.");
   addP(
-    "8.5 Transações podem ser registradas em blockchain e/ou na corretora e podem servir de referência para auditoria.",
+    isOutsideExchange
+      ? "8.5 A transação poderá ser registrada em blockchain e nos sistemas internos da Cryptotech, podendo tais registros servir de referência para auditoria."
+      : "8.5 Transações podem ser registradas em blockchain e/ou na corretora e podem servir de referência para auditoria.",
   );
+
   addP(
-    "8.6 O aceite e a assinatura ocorrerão de forma eletrônica, vinculados aos dados cadastrados na corretora, para fins de registro e auditoria.",
+    isOutsideExchange
+      ? "8.6 O aceite e a assinatura ocorrerão de forma eletrônica, vinculados aos dados cadastrais e registros eletrônicos mantidos pela Cryptotech, para fins de registro e auditoria."
+      : "8.6 O aceite e a assinatura ocorrerão de forma eletrônica, vinculados aos dados cadastrados na corretora, para fins de registro e auditoria.",
   );
   addP("8.7 O comprador declara ciência das políticas internas de KYC/PLD/FT aplicáveis.");
   addP(
@@ -231,7 +255,9 @@ export const confirmContract = async ({
 
   // Final
   addP(
-    `E, assim, por estarem justas e contratadas, as partes declaram que este instrumento foi aceito eletronicamente no chat da ordem de número ${o} e arquivado para fins de registro e auditoria nos sistemas da Cryptotech.`,
+    isOutsideExchange
+      ? `E, assim, por estarem justas e contratadas, as partes declaram que este instrumento foi aceito eletronicamente no registro da operação de número (TxiD) ${o} e arquivado para fins de registro e auditoria nos sistemas da Cryptotech.`
+      : `E, assim, por estarem justas e contratadas, as partes declaram que este instrumento foi aceito eletronicamente no chat da ordem de número ${o} e arquivado para fins de registro e auditoria nos sistemas da Cryptotech.`,
   );
 
   // ✅ aqui corrige o “Jacareí, - de - de -.”
@@ -268,7 +294,9 @@ export const confirmContract = async ({
       font: "F1",
     });
     lines.push({
-      text: `Registro: aceite eletrônico vinculado à ordem e ao evento no chat/plataforma.`,
+      text: isOutsideExchange
+        ? `Registro: aceite eletrônico vinculado à operação (TxID) ${o} nos sistemas da Cryptotech.`
+        : `Registro: aceite eletrônico vinculado à ordem e ao evento no chat/plataforma.`,
       size: 10,
       font: "F1",
     });
@@ -291,7 +319,9 @@ export const confirmContract = async ({
     spacer(1);
 
     lines.push({
-      text: `Registro: aceite eletrônico do ${role.toLowerCase()} vinculado ao cadastro na corretora e à ordem ${o}.`,
+      text: isOutsideExchange
+        ? `Registro: aceite eletrônico do ${role.toLowerCase()} vinculado ao cadastro e à operação (TxID) ${o} nos sistemas da Cryptotech.`
+        : `Registro: aceite eletrônico do ${role.toLowerCase()} vinculado ao cadastro na corretora e à ordem ${o}.`,
       size: 10,
       font: "F1",
     });
