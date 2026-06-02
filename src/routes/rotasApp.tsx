@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 import { Unauthorized } from "src/components/Feedback/Unathorized.views";
 import { LayoutX } from "src/components/Layout/LayoutX/LayoutX";
 import { Auth } from "src/pages/Auth/Auth.views";
+import { StepUpLogin } from "src/pages/Auth/StepUpLogin.views";
 import { Contracts } from "src/pages/Contracts/Contracts.views";
 import { Convert } from "src/pages/Convert/Convert.views";
 import { CryptoTech } from "src/pages/CryptoTech/CryptoTech.views";
@@ -12,6 +13,7 @@ import { Users } from "src/pages/Users/Users.views";
 import { app } from "./app";
 import { AuthenticatedRoute } from "./context/AuthenticatedRoute";
 import { RoleProtectedRoute } from "./context/RoleProtectedRoute";
+import { SecurityPage } from "src/pages/Security/Security,views";
 
 export const browserRouter = createBrowserRouter([
   {
@@ -19,6 +21,7 @@ export const browserRouter = createBrowserRouter([
       { path: app.first, element: <CryptoTech /> },
       { path: "*", element: <CryptoTech /> },
       { path: app.auth, element: <Auth /> },
+      { path: app.authStepUp, element: <StepUpLogin /> },
       { path: "/record", element: <Record /> },
       { path: app.unauthorized, element: <Unauthorized /> },
     ],
@@ -30,6 +33,7 @@ export const browserRouter = createBrowserRouter([
         element: <LayoutX />,
         children: [
           { path: app.home, element: <Home /> },
+          { path: app.security, element: <SecurityPage /> },
           {
             element: <RoleProtectedRoute allowedRoles={["Master"]} />,
             children: [

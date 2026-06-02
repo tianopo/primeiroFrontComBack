@@ -14,6 +14,7 @@ import { useListUsers } from "./hooks/useListUsers";
 import { IOrder, useOrders } from "./hooks/useOrders";
 import "./registerOrders.css";
 import { extractApelidosFromError } from "./Utils/extractApelidosFromError";
+import { extractExistingOrdersFromError } from "./Utils/extractExistingOrdersFromError";
 
 export const RegisterOrders = () => {
   const { mutate, isPending, context } = useOrders();
@@ -118,11 +119,13 @@ export const RegisterOrders = () => {
   };
 
   const [apelidosNaoEncontrados, setApelidosNaoEncontrados] = useState<Set<string>>(new Set());
+  const [ordensJaCadastradas, setOrdensJaCadastradas] = useState<Set<string>>(new Set());
 
   const handleSend = async () => {
     mutate(formData, {
       onSuccess: () => {
         setApelidosNaoEncontrados(new Set());
+        setOrdensJaCadastradas(new Set());
       },
       onError: (err: any) => {
         const msg =
@@ -130,7 +133,9 @@ export const RegisterOrders = () => {
           err?.message ??
           (typeof err === "string" ? err : JSON.stringify(err));
         const notFound = extractApelidosFromError(msg);
+        const alreadyRegistered = extractExistingOrdersFromError(msg);
         if (notFound.size > 0) setApelidosNaoEncontrados(notFound);
+        if (alreadyRegistered.size > 0) setOrdensJaCadastradas(alreadyRegistered);
         else toast.error("Erro ao enviar ordens.");
       },
     });
@@ -352,6 +357,7 @@ export const RegisterOrders = () => {
           formData={formData}
           handleEdit={handleEdit}
           notFoundNicknames={apelidosNaoEncontrados}
+          existingOrders={ordensJaCadastradas}
         />
       )}
     </FlexCol>

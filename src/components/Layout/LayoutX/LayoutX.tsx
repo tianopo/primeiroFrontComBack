@@ -1,4 +1,11 @@
-import { File, FileArchive, House, TrademarkRegistered, UserCheck } from "@phosphor-icons/react";
+import {
+  File,
+  FileArchive,
+  House,
+  Lock,
+  TrademarkRegistered,
+  UserCheck,
+} from "@phosphor-icons/react";
 import { Outlet } from "react-router-dom";
 import { app } from "src/routes/app";
 import { useAccessControl } from "src/routes/context/AccessControl";
@@ -14,6 +21,11 @@ export const LayoutX = () => {
       text: "Início",
       route: app.home,
       icon: <House width={20} height={17} weight="duotone" />,
+    },
+    {
+      text: "Segurança",
+      route: app.security,
+      icon: <Lock width={20} height={17} weight="duotone" />,
     },
     // Itens visíveis apenas se acesso !== 'User'
     ...(acesso !== "User"

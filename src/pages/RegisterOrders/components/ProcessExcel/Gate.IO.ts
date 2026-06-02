@@ -6,8 +6,32 @@ export const processExcelGateIO = (workbook: XLSX.WorkBook, selectedBroker: stri
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
 
-  const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
-  const [titles, ...rows] = json;
+  const json = XLSX.utils.sheet_to_json(worksheet, {
+    header: 1,
+    raw: false,
+    defval: "",
+  }) as Array<Array<string | number>>;
+
+  const normalize = (v: string | number) =>
+    String(v ?? "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+
+  // acha o header mesmo que o CSV tenha linhas vazias antes
+  const headerRowIndex = json.findIndex(
+    (row) => normalize(row?.[0] ?? "") === "no" && normalize(row?.[1] ?? "") === "created date",
+  );
+
+  if (headerRowIndex === -1) {
+    toast.error(`Esta planilha não pertence a ${selectedBroker.split(" ")[0]}`);
+    return [];
+  }
+
+  const titles = json[headerRowIndex].map((x) => String(x ?? "").trim());
+  const rows = json.slice(headerRowIndex + 1);
+
   const expectedTitles = [
     "No",
     "Created date",
@@ -22,44 +46,70 @@ export const processExcelGateIO = (workbook: XLSX.WorkBook, selectedBroker: stri
     "Name",
   ];
 
-  const isValid = expectedTitles.every((title, index) => titles[index] === title);
+  const isValid = expectedTitles.every(
+    (title, index) => normalize(titles[index] ?? "") === normalize(title),
+  );
   if (!isValid) {
     toast.error(`Esta planilha não pertence a ${selectedBroker.split(" ")[0]}`);
     return [];
   }
-  const formatNumber = (value: string): string => {
-    return parseFloat(value).toFixed(2).replace(".", ",").split("/")[0];
+
+  const formatNumber = (value: string | number): string => {
+    const n = Number(String(value ?? "").replace(",", "."));
+    return Number.isFinite(n) ? n.toFixed(2).replace(".", ",") : "";
   };
+
+  const parseDateTime = (value: string | number): string => {
+    if (value === "" || value == null) return "";
+
+    // se vier serial do Excel
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return excelDateToJSDate(value);
+    }
+
+    // Gate.io vem como "YYYY-MM-DD HH:mm:ss"
+    const s = String(value).trim();
+    if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}$/.test(s)) return s;
+
+    // fallback
+    return s;
+  };
+
+  const isCompleted = (status: string | number) => {
+    const s = normalize(status);
+    return s === "done" || s === "completed" || s === "concluido" || s === "concluído";
+  };
+
+  const mapSide = (type: string | number) => {
+    const t = normalize(type);
+    if (t === "buy" || t === "comprar") return "compras";
+    if (t === "sell" || t === "vender") return "vendas";
+    return "vendas";
+  };
+
   return rows
     .map((row) => {
-      const [
-        no, // Ex: "No"
-        createdTime, // Ex: "Created date"
-        ,
-        // Ex: "Updated date"
-        type, // Ex: "Type"
-        fundType, // Ex: "Fund Type"
-        ,
-        // Ex: "Payment Method"
-        price, // Ex: "Price"
-        amount, // Ex: "Amount"
-        total, // Ex: "Total"
-        status, // Ex: "Status"
-        name, // Ex: "Name"
-      ] = row;
+      if (!row || row.length < 11) return false;
 
-      const ativo = fundType.split("/")[0];
-      if (status?.trim().toLowerCase() !== "concluído") return false;
+      const [no, createdTime, , type, fundType, , price, amount, total, status, name] = row;
+
+      if (!no) return false;
+      if (!isCompleted(status)) return false;
+
+      const ativo = String(fundType ?? "")
+        .split("/")[0]
+        .trim();
+
       return {
-        numeroOrdem: no.toString(),
-        tipo: type === "Comprar" ? "compras" : "vendas",
-        dataHora: excelDateToJSDate(Number(createdTime)),
+        numeroOrdem: String(no).trim(),
+        tipo: mapSide(type),
+        dataHora: parseDateTime(createdTime),
         exchange: selectedBroker,
         ativo,
-        nome: name,
-        quantidade: amount.toString(),
-        valor: formatNumber(total.toString()),
-        valorToken: price.toString(),
+        nome: String(name ?? "").trim(),
+        quantidade: String(amount ?? "").trim(),
+        valor: formatNumber(total),
+        valorToken: formatNumber(price),
         taxa: "0",
       };
     })

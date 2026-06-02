@@ -1,10 +1,16 @@
 interface IHandleListEdit {
   formData: any[];
   handleEdit: (numeroOrdem: string) => void;
-  notFoundNicknames?: Set<string>; // <<<<<< novo
+  notFoundNicknames?: Set<string>;
+  existingOrders?: Set<string>;
 }
 
-export const HandleListEdit = ({ formData, handleEdit, notFoundNicknames }: IHandleListEdit) => {
+export const HandleListEdit = ({
+  formData,
+  handleEdit,
+  notFoundNicknames,
+  existingOrders,
+}: IHandleListEdit) => {
   const compras = formData.filter((item) => item.tipo === "compras");
   const vendas = formData.filter((item) => item.tipo === "vendas");
 
@@ -31,21 +37,43 @@ export const HandleListEdit = ({ formData, handleEdit, notFoundNicknames }: IHan
         <ul className="flex flex-row flex-wrap gap-2">
           {items.map((item, index) => {
             const isNotFound = notFoundNicknames?.has(item.apelido || "");
+            const isExisting = existingOrders?.has(`${item.numeroOrdem}|||${item.exchange}`);
+
+            const cardClass = [
+              "relative cursor-pointer rounded-lg border px-3 py-5",
+              isNotFound
+                ? "border-red-500 bg-red-50"
+                : isExisting
+                  ? "border-yellow-500 bg-yellow-50"
+                  : "bg-gray-100",
+            ].join(" ");
+
             return (
               <li
                 key={index}
-                className={[
-                  "relative cursor-pointer rounded-lg border px-3 py-5",
-                  isNotFound ? "border-red-500 bg-red-50" : "bg-gray-100",
-                ].join(" ")}
+                className={cardClass}
                 onClick={() => handleEdit(item.numeroOrdem)}
-                title={isNotFound ? "Apelido não encontrado no banco" : ""}
+                title={
+                  isNotFound
+                    ? "Usuário não encontrado no banco"
+                    : isExisting
+                      ? "Ordem já existe no banco"
+                      : ""
+                }
               >
                 {isNotFound && (
                   <span className="absolute left-2 top-1 rounded-full bg-red-600 px-2 py-0.5 font-semibold uppercase tracking-wide text-white">
                     Usuário não encontrado
                   </span>
                 )}
+
+                {!isNotFound && isExisting && (
+                  <span className="absolute left-2 top-1 rounded-full bg-yellow-600 px-2 py-0.5 font-semibold uppercase tracking-wide text-white">
+                    Ordem já existe
+                  </span>
+                )}
+
+                {/* resto igual */}
                 <p>
                   <strong>Número Ordem:</strong> {item.numeroOrdem}
                 </p>
