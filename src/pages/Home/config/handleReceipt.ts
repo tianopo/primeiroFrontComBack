@@ -291,7 +291,7 @@ export const generateStatementReceipt = (tx: any): Promise<string> => {
         // ✅ banco só se existir
         ...(bankName ? [{ text: `Banco: ${bankName}`, font: "20px Arial" }] : []),
 
-        { text: `${branch && "Agência: " + branch}`, font: "20px Arial" },
+        { text: `${branch && branch !== null ? "Agência: " + branch : ""}`, font: "20px Arial" },
         { text: `Conta: ${account ?? "-"}`, font: "20px Arial" },
 
         ...(counterpartyPixKey

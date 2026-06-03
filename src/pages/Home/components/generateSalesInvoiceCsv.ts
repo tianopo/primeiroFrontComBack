@@ -1,4 +1,4 @@
-import { parseBRL, parseNum, toBRDate } from "../config/helpers";
+import { normalizeVendaCodigo, parseBRL, parseNum, toBRDate } from "../config/helpers";
 
 type CommissionMode = "fixa" | "dinamica";
 
@@ -277,11 +277,20 @@ export const generateSalesInvoiceCsv = ({
 
   let totalValorNotas = 0;
 
+  const vendaCodigoForCsv = (raw: unknown, fallback: string) => {
+    const normalized = normalizeVendaCodigo(raw); // <- seu helper
+    if (!normalized) return fallback;
+
+    // ✅ Excel transforma números longos em notação científica.
+    // Prefixo "'" força Excel a tratar como TEXTO (não vira 2,28E+19).
+    return normalized.length >= 16 ? `'${normalized}` : normalized;
+  };
+
   const invoiceRows = salesTransactions.map((transaction, index) => {
     const user = transaction?.User;
 
-    const vendaCodigo =
-      String(transaction?.numeroOrdem ?? "").trim() || `VEN${String(index + 1).padStart(6, "0")}`;
+    const fallback = `VEN${String(index + 1).padStart(6, "0")}`;
+    const vendaCodigo = vendaCodigoForCsv(transaction?.numeroOrdem, fallback);
 
     const vendaData = resolveInvoiceDate(
       transaction?.dataHora as string | Date | null | undefined,
