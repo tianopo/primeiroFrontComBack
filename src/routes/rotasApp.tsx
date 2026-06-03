@@ -13,7 +13,7 @@ import { Users } from "src/pages/Users/Users.views";
 import { app } from "./app";
 import { AuthenticatedRoute } from "./context/AuthenticatedRoute";
 import { RoleProtectedRoute } from "./context/RoleProtectedRoute";
-import { SecurityPage } from "src/pages/Security/Security,views";
+import { SecurityPage } from "src/pages/Security/Security.views";
 
 export const browserRouter = createBrowserRouter([
   {

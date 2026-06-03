@@ -7,6 +7,8 @@ import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalB
 import { api } from "src/config/api";
 import { responseError, responseSuccess } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
+import { useSensitiveAction } from "../hooks/useSensitiveAction";
+import { SensitiveActionModal } from "./SensitiveActionModal";
 
 interface IPasskeySection {
   passkeys?: any[];
@@ -23,11 +25,19 @@ const Row = ({ label, value }: { label: string; value?: any }) => (
 export const PasskeySection = ({ passkeys = [], onReloadProfile }: IPasskeySection) => {
   const [loadingRegister, setLoadingRegister] = useState(false);
   const [loadingDeleteId, setLoadingDeleteId] = useState<string | null>(null);
+
   const [confirmDelete, setConfirmDelete] = useState<{
     open: boolean;
     passkeyId?: string;
     deviceName?: string;
   }>({ open: false });
+
+  const [pendingDelete, setPendingDelete] = useState<{
+    passkeyId?: string;
+    deviceName?: string;
+  } | null>(null);
+
+  const sensitive = useSensitiveAction();
 
   const handleRegisterPasskey = async () => {
     setLoadingRegister(true);
@@ -52,20 +62,39 @@ export const PasskeySection = ({ passkeys = [], onReloadProfile }: IPasskeySecti
     }
   };
 
-  const handleDeletePasskey = async () => {
-    if (!confirmDelete.passkeyId) return;
-
-    setLoadingDeleteId(confirmDelete.passkeyId);
+  const deletePasskey = async (passkeyId: string, actionTicketId?: string) => {
+    setLoadingDeleteId(passkeyId);
     try {
-      const res = await api().delete(apiRoute.securityPasskeyDelete(confirmDelete.passkeyId));
+      const res = await api().delete(apiRoute.securityPasskeyDelete(passkeyId), {
+        data: { actionTicketId },
+      });
+
       responseSuccess(res?.data?.message ?? "Chave de acesso removida com sucesso.");
       setConfirmDelete({ open: false });
+      setPendingDelete(null);
       await onReloadProfile();
     } catch (error) {
       responseError(error as AxiosError);
     } finally {
       setLoadingDeleteId(null);
     }
+  };
+
+  const handleProtectedDelete = async () => {
+    if (!confirmDelete.passkeyId) return;
+
+    const ticket = await sensitive.start("DELETE_PASSKEY");
+
+    if (ticket === undefined) {
+      await deletePasskey(confirmDelete.passkeyId);
+      return;
+    }
+
+    setPendingDelete({
+      passkeyId: confirmDelete.passkeyId,
+      deviceName: confirmDelete.deviceName,
+    });
+    setConfirmDelete({ open: false });
   };
 
   return (
@@ -133,10 +162,26 @@ export const PasskeySection = ({ passkeys = [], onReloadProfile }: IPasskeySecti
           <ConfirmationModalButton
             text={`Tem certeza que deseja excluir a chave de acesso de ${confirmDelete.deviceName ?? "este dispositivo"}?`}
             onCancel={() => setConfirmDelete({ open: false })}
-            onConfirm={handleDeletePasskey}
+            onConfirm={handleProtectedDelete}
             confirmDisabled={Boolean(loadingDeleteId)}
           />
         )}
+
+        <SensitiveActionModal
+          challenge={sensitive.challenge}
+          onClose={() => {
+            sensitive.clear();
+            setPendingDelete(null);
+          }}
+          onVerified={async (ticketId) => {
+            if (pendingDelete?.passkeyId) {
+              await deletePasskey(pendingDelete.passkeyId, ticketId);
+            }
+
+            sensitive.clear();
+            setPendingDelete(null);
+          }}
+        />
       </div>
     </CardContainer>
   );

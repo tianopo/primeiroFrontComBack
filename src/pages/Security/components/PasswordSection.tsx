@@ -6,6 +6,8 @@ import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalB
 import { api } from "src/config/api";
 import { responseError, responseSuccess } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
+import { useSensitiveAction } from "../hooks/useSensitiveAction";
+import { SensitiveActionModal } from "./SensitiveActionModal";
 
 interface IPasswordSection {
   hasAlternativePassword?: boolean;
@@ -29,8 +31,11 @@ export const PasswordSection = ({
 }: IPasswordSection) => {
   const [alternativePassword, setAlternativePassword] = useState("");
   const [confirmAlternativePassword, setConfirmAlternativePassword] = useState("");
+  const [currentAlternativePassword, setCurrentAlternativePassword] = useState("");
+
   const [thirdPassword, setThirdPassword] = useState("");
   const [confirmThirdPassword, setConfirmThirdPassword] = useState("");
+  const [currentThirdPassword, setCurrentThirdPassword] = useState("");
 
   const [alternativeMode, setAlternativeMode] = useState<ModeType>("create");
   const [thirdMode, setThirdMode] = useState<ModeType>("create");
@@ -42,6 +47,12 @@ export const PasswordSection = ({
 
   const [confirmDeleteAlternative, setConfirmDeleteAlternative] = useState(false);
   const [confirmDeleteThird, setConfirmDeleteThird] = useState(false);
+
+  const [pendingAction, setPendingAction] = useState<
+    null | "SAVE_ALT" | "DELETE_ALT" | "SAVE_THIRD" | "DELETE_THIRD"
+  >(null);
+
+  const sensitive = useSensitiveAction();
 
   const alternativeError = useMemo(() => {
     if (!alternativePassword && !confirmAlternativePassword) return "";
@@ -62,22 +73,24 @@ export const PasswordSection = ({
   const resetAlternativeFields = () => {
     setAlternativePassword("");
     setConfirmAlternativePassword("");
+    setCurrentAlternativePassword("");
     setAlternativeMode("create");
   };
 
   const resetThirdFields = () => {
     setThirdPassword("");
     setConfirmThirdPassword("");
+    setCurrentThirdPassword("");
     setThirdMode("create");
   };
 
-  const handleSaveAlternativePassword = async () => {
-    if (alternativeError || !alternativePassword.trim()) return;
-
+  const saveAlternative = async (actionTicketId?: string) => {
     setSavingAlternative(true);
     try {
       const res = await api().patch(apiRoute.securityAlternativePassword, {
         alternativePassword,
+        currentAlternativePassword,
+        actionTicketId,
       });
 
       responseSuccess(
@@ -96,10 +109,12 @@ export const PasswordSection = ({
     }
   };
 
-  const handleDeleteAlternativePassword = async () => {
+  const deleteAlternative = async (actionTicketId?: string) => {
     setDeletingAlternative(true);
     try {
-      const res = await api().delete(apiRoute.securityAlternativePasswordDelete);
+      const res = await api().delete(apiRoute.securityAlternativePasswordDelete, {
+        data: { actionTicketId },
+      });
 
       responseSuccess(res?.data?.message ?? "Senha alternativa excluída com sucesso.");
 
@@ -113,13 +128,13 @@ export const PasswordSection = ({
     }
   };
 
-  const handleSaveThirdPassword = async () => {
-    if (thirdError || !thirdPassword.trim()) return;
-
+  const saveThird = async (actionTicketId?: string) => {
     setSavingThird(true);
     try {
       const res = await api().patch(apiRoute.securityThirdPassword, {
         thirdPassword,
+        currentThirdPassword,
+        actionTicketId,
       });
 
       responseSuccess(
@@ -138,10 +153,12 @@ export const PasswordSection = ({
     }
   };
 
-  const handleDeleteThirdPassword = async () => {
+  const deleteThird = async (actionTicketId?: string) => {
     setDeletingThird(true);
     try {
-      const res = await api().delete(apiRoute.securityThirdPasswordDelete);
+      const res = await api().delete(apiRoute.securityThirdPasswordDelete, {
+        data: { actionTicketId },
+      });
 
       responseSuccess(res?.data?.message ?? "Terceira senha excluída com sucesso.");
 
@@ -153,6 +170,13 @@ export const PasswordSection = ({
     } finally {
       setDeletingThird(false);
     }
+  };
+
+  const protect = async (action: string, pending: typeof pendingAction) => {
+    const ticket = await sensitive.start(action);
+    if (ticket === undefined) return true;
+    setPendingAction(pending);
+    return false;
   };
 
   return (
@@ -192,11 +216,21 @@ export const PasswordSection = ({
               </div>
             ) : (
               <div className="flex flex-col gap-3">
+                {hasAlternativePassword && (
+                  <input
+                    value={currentAlternativePassword}
+                    onChange={(e) => setCurrentAlternativePassword(e.target.value)}
+                    type="password"
+                    placeholder="Senha alternativa atual"
+                    className="rounded border px-3 py-2"
+                  />
+                )}
+
                 <input
                   value={alternativePassword}
                   onChange={(e) => setAlternativePassword(e.target.value)}
                   type="password"
-                  placeholder="Senha alternativa"
+                  placeholder="Nova senha alternativa"
                   className="rounded border px-3 py-2"
                 />
 
@@ -204,7 +238,7 @@ export const PasswordSection = ({
                   value={confirmAlternativePassword}
                   onChange={(e) => setConfirmAlternativePassword(e.target.value)}
                   type="password"
-                  placeholder="Confirmar senha alternativa"
+                  placeholder="Confirmar nova senha alternativa"
                   className="rounded border px-3 py-2"
                 />
 
@@ -212,9 +246,16 @@ export const PasswordSection = ({
 
                 <div className="flex flex-wrap gap-2">
                   <Button
-                    onClick={handleSaveAlternativePassword}
+                    onClick={async () => {
+                      if (alternativeError || !alternativePassword.trim()) return;
+                      const proceed = await protect("MODIFY_ALTERNATIVE_PASSWORD", "SAVE_ALT");
+                      if (proceed) await saveAlternative();
+                    }}
                     disabled={
-                      savingAlternative || !alternativePassword.trim() || Boolean(alternativeError)
+                      savingAlternative ||
+                      !alternativePassword.trim() ||
+                      Boolean(alternativeError) ||
+                      (hasAlternativePassword && !currentAlternativePassword.trim())
                     }
                   >
                     {savingAlternative
@@ -225,13 +266,7 @@ export const PasswordSection = ({
                   </Button>
 
                   {hasAlternativePassword && (
-                    <Button
-                      onClick={() => {
-                        resetAlternativeFields();
-                      }}
-                    >
-                      Cancelar edição
-                    </Button>
+                    <Button onClick={resetAlternativeFields}>Cancelar edição</Button>
                   )}
                 </div>
               </div>
@@ -268,11 +303,21 @@ export const PasswordSection = ({
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
+                  {hasThirdPassword && (
+                    <input
+                      value={currentThirdPassword}
+                      onChange={(e) => setCurrentThirdPassword(e.target.value)}
+                      type="password"
+                      placeholder="Terceira senha atual"
+                      className="rounded border px-3 py-2"
+                    />
+                  )}
+
                   <input
                     value={thirdPassword}
                     onChange={(e) => setThirdPassword(e.target.value)}
                     type="password"
-                    placeholder="Terceira senha"
+                    placeholder="Nova terceira senha"
                     className="rounded border px-3 py-2"
                   />
 
@@ -280,7 +325,7 @@ export const PasswordSection = ({
                     value={confirmThirdPassword}
                     onChange={(e) => setConfirmThirdPassword(e.target.value)}
                     type="password"
-                    placeholder="Confirmar terceira senha"
+                    placeholder="Confirmar nova terceira senha"
                     className="rounded border px-3 py-2"
                   />
 
@@ -288,8 +333,17 @@ export const PasswordSection = ({
 
                   <div className="flex flex-wrap gap-2">
                     <Button
-                      onClick={handleSaveThirdPassword}
-                      disabled={savingThird || !thirdPassword.trim() || Boolean(thirdError)}
+                      onClick={async () => {
+                        if (thirdError || !thirdPassword.trim()) return;
+                        const proceed = await protect("MODIFY_THIRD_PASSWORD", "SAVE_THIRD");
+                        if (proceed) await saveThird();
+                      }}
+                      disabled={
+                        savingThird ||
+                        !thirdPassword.trim() ||
+                        Boolean(thirdError) ||
+                        (hasThirdPassword && !currentThirdPassword.trim())
+                      }
                     >
                       {savingThird
                         ? "Salvando..."
@@ -299,13 +353,7 @@ export const PasswordSection = ({
                     </Button>
 
                     {hasThirdPassword && (
-                      <Button
-                        onClick={() => {
-                          resetThirdFields();
-                        }}
-                      >
-                        Cancelar edição
-                      </Button>
+                      <Button onClick={resetThirdFields}>Cancelar edição</Button>
                     )}
                   </div>
                 </div>
@@ -318,7 +366,10 @@ export const PasswordSection = ({
           <ConfirmationModalButton
             text="Tem certeza que deseja excluir a senha alternativa?"
             onCancel={() => setConfirmDeleteAlternative(false)}
-            onConfirm={handleDeleteAlternativePassword}
+            onConfirm={async () => {
+              const proceed = await protect("DELETE_ALTERNATIVE_PASSWORD", "DELETE_ALT");
+              if (proceed) await deleteAlternative();
+            }}
             confirmDisabled={deletingAlternative}
           />
         )}
@@ -327,10 +378,30 @@ export const PasswordSection = ({
           <ConfirmationModalButton
             text="Tem certeza que deseja excluir a terceira senha?"
             onCancel={() => setConfirmDeleteThird(false)}
-            onConfirm={handleDeleteThirdPassword}
+            onConfirm={async () => {
+              const proceed = await protect("DELETE_THIRD_PASSWORD", "DELETE_THIRD");
+              if (proceed) await deleteThird();
+            }}
             confirmDisabled={deletingThird}
           />
         )}
+
+        <SensitiveActionModal
+          challenge={sensitive.challenge}
+          onClose={() => {
+            sensitive.clear();
+            setPendingAction(null);
+          }}
+          onVerified={async (ticketId) => {
+            if (pendingAction === "SAVE_ALT") await saveAlternative(ticketId);
+            if (pendingAction === "DELETE_ALT") await deleteAlternative(ticketId);
+            if (pendingAction === "SAVE_THIRD") await saveThird(ticketId);
+            if (pendingAction === "DELETE_THIRD") await deleteThird(ticketId);
+
+            sensitive.clear();
+            setPendingAction(null);
+          }}
+        />
       </div>
     </CardContainer>
   );

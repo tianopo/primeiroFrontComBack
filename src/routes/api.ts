@@ -25,9 +25,17 @@ export const apiRoute = {
   securityAlternativePassword: "/security/alternative-password",
   securityThirdPassword: "/security/third-password",
   securityDeviceApprove: "/security/devices/approve",
-  securityPasskeyDelete: (passkeyId: string) => `/security/passkey/${passkeyId}`,
+  securityLogs: "/security/logs",
+  securitySensitiveActionStart: "/security/sensitive-action/start",
+  securitySensitiveVerifyTotp: "/security/sensitive-action/verify/totp",
+  securitySensitiveVerifyAlternativePassword:
+    "/security/sensitive-action/verify/alternative-password",
+  securitySensitiveVerifyRecoveryCode: "/security/sensitive-action/verify/recovery-code",
+  securitySensitivePasskeyOptions: "/security/sensitive-action/passkey/options",
+  securitySensitivePasskeyVerify: "/security/sensitive-action/passkey/verify",
   securityAlternativePasswordDelete: "/security/alternative-password",
   securityThirdPasswordDelete: "/security/third-password",
+  securityPasskeyDelete: (passkeyId: string) => `/security/passkey/${passkeyId}`,
   /* ORDENS */
   orders: "orders",
   tax: "orders/tax",

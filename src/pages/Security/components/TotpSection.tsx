@@ -7,6 +7,8 @@ import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalB
 import { api } from "src/config/api";
 import { responseError, responseSuccess } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
+import { useSensitiveAction } from "../hooks/useSensitiveAction";
+import { SensitiveActionModal } from "./SensitiveActionModal";
 
 interface ITotpSection {
   enabled?: boolean;
@@ -20,11 +22,15 @@ export const TotpSection = ({ enabled, onReloadProfile }: ITotpSection) => {
   const [totpCode, setTotpCode] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [setupMode, setSetupMode] = useState<SetupMode>("qr");
-  const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
 
   const [setupLoading, setSetupLoading] = useState(false);
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [disableLoading, setDisableLoading] = useState(false);
+
+  const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<null | "DELETE_TOTP">(null);
+
+  const sensitive = useSensitiveAction();
 
   const handleTotpCodeChange = (value: string) => {
     const onlyNumbers = value.replace(/\D/g, "").slice(0, 6);
@@ -81,13 +87,16 @@ export const TotpSection = ({ enabled, onReloadProfile }: ITotpSection) => {
     }
   };
 
-  const handleTotpDisable = async () => {
+  const disableTotp = async (actionTicketId?: string) => {
     setDisableLoading(true);
     try {
-      await api().delete(apiRoute.securityTotpDelete);
+      const res = await api().delete(apiRoute.securityTotpDelete, {
+        data: { actionTicketId },
+      });
+
       resetSetupState();
       setConfirmRemoveOpen(false);
-      responseSuccess("Google Authenticator removido com sucesso.");
+      responseSuccess(res?.data?.message ?? "Google Authenticator removido com sucesso.");
       await onReloadProfile();
     } catch (error) {
       responseError(error as AxiosError);
@@ -96,8 +105,21 @@ export const TotpSection = ({ enabled, onReloadProfile }: ITotpSection) => {
     }
   };
 
+  const handleProtectedRemove = async () => {
+    const ticket = await sensitive.start("DELETE_TOTP");
+
+    if (ticket === undefined) {
+      await disableTotp();
+      return;
+    }
+
+    setConfirmRemoveOpen(false);
+    setPendingAction("DELETE_TOTP");
+  };
+
   const copyText = async (text?: string) => {
     if (!text) return;
+
     try {
       await navigator.clipboard.writeText(text);
       responseSuccess("Copiado com sucesso.");
@@ -203,6 +225,8 @@ export const TotpSection = ({ enabled, onReloadProfile }: ITotpSection) => {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
+                    <Button onClick={() => copyText(totpSetup?.accountName)}>Copiar conta</Button>
+                    <Button onClick={() => copyText(totpSetup?.issuer)}>Copiar emissor</Button>
                     <Button onClick={() => copyText(totpSetup?.secret)}>Copiar chave</Button>
                   </div>
                 </div>
@@ -234,10 +258,26 @@ export const TotpSection = ({ enabled, onReloadProfile }: ITotpSection) => {
           <ConfirmationModalButton
             text="Tem certeza que deseja remover o Google Authenticator? Você deixará de usar este fator extra de segurança até cadastrar novamente."
             onCancel={() => setConfirmRemoveOpen(false)}
-            onConfirm={handleTotpDisable}
+            onConfirm={handleProtectedRemove}
             confirmDisabled={disableLoading}
           />
         )}
+
+        <SensitiveActionModal
+          challenge={sensitive.challenge}
+          onClose={() => {
+            sensitive.clear();
+            setPendingAction(null);
+          }}
+          onVerified={async (ticketId) => {
+            if (pendingAction === "DELETE_TOTP") {
+              await disableTotp(ticketId);
+            }
+
+            sensitive.clear();
+            setPendingAction(null);
+          }}
+        />
       </div>
     </CardContainer>
   );
