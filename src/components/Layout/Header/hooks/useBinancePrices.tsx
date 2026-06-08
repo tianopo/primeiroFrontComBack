@@ -7,7 +7,7 @@ interface ReferencePriceItem {
   referencePrice: string | number;
 }
 
-interface ReferencePriceBody {
+interface ReferencePriceResponse {
   data: ReferencePriceItem[];
 }
 
@@ -21,7 +21,7 @@ interface AdReferencePriceQueryReq {
   fiatCurrency: string;
   fromUserRole: string;
   payType: string;
-  tradeType: string; // "BUY" | "SELL" (no seu backend)
+  tradeType: string;
 }
 
 export const useBinancePrices = (): BinancePrices | null => {
@@ -34,12 +34,12 @@ export const useBinancePrices = (): BinancePrices | null => {
       tradeType: "SELL",
     };
 
-    const { data } = await api().post<ReferencePriceBody>(apiRoute.referencePrice, payload);
+    const { data } = await api().post<ReferencePriceResponse>(apiRoute.referencePrice, payload);
 
-    const items = Array.isArray((data as any)?.data) ? (data as any).data : [];
+    const items = Array.isArray(data?.data) ? data.data : [];
 
-    const usdtRaw = items.find((i: { asset: string }) => i.asset === "USDT")?.referencePrice;
-    const btcRaw = items.find((i: { asset: string }) => i.asset === "BTC")?.referencePrice;
+    const usdtRaw = items.find((item) => item.asset === "USDT")?.referencePrice;
+    const btcRaw = items.find((item) => item.asset === "BTC")?.referencePrice;
 
     const USDTBRL = Number(usdtRaw);
     const BTCBRL = Number(btcRaw);
@@ -52,9 +52,13 @@ export const useBinancePrices = (): BinancePrices | null => {
   };
 
   const { data } = useQuery({
-    queryKey: ["binance-reference-price", "USDT", "BTC", "BRL", "PIX", "SELL"],
+    queryKey: ["binance-reference-price", "USDT,BTC", "BRL", "PIX", "SELL", "MERCHANT"],
     queryFn: fetcher,
-    refetchInterval: 60000,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: false,
     retry: 1,
   });
 
