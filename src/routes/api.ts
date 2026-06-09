@@ -27,8 +27,9 @@ export const apiRoute = {
   securityAntiPhishing: "/security/anti-phishing",
   securityAlternativePassword: "/security/alternative-password",
   securityThirdPassword: "/security/third-password",
-  securityDeviceApprove: "/security/devices/approve",
   securityLogs: "/security/logs",
+  securityApproveDevice: (deviceId: string) => `/security/devices/${deviceId}/approve`,
+  securityDeleteDevice: (deviceId: string) => `/security/devices/${deviceId}`,
   securitySensitiveActionStart: "/security/sensitive-action/start",
   securitySensitiveVerifyTotp: "/security/sensitive-action/verify/totp",
   securitySensitiveVerifyAlternativePassword:
