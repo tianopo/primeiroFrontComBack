@@ -72,7 +72,7 @@ export const Header = ({ navbar }: IHeader) => {
           className="hidden cursor-pointer items-center gap-2 rounded-6 p-2.5 text-write-secundary hover:bg-secundary hover:text-write-primary md:flex"
           onClick={() => setShowPasswordModal(true)}
         >
-          <Gear width={19.45} height={20} weight="fill" onClick={() => navigate("/usuarios")} />
+          <Gear width={19.45} height={20} weight="fill" />
           <h5>{name}</h5>
         </div>
 

@@ -2,8 +2,8 @@ import { CopySimple, DoorOpen, Gear } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useLogout } from "src/hooks/API/useLogout";
-import { app } from "src/routes/app";
 import { useAccessControl } from "src/routes/context/AccessControl";
+import { ModalPassword } from "../Header/components/ModalPassword";
 import "./Sidebar.css";
 
 interface INavbar {
@@ -23,6 +23,7 @@ export const SidebarX = ({ navbar, menuOpen }: ISidebarX) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const copyTexts = [
@@ -76,14 +77,18 @@ Telegram: @Tianopo`,
           <div className="flex flex-col items-center gap-5 md:hidden">
             <div
               className="flex cursor-pointer items-center gap-5 rounded-6 p-2.5 text-write-secundary hover:bg-secundary hover:text-write-primary"
-              onClick={() => navigate(app.users)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowPasswordModal(true);
+              }}
             >
               <h5>
-                <Gear width={19.45} height={20} weight="fill" onClick={() => navigate(app.users)} />
+                <Gear width={19.45} height={20} weight="fill" />
                 {name}
               </h5>
             </div>
           </div>
+          <ModalPassword isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
 
           {/* Botões de cópia visíveis apenas para Master */}
           {acesso === "Master" &&
