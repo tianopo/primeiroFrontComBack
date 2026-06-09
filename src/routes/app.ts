@@ -11,7 +11,6 @@ export const app = {
   /* After Login */
   auth: "/auth",
   authStepUp: "/auth/step-up", // new
-  validateToken: "/auth/validate-token",
   home: "/inicio",
   security: "/seguranca", // new
   kyc: "kyc",

@@ -5,8 +5,8 @@ import { CardContainer } from "src/components/Layout/CardContainer";
 import { api } from "src/config/api";
 import { responseError, responseSuccess } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
-import { SensitiveActionModal } from "./SensitiveActionModal";
 import { useSensitiveAction } from "../hooks/useSensitiveAction";
+import { SensitiveActionModal } from "./SensitiveActionModal";
 
 export const RecoveryCodesSection = () => {
   const [loading, setLoading] = useState(false);
@@ -36,18 +36,41 @@ export const RecoveryCodesSection = () => {
     }
   };
 
-  const copyCode = async (code: string) => {
+  const downloadCodesTxt = () => {
+    if (codes.length === 0) return;
+
     try {
-      await navigator.clipboard.writeText(code);
-      responseSuccess("Código copiado com sucesso.");
+      const content = [
+        "Códigos de recuperação",
+        "",
+        ...codes,
+        "",
+        "Guarde estes códigos em local seguro.",
+        "O código não ficará disponível na página de segurança",
+        "Copie e cole apenas uma linha qualquer quando for requisitado.",
+      ].join("\n");
+
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "codigos-de-recuperacao.txt";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      window.URL.revokeObjectURL(url);
+
+      responseSuccess("Arquivo .txt baixado com sucesso.");
     } catch {
       responseError({
         response: {
           data: {
-            message: "Não foi possível copiar o código.",
+            message: "Não foi possível baixar o arquivo .txt.",
           },
         },
-      } as any);
+      } as AxiosError);
     }
   };
 
@@ -68,14 +91,14 @@ export const RecoveryCodesSection = () => {
               Guarde estes códigos em local seguro. Cada código pode ser usado como recuperação.
             </div>
 
+            <div className="mb-4 flex flex-wrap gap-2">
+              <Button onClick={downloadCodesTxt}>Baixar</Button>
+            </div>
+
             <div className="grid gap-2 md:grid-cols-2">
               {codes.map((code) => (
-                <div
-                  key={code}
-                  className="flex items-center justify-between rounded border border-gray-200 bg-gray-50 px-3 py-2"
-                >
+                <div key={code} className="rounded border border-gray-200 bg-gray-50 px-3 py-2">
                   <span className="font-mono text-sm">{code}</span>
-                  <Button onClick={() => copyCode(code)}>Copiar</Button>
                 </div>
               ))}
             </div>

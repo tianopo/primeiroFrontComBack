@@ -13,7 +13,6 @@ export const useListTransactionsInDate = (startDate: string, endDate: string) =>
     queryFn: path,
     staleTime: 0, // ✅ não “eterniza” cache
     refetchOnWindowFocus: false,
-    refetchOnMount: "always", // ✅ garante refetch ao montar
     enabled: !!startDate && !!endDate,
   });
 

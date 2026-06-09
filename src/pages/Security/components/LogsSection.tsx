@@ -1,5 +1,5 @@
 import { AxiosError } from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { CardContainer } from "src/components/Layout/CardContainer";
 import { api } from "src/config/api";
@@ -11,6 +11,7 @@ export const LogsSection = () => {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const didLoadRef = useRef(false);
 
   const loadPage = async (nextPage: number, append = false) => {
     setLoading(true);
@@ -35,6 +36,8 @@ export const LogsSection = () => {
   };
 
   useEffect(() => {
+    if (didLoadRef.current) return;
+    didLoadRef.current = true;
     loadPage(1, false);
   }, []);
 

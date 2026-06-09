@@ -1,59 +1,132 @@
-// AccessControl.tsx
-import { jwtDecode } from "jwt-decode";
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
+import { app } from "../app";
 
-interface TokenPayload {
-  document: string;
-  acesso: string;
+type AccessControlContextType = {
+  token: string;
   name: string;
-}
-
-interface AccessControlContextType {
-  document: string | null;
-  acesso: string | null;
-  name: string | null;
+  acesso: string;
+  deviceLimited: boolean;
   setAccessFromToken: (token: string) => void;
-}
+  clearAccess: () => void;
+};
+
+type JwtPayload = {
+  name?: string;
+  acesso?: string;
+  role?: string;
+  deviceLimited?: boolean;
+};
 
 const AccessControlContext = createContext<AccessControlContextType>({
-  document: null,
-  acesso: null,
-  name: null,
-  setAccessFromToken: () => {},
+  token: "",
+  name: "",
+  acesso: "",
+  deviceLimited: false,
+  setAccessFromToken: () => undefined,
+  clearAccess: () => undefined,
 });
 
-export const AccessControlProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [document, setDocument] = useState<string | null>(null);
-  const [acesso, setAcesso] = useState<string | null>(null);
-  const [name, setName] = useState<string | null>(null);
+const decodeJwtPayload = (token: string): JwtPayload | null => {
+  try {
+    const [, payloadBase64] = token.split(".");
+    if (!payloadBase64) return null;
 
-  const setAccessFromToken = (token: string) => {
-    try {
-      const decodedToken = jwtDecode<TokenPayload>(token);
-      setDocument(decodedToken.document);
-      setAcesso(decodedToken.acesso);
-      setName(decodedToken.name);
-    } catch (error) {
-      console.error("Token inválido:", error);
-    }
-  };
+    const normalized = payloadBase64.replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = atob(normalized);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) setAccessFromToken(token);
-  }, []);
+    return JSON.parse(decoded) as JwtPayload;
+  } catch {
+    return null;
+  }
+};
 
-  return (
-    <AccessControlContext.Provider value={{ document, acesso, name, setAccessFromToken }}>
-      {children}
-    </AccessControlContext.Provider>
+const redirectToAuth = () => {
+  if (window.location.pathname !== app.auth) {
+    window.location.replace(app.auth);
+  }
+};
+
+const showLimitedDeviceWarning = () => {
+  toast.warning(
+    "Mais de 2 dispositivos conectados. Este dispositivo precisa de confirmação por outro dispositivo já aprovado na página de Segurança.",
   );
 };
 
-export const useAccessControl = (): AccessControlContextType => {
-  const context = useContext(AccessControlContext);
-  if (context === undefined) {
-    throw new Error("useAccessControl must be used within an AccessControlProvider");
-  }
-  return context;
+export const AccessControlProvider = ({ children }: { children: React.ReactNode }) => {
+  const [token, setToken] = useState("");
+  const [name, setName] = useState("");
+  const [acesso, setAcesso] = useState("");
+  const [deviceLimited, setDeviceLimited] = useState(false);
+
+  const clearAccess = () => {
+    setToken("");
+    setName("");
+    setAcesso("");
+    setDeviceLimited(false);
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    sessionStorage.removeItem("loginTicket");
+    sessionStorage.removeItem("availableMethods");
+    sessionStorage.removeItem("deviceLimited");
+  };
+
+  const setAccessFromToken = (nextToken: string) => {
+    const payload = decodeJwtPayload(nextToken);
+
+    const nextName = String(payload?.name ?? "");
+    const nextAcesso = String(payload?.acesso ?? payload?.role ?? "");
+    const nextDeviceLimited = Boolean(payload?.deviceLimited);
+
+    if (nextDeviceLimited) {
+      clearAccess();
+      showLimitedDeviceWarning();
+      redirectToAuth();
+      return;
+    }
+
+    setToken(nextToken);
+    setName(nextName);
+    setAcesso(nextAcesso);
+    setDeviceLimited(false);
+
+    localStorage.setItem("token", nextToken);
+  };
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token") ?? "";
+    if (!storedToken) return;
+
+    const payload = decodeJwtPayload(storedToken);
+    const storedDeviceLimited = Boolean(payload?.deviceLimited);
+
+    if (storedDeviceLimited) {
+      clearAccess();
+      showLimitedDeviceWarning();
+      redirectToAuth();
+      return;
+    }
+
+    setToken(storedToken);
+    setName(String(payload?.name ?? ""));
+    setAcesso(String(payload?.acesso ?? payload?.role ?? ""));
+    setDeviceLimited(false);
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      token,
+      name,
+      acesso,
+      deviceLimited,
+      setAccessFromToken,
+      clearAccess,
+    }),
+    [token, name, acesso, deviceLimited],
+  );
+
+  return <AccessControlContext.Provider value={value}>{children}</AccessControlContext.Provider>;
 };
+
+export const useAccessControl = () => useContext(AccessControlContext);

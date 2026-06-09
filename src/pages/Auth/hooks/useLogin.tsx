@@ -4,9 +4,9 @@ import { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { api, queryClient } from "src/config/api";
 import { responseError, responseSuccess } from "src/config/responseErrors";
-import { IAuthModel } from "src/interfaces/models";
 import { apiRoute } from "src/routes/api";
 import { app } from "src/routes/app";
 import { useAccessControl } from "src/routes/context/AccessControl";
@@ -18,16 +18,55 @@ export interface ILoginDto {
   password: string;
 }
 
+type StepUpLoginResponse = {
+  requiresStepUp: true;
+  availableMethods: string[];
+  loginTicket: string;
+  deviceLimited: boolean;
+  showSetupTotpBanner?: boolean;
+};
+
+type SuccessLoginResponse = {
+  token: string;
+  refreshToken?: string;
+  document: string;
+  requiresStepUp?: false;
+  deviceLimited?: boolean;
+  showSetupTotpBanner?: boolean;
+};
+
+type SignInResponse = StepUpLoginResponse | SuccessLoginResponse;
+
+const getNavigatorVendor = (): string => {
+  const vendor = Reflect.get(window.navigator, "vendor");
+  return typeof vendor === "string" ? vendor : "";
+};
+
 export const useLogin = () => {
   const navigate = useNavigate();
   const { t: translator } = useTranslation();
-  const { setAccessFromToken } = useAccessControl();
+  const { setAccessFromToken, acesso } = useAccessControl();
 
-  const t = (t: string) => translator(`hooks.auth.${t}`);
+  const t = (key: string) => translator(`hooks.auth.${key}`);
 
   const { mutate, isPending } = useMutation({
     mutationFn: path,
-    onSuccess: (data: any) => {
+    onSuccess: (data: SignInResponse) => {
+      if (data.deviceLimited) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
+        sessionStorage.removeItem("loginTicket");
+        sessionStorage.removeItem("availableMethods");
+        sessionStorage.removeItem("deviceLimited");
+
+        toast.warning(
+          "Mais de 2 dispositivos conectados. Este dispositivo precisa de confirmação por outro dispositivo já aprovado na página de Segurança.",
+        );
+
+        navigate(app.auth);
+        return;
+      }
+
       if (data.requiresStepUp) {
         sessionStorage.setItem("loginTicket", data.loginTicket);
         sessionStorage.setItem("availableMethods", JSON.stringify(data.availableMethods ?? []));
@@ -39,9 +78,12 @@ export const useLogin = () => {
       responseSuccess(t("userLogged"));
       queryClient.setQueryData(["token-data"], data.token);
       localStorage.setItem("token", data.token);
-      if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
-      setAccessFromToken(data.token);
 
+      if (data.refreshToken) {
+        localStorage.setItem("refreshToken", data.refreshToken);
+      }
+
+      setAccessFromToken(data.token);
       navigate(app.home);
     },
     onError: (erro: AxiosError) => responseError(erro),
@@ -63,16 +105,17 @@ export const useLogin = () => {
     reValidateMode: "onChange",
   });
 
-  async function path(data: Yup.InferType<typeof schema>): Promise<IAuthModel> {
+  async function path(data: Yup.InferType<typeof schema>): Promise<SignInResponse> {
     const result = await api().post(apiRoute.signin, data, {
       headers: {
         "x-device-platform": navigator.platform,
-        "x-device-vendor": (navigator as any).vendor ?? "",
+        "x-device-vendor": getNavigatorVendor(),
         "x-device-language": navigator.language,
         "x-device-timezone": Intl.DateTimeFormat().resolvedOptions().timeZone,
       },
     });
-    return result.data;
+
+    return result.data as SignInResponse;
   }
 
   return { mutate, isPending, context };

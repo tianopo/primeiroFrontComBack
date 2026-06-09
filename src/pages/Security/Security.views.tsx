@@ -1,5 +1,5 @@
 import { AxiosError } from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { CardContainer } from "src/components/Layout/CardContainer";
 import { api } from "src/config/api";
@@ -11,13 +11,14 @@ import { LogsSection } from "./components/LogsSection";
 import { OtpChannelsSection } from "./components/OtpChannelsSection";
 import { PasskeySection } from "./components/PasskeySection";
 import { PasswordSection } from "./components/PasswordSection";
-import { TotpSection } from "./components/TotpSection";
 import { RecoveryCodesSection } from "./components/RecoveryCodesSanction";
+import { TotpSection } from "./components/TotpSection";
 
 export const SecurityPage = () => {
   const { acesso } = useAccessControl();
   const [profile, setProfile] = useState<any>(null);
   const [approvingDeviceId, setApprovingDeviceId] = useState<string | null>(null);
+  const didLoadRef = useRef(false);
 
   const loadProfile = async () => {
     const res = await api().get(apiRoute.securityProfile);
@@ -25,6 +26,8 @@ export const SecurityPage = () => {
   };
 
   useEffect(() => {
+    if (didLoadRef.current) return;
+    didLoadRef.current = true;
     loadProfile();
   }, []);
 
@@ -58,7 +61,7 @@ export const SecurityPage = () => {
 
       <OtpChannelsSection profile={profile} onReloadProfile={loadProfile} />
 
-      <AntiPhishingSection profile={profile} onReloadProfile={loadProfile} />
+      {/* <AntiPhishingSection profile={profile} onReloadProfile={loadProfile} /> */}
 
       <RecoveryCodesSection />
 

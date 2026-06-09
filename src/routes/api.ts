@@ -4,10 +4,13 @@ export const apiRoute = {
   signup: "/auth/signup",
   logout: (token: string) => `/auth/logout/${token}`,
   token: (token: string) => `/user/${token}`,
+  validateToken: "/auth/validate-token",
+
   changePassword: "/auth/change-password",
   completeTotpLogin: "/auth/complete-totp-login",
   passkeyLoginOptions: "/auth/passkey/login/options",
   passkeyLoginVerify: "/auth/passkey/login/verify",
+  completeSecondaryLogin: "/auth/complete-secondary-login",
   refreshToken: "/auth/refresh",
   /* SEGURANÇA */
   securityProfile: "/security/profile",

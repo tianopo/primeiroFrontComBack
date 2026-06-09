@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { api } from "src/config/api";
+import { apiRoute } from "src/routes/api";
 import { app } from "src/routes/app";
 
 export const useValidateToken = () => {
@@ -11,7 +12,7 @@ export const useValidateToken = () => {
     const validateToken = async () => {
       try {
         // Endpoint que retorna o token atual do backend (ajuste conforme sua API)
-        await api().get<{ token: string | null }>(app.validateToken);
+        await api().get<{ token: string | null }>(apiRoute.validateToken);
       } catch (error) {
         // Erro na validação -> remove token e redireciona
         toast.error("Usuário não autenticado");

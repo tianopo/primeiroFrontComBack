@@ -5,8 +5,8 @@ import { CardContainer } from "src/components/Layout/CardContainer";
 import { api } from "src/config/api";
 import { responseError, responseSuccess } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
-import { SensitiveActionModal } from "./SensitiveActionModal";
 import { useSensitiveAction } from "../hooks/useSensitiveAction";
+import { SensitiveActionModal } from "./SensitiveActionModal";
 
 interface IOtpChannelsSection {
   profile: any;
@@ -129,10 +129,10 @@ export const OtpChannelsSection = ({ profile, onReloadProfile }: IOtpChannelsSec
           <div className="rounded-lg border border-gray-200 p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-lg font-semibold">Email OTP</h3>
-              <StatusBadge
+              {/* <StatusBadge
                 ok={Boolean(profile?.emailOtpVerified)}
                 text={profile?.emailOtpVerified ? "Confirmado" : "Pendente / Não confirmado"}
-              />
+              /> */}
             </div>
 
             <div className="flex flex-col gap-3">
@@ -150,7 +150,7 @@ export const OtpChannelsSection = ({ profile, onReloadProfile }: IOtpChannelsSec
               <div className="text-sm text-gray-600">
                 Email salvo: <strong>{profile?.emailOtpAddress ?? "-"}</strong>
               </div>
-
+              {/* 
               <input
                 value={emailOtpCode}
                 onChange={(e) => setEmailOtpCode(e.target.value)}
@@ -163,17 +163,17 @@ export const OtpChannelsSection = ({ profile, onReloadProfile }: IOtpChannelsSec
                 disabled={emailVerifyLoading || !emailOtpCode.trim()}
               >
                 {emailVerifyLoading ? "Confirmando..." : "Confirmar email OTP"}
-              </Button>
+              </Button> */}
             </div>
           </div>
 
           <div className="rounded-lg border border-gray-200 p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-lg font-semibold">SMS OTP</h3>
-              <StatusBadge
+              {/* <StatusBadge
                 ok={Boolean(profile?.smsOtpVerified)}
                 text={profile?.smsOtpVerified ? "Confirmado" : "Pendente / Não confirmado"}
-              />
+              /> */}
             </div>
 
             <div className="flex flex-col gap-3">
@@ -191,7 +191,7 @@ export const OtpChannelsSection = ({ profile, onReloadProfile }: IOtpChannelsSec
               <div className="text-sm text-gray-600">
                 Telefone salvo: <strong>{profile?.smsOtpPhone ?? "-"}</strong>
               </div>
-
+              {/* 
               <input
                 value={smsOtpCode}
                 onChange={(e) => setSmsOtpCode(e.target.value)}
@@ -204,7 +204,7 @@ export const OtpChannelsSection = ({ profile, onReloadProfile }: IOtpChannelsSec
                 disabled={smsVerifyLoading || !smsOtpCode.trim()}
               >
                 {smsVerifyLoading ? "Confirmando..." : "Confirmar SMS OTP"}
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>
