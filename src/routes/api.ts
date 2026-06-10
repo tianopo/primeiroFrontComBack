@@ -120,6 +120,7 @@ export const apiRoute = {
     statement: "/gowd/statement",
     refund: "/gowd/refund",
     pixOut: "/gowd/payouts/brazil/pix",
+    dictKeyCheck: "/gowd/dict/key/check",
     statementRedis: `/gowd/statement/redis`,
     statementRedisVerificationBulk: "/gowd/statement/redis/verification/bulk",
   },

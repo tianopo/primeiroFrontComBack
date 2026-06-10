@@ -143,14 +143,13 @@ export const BinanceOrders = ({
     document: string;
     fieldValues: string[];
   }) => {
-    const { order, orderId, document, fieldValues } = params;
+    const { order, orderId, fieldValues } = params;
 
     setPixModalInitialValues({
       pixKey: String(fieldValues?.[1] ?? ""),
-      fullName: String(order?.counterparty?.name ?? ""),
-      documentNumber: String(document ?? ""),
       amount: String(order?.totalPrice ?? ""),
       orderId,
+      description: `Pagamento da ordem '${orderId}'`,
     });
   };
 
