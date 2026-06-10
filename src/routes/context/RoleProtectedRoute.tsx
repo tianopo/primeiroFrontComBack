@@ -1,31 +1,29 @@
-import { useEffect, useState } from "react";
-import { Navigate, Outlet, useNavigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { Spinner } from "src/components/Feedback/Spinner.views";
 import { app } from "../app";
-import { useAccessControl } from "./AccessControl";
+import { normalizeRole, useAccessControl } from "./AccessControl";
 
 interface RoleProtectedRouteProps {
   allowedRoles: string[];
 }
 
 export const RoleProtectedRoute = ({ allowedRoles }: RoleProtectedRouteProps) => {
-  const { acesso } = useAccessControl();
-  const navigate = useNavigate();
-  const [checkingAccess, setCheckingAccess] = useState(true);
-  const [unauthorized, setUnauthorized] = useState(false);
+  const { acesso, hydrated, token } = useAccessControl();
 
-  useEffect(() => {
-    if (acesso === null) return; // Ainda carregando token
-
-    const hasAccess = allowedRoles.includes(acesso);
-    setUnauthorized(!hasAccess);
-    setCheckingAccess(false);
-  }, [acesso, allowedRoles, navigate]);
-
-  if (checkingAccess) {
+  if (!hydrated) {
     return <Spinner />;
   }
-  if (unauthorized) {
+
+  if (!token) {
+    return <Navigate to={app.auth} replace />;
+  }
+
+  const normalizedAccess = normalizeRole(acesso);
+  const normalizedAllowedRoles = allowedRoles.map((role) => normalizeRole(role));
+
+  const hasAccess = normalizedAllowedRoles.includes(normalizedAccess);
+
+  if (!hasAccess) {
     return <Navigate to={app.unauthorized} replace />;
   }
 

@@ -11,7 +11,7 @@ const PrivateRouteUserContext = createContext<IPrivateRouteContext>({ token: nul
 
 export const AuthenticatedRoute = () => {
   useTitle();
-  useValidateToken(); // chama o hook para validar token
+  useValidateToken();
 
   return (
     <PrivateRouteUserContext.Provider value={{ token: localStorage.getItem("token") }}>

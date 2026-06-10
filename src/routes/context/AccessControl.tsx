@@ -7,6 +7,7 @@ type AccessControlContextType = {
   name: string;
   acesso: string;
   deviceLimited: boolean;
+  hydrated: boolean;
   setAccessFromToken: (token: string) => void;
   clearAccess: () => void;
 };
@@ -23,6 +24,7 @@ const AccessControlContext = createContext<AccessControlContextType>({
   name: "",
   acesso: "",
   deviceLimited: false,
+  hydrated: false,
   setAccessFromToken: () => undefined,
   clearAccess: () => undefined,
 });
@@ -53,11 +55,17 @@ const showLimitedDeviceWarning = () => {
   );
 };
 
+export const normalizeRole = (value: string) =>
+  String(value ?? "")
+    .trim()
+    .toLowerCase();
+
 export const AccessControlProvider = ({ children }: { children: React.ReactNode }) => {
   const [token, setToken] = useState("");
   const [name, setName] = useState("");
   const [acesso, setAcesso] = useState("");
   const [deviceLimited, setDeviceLimited] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   const clearAccess = () => {
     setToken("");
@@ -96,7 +104,11 @@ export const AccessControlProvider = ({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token") ?? "";
-    if (!storedToken) return;
+
+    if (!storedToken) {
+      setHydrated(true);
+      return;
+    }
 
     const payload = decodeJwtPayload(storedToken);
     const storedDeviceLimited = Boolean(payload?.deviceLimited);
@@ -104,6 +116,7 @@ export const AccessControlProvider = ({ children }: { children: React.ReactNode 
     if (storedDeviceLimited) {
       clearAccess();
       showLimitedDeviceWarning();
+      setHydrated(true);
       redirectToAuth();
       return;
     }
@@ -112,6 +125,7 @@ export const AccessControlProvider = ({ children }: { children: React.ReactNode 
     setName(String(payload?.name ?? ""));
     setAcesso(String(payload?.acesso ?? payload?.role ?? ""));
     setDeviceLimited(false);
+    setHydrated(true);
   }, []);
 
   const value = useMemo(
@@ -120,10 +134,11 @@ export const AccessControlProvider = ({ children }: { children: React.ReactNode 
       name,
       acesso,
       deviceLimited,
+      hydrated,
       setAccessFromToken,
       clearAccess,
     }),
-    [token, name, acesso, deviceLimited],
+    [token, name, acesso, deviceLimited, hydrated],
   );
 
   return <AccessControlContext.Provider value={value}>{children}</AccessControlContext.Provider>;
