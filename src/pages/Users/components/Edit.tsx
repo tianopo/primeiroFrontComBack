@@ -20,6 +20,7 @@ import { IUpdateUserPayload, useUpdateUser } from "../hooks/User/useUpdateUser";
 import { DeskdataDataset } from "../utils/deskdataTypes";
 import { ComplianceEditModal } from "./Compliance/ComplianceEditModal";
 import { DeskdataSelector } from "./Compliance/DeskdataSelector";
+import { UserSecurityModal } from "./Security/UserSecurityModal";
 
 interface IEdit {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -36,6 +37,8 @@ export const Edit = ({ setForm }: IEdit) => {
 
   const [openEditModal, setOpenEditModal] = useState(false);
   const [complianceData, setComplianceData] = useState<any>(null);
+
+  const [openSecurityModal, setOpenSecurityModal] = useState(false);
 
   const { data } = useListUsers();
   const { mutate, isPending, context } = useUpdateUser();
@@ -319,17 +322,22 @@ export const Edit = ({ setForm }: IEdit) => {
             </Button>
 
             {apelido && nome && exchange && documento && (
-              <Button
-                type="button"
-                disabled={isSyncingDeskdata || isLoadingCompliance}
-                onClick={handleOpenCompliance}
-              >
-                {isLoadingCompliance
-                  ? "Carregando compliance..."
-                  : isSyncingDeskdata
-                    ? "Salvando compliance ..."
-                    : "Compliance"}
-              </Button>
+              <>
+                <Button
+                  type="button"
+                  disabled={isSyncingDeskdata || isLoadingCompliance}
+                  onClick={handleOpenCompliance}
+                >
+                  {isLoadingCompliance
+                    ? "Carregando compliance..."
+                    : isSyncingDeskdata
+                      ? "Salvando compliance ..."
+                      : "Compliance"}
+                </Button>
+                <Button type="button" onClick={() => setOpenSecurityModal(true)}>
+                  Security
+                </Button>
+              </>
             )}
           </div>
         </FormX>
@@ -340,6 +348,13 @@ export const Edit = ({ setForm }: IEdit) => {
         onClose={() => setOpenEditModal(false)}
         data={complianceData}
         onSaved={setComplianceData}
+      />
+
+      <UserSecurityModal
+        open={openSecurityModal}
+        onClose={() => setOpenSecurityModal(false)}
+        userId={id}
+        userLabel={`${nome} - ${apelido}`}
       />
 
       {isConfirming && (

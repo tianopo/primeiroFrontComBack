@@ -12,7 +12,7 @@ export const apiRoute = {
   passkeyLoginVerify: "/auth/passkey/login/verify",
   completeSecondaryLogin: "/auth/complete-secondary-login",
   refreshToken: "/auth/refresh",
-  /* SEGURANÇA */
+  /* SEGURANÇA BANK */
   securityProfile: "/security/profile",
   securityTotpSetup: "/security/totp/setup",
   securityTotpVerify: "/security/totp/verify",
@@ -40,6 +40,25 @@ export const apiRoute = {
   securityAlternativePasswordDelete: "/security/alternative-password",
   securityThirdPasswordDelete: "/security/third-password",
   securityPasskeyDelete: (passkeyId: string) => `/security/passkey/${passkeyId}`,
+  /* SEGURANÇA MASTER */
+  securityAdminProfile: (userId: string) => `/security/admin/${userId}/profile`,
+  securityAdminUpdateRole: (userId: string) => `/security/admin/${userId}/role`,
+  securityAdminDeleteTotp: (userId: string) => `/security/admin/${userId}/totp`,
+  securityAdminDeletePasskey: (userId: string, passkeyId: string) =>
+    `/security/admin/${userId}/passkeys/${passkeyId}`,
+  securityAdminSetAlternativePassword: (userId: string) =>
+    `/security/admin/${userId}/alternative-password`,
+  securityAdminDeleteAlternativePassword: (userId: string) =>
+    `/security/admin/${userId}/alternative-password`,
+  securityAdminSetEmailOtp: (userId: string) => `/security/admin/${userId}/email-otp`,
+  securityAdminDeleteEmailOtp: (userId: string) => `/security/admin/${userId}/email-otp`,
+  securityAdminSetSmsOtp: (userId: string) => `/security/admin/${userId}/sms-otp`,
+  securityAdminDeleteSmsOtp: (userId: string) => `/security/admin/${userId}/sms-otp`,
+  securityAdminRegenerateRecoveryCodes: (userId: string) =>
+    `/security/admin/${userId}/recovery-codes/regenerate`,
+  securityAdminDeleteDevice: (userId: string, deviceId: string) =>
+    `/security/admin/${userId}/devices/${deviceId}`,
+  securityAdminLogs: (userId: string) => `/security/admin/${userId}/logs`,
   /* ORDENS */
   orders: "orders",
   tax: "orders/tax",
