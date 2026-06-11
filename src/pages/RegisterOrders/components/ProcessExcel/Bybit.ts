@@ -138,8 +138,6 @@ export const processExcelBybit = (workbook: XLSX.WorkBook, selectedBroker: strin
 
       const normalizedDirection = toStringValue(direction).toUpperCase();
 
-      if (normalizedDirection !== "BUY") return false;
-
       return {
         numeroOrdem: toStringValue(numeroOrdem),
         tipo: normalizedDirection === "BUY" ? "compras" : "vendas",
