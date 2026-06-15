@@ -11,6 +11,8 @@ export interface IExchangeOffsets {
   bybitBuyOffset: number;
   coinexSellOffset: number;
   coinexBuyOffset: number;
+  mexcSellOffset: number;
+  mexcBuyOffset: number;
 }
 
 export const useUpdateExchangeOffsets = () => {

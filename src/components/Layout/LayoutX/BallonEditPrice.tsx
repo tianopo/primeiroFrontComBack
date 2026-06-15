@@ -12,6 +12,8 @@ const INITIAL_FORM: TOffsetForm = {
   bybitBuyOffset: "0.10",
   coinexSellOffset: "0.10",
   coinexBuyOffset: "0.10",
+  mexcSellOffset: "0.10",
+  mexcBuyOffset: "0.10",
 };
 
 export const BallonEditPrice = () => {
@@ -30,6 +32,8 @@ export const BallonEditPrice = () => {
         bybitBuyOffset: String(data.bybitBuyOffset),
         coinexSellOffset: String(data.coinexSellOffset),
         coinexBuyOffset: String(data.coinexBuyOffset),
+        mexcSellOffset: String(data.mexcSellOffset),
+        mexcBuyOffset: String(data.mexcBuyOffset),
       });
     }
   }, [data]);
@@ -59,6 +63,8 @@ export const BallonEditPrice = () => {
       bybitBuyOffset: parseNumber(form.bybitBuyOffset),
       coinexSellOffset: parseNumber(form.coinexSellOffset),
       coinexBuyOffset: parseNumber(form.coinexBuyOffset),
+      mexcSellOffset: parseNumber(form.mexcSellOffset),
+      mexcBuyOffset: parseNumber(form.mexcBuyOffset),
     };
 
     const hasInvalid = Object.values(payload).some((value) => !Number.isFinite(value));
@@ -72,7 +78,7 @@ export const BallonEditPrice = () => {
 
   const summary = isLoading
     ? "Carregando..."
-    : `BINANCE___ SELL: ${form.binanceSellOffset} BUY: ${form.binanceBuyOffset} | BYBIT_____ SELL: ${form.bybitSellOffset} BUY: ${form.bybitBuyOffset} | COINEX____ SELL: ${form.coinexSellOffset} BUY: ${form.coinexBuyOffset}`;
+    : `BINANCE___ SELL: ${form.binanceSellOffset} BUY: ${form.binanceBuyOffset} | BYBIT_____ SELL: ${form.bybitSellOffset} BUY: ${form.bybitBuyOffset} | COINEX____ SELL: ${form.coinexSellOffset} BUY: ${form.coinexBuyOffset} | MEXC______ SELL: ${form.mexcSellOffset} BUY: ${form.mexcBuyOffset}`;
 
   const renderSection = (
     title: string,
@@ -146,6 +152,7 @@ export const BallonEditPrice = () => {
             {renderSection("Binance", "binanceSellOffset", "binanceBuyOffset")}
             {renderSection("Bybit", "bybitSellOffset", "bybitBuyOffset")}
             {renderSection("Coinex", "coinexSellOffset", "coinexBuyOffset")}
+            {renderSection("Mexc", "mexcSellOffset", "mexcBuyOffset")}
           </div>
 
           <button
