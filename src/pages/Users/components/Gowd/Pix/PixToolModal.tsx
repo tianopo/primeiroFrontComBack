@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { Button } from "src/components/Buttons/Button";
 import { Modal } from "src/components/Modal/Modal";
-import { parseBRL } from "src/pages/Home/config/helpers";
 import { useGowdPixDictCheck } from "src/pages/Users/hooks/Gowd/useGowdPixDictCheck";
 import { useGowdPixOut } from "src/pages/Users/hooks/Gowd/useGowdPixOut";
 import { PixKeyType } from "src/pages/Users/utils/Interface";
@@ -336,14 +335,76 @@ const mapGowdKeyTypeToPixKeyType = (type: unknown): PixKeyType => {
   return "RANDOM";
 };
 
+const normalizeCurrencyDigits = (value: unknown) => {
+  const digits = onlyDigits(value);
+
+  if (!digits) return "";
+
+  // Remove zeros artificiais do começo, mas mantém dígitos suficientes para centavos.
+  // Ex: "0022" => "022" => 0,22
+  // Ex: "0002" => "002" => 0,02
+  return digits.replace(/^0+(?=\d{3,})/, "");
+};
+
+const formatAmountInputFromDigits = (value: unknown) => {
+  const digits = normalizeCurrencyDigits(value);
+
+  if (!digits) return "";
+
+  const padded = digits.padStart(3, "0");
+  const cents = padded.slice(-2);
+  const integer = padded.slice(0, -2).replace(/^0+(?=\d)/, "") || "0";
+
+  return `${integer},${cents}`;
+};
+
 const formatInitialAmount = (value: unknown) => {
   const raw = String(value ?? "").trim();
 
   if (!raw) return "";
-  if (raw.includes(",")) return raw;
-  if (/^\d+(\.\d{1,2})?$/.test(raw)) return raw.replace(".", ",");
 
-  return raw;
+  // Se vier número do backend, ex: 10.5 => 10,50
+  if (typeof value === "number") {
+    return formatAmountInputFromDigits(Math.round(value * 100));
+  }
+
+  // Se vier string decimal com ponto, ex: "10.50" => 10,50
+  if (/^\d+(\.\d{1,2})?$/.test(raw)) {
+    return formatAmountInputFromDigits(Math.round(Number(raw) * 100));
+  }
+
+  // Se já vier com vírgula, ex: "10,50", preserva como moeda por centavos.
+  return formatAmountInputFromDigits(raw);
+};
+
+const amountInputToNumber = (value: unknown) => {
+  const digits = normalizeCurrencyDigits(value);
+
+  if (!digits) return Number.NaN;
+
+  return Number(digits) / 100;
+};
+
+const countDigitsBeforeCaret = (value: string, caret: number) => {
+  return onlyDigits(value.slice(0, caret)).length;
+};
+
+const getCaretPositionAfterDigitIndex = (formatted: string, digitIndex: number) => {
+  if (digitIndex <= 0) return 0;
+
+  let count = 0;
+
+  for (let index = 0; index < formatted.length; index += 1) {
+    if (/\d/.test(formatted[index])) {
+      count += 1;
+
+      if (count >= digitIndex) {
+        return index + 1;
+      }
+    }
+  }
+
+  return formatted.length;
 };
 
 const maskDocumentMiddle = (value: string) => {
@@ -413,6 +474,8 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
   } = useGowdPixDictCheck();
 
   const identifierRef = useRef(`pixout-${Date.now()}`);
+  const amountInputRef = useRef<HTMLInputElement | null>(null);
+  const amountCaretRef = useRef<number | null>(null);
 
   const initialPixKey = String(initialValues?.pixKey ?? "");
   const initialPixKeyType = detectPixKeyType(initialPixKey);
@@ -501,6 +564,21 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
     }
   }, [lastCheckedPixKey, normalizedPixKey, resetDict]);
 
+  useLayoutEffect(() => {
+    const input = amountInputRef.current;
+    const caret = amountCaretRef.current;
+
+    if (!input || caret === null) return;
+
+    if (document.activeElement === input) {
+      const safeCaret = Math.min(caret, input.value.length);
+
+      input.setSelectionRange(safeCaret, safeCaret);
+    }
+
+    amountCaretRef.current = null;
+  }, [amount]);
+
   const handleTypeChange = (value: PixKeyTypeSelectable) => {
     setSelectedKeyType(value);
 
@@ -518,12 +596,12 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
 
   const handleDictCheck = async () => {
     if (!canUseDict) {
-      toast.warning("A consulta Dict Pix está disponível apenas para Master e Bank.");
+      toast.warning("A consulta Pix está disponível apenas para Master e Bank.");
       return;
     }
 
     if (!normalizedPixKey) {
-      toast.error("Informe uma chave Pix para consultar o Dict.");
+      toast.error("Informe uma chave Pix para consultar.");
       return;
     }
 
@@ -562,33 +640,60 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
       // garante que, no sucesso da consulta Dict, a resposta PIX antiga desapareça
       resetPixOut();
 
-      toast.success("Dict consultado com sucesso.");
+      toast.success("Consulta bem sucedida.");
     } catch {
       resetDict();
       resetPixOut();
       setLastCheckedPixKey("");
       setDictError("Não foi possível consultar a chave Pix.");
-      toast.error("Não foi possível consultar a chave Pix no Dict.");
+      toast.error("Não foi possível consultar a chave Pix.");
     }
+  };
+
+  const handleAmountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = event.target.value;
+    const caret = event.target.selectionStart ?? rawValue.length;
+
+    const rawDigits = onlyDigits(rawValue);
+    const normalizedDigits = normalizeCurrencyDigits(rawDigits);
+
+    const rawDigitsBeforeCaret = countDigitsBeforeCaret(rawValue, caret);
+
+    const removedLeadingZeros = rawDigits.length - normalizedDigits.length;
+
+    const normalizedDigitsBeforeCaret = Math.max(
+      0,
+      rawDigitsBeforeCaret - Math.min(rawDigitsBeforeCaret, removedLeadingZeros),
+    );
+
+    const paddingDigits = Math.max(0, 3 - normalizedDigits.length);
+    const formatted = formatAmountInputFromDigits(normalizedDigits);
+
+    amountCaretRef.current = getCaretPositionAfterDigitIndex(
+      formatted,
+      paddingDigits + normalizedDigitsBeforeCaret,
+    );
+
+    setAmount(formatted);
   };
 
   const handleSubmit = () => {
     if (!canUseDict) {
-      toast.warning("A consulta Dict Pix está disponível apenas para Master e Bank.");
+      toast.warning("A consulta do Pix está disponível apenas para Master e Bank.");
       return;
     }
 
     if (!dictReady || !dictData) {
-      toast.error("Busque o Dict antes de fazer o PIX.");
+      toast.error("Consulte antes de fazer o PIX.");
       return;
     }
 
     if (!dictData.name || !dictData.document?.number || !dictData.document?.type) {
-      toast.error("O Dict retornou dados incompletos do titular.");
+      toast.error("A consulta retornou dados incompletos do titular.");
       return;
     }
 
-    const amountValue = parseBRL(amount);
+    const amountValue = amountInputToNumber(amount);
 
     if (!Number.isFinite(amountValue) || amountValue <= 0) {
       toast.error("Informe um valor válido.");
@@ -665,9 +770,7 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
   return (
     <Modal onClose={onClose} title="Pix out" fit>
       <div className="flex w-full min-w-0 flex-col gap-4">
-        <p className="text-sm text-gray-600">
-          Pagamento via chave Pix com consulta Dict antes do envio.
-        </p>
+        <p className="text-sm text-gray-600">Pagamento via chave Pix com consulta</p>
 
         {!canUseDict && (
           <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
@@ -709,7 +812,7 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
             />
 
             <span className="text-xs text-gray-500">
-              Telefone será enviado ao backend como{" "}
+              Telefone{" "}
               <strong>
                 {effectiveKeyType === "PHONE" ? normalizedPixKey || "+55..." : "+55..."}
               </strong>
@@ -721,10 +824,12 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
             <span className="text-sm font-medium">Valor</span>
 
             <input
+              ref={amountInputRef}
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={handleAmountChange}
               className="w-full rounded-lg border px-3 py-2"
               placeholder="0,00"
+              inputMode="numeric"
               disabled={outPending}
             />
           </label>
@@ -750,7 +855,7 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
 
               {dictReady && (
                 <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
-                  Dict consultado
+                  Chave pix consultada
                 </span>
               )}
             </div>
@@ -761,7 +866,7 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
               </div>
             ) : !dictData ? (
               <div className="rounded-lg border border-dashed border-gray-200 p-3 text-sm text-gray-500">
-                Digite uma chave Pix válida e clique em Buscar Dict.
+                Digite uma chave Pix válida e clique em Buscar.
               </div>
             ) : (
               <div className="flex flex-col gap-2">
