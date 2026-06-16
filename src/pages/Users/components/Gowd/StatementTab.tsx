@@ -92,6 +92,10 @@ export const StatementTab = ({
     };
   };
 
+  const canRefundTransaction = (item?: GowdStatementItem | null) => {
+    return Number(item?.amount ?? 0) > 0;
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-3 md:grid-cols-4">
@@ -195,13 +199,21 @@ export const StatementTab = ({
       </div>
 
       {selected && (
-        <Modal onClose={() => setSelected(null)} fit>
+        <Modal
+          onClose={() => {
+            setSelected(null);
+            setShowRefundModal(false);
+          }}
+          fit
+        >
           <div className="flex flex-row justify-between">
             <h3 className="w-full text-xl font-semibold">Detalhes da transação</h3>
             <div className="mt-4 flex justify-end gap-2">
               <Button onClick={() => downloadReceipt(selected)}>Recibo</Button>
 
-              <Button onClick={() => setShowRefundModal(true)}>Estorno</Button>
+              {canRefundTransaction(selected) && (
+                <Button onClick={() => setShowRefundModal(true)}>Estorno</Button>
+              )}
             </div>
           </div>
 
@@ -222,7 +234,7 @@ export const StatementTab = ({
           </div>
         </Modal>
       )}
-      {showRefundModal && selected && (
+      {showRefundModal && selected && canRefundTransaction(selected) && (
         <RefundModal
           orderId={selected.orderId}
           defaultAmount={Math.abs(Number(selected.amount ?? 0))}
