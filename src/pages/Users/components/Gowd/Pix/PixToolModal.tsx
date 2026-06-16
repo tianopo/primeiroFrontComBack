@@ -27,63 +27,216 @@ type PixToolModalProps = {
 };
 
 const onlyDigits = (value: unknown) => String(value ?? "").replace(/\D/g, "");
+
 const normalizeRole = (value: string) =>
   String(value ?? "")
     .trim()
     .toLowerCase();
 
+const VALID_BRAZIL_DDDS = new Set([
+  "11",
+  "12",
+  "13",
+  "14",
+  "15",
+  "16",
+  "17",
+  "18",
+  "19",
+  "21",
+  "22",
+  "24",
+  "27",
+  "28",
+  "31",
+  "32",
+  "33",
+  "34",
+  "35",
+  "37",
+  "38",
+  "41",
+  "42",
+  "43",
+  "44",
+  "45",
+  "46",
+  "47",
+  "48",
+  "49",
+  "51",
+  "53",
+  "54",
+  "55",
+  "61",
+  "62",
+  "63",
+  "64",
+  "65",
+  "66",
+  "67",
+  "68",
+  "69",
+  "71",
+  "73",
+  "74",
+  "75",
+  "77",
+  "79",
+  "81",
+  "82",
+  "83",
+  "84",
+  "85",
+  "86",
+  "87",
+  "88",
+  "89",
+  "91",
+  "92",
+  "93",
+  "94",
+  "95",
+  "96",
+  "97",
+  "98",
+  "99",
+]);
+
 const formatCpf = (value: string) => {
   const digits = onlyDigits(value).slice(0, 11);
+
   if (digits.length <= 3) return digits;
   if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
   if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+
   return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
 };
 
 const formatCnpj = (value: string) => {
   const digits = onlyDigits(value).slice(0, 14);
+
   if (digits.length <= 2) return digits;
   if (digits.length <= 5) return `${digits.slice(0, 2)}.${digits.slice(2)}`;
   if (digits.length <= 8) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5)}`;
+
   if (digits.length <= 12) {
     return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8)}`;
   }
-  return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12, 14)}`;
+
+  return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(
+    8,
+    12,
+  )}-${digits.slice(12, 14)}`;
 };
 
 const formatPhone = (value: string) => {
   const digits = onlyDigits(value).slice(0, 13);
 
   if (digits.startsWith("55")) {
-    if (digits.length <= 2) return digits;
+    if (digits.length <= 2) return `+${digits}`;
     if (digits.length <= 4) return `+${digits.slice(0, 2)} (${digits.slice(2)}`;
     if (digits.length <= 9) {
       return `+${digits.slice(0, 2)} (${digits.slice(2, 4)}) ${digits.slice(4)}`;
     }
-    return `+${digits.slice(0, 2)} (${digits.slice(2, 4)}) ${digits.slice(4, 9)}-${digits.slice(9, 13)}`;
+
+    return `+${digits.slice(0, 2)} (${digits.slice(2, 4)}) ${digits.slice(4, 9)}-${digits.slice(
+      9,
+      13,
+    )}`;
   }
 
   if (digits.length <= 2) return digits;
   if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
 };
 
-const isLikelyPhone = (value: string) => {
+const isValidCpf = (value: unknown) => {
+  const digits = onlyDigits(value);
+
+  if (digits.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(digits)) return false;
+
+  const calcDigit = (base: string, factor: number) => {
+    let total = 0;
+
+    for (const digit of base) {
+      total += Number(digit) * factor;
+      factor -= 1;
+    }
+
+    const rest = (total * 10) % 11;
+
+    return rest === 10 ? 0 : rest;
+  };
+
+  const firstDigit = calcDigit(digits.slice(0, 9), 10);
+  const secondDigit = calcDigit(digits.slice(0, 10), 11);
+
+  return firstDigit === Number(digits[9]) && secondDigit === Number(digits[10]);
+};
+
+const isValidCnpj = (value: unknown) => {
+  const digits = onlyDigits(value);
+
+  if (digits.length !== 14) return false;
+  if (/^(\d)\1{13}$/.test(digits)) return false;
+
+  const calcDigit = (base: string, factors: number[]) => {
+    const total = base
+      .split("")
+      .reduce((sum, digit, index) => sum + Number(digit) * factors[index], 0);
+
+    const rest = total % 11;
+
+    return rest < 2 ? 0 : 11 - rest;
+  };
+
+  const firstDigit = calcDigit(digits.slice(0, 12), [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+  const secondDigit = calcDigit(digits.slice(0, 13), [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+
+  return firstDigit === Number(digits[12]) && secondDigit === Number(digits[13]);
+};
+
+const stripBrazilCountryCode = (value: unknown) => {
+  let digits = onlyDigits(value);
+
+  if (digits.startsWith("00")) {
+    digits = digits.slice(2);
+  }
+
+  if ((digits.length === 12 || digits.length === 13) && digits.startsWith("55")) {
+    return digits.slice(2);
+  }
+
+  return digits;
+};
+
+const hasStrongPhoneSignal = (value: string) => {
   const raw = String(value ?? "").trim();
   const digits = onlyDigits(raw);
 
-  if (!digits || raw.includes("@")) return false;
   if (raw.startsWith("+")) return true;
-  if (/[()\-\s]/.test(raw)) return true;
-
-  if (digits.length === 11 && digits[2] === "9") return true;
-  if (digits.length === 13 && digits.startsWith("55") && digits[4] === "9") return true;
-  if (digits.length === 10 && ["6", "7", "8", "9"].includes(digits[2])) return true;
-  if (digits.length === 12 && digits.startsWith("55") && ["6", "7", "8", "9"].includes(digits[4])) {
-    return true;
-  }
+  if (/^\+?55/.test(raw)) return true;
+  if (/\(\d{2}\)/.test(raw)) return true;
+  if (/^\d{2}\s?9\d{4}-?\d{4}$/.test(raw)) return true;
+  if ((digits.length === 12 || digits.length === 13) && digits.startsWith("55")) return true;
 
   return false;
+};
+
+const isValidBrazilPhone = (value: unknown) => {
+  const national = stripBrazilCountryCode(value);
+
+  if (national.length !== 11) return false;
+
+  const ddd = national.slice(0, 2);
+  const ninthDigit = national[2];
+
+  if (!VALID_BRAZIL_DDDS.has(ddd)) return false;
+
+  return ninthDigit === "9";
 };
 
 const detectPixKeyType = (value: string): PixKeyType => {
@@ -92,10 +245,32 @@ const detectPixKeyType = (value: string): PixKeyType => {
 
   if (!raw) return "RANDOM";
   if (raw.includes("@")) return "EMAIL";
-  if ((raw.match(/-/g) ?? []).length >= 3) return "RANDOM";
-  if (/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/.test(raw) || digits.length === 14) return "CNPJ";
-  if (isLikelyPhone(raw)) return "PHONE";
-  if (/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(raw) || digits.length === 11) return "CPF";
+
+  const dashCount = (raw.match(/-/g) ?? []).length;
+  if (dashCount >= 3) return "RANDOM";
+
+  if (/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/.test(raw)) return "CNPJ";
+  if (digits.length === 14) return "CNPJ";
+
+  if (/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(raw) && isValidCpf(raw)) {
+    return "CPF";
+  }
+
+  if (hasStrongPhoneSignal(raw) && isValidBrazilPhone(raw)) {
+    return "PHONE";
+  }
+
+  if (digits.length === 11 && isValidCpf(digits)) {
+    return "CPF";
+  }
+
+  if (digits.length === 11 && isValidBrazilPhone(raw)) {
+    return "PHONE";
+  }
+
+  if (digits.length === 11) return "CPF";
+  if (digits.length === 14 && isValidCnpj(digits)) return "CNPJ";
+
   return "RANDOM";
 };
 
@@ -103,49 +278,90 @@ const formatPixInputValue = (value: string, type: PixKeyType) => {
   if (type === "CPF") return formatCpf(value);
   if (type === "CNPJ") return formatCnpj(value);
   if (type === "PHONE") return formatPhone(value);
+
   return String(value ?? "");
 };
 
 const normalizePhoneForBackend = (value: string) => {
-  let digits = onlyDigits(value);
-  if (!digits) return "";
-  if (!digits.startsWith("55")) digits = `55${digits}`;
-  return `+${digits}`;
+  const national = stripBrazilCountryCode(value);
+
+  if (!national) return "";
+
+  if (national.length === 11) {
+    return `+55${national}`;
+  }
+
+  const digits = onlyDigits(value);
+
+  if (digits.startsWith("55")) {
+    return `+${digits}`;
+  }
+
+  return `+55${digits}`;
 };
 
 const normalizePixKeyForBackend = (value: string, type: PixKeyType) => {
   const raw = String(value ?? "").trim();
 
   if (type === "CPF" || type === "CNPJ") {
-    return { pixKeyType: type, pixKey: onlyDigits(raw) };
+    return {
+      pixKeyType: type,
+      pixKey: onlyDigits(raw),
+    };
   }
 
   if (type === "PHONE") {
-    return { pixKeyType: type, pixKey: normalizePhoneForBackend(raw) };
+    return {
+      pixKeyType: type,
+      pixKey: normalizePhoneForBackend(raw),
+    };
   }
 
-  return { pixKeyType: type, pixKey: raw };
+  return {
+    pixKeyType: type,
+    pixKey: raw,
+  };
+};
+
+const mapGowdKeyTypeToPixKeyType = (type: unknown): PixKeyType => {
+  const value = String(type ?? "").toUpperCase();
+
+  if (value === "EVP") return "RANDOM";
+  if (value === "RANDOM") return "RANDOM";
+  if (value === "CPF") return "CPF";
+  if (value === "CNPJ") return "CNPJ";
+  if (value === "EMAIL") return "EMAIL";
+  if (value === "PHONE") return "PHONE";
+
+  return "RANDOM";
 };
 
 const formatInitialAmount = (value: unknown) => {
   const raw = String(value ?? "").trim();
+
   if (!raw) return "";
   if (raw.includes(",")) return raw;
   if (/^\d+(\.\d{1,2})?$/.test(raw)) return raw.replace(".", ",");
+
   return raw;
 };
 
 const maskDocumentMiddle = (value: string) => {
   const digits = onlyDigits(value);
+
   if (!digits) return "";
   if (digits.length <= 5) return digits;
+
   return `${digits.slice(0, 3)}${"*".repeat(Math.max(0, digits.length - 5))}${digits.slice(-2)}`;
 };
 
 const formatDateTime = (value?: string) => {
   if (!value) return "-";
+
   const date = new Date(value);
+
   if (Number.isNaN(date.getTime())) return value;
+
   return date.toLocaleString("pt-BR");
 };
 
@@ -177,11 +393,18 @@ const InfoRow = ({ label, value }: { label: string; value?: string }) => (
 
 export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
   const { acesso } = useAccessControl();
+
   const role = normalizeRole(acesso);
   const isMaster = role === "master";
   const canUseDict = isMaster || role === "bank";
 
-  const { mutate: pixOut, isPending: outPending, data: outData } = useGowdPixOut();
+  const {
+  mutate: pixOut,
+  isPending: outPending,
+  data: outData,
+  reset: resetPixOut,
+} = useGowdPixOut();
+
   const {
     mutateAsync: checkPixKey,
     data: dictData,
@@ -190,6 +413,7 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
   } = useGowdPixDictCheck();
 
   const identifierRef = useRef(`pixout-${Date.now()}`);
+
   const initialPixKey = String(initialValues?.pixKey ?? "");
   const initialPixKeyType = detectPixKeyType(initialPixKey);
 
@@ -198,48 +422,47 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
   const [amount, setAmount] = useState(() => formatInitialAmount(initialValues?.amount));
   const [description, setDescription] = useState(() => String(initialValues?.description ?? ""));
   const [dictError, setDictError] = useState("");
+  const [lastCheckedPixKey, setLastCheckedPixKey] = useState("");
 
   const detectedType = useMemo(() => detectPixKeyType(key), [key]);
-  const effectiveKeyType = selectedKeyType === "AUTO" ? detectedType : selectedKeyType;
+
+  const effectiveKeyType: PixKeyType = selectedKeyType === "AUTO" ? detectedType : selectedKeyType;
+
   const normalized = useMemo(
     () => normalizePixKeyForBackend(key, effectiveKeyType),
     [key, effectiveKeyType],
   );
 
-  useEffect(() => {
-    setKey(formatPixInputValue(initialPixKey, initialPixKeyType));
-  }, [initialPixKey, initialPixKeyType]);
+  const normalizedPixKey = String(normalized.pixKey ?? "").trim();
 
-  useEffect(() => {
-    if (!canUseDict || !normalized.pixKey) {
-      resetDict();
-      setDictError("");
-      return;
-    }
+  const dictReady =
+    Boolean(dictData) &&
+    Boolean(lastCheckedPixKey) &&
+    Boolean(normalizedPixKey) &&
+    lastCheckedPixKey === normalizedPixKey &&
+    !dictPending;
 
-    const timer = window.setTimeout(async () => {
-      try {
-        setDictError("");
-        await checkPixKey({ key: normalized.pixKey });
-      } catch {
-        setDictError("Não foi possível consultar a chave Pix.");
-      }
-    }, 450);
+  const canSearchDict = canUseDict && Boolean(normalizedPixKey) && !dictPending && !outPending;
 
-    return () => window.clearTimeout(timer);
-  }, [canUseDict, normalized.pixKey, checkPixKey, resetDict]);
+  const canSendPix =
+    canUseDict &&
+    dictReady &&
+    Boolean(amount.trim()) &&
+    Boolean(dictData?.name) &&
+    Boolean(dictData?.document?.number) &&
+    Boolean(dictData?.document?.type) &&
+    !dictPending &&
+    !outPending;
 
-  useEffect(() => {
-    setDescription(
-      buildDescription({
-        orderId: initialValues?.orderId,
-        name: dictData?.name,
-        documentType: dictData?.document?.type,
-        documentNumber: dictData?.document?.number,
-        pixKeyType: dictData?.keyType ?? effectiveKeyType,
-        pixKey: dictData?.key ?? normalized.pixKey,
-      }),
-    );
+  const autoDescription = useMemo(() => {
+    return buildDescription({
+      orderId: initialValues?.orderId,
+      name: dictData?.name,
+      documentType: dictData?.document?.type,
+      documentNumber: dictData?.document?.number,
+      pixKeyType: dictData?.keyType ?? effectiveKeyType,
+      pixKey: dictData?.key ?? normalizedPixKey,
+    });
   }, [
     dictData?.document?.number,
     dictData?.document?.type,
@@ -248,8 +471,97 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
     dictData?.name,
     effectiveKeyType,
     initialValues?.orderId,
-    normalized.pixKey,
+    normalizedPixKey,
   ]);
+
+  useEffect(() => {
+    const pixKey = String(initialValues?.pixKey ?? "");
+    const pixKeyType = detectPixKeyType(pixKey);
+
+    setSelectedKeyType("AUTO");
+    setKey(formatPixInputValue(pixKey, pixKeyType));
+    setAmount(formatInitialAmount(initialValues?.amount));
+    setDescription(String(initialValues?.description ?? ""));
+    setDictError("");
+    setLastCheckedPixKey("");
+    resetDict();
+  }, [initialValues, resetDict]);
+
+  useEffect(() => {
+    setDescription(autoDescription);
+  }, [autoDescription]);
+
+  useEffect(() => {
+    if (!lastCheckedPixKey) return;
+
+    if (lastCheckedPixKey !== normalizedPixKey) {
+      resetDict();
+      setDictError("");
+      setLastCheckedPixKey("");
+    }
+  }, [lastCheckedPixKey, normalizedPixKey, resetDict]);
+
+  const handleTypeChange = (value: PixKeyTypeSelectable) => {
+    setSelectedKeyType(value);
+
+    const typeForFormatting = value === "AUTO" ? detectPixKeyType(key) : value;
+
+    setKey((current) => formatPixInputValue(current, typeForFormatting));
+  };
+
+  const handlePixKeyChange = (value: string) => {
+    const typeForFormatting =
+      selectedKeyType === "AUTO" ? detectPixKeyType(value) : selectedKeyType;
+
+    setKey(formatPixInputValue(value, typeForFormatting));
+  };
+
+  const handleDictCheck = async () => {
+    if (!canUseDict) {
+      toast.warning("A consulta Dict Pix está disponível apenas para Master e Bank.");
+      return;
+    }
+
+    if (!normalizedPixKey) {
+      toast.error("Informe uma chave Pix para consultar o Dict.");
+      return;
+    }
+
+    try {
+      setDictError("");
+      setLastCheckedPixKey("");
+
+      const dict = await checkPixKey({
+        key: normalizedPixKey,
+      });
+
+      const dictKeyType = mapGowdKeyTypeToPixKeyType(dict.keyType);
+      const dictKey = String(dict.key || normalizedPixKey).trim();
+      const normalizedDictKey = normalizePixKeyForBackend(dictKey, dictKeyType);
+
+      setSelectedKeyType(dictKeyType);
+      setKey(formatPixInputValue(dictKey, dictKeyType));
+      setLastCheckedPixKey(String(normalizedDictKey.pixKey ?? "").trim());
+
+      setDescription(
+        buildDescription({
+          orderId: initialValues?.orderId,
+          name: dict.name,
+          documentType: dict.document?.type,
+          documentNumber: dict.document?.number,
+          pixKeyType: dict.keyType,
+          pixKey: dict.key,
+        }),
+      );
+
+      toast.success("Dict consultado com sucesso.");
+    } catch {
+      resetDict();
+      setLastCheckedPixKey("");
+      setDictError("Não foi possível consultar a chave Pix.");
+      toast.error("Não foi possível consultar a chave Pix no Dict.");
+    }
+  };
 
   const handleSubmit = () => {
     if (!canUseDict) {
@@ -257,18 +569,32 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
       return;
     }
 
-    if (!dictData?.name || !dictData?.document?.number || !dictData?.document?.type) {
-      toast.error("Consulte uma chave Pix válida antes de enviar.");
+    if (!dictReady || !dictData) {
+      toast.error("Busque o Dict antes de fazer o PIX.");
+      return;
+    }
+
+    if (!dictData.name || !dictData.document?.number || !dictData.document?.type) {
+      toast.error("O Dict retornou dados incompletos do titular.");
       return;
     }
 
     const amountValue = parseBRL(amount);
-    if (!amountValue || amountValue <= 0) {
+
+    if (!Number.isFinite(amountValue) || amountValue <= 0) {
       toast.error("Informe um valor válido.");
       return;
     }
 
-    const documentType = dictData.document.type === "CNPJ" ? "CNPJ" : "CPF";
+    const dictPixKeyType = mapGowdKeyTypeToPixKeyType(dictData.keyType);
+    const dictPixKey = normalizePixKeyForBackend(String(dictData.key ?? ""), dictPixKeyType);
+
+    if (!String(dictPixKey.pixKey ?? "").trim()) {
+      toast.error("O Dict retornou uma chave Pix inválida.");
+      return;
+    }
+
+    const documentType = String(dictData.document.type).toUpperCase() === "CNPJ" ? "CNPJ" : "CPF";
 
     pixOut({
       idempotencyKey: identifierRef.current,
@@ -282,16 +608,16 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
           fullName: dictData.name,
           document: {
             type: documentType,
-            number: dictData.document.number,
+            number: onlyDigits(dictData.document.number),
           },
         },
         bank: {
           pix: {
-            type: normalized.pixKeyType,
-            key: normalized.pixKey,
+            type: dictPixKey.pixKeyType,
+            key: String(dictPixKey.pixKey ?? "").trim(),
           },
         },
-        description,
+        description: description.trim() || autoDescription,
         code: identifierRef.current,
       },
     });
@@ -313,7 +639,9 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
   return (
     <Modal onClose={onClose} title="Pix out" fit>
       <div className="flex w-full min-w-0 flex-col gap-4">
-        <p className="text-sm text-gray-600">Pagamento via chave Pix com consulta automática.</p>
+        <p className="text-sm text-gray-600">
+          Pagamento via chave Pix com consulta Dict antes do envio.
+        </p>
 
         {!canUseDict && (
           <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
@@ -324,17 +652,20 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
         <div className="flex w-full min-w-0 flex-col gap-3">
           <label className="flex w-full min-w-0 flex-col gap-1">
             <span className="text-sm font-medium">Tipo da chave</span>
+
             <select
               value={selectedKeyType}
-              onChange={(e) => setSelectedKeyType(e.target.value as PixKeyTypeSelectable)}
+              onChange={(e) => handleTypeChange(e.target.value as PixKeyTypeSelectable)}
               className="w-full rounded-lg border px-3 py-2"
+              disabled={dictPending || outPending}
             >
               {KEY_TYPES_WITH_AUTO.map((item) => (
                 <option key={item} value={item}>
-                  {item === "AUTO" ? "AUTO" : item}
+                  {item === "AUTO" ? `AUTO (${detectedType})` : item}
                 </option>
               ))}
             </select>
+
             <span className="text-xs text-gray-500">
               Detectado automaticamente: <strong>{detectedType}</strong>
             </span>
@@ -342,34 +673,44 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
 
           <label className="flex w-full min-w-0 flex-col gap-1">
             <span className="text-sm font-medium">Chave Pix</span>
+
             <input
               value={key}
-              onChange={(e) => setKey(formatPixInputValue(e.target.value, effectiveKeyType))}
+              onChange={(e) => handlePixKeyChange(e.target.value)}
               className="w-full rounded-lg border px-3 py-2"
-              placeholder="Digite a chave Pix"
+              placeholder="CPF / CNPJ / EMAIL / telefone / RANDOM"
+              disabled={dictPending || outPending}
             />
+
             <span className="text-xs text-gray-500">
-              Telefones são detectados automaticamente quando o número seguir o padrão celular, como
-              DDD + 9.
+              Telefone será enviado ao backend como{" "}
+              <strong>
+                {effectiveKeyType === "PHONE" ? normalizedPixKey || "+55..." : "+55..."}
+              </strong>
+              .
             </span>
           </label>
 
           <label className="flex w-full min-w-0 flex-col gap-1">
             <span className="text-sm font-medium">Valor</span>
+
             <input
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               className="w-full rounded-lg border px-3 py-2"
               placeholder="0,00"
+              disabled={outPending}
             />
           </label>
 
           <label className="flex w-full min-w-0 flex-col gap-1">
             <span className="text-sm font-medium">Descrição</span>
+
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="min-h-[110px] w-full rounded-lg border px-3 py-2"
+              disabled={outPending}
             />
           </label>
         </div>
@@ -377,8 +718,15 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
         {canUseDict && (
           <div className="flex flex-col gap-3 rounded-xl border border-gray-200 p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="font-semibold text-gray-900">Consulta Dict</h3>
+              <h3 className="font-semibold text-gray-900">Consulta</h3>
+
               {dictPending && <span className="text-sm text-gray-500">Consultando...</span>}
+
+              {dictReady && (
+                <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                  Dict consultado
+                </span>
+              )}
             </div>
 
             {dictError ? (
@@ -387,13 +735,14 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
               </div>
             ) : !dictData ? (
               <div className="rounded-lg border border-dashed border-gray-200 p-3 text-sm text-gray-500">
-                Digite uma chave Pix válida para consultar.
+                Digite uma chave Pix válida e clique em Buscar Dict.
               </div>
             ) : (
               <div className="flex flex-col gap-2">
                 <InfoRow label="Nome" value={dictData.name} />
                 <InfoRow label="Banco" value={dictData.bankName} />
                 <InfoRow label="Documento" value={maskDocumentMiddle(dictData.document.number)} />
+                <InfoRow label="Chave consultada" value={dictData.key} />
 
                 {isMaster && (
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -411,10 +760,21 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
           <PixOutResponse data={outData} />
         ) : (
           <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
-            <Button onClick={onClose}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={outPending || dictPending || !canUseDict}>
-              {outPending ? "Enviando..." : "Enviar Pix"}
+            <Button onClick={onClose} disabled={dictPending || outPending}>
+              Cancelar
             </Button>
+
+            {canUseDict && (
+              <Button onClick={handleDictCheck} disabled={!canSearchDict}>
+                {dictPending ? "Consultando ..." : "Buscar"}
+              </Button>
+            )}
+
+            {dictReady && (
+              <Button onClick={handleSubmit} disabled={!canSendPix}>
+                {outPending ? "Enviando..." : "Fazer PIX"}
+              </Button>
+            )}
           </div>
         )}
       </div>

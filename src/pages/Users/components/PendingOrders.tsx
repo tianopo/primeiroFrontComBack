@@ -20,7 +20,7 @@ import { BinanceOrders } from "./PendingOrders/BinanceOrders";
 import { CoinexOrders } from "./PendingOrders/CoinexOrders";
 import { CompliancePopover } from "./PendingOrders/CompliancePopover";
 import { CryptotechOrders } from "./PendingOrders/CryptotechOrders";
-import { PaymentTermLite, PaymentTermsBox } from "./PendingOrders/PaymentTermsBox";
+import { PaymentTermsBox } from "./PendingOrders/PaymentTermsBox";
 
 interface IPendingOrders {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -79,18 +79,11 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
     return "empresa";
   });
 
-  const openPendingOrderPixModal = (params: {
-    orderId: string;
-    amount?: string | number;
-    paymentTerm?: PaymentTermLite;
-  }) => {
-    const { orderId, amount, paymentTerm } = params;
-
+  const openPendingOrderPixModal = (order: any) => {
     setPixModalInitialValues({
-      pixKey: String(paymentTerm?.accountNo ?? ""),
-      amount: String(amount ?? ""),
-      orderId,
-      description: `Pagamento da ordem '${orderId}'`,
+      pixKey: "",
+      amount: String(order?.amount ?? ""),
+      orderId: String(order?.id ?? ""),
     });
   };
 
@@ -437,13 +430,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
                   <button
                     type="button"
                     className="absolute right-2 top-12 rounded-6 border border-green-200 bg-green-50 px-2 py-1 text-xs font-semibold text-green-700 hover:bg-green-100"
-                    onClick={() =>
-                      openPendingOrderPixModal({
-                        orderId: String(order.id),
-                        amount: order.amount,
-                        paymentTerm: order.paymentTerms,
-                      })
-                    }
+                    onClick={() => openPendingOrderPixModal(order)}
                     title="Fazer PIX pela GOWD"
                   >
                     Pix
