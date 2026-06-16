@@ -32,9 +32,18 @@ export type GowdPixOutBody = {
   code: string;
 };
 
+export type GowdPixOutPayload = {
+  body: GowdPixOutBody;
+  idempotencyKey?: string;
+};
+
 export const useGowdPixOut = () => {
-  const { mutate, isPending, data } = useMutation({
-    mutationFn: async (payload: { body: GowdPixOutBody; idempotencyKey?: string }) => {
+  const { mutate, mutateAsync, isPending, data, reset } = useMutation<
+    any,
+    AxiosError,
+    GowdPixOutPayload
+  >({
+    mutationFn: async (payload) => {
       const res = await api().put(apiRoute.gowd.pixOut, payload.body, {
         headers: {
           "idempotency-key": payload.idempotencyKey ?? `gowd-pixout-${Date.now()}`,
@@ -47,5 +56,11 @@ export const useGowdPixOut = () => {
     onError: (err: AxiosError) => responseError(err),
   });
 
-  return { mutate, isPending, data };
+  return {
+    mutate,
+    mutateAsync,
+    isPending,
+    data,
+    reset,
+  };
 };

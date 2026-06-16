@@ -399,11 +399,11 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
   const canUseDict = isMaster || role === "bank";
 
   const {
-  mutate: pixOut,
-  isPending: outPending,
-  data: outData,
-  reset: resetPixOut,
-} = useGowdPixOut();
+    mutate: pixOut,
+    isPending: outPending,
+    data: outData,
+    reset: resetPixOut,
+  } = useGowdPixOut();
 
   const {
     mutateAsync: checkPixKey,
@@ -528,8 +528,13 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
     }
 
     try {
+      // limpa consulta Dict antiga antes de buscar uma nova
+      resetDict();
       setDictError("");
       setLastCheckedPixKey("");
+
+      // limpa resposta de transferência antiga ao buscar novo Dict
+      resetPixOut();
 
       const dict = await checkPixKey({
         key: normalizedPixKey,
@@ -554,9 +559,13 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
         }),
       );
 
+      // garante que, no sucesso da consulta Dict, a resposta PIX antiga desapareça
+      resetPixOut();
+
       toast.success("Dict consultado com sucesso.");
     } catch {
       resetDict();
+      resetPixOut();
       setLastCheckedPixKey("");
       setDictError("Não foi possível consultar a chave Pix.");
       toast.error("Não foi possível consultar a chave Pix no Dict.");
@@ -596,44 +605,61 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
 
     const documentType = String(dictData.document.type).toUpperCase() === "CNPJ" ? "CNPJ" : "CPF";
 
-    pixOut({
-      idempotencyKey: identifierRef.current,
-      body: {
-        amount: {
-          currency: "BRL",
-          value: amountValue.toFixed(2),
-        },
-        paymentMethod: "PIX",
-        customer: {
-          fullName: dictData.name,
-          document: {
-            type: documentType,
-            number: onlyDigits(dictData.document.number),
+    pixOut(
+      {
+        idempotencyKey: identifierRef.current,
+        body: {
+          amount: {
+            currency: "BRL",
+            value: amountValue.toFixed(2),
           },
-        },
-        bank: {
-          pix: {
-            type: dictPixKey.pixKeyType,
-            key: String(dictPixKey.pixKey ?? "").trim(),
+          paymentMethod: "PIX",
+          customer: {
+            fullName: dictData.name,
+            document: {
+              type: documentType,
+              number: onlyDigits(dictData.document.number),
+            },
           },
+          bank: {
+            pix: {
+              type: dictPixKey.pixKeyType,
+              key: String(dictPixKey.pixKey ?? "").trim(),
+            },
+          },
+          description: description.trim() || autoDescription,
+          code: identifierRef.current,
         },
-        description: description.trim() || autoDescription,
-        code: identifierRef.current,
       },
-    });
+      {
+        onSuccess: () => {
+          // depois que a transferência for feita, limpa os dados da consulta Dict
+          resetDict();
+          setLastCheckedPixKey("");
+          setDictError("");
+        },
+      },
+    );
   };
+
+  const publicDictFields = [
+    { label: "Nome", value: dictData?.name ?? "-" },
+    { label: "Banco", value: dictData?.bankName ?? "-" },
+    { label: "Chave consultada", value: dictData?.key ?? "-" },
+    { label: "Tipo da chave", value: dictData?.keyType ?? "-" },
+  ];
 
   const masterFields = [
     { label: "Created at", value: formatDateTime(dictData?.createdAt) },
     { label: "Possed at", value: formatDateTime(dictData?.possedAt) },
-    { label: "Key type", value: dictData?.keyType ?? "-" },
-    { label: "Key", value: dictData?.key ?? "-" },
+    { label: "Document type", value: dictData?.document?.type ?? "-" },
+    { label: "Document number", value: dictData?.document?.number ?? "-" },
     { label: "Account type", value: dictData?.accountType ?? "-" },
     { label: "Branch", value: dictData?.branchNumber ?? "-" },
     { label: "Account", value: dictData?.accountNumber ?? "-" },
-    { label: "Document type", value: dictData?.document?.type ?? "-" },
-    { label: "Document number", value: dictData?.document?.number ?? "-" },
+    { label: "Account created at", value: formatDateTime(dictData?.accountCreatedAt) },
     { label: "ISPB", value: dictData?.ispb ?? "-" },
+    { label: "Code", value: dictData?.code ?? "-" },
   ];
 
   return (
@@ -739,13 +765,14 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                <InfoRow label="Nome" value={dictData.name} />
-                <InfoRow label="Banco" value={dictData.bankName} />
-                <InfoRow label="Documento" value={maskDocumentMiddle(dictData.document.number)} />
-                <InfoRow label="Chave consultada" value={dictData.key} />
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {publicDictFields.map((field) => (
+                    <InfoRow key={field.label} label={field.label} value={field.value} />
+                  ))}
+                </div>
 
                 {isMaster && (
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {masterFields.map((field) => (
                       <InfoRow key={field.label} label={field.label} value={field.value} />
                     ))}
