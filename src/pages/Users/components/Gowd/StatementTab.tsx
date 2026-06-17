@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { Modal } from "src/components/Modal/Modal";
 import { generateStatementReceipt } from "src/pages/Home/config/handleReceipt";
+import { useAccessControl } from "src/routes/context/AccessControl";
 import { GowdStatementItem } from "../../hooks/Gowd/useGowdStatement";
 import { RefundModal } from "./Pix/RefundModal";
 
@@ -54,6 +55,7 @@ export const StatementTab = ({
 }: Props) => {
   const [selected, setSelected] = useState<GowdStatementItem | null>(null);
   const [showRefundModal, setShowRefundModal] = useState(false);
+  const { acesso } = useAccessControl();
 
   const items = useMemo(() => {
     const rawItems = statementQ.data?.items ?? [];
@@ -218,17 +220,21 @@ export const StatementTab = ({
           </div>
 
           <div className="mt-4 rounded-xl border border-gray-200 p-2">
-            <Row label="Data" value={formatDateTime(selected.timestamp)} />
-            <Row label="Valor" value={formatBRL(Number(selected.amount ?? 0))} />
-            <Row label="Tipo" value={selected.transactionType ?? selected.operation} />
-            <Row label="OrderId" value={selected.orderId} />
-            <Row label="Code" value={selected.code} />
-            <Row label="TransactionId" value={selected.transactionId} />
-            <Row label="EndToEndId" value={selected.endToEndId} />
             <Row label="Nome" value={selected.payer?.name} />
             <Row label="Documento" value={selected.payer?.document} />
+            <Row label="Data" value={formatDateTime(selected.timestamp)} />
+            <Row label="Valor" value={formatBRL(Number(selected.amount ?? 0))} />
+            {acesso === "Master" && (
+              <>
+                <Row label="Tipo" value={selected.transactionType ?? selected.operation} />
+                <Row label="OrderId" value={selected.orderId} />
+                <Row label="Code" value={selected.code} />
+                <Row label="TransactionId" value={selected.transactionId} />
+                <Row label="ISPB" value={selected.payer?.bankCode} />
+              </>
+            )}
+            <Row label="EndToEndId" value={selected.endToEndId} />
             <Row label="Banco" value={selected.payer?.bankName} />
-            <Row label="ISPB" value={selected.payer?.bankCode} />
             <Row label="Agência" value={selected.payer?.branch} />
             <Row label="Conta" value={selected.payer?.account} />
           </div>

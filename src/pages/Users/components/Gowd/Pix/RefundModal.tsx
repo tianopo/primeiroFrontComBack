@@ -4,11 +4,12 @@ import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalB
 import { Modal } from "src/components/Modal/Modal";
 import { useGowdRefund } from "../../../hooks/Gowd/useGowdRefund";
 import {
-  formatBRLInputValue,
-  brlInputToNumber,
-  brlInputToBackendValue,
   BRLAmountInput,
+  brlInputToBackendValue,
+  brlInputToNumber,
+  formatBRLInputValue,
 } from "./BRLAmountInput";
+import { useAccessControl } from "src/routes/context/AccessControl";
 
 const REFUND_REASON = "Customer requested or sold was not done";
 
@@ -39,6 +40,7 @@ export const RefundModal = ({
   onClose: () => void;
 }) => {
   const { sendRefund, isPending, data } = useGowdRefund();
+  const { acesso } = useAccessControl();
 
   const [amount, setAmount] = useState(() => formatBRLInputValue(defaultAmount ?? 0));
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -83,9 +85,11 @@ export const RefundModal = ({
       <h3 className="text-xl font-semibold">Devolver PIX (Reembolso - GOWD)</h3>
 
       <div className="mt-2 rounded bg-gray-50 p-2 text-sm">
-        <div>
-          <strong>OrderId:</strong> {orderId ?? "-"}
-        </div>
+        {acesso === "Master" && (
+          <div>
+            <strong>OrderId:</strong> {orderId ?? "-"}
+          </div>
+        )}
         <div>
           <strong>Nome:</strong> {counterpartyName ?? "-"}
         </div>
