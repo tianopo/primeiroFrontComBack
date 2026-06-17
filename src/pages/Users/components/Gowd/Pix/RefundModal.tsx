@@ -80,7 +80,7 @@ export const RefundModal = ({
 
   return (
     <Modal onClose={onClose} fit>
-      <h3 className="text-xl font-semibold">Devolver PIX (Refund - GOWD)</h3>
+      <h3 className="text-xl font-semibold">Devolver PIX (Reembolso - GOWD)</h3>
 
       <div className="mt-2 rounded bg-gray-50 p-2 text-sm">
         <div>
