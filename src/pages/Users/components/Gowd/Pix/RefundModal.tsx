@@ -3,8 +3,20 @@ import { Button } from "src/components/Buttons/Button";
 import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalButton";
 import { Modal } from "src/components/Modal/Modal";
 import { useGowdRefund } from "../../../hooks/Gowd/useGowdRefund";
+import {
+  formatBRLInputValue,
+  brlInputToNumber,
+  brlInputToBackendValue,
+  BRLAmountInput,
+} from "./BRLAmountInput";
 
-const formatBRL = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const REFUND_REASON = "Customer requested or sold was not done";
+
+const formatBRL = (v: number) =>
+  v.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
 
 const Row = ({ label, value }: { label: string; value?: any }) => (
   <div className="flex min-h-[34px] items-center justify-between gap-2 border-b border-gray-100 px-2 py-1 last:border-b-0">
@@ -28,34 +40,37 @@ export const RefundModal = ({
 }) => {
   const { sendRefund, isPending, data } = useGowdRefund();
 
-  const [amount, setAmount] = useState(String(Math.abs(Number(defaultAmount ?? 0)).toFixed(2)));
-  const [reason, setReason] = useState("Customer requested or sold was not done");
-  const [requestedByName, setRequestedByName] = useState(counterpartyName ?? "");
-  const [requestedByEmail, setRequestedByEmail] = useState("matheuslink18@hotmail.com");
+  const [amount, setAmount] = useState(() => formatBRLInputValue(defaultAmount ?? 0));
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const canRefund = !!orderId && Number(amount) > 0 && !!requestedByName && !!requestedByEmail;
+  const amountNumber = useMemo(() => brlInputToNumber(amount), [amount]);
+
+  const requestedByName = String(counterpartyName ?? "").trim();
+
+  const canRefund =
+    !!orderId && Number.isFinite(amountNumber) && amountNumber > 0 && !!requestedByName;
 
   const confirmText = useMemo(() => {
-    const a = Number(amount);
-    const valueText = Number.isFinite(a) ? formatBRL(a) : "-";
+    const valueText = Number.isFinite(amountNumber) ? formatBRL(amountNumber) : "-";
 
     return `Confirmar reembolso de ${valueText} para ${
       counterpartyName ?? "-"
     } (CPF/CNPJ: ${counterpartyDocument ?? "-"})?`;
-  }, [amount, counterpartyName, counterpartyDocument]);
+  }, [amountNumber, counterpartyName, counterpartyDocument]);
 
   const doSubmit = () => {
     if (!orderId) return;
 
+    const backendAmount = brlInputToBackendValue(amount);
+
+    if (!backendAmount) return;
+
     sendRefund({
       orderId,
-      reason,
       requestedBy: {
         name: requestedByName,
-        email: requestedByEmail,
       },
-      amount: String(Number(amount)),
+      amount: backendAmount,
     });
 
     setConfirmOpen(false);
@@ -82,37 +97,12 @@ export const RefundModal = ({
       <div className="mt-3 grid gap-3">
         <label className="text-sm">
           Valor a devolver (BRL)
-          <input
+          <BRLAmountInput
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={setAmount}
             className="mt-1 w-full rounded-6 border border-gray-200 px-3 py-2"
-          />
-        </label>
-
-        <label className="text-sm">
-          Motivo
-          <input
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            className="mt-1 w-full rounded-6 border border-gray-200 px-3 py-2"
-          />
-        </label>
-
-        <label className="text-sm">
-          Nome
-          <input
-            value={requestedByName}
-            onChange={(e) => setRequestedByName(e.target.value)}
-            className="mt-1 w-full rounded-6 border border-gray-200 px-3 py-2"
-          />
-        </label>
-
-        <label className="text-sm">
-          Email
-          <input
-            value={requestedByEmail}
-            onChange={(e) => setRequestedByEmail(e.target.value)}
-            className="mt-1 w-full rounded-6 border border-gray-200 px-3 py-2"
+            placeholder="0,00"
+            disabled={isPending}
           />
         </label>
       </div>
@@ -143,10 +133,12 @@ export const RefundModal = ({
         ) : (
           <div className="flex flex-col">
             <Row label="OrderId" value={refundResponse.orderId ?? orderId} />
-            <Row label="Valor" value={amount ? formatBRL(Number(amount)) : "-"} />
-            <Row label="Motivo" value={reason} />
+            <Row
+              label="Valor"
+              value={Number.isFinite(amountNumber) ? formatBRL(amountNumber) : "-"}
+            />
+            <Row label="Motivo" value={REFUND_REASON} />
             <Row label="Nome" value={requestedByName} />
-            <Row label="Email" value={requestedByEmail} />
             <Row label="Status" value={refundResponse.status} />
             <Row label="Id" value={refundResponse.id} />
           </div>

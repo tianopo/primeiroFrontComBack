@@ -10,20 +10,16 @@ import { apiRoute } from "src/routes/api";
 
 export interface IGowdRefundForm {
   orderId: string;
-  reason: string;
   requestedBy: {
     name: string;
-    email: string;
   };
   amount: string;
 }
 
 const schema = Yup.object({
   orderId: Yup.string().uuid("OrderId inválido").required("OrderId é obrigatório"),
-  reason: Yup.string().required("Motivo é obrigatório"),
   requestedBy: Yup.object({
     name: Yup.string().required("Nome é obrigatório"),
-    email: Yup.string().email("Email inválido").required("Email é obrigatório"),
   }).required(),
   amount: Yup.string().required("Valor é obrigatório"),
 });
@@ -33,10 +29,8 @@ export const useGowdRefund = () => {
     resolver: yupResolver(schema),
     defaultValues: {
       orderId: "",
-      reason: "Customer requested or sold was not done",
       requestedBy: {
         name: "",
-        email: "matheuslink18@hotmail.com",
       },
       amount: "0.00",
     },

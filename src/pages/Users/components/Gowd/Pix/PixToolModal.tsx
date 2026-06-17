@@ -677,9 +677,17 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
     { label: "Code", value: dictData?.code ?? "-" },
   ];
 
+  const handleClose = () => {
+    resetDict();
+    resetPixOut();
+    setLastCheckedPixKey("");
+    setDictError("");
+    onClose();
+  };
+
   return (
-    <Modal onClose={onClose} title="Pix out" fit>
-      <div className="flex w-full min-w-0 flex-col gap-4">
+    <Modal onClose={handleClose} title="Pix out" fit>
+      <div className="flex max-h-[78vh] w-full min-w-0 flex-col gap-4 overflow-y-auto pr-1 md:max-h-none md:overflow-visible md:pr-0">
         <p className="text-sm text-gray-600">Pagamento via chave Pix com consulta</p>
 
         {!canUseDict && (
@@ -755,7 +763,7 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
         </div>
 
         {canUseDict && (
-          <div className="flex flex-col gap-3 rounded-xl border border-gray-200 p-4">
+          <div className="flex max-h-[260px] flex-col gap-3 overflow-y-auto rounded-xl border border-gray-200 p-4 md:max-h-none md:overflow-visible">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="font-semibold text-gray-900">Consulta</h3>
 
@@ -796,27 +804,29 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
           </div>
         )}
 
-        {outData ? (
-          <PixOutResponse data={outData} />
-        ) : (
-          <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
-            <Button onClick={onClose} disabled={dictPending || outPending}>
-              Cancelar
-            </Button>
-
-            {canUseDict && (
-              <Button onClick={handleDictCheck} disabled={!canSearchDict}>
-                {dictPending ? "Consultando ..." : "Buscar"}
-              </Button>
-            )}
-
-            {dictReady && (
-              <Button onClick={handleSubmit} disabled={!canSendPix}>
-                {outPending ? "Enviando..." : "Fazer PIX"}
-              </Button>
-            )}
+        {outData && (
+          <div className="rounded-xl border border-gray-200 p-3">
+            <PixOutResponse data={outData} />
           </div>
         )}
+
+        <div className="sticky bottom-0 -mx-1 flex flex-col-reverse gap-2 border-t border-gray-100 bg-white/95 px-1 pt-3 backdrop-blur sm:flex-row sm:justify-end md:static md:border-t-0 md:bg-transparent md:px-0 md:backdrop-blur-0">
+          <Button onClick={handleClose} disabled={dictPending || outPending}>
+            Fechar
+          </Button>
+
+          {!outData && canUseDict && (
+            <Button onClick={handleDictCheck} disabled={!canSearchDict}>
+              {dictPending ? "Consultando Dict..." : "Buscar"}
+            </Button>
+          )}
+
+          {!outData && dictReady && (
+            <Button onClick={handleSubmit} disabled={!canSendPix}>
+              {outPending ? "Enviando..." : "Fazer PIX"}
+            </Button>
+          )}
+        </div>
       </div>
     </Modal>
   );
