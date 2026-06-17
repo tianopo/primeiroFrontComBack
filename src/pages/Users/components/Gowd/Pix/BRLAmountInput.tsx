@@ -22,6 +22,43 @@ export const formatBRLAmountFromDigits = (value: unknown) => {
   return `${integer},${cents}`;
 };
 
+const decimalStringToCents = (value: string) => {
+  const raw = String(value ?? "").trim();
+
+  if (!raw) return null;
+
+  const cleaned = raw.replace(/\s/g, "");
+
+  const hasComma = cleaned.includes(",");
+  const hasDot = cleaned.includes(".");
+
+  if (!hasComma && !hasDot) {
+    return null;
+  }
+
+  const lastComma = cleaned.lastIndexOf(",");
+  const lastDot = cleaned.lastIndexOf(".");
+
+  const decimalSeparator = lastComma > lastDot ? "," : ".";
+  const thousandSeparator = decimalSeparator === "," ? "." : ",";
+
+  const normalized = cleaned
+    .replace(new RegExp(`\\${thousandSeparator}`, "g"), "")
+    .replace(decimalSeparator, ".");
+
+  if (!/^\d+(\.\d+)?$/.test(normalized)) {
+    return null;
+  }
+
+  const parsed = Number(normalized);
+
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+
+  return Math.round(parsed * 100);
+};
+
 export const formatBRLInputValue = (value: unknown) => {
   const raw = String(value ?? "").trim();
 
@@ -31,8 +68,10 @@ export const formatBRLInputValue = (value: unknown) => {
     return formatBRLAmountFromDigits(Math.round(value * 100));
   }
 
-  if (/^\d+(\.\d{1,2})?$/.test(raw)) {
-    return formatBRLAmountFromDigits(Math.round(Number(raw) * 100));
+  const centsFromDecimal = decimalStringToCents(raw);
+
+  if (centsFromDecimal !== null) {
+    return formatBRLAmountFromDigits(centsFromDecimal);
   }
 
   return formatBRLAmountFromDigits(raw);

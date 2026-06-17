@@ -79,9 +79,19 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: IPendingOrder
     return "empresa";
   });
 
+  const getPaymentTermAccountNo = (order: any) => {
+    const terms = Array.isArray(order?.paymentTerms) ? order.paymentTerms : [];
+
+    const term = terms.find((item: any) => {
+      return String(item?.accountNo ?? "").trim();
+    });
+
+    return String(term?.accountNo ?? "").trim();
+  };
+
   const openPendingOrderPixModal = (order: any) => {
     setPixModalInitialValues({
-      pixKey: "",
+      pixKey: getPaymentTermAccountNo(order),
       amount: String(order?.amount ?? ""),
       orderId: String(order?.id ?? ""),
     });
