@@ -136,15 +136,19 @@ export const RefundModal = ({
           <div className="text-sm text-gray-600">Nenhuma solicitação ainda.</div>
         ) : (
           <div className="flex flex-col">
-            <Row label="OrderId" value={refundResponse.orderId ?? orderId} />
+            <Row label="Id" value={refundResponse.id} />
             <Row
               label="Valor"
               value={Number.isFinite(amountNumber) ? formatBRL(amountNumber) : "-"}
             />
-            <Row label="Motivo" value={REFUND_REASON} />
             <Row label="Nome" value={requestedByName} />
-            <Row label="Status" value={refundResponse.status} />
-            <Row label="Id" value={refundResponse.id} />
+            {acesso === "Master" && (
+              <>
+                <Row label="OrderId" value={refundResponse.orderId ?? orderId} />
+                <Row label="Motivo" value={REFUND_REASON} />
+                <Row label="Status" value={refundResponse.status} />
+              </>
+            )}
           </div>
         )}
       </div>

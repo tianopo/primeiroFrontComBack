@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAccessControl } from "src/routes/context/AccessControl";
 
 const Row = ({ label, value }: { label: string; value?: any }) => (
   <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 py-2 last:border-b-0">
@@ -69,6 +70,7 @@ const formatDateTime = (value?: string) => {
 };
 
 export const PixOutResponse = ({ data }: { data?: any }) => {
+  const { acesso } = useAccessControl();
   if (!data) {
     return (
       <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
@@ -89,7 +91,7 @@ export const PixOutResponse = ({ data }: { data?: any }) => {
     <div className="mt-3 rounded-xl border border-gray-200 p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
         <div className="text-sm font-semibold text-gray-900">
-          Resposta da Transferência (PIX OUT - GOWD)
+          Resposta da Transferência (PIX - GOWD)
         </div>
         <StatusBadge status={data.status} />
       </div>
@@ -107,10 +109,14 @@ export const PixOutResponse = ({ data }: { data?: any }) => {
         <Row label="Moeda" value={amountCurrency} />
         <Row label="Status" value={data.status} />
         <Row label="Erro" value={data.errorMessage ?? "-"} />
-        <Row label="Criado em" value={formatDateTime(data.createdAt)} />
-        <Row label="Fee fixa" value={formatBRL(data.fee?.fixed)} />
-        <Row label="Fee variável" value={formatBRL(data.fee?.variable)} />
-        <Row label="Fee adicional" value={formatBRL(data.fee?.additional)} />
+        {acesso === "Master" && (
+          <>
+            <Row label="Criado em" value={formatDateTime(data.createdAt)} />
+            <Row label="Fee fixa" value={formatBRL(data.fee?.fixed)} />
+            <Row label="Fee variável" value={formatBRL(data.fee?.variable)} />
+            <Row label="Fee adicional" value={formatBRL(data.fee?.additional)} />
+          </>
+        )}
       </div>
     </div>
   );

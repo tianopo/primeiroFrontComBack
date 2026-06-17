@@ -21,12 +21,70 @@ const formatDateTime = (value?: string) => {
   return d.toLocaleString("pt-BR");
 };
 
-const Row = ({ label, value }: { label: string; value?: any }) => (
-  <div className="flex min-h-[34px] items-center justify-between gap-2 border-b border-gray-100 px-2 py-1 last:border-b-0">
-    <span className="text-[11px] font-semibold text-gray-600">{label}</span>
-    <span className="break-all text-sm text-gray-900">{value ?? "-"}</span>
-  </div>
-);
+const isEmptyValue = (value: any) => {
+  if (value === undefined || value === null) return true;
+
+  const text = String(value).trim();
+
+  return text === "" || text === "-";
+};
+
+const Row = ({ label, value }: { label: string; value?: any }) => {
+  if (isEmptyValue(value)) return null;
+
+  return (
+    <div className="flex min-h-[34px] items-center justify-between gap-2 border-b border-gray-100 px-2 py-1 last:border-b-0">
+      <span className="text-[11px] font-semibold text-gray-600">{label}</span>
+      <span className="break-all text-sm text-gray-900">{value}</span>
+    </div>
+  );
+};
+
+const normalizeOperation = (item?: GowdStatementItem | null) => {
+  return String(item?.operation ?? item?.transactionType ?? "").toUpperCase();
+};
+
+const isFeeOperation = (item?: GowdStatementItem | null) => {
+  return normalizeOperation(item).includes("FEE");
+};
+
+const isRefundOperation = (item?: GowdStatementItem | null) => {
+  return normalizeOperation(item).includes("REFUND");
+};
+
+const getOperationLabel = (item?: GowdStatementItem | null) => {
+  const operation = normalizeOperation(item);
+
+  if (!operation) return "";
+
+  if (operation === "LOAD") return "Entrada PIX";
+  if (operation === "PAYOUT") return "Saída PIX";
+  if (operation === "TRANSFER") return "Transferência";
+  if (operation === "LOAD_FEE") return "Taxa de entrada PIX";
+  if (operation === "PAYOUT_FEE") return "Taxa de saída PIX";
+  if (operation === "TRANSFER_FEE") return "Taxa de transferência";
+  if (operation === "LOAD_REFUND") return "Estorno de entrada PIX";
+
+  if (operation.includes("FEE")) return `Taxa - ${operation}`;
+  if (operation.includes("REFUND")) return `Estorno - ${operation}`;
+
+  return operation;
+};
+
+const getStatementName = (item: GowdStatementItem) => {
+  const payerName = String(item?.payer?.name ?? "").trim();
+
+  if (payerName) return payerName;
+
+  if (isFeeOperation(item)) return getOperationLabel(item);
+  if (isRefundOperation(item)) return getOperationLabel(item);
+
+  return getOperationLabel(item);
+};
+
+const getStatementDocument = (item: GowdStatementItem) => {
+  return String(item?.payer?.document ?? "").trim();
+};
 
 type Props = {
   statementQ: any;
@@ -60,11 +118,9 @@ export const StatementTab = ({
   const items = useMemo(() => {
     const rawItems = statementQ.data?.items ?? [];
 
-    return rawItems.filter((item: GowdStatementItem) =>
-      ["LOAD", "TRANSFER", "PAYOUT"].includes(String(item?.operation ?? "").toUpperCase()),
-    );
+    return Array.isArray(rawItems) ? rawItems : [];
   }, [statementQ.data]);
-
+  console.log(items);
   const downloadReceipt = async (it: any) => {
     const base64 = await generateStatementReceipt(it);
     if (!base64) return;
@@ -78,8 +134,22 @@ export const StatementTab = ({
     a.click();
   };
 
-  const getAmountStyles = (amount?: number) => {
-    const value = Number(amount ?? 0);
+  const getAmountStyles = (item?: GowdStatementItem | null) => {
+    const value = Number(item?.amount ?? 0);
+
+    if (isFeeOperation(item)) {
+      return {
+        rowClass: "bg-orange-50 hover:bg-orange-100",
+        amountClass: "text-orange-700",
+      };
+    }
+
+    if (isRefundOperation(item)) {
+      return {
+        rowClass: "bg-yellow-50 hover:bg-yellow-100",
+        amountClass: "text-yellow-700",
+      };
+    }
 
     if (value < 0) {
       return {
@@ -95,7 +165,7 @@ export const StatementTab = ({
   };
 
   const canRefundTransaction = (item?: GowdStatementItem | null) => {
-    return Number(item?.amount ?? 0) > 0;
+    return Number(item?.amount ?? 0) > 0 && !isFeeOperation(item) && !isRefundOperation(item);
   };
 
   return (
@@ -152,7 +222,7 @@ export const StatementTab = ({
               </tr>
             ) : (
               items.map((item: GowdStatementItem) => {
-                const { rowClass, amountClass } = getAmountStyles(item?.amount);
+                const { rowClass, amountClass } = getAmountStyles(item);
 
                 return (
                   <tr
@@ -164,11 +234,11 @@ export const StatementTab = ({
                     </td>
 
                     <td className="cursor-pointer px-3 py-2" onClick={() => setSelected(item)}>
-                      {item.payer?.name ?? "-"}
+                      {getStatementName(item) || "-"}
                     </td>
 
                     <td className="cursor-pointer px-3 py-2" onClick={() => setSelected(item)}>
-                      {item.payer?.document ?? "-"}
+                      {getStatementDocument(item) || "-"}
                     </td>
 
                     <td
@@ -220,19 +290,26 @@ export const StatementTab = ({
           </div>
 
           <div className="mt-4 rounded-xl border border-gray-200 p-2">
+            <Row label="Tipo" value={getOperationLabel(selected)} />
             <Row label="Nome" value={selected.payer?.name} />
             <Row label="Documento" value={selected.payer?.document} />
             <Row label="Data" value={formatDateTime(selected.timestamp)} />
             <Row label="Valor" value={formatBRL(Number(selected.amount ?? 0))} />
+
             {acesso === "Master" && (
               <>
-                <Row label="Tipo" value={selected.transactionType ?? selected.operation} />
+                <Row
+                  label="Operação original"
+                  value={selected.transactionType ?? selected.operation}
+                />
                 <Row label="OrderId" value={selected.orderId} />
                 <Row label="Code" value={selected.code} />
                 <Row label="TransactionId" value={selected.transactionId} />
+                <Row label="Identifier" value={selected.identifier} />
                 <Row label="ISPB" value={selected.payer?.bankCode} />
               </>
             )}
+
             <Row label="EndToEndId" value={selected.endToEndId} />
             <Row label="Banco" value={selected.payer?.bankName} />
             <Row label="Agência" value={selected.payer?.branch} />
