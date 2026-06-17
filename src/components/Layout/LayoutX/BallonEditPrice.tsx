@@ -111,7 +111,7 @@ export const BallonEditPrice = () => {
   );
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex max-w-[460px] flex-col gap-2 rounded-10 bg-gray-50 p-2 text-32 text-gray-700 shadow-lg">
+    <div className="fixed bottom-4 left-4 z-50 flex max-w-[460px] flex-col gap-2 rounded-10 bg-gray-50 p-2 text-32 text-gray-700 shadow-lg">
       {!editingOffsets ? (
         <button
           type="button"

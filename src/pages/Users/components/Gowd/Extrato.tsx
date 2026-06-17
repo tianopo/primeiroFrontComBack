@@ -26,6 +26,9 @@ export const Extrato = () => {
   const [open, setOpen] = useState(false);
   const { data: gowdBalance, isLoading } = useGowdBalance();
 
+  const STATEMENT_PAGE_SIZE = 20;
+  const BACKEND_FETCH_SIZE = 1000;
+
   const formattedBalance = Number(gowdBalance ?? 0).toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
@@ -52,20 +55,51 @@ export const Extrato = () => {
     startDate,
     endDate,
     page: 1,
-    size: 1000,
+    size: STATEMENT_PAGE_SIZE,
   }));
 
   const statementQ = useGowdStatement({
     startDate: applied.startDate,
     endDate: applied.endDate,
-    page: applied.page,
-    size: applied.size,
+    page: 1,
+    size: BACKEND_FETCH_SIZE,
   });
 
-  const totals = useMemo(() => {
+  const allStatementItems = useMemo(() => {
     const items = statementQ.data?.items ?? [];
 
-    return items.reduce(
+    return Array.isArray(items) ? items : [];
+  }, [statementQ.data?.items]);
+
+  const totalStatementItems = allStatementItems.length;
+
+  const totalStatementPages = Math.max(1, Math.ceil(totalStatementItems / applied.size));
+
+  const currentStatementPage = Math.min(applied.page, totalStatementPages);
+
+  const paginatedStatementItems = useMemo(() => {
+    const start = (currentStatementPage - 1) * applied.size;
+    const end = start + applied.size;
+
+    return allStatementItems.slice(start, end);
+  }, [allStatementItems, applied.size, currentStatementPage]);
+
+  const paginatedStatementQ = useMemo(() => {
+    return {
+      ...statementQ,
+      data: statementQ.data
+        ? {
+            ...statementQ.data,
+            items: paginatedStatementItems,
+            count: paginatedStatementItems.length,
+            page: currentStatementPage,
+          }
+        : statementQ.data,
+    };
+  }, [statementQ, paginatedStatementItems, currentStatementPage]);
+
+  const totals = useMemo(() => {
+    return allStatementItems.reduce(
       (acc: { entradas: number; saidas: number }, item: any) => {
         const amount = Number(item?.amount ?? 0);
 
@@ -81,7 +115,38 @@ export const Extrato = () => {
       },
       { entradas: 0, saidas: 0 },
     );
-  }, [statementQ.data?.items]);
+  }, [allStatementItems]);
+
+  const applyStatementFilter = () => {
+    setApplied({
+      startDate,
+      endDate,
+      page: 1,
+      size: STATEMENT_PAGE_SIZE,
+    });
+  };
+
+  const goPrevStatementPage = () => {
+    setApplied((prev) => ({
+      ...prev,
+      page: Math.max(1, prev.page - 1),
+    }));
+  };
+
+  const goNextStatementPage = () => {
+    setApplied((prev) => {
+      const totalPages = Math.max(1, Math.ceil(totalStatementItems / prev.size));
+
+      if (prev.page >= totalPages) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        page: prev.page + 1,
+      };
+    });
+  };
 
   const [showPixModal, setShowPixModal] = useState(false);
 
@@ -112,24 +177,17 @@ export const Extrato = () => {
 
         {activeTab === "extrato" && (
           <StatementTab
-            statementQ={statementQ}
+            statementQ={paginatedStatementQ}
             startDate={startDate}
             endDate={endDate}
             onChangeStart={setStartDate}
             onChangeEnd={setEndDate}
-            onApply={() =>
-              setApplied((p) => ({
-                ...p,
-                startDate,
-                endDate,
-                page: 1,
-                size: 1000,
-              }))
-            }
-            page={applied.page}
+            onApply={applyStatementFilter}
+            page={currentStatementPage}
             size={applied.size}
-            onPrev={() => setApplied((p) => ({ ...p, page: Math.max(1, p.page - 1) }))}
-            onNext={() => setApplied((p) => ({ ...p, page: p.page + 1 }))}
+            totalItems={totalStatementItems}
+            onPrev={goPrevStatementPage}
+            onNext={goNextStatementPage}
           />
         )}
       </CardContainer>

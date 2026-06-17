@@ -5,6 +5,7 @@ import { generateStatementReceipt } from "src/pages/Home/config/handleReceipt";
 import { useAccessControl } from "src/routes/context/AccessControl";
 import { GowdStatementItem } from "../../hooks/Gowd/useGowdStatement";
 import { RefundModal } from "./Pix/RefundModal";
+import { StatementPagination } from "./StatementPagination";
 
 const formatBRL = (v: number) =>
   Number(v).toLocaleString("pt-BR", {
@@ -95,6 +96,7 @@ type Props = {
   onApply: () => void;
   page: number;
   size: number;
+  totalItems: number;
   onPrev: () => void;
   onNext: () => void;
 };
@@ -108,6 +110,7 @@ export const StatementTab = ({
   onApply,
   page,
   size,
+  totalItems,
   onPrev,
   onNext,
 }: Props) => {
@@ -255,20 +258,14 @@ export const StatementTab = ({
         </table>
       </div>
 
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-gray-600">
-          Página {page} • {items.length} itens exibidos
-        </span>
-
-        <div className="flex gap-2">
-          <Button onClick={onPrev} disabled={page <= 1}>
-            Anterior
-          </Button>
-          <Button onClick={onNext} disabled={items.length < size}>
-            Próxima
-          </Button>
-        </div>
-      </div>
+      <StatementPagination
+        page={page}
+        pageSize={size}
+        totalItems={totalItems}
+        isLoading={statementQ.isLoading || statementQ.isFetching}
+        onPrev={onPrev}
+        onNext={onNext}
+      />
 
       {selected && (
         <Modal
