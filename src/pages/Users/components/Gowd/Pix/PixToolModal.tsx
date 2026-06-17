@@ -6,6 +6,7 @@ import { useGowdPixDictCheck } from "src/pages/Users/hooks/Gowd/useGowdPixDictCh
 import { useGowdPixOut } from "src/pages/Users/hooks/Gowd/useGowdPixOut";
 import { PixKeyType } from "src/pages/Users/utils/Interface";
 import { useAccessControl } from "src/routes/context/AccessControl";
+import { BRLAmountInput, brlInputToNumber, formatBRLInputValue } from "./BRLAmountInput";
 import { PixOutResponse } from "./PixOutResponse";
 
 const KEY_TYPES: PixKeyType[] = ["CPF", "CNPJ", "EMAIL", "PHONE", "RANDOM"];
@@ -358,55 +359,6 @@ const formatAmountInputFromDigits = (value: unknown) => {
   return `${integer},${cents}`;
 };
 
-const formatInitialAmount = (value: unknown) => {
-  const raw = String(value ?? "").trim();
-
-  if (!raw) return "";
-
-  // Se vier número do backend, ex: 10.5 => 10,50
-  if (typeof value === "number") {
-    return formatAmountInputFromDigits(Math.round(value * 100));
-  }
-
-  // Se vier string decimal com ponto, ex: "10.50" => 10,50
-  if (/^\d+(\.\d{1,2})?$/.test(raw)) {
-    return formatAmountInputFromDigits(Math.round(Number(raw) * 100));
-  }
-
-  // Se já vier com vírgula, ex: "10,50", preserva como moeda por centavos.
-  return formatAmountInputFromDigits(raw);
-};
-
-const amountInputToNumber = (value: unknown) => {
-  const digits = normalizeCurrencyDigits(value);
-
-  if (!digits) return Number.NaN;
-
-  return Number(digits) / 100;
-};
-
-const countDigitsBeforeCaret = (value: string, caret: number) => {
-  return onlyDigits(value.slice(0, caret)).length;
-};
-
-const getCaretPositionAfterDigitIndex = (formatted: string, digitIndex: number) => {
-  if (digitIndex <= 0) return 0;
-
-  let count = 0;
-
-  for (let index = 0; index < formatted.length; index += 1) {
-    if (/\d/.test(formatted[index])) {
-      count += 1;
-
-      if (count >= digitIndex) {
-        return index + 1;
-      }
-    }
-  }
-
-  return formatted.length;
-};
-
 const maskDocumentMiddle = (value: string) => {
   const digits = onlyDigits(value);
 
@@ -482,7 +434,7 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
 
   const [selectedKeyType, setSelectedKeyType] = useState<PixKeyTypeSelectable>("AUTO");
   const [key, setKey] = useState(() => formatPixInputValue(initialPixKey, initialPixKeyType));
-  const [amount, setAmount] = useState(() => formatInitialAmount(initialValues?.amount));
+  const [amount, setAmount] = useState(() => formatBRLInputValue(initialValues?.amount));
   const [description, setDescription] = useState(() => String(initialValues?.description ?? ""));
   const [dictError, setDictError] = useState("");
   const [lastCheckedPixKey, setLastCheckedPixKey] = useState("");
@@ -543,7 +495,7 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
 
     setSelectedKeyType("AUTO");
     setKey(formatPixInputValue(pixKey, pixKeyType));
-    setAmount(formatInitialAmount(initialValues?.amount));
+    setAmount(formatBRLInputValue(initialValues?.amount));
     setDescription(String(initialValues?.description ?? ""));
     setDictError("");
     setLastCheckedPixKey("");
@@ -563,21 +515,6 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
       setLastCheckedPixKey("");
     }
   }, [lastCheckedPixKey, normalizedPixKey, resetDict]);
-
-  useLayoutEffect(() => {
-    const input = amountInputRef.current;
-    const caret = amountCaretRef.current;
-
-    if (!input || caret === null) return;
-
-    if (document.activeElement === input) {
-      const safeCaret = Math.min(caret, input.value.length);
-
-      input.setSelectionRange(safeCaret, safeCaret);
-    }
-
-    amountCaretRef.current = null;
-  }, [amount]);
 
   const handleTypeChange = (value: PixKeyTypeSelectable) => {
     setSelectedKeyType(value);
@@ -650,33 +587,6 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
     }
   };
 
-  const handleAmountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = event.target.value;
-    const caret = event.target.selectionStart ?? rawValue.length;
-
-    const rawDigits = onlyDigits(rawValue);
-    const normalizedDigits = normalizeCurrencyDigits(rawDigits);
-
-    const rawDigitsBeforeCaret = countDigitsBeforeCaret(rawValue, caret);
-
-    const removedLeadingZeros = rawDigits.length - normalizedDigits.length;
-
-    const normalizedDigitsBeforeCaret = Math.max(
-      0,
-      rawDigitsBeforeCaret - Math.min(rawDigitsBeforeCaret, removedLeadingZeros),
-    );
-
-    const paddingDigits = Math.max(0, 3 - normalizedDigits.length);
-    const formatted = formatAmountInputFromDigits(normalizedDigits);
-
-    amountCaretRef.current = getCaretPositionAfterDigitIndex(
-      formatted,
-      paddingDigits + normalizedDigitsBeforeCaret,
-    );
-
-    setAmount(formatted);
-  };
-
   const handleSubmit = () => {
     if (!canUseDict) {
       toast.warning("A consulta do Pix está disponível apenas para Master e Bank.");
@@ -693,7 +603,7 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
       return;
     }
 
-    const amountValue = amountInputToNumber(amount);
+    const amountValue = brlInputToNumber(amount);
 
     if (!Number.isFinite(amountValue) || amountValue <= 0) {
       toast.error("Informe um valor válido.");
@@ -823,13 +733,11 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
           <label className="flex w-full min-w-0 flex-col gap-1">
             <span className="text-sm font-medium">Valor</span>
 
-            <input
-              ref={amountInputRef}
+            <BRLAmountInput
               value={amount}
-              onChange={handleAmountChange}
+              onChange={setAmount}
               className="w-full rounded-lg border px-3 py-2"
               placeholder="0,00"
-              inputMode="numeric"
               disabled={outPending}
             />
           </label>
