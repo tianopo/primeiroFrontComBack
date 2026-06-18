@@ -5,8 +5,9 @@ import { useGowdBalance } from "../../../hooks/Gowd/useGowdBalance";
 import { useGowdStatement } from "../../../hooks/Gowd/useGowdStatement";
 import { PixToolModal } from "../Pix/PixToolModal";
 import { StatementExportButtons } from "./StatementExportButtons";
-import { StatementTab } from "./StatementTab";
+import { getInitialStatementHideFees, StatementFeesFilter } from "./StatementFeesFilter";
 import { StatementRedisModal } from "./StatementRedisModal";
+import { StatementTab } from "./StatementTab";
 
 type TabKey = "extrato";
 
@@ -25,6 +26,7 @@ export const Extrato = () => {
   });
 
   const [open, setOpen] = useState(false);
+  const [hideFees, setHideFees] = useState(getInitialStatementHideFees);
   const { data: gowdBalance, isLoading } = useGowdBalance();
 
   const STATEMENT_PAGE_SIZE = 20;
@@ -72,7 +74,17 @@ export const Extrato = () => {
     return Array.isArray(items) ? items : [];
   }, [statementQ.data?.items]);
 
-  const totalStatementItems = allStatementItems.length;
+  const filteredStatementItems = useMemo(() => {
+    if (!hideFees) return allStatementItems;
+
+    return allStatementItems.filter((item: any) => {
+      const operation = String(item?.operation ?? item?.transactionType ?? "").toUpperCase();
+
+      return !operation.includes("FEE");
+    });
+  }, [allStatementItems, hideFees]);
+
+  const totalStatementItems = filteredStatementItems.length;
 
   const totalStatementPages = Math.max(1, Math.ceil(totalStatementItems / applied.size));
 
@@ -82,8 +94,8 @@ export const Extrato = () => {
     const start = (currentStatementPage - 1) * applied.size;
     const end = start + applied.size;
 
-    return allStatementItems.slice(start, end);
-  }, [allStatementItems, applied.size, currentStatementPage]);
+    return filteredStatementItems.slice(start, end);
+  }, [filteredStatementItems, applied.size, currentStatementPage]);
 
   const paginatedStatementQ = useMemo(() => {
     return {
@@ -165,6 +177,15 @@ export const Extrato = () => {
 
   const [showPixModal, setShowPixModal] = useState(false);
 
+  const handleChangeHideFees = (checked: boolean) => {
+    setHideFees(checked);
+
+    setApplied((prev) => ({
+      ...prev,
+      page: 1,
+    }));
+  };
+
   return (
     <div className="flex w-full flex-col gap-4 px-4">
       <CardContainer full>
@@ -182,6 +203,8 @@ export const Extrato = () => {
             {open && <StatementRedisModal onClose={() => setOpen(false)} />}
 
             <Button onClick={() => setShowPixModal(true)}>Fazer PIX</Button>
+
+            <StatementFeesFilter checked={hideFees} onChange={handleChangeHideFees} />
 
             <StatementExportButtons
               items={allStatementItems}

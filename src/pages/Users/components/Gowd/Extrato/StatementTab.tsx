@@ -315,15 +315,18 @@ export const StatementTab = ({
           </div>
         </Modal>
       )}
-      {showRefundModal && selected && canRefundTransaction(selected) && (
-        <RefundModal
-          orderId={selected.orderId}
-          defaultAmount={Math.abs(Number(selected.amount ?? 0))}
-          counterpartyName={selected.payer?.name}
-          counterpartyDocument={selected.payer?.document}
-          onClose={() => setShowRefundModal(false)}
-        />
-      )}
+      {showRefundModal &&
+        selected &&
+        canRefundTransaction(selected) &&
+        !isFeeOperation(selected) && (
+          <RefundModal
+            orderId={selected.orderId}
+            defaultAmount={Math.abs(Number(selected.amount ?? 0))}
+            counterpartyName={selected.payer?.name}
+            counterpartyDocument={selected.payer?.document}
+            onClose={() => setShowRefundModal(false)}
+          />
+        )}
     </div>
   );
 };
