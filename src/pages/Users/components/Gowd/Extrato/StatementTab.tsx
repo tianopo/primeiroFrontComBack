@@ -278,8 +278,9 @@ export const StatementTab = ({
           <div className="flex flex-row justify-between">
             <h3 className="w-full text-xl font-semibold">Detalhes da transação</h3>
             <div className="mt-4 flex justify-end gap-2">
-              <Button onClick={() => downloadReceipt(selected)}>Recibo</Button>
-
+              {!isFeeOperation(selected) && (
+                <Button onClick={() => downloadReceipt(selected)}>Recibo</Button>
+              )}
               {canRefundTransaction(selected) && (
                 <Button onClick={() => setShowRefundModal(true)}>Estorno</Button>
               )}

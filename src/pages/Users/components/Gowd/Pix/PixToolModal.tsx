@@ -336,29 +336,6 @@ const mapGowdKeyTypeToPixKeyType = (type: unknown): PixKeyType => {
   return "RANDOM";
 };
 
-const normalizeCurrencyDigits = (value: unknown) => {
-  const digits = onlyDigits(value);
-
-  if (!digits) return "";
-
-  // Remove zeros artificiais do começo, mas mantém dígitos suficientes para centavos.
-  // Ex: "0022" => "022" => 0,22
-  // Ex: "0002" => "002" => 0,02
-  return digits.replace(/^0+(?=\d{3,})/, "");
-};
-
-const formatAmountInputFromDigits = (value: unknown) => {
-  const digits = normalizeCurrencyDigits(value);
-
-  if (!digits) return "";
-
-  const padded = digits.padStart(3, "0");
-  const cents = padded.slice(-2);
-  const integer = padded.slice(0, -2).replace(/^0+(?=\d)/, "") || "0";
-
-  return `${integer},${cents}`;
-};
-
 const maskDocumentMiddle = (value: string) => {
   const digits = onlyDigits(value);
 

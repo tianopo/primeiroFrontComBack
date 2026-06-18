@@ -1,5 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { api } from "src/config/api";
+import { responseError } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
 
 export type GowdPixDictCheckPayload = {
@@ -34,7 +36,11 @@ export const useGowdPixDictCheck = () => {
         apiRoute.gowd.dictKeyCheck,
         payload,
       );
+
       return data;
+    },
+    onError: (error) => {
+      responseError(error as AxiosError);
     },
   });
 };
