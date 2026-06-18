@@ -84,7 +84,7 @@ export const DocumentsTab = ({ data, onSaved }: IDocumentsTab) => {
   const isPdfFile = (mimeType?: string | null, storageKey?: string | null) => {
     return mimeType === "application/pdf" || /\.pdf$/i.test(String(storageKey ?? ""));
   };
-  console.log(data);
+
   const requiredNow = data?.compliance?.evidence?.requiredNow ?? [];
   const storedEvidence = data?.compliance?.evidence?.stored ?? [];
 

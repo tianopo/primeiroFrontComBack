@@ -2,7 +2,7 @@ import {
   DESKDATA_OPTIONS_BY_KIND,
   DESKDATA_OWNER_OPTIONS_FOR_COMPANY,
 } from "../../config/deskdataCatalog";
-import { DeskdataDataset, resolveDeskdataKind } from "../../utils/deskdataTypes";
+import { DeskdataDataset, resolveDeskdataKind } from "../../utils/deskdata.types";
 
 interface IDeskdataSelector {
   documento: string;

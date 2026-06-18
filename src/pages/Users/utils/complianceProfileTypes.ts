@@ -1,4 +1,4 @@
-import { DeskdataSummary } from "./deskdataTypes";
+import { DeskdataSummary } from "./deskdata.types";
 
 export type ComplianceRiskLevel = "LOW" | "MEDIUM" | "HIGH" | "BLOCKED";
 export type ComplianceStatus =

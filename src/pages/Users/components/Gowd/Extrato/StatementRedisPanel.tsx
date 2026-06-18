@@ -2,11 +2,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { Button } from "src/components/Buttons/Button";
-import { useGowdSetStatementsVerificationBulk } from "../../hooks/Corpx/useCorpxSetStatementVerification";
+import { useGowdSetStatementsVerificationBulk } from "../../../hooks/Corpx/useCorpxSetStatementVerification";
 import {
   GowdStatementRedisItem,
   useGowdStatementRedis,
-} from "../../hooks/Corpx/useGowdStatementRedis";
+} from "../../../hooks/Corpx/useGowdStatementRedis";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 

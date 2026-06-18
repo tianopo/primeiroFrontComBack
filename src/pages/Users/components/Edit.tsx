@@ -17,7 +17,7 @@ import { useSyncDeskdata } from "../hooks/Compliance/useSyncDeskdata";
 import { useDelUser } from "../hooks/User/useDelUser";
 import { useListUsers } from "../hooks/User/useListUsers";
 import { IUpdateUserPayload, useUpdateUser } from "../hooks/User/useUpdateUser";
-import { DeskdataDataset } from "../utils/deskdataTypes";
+import { DeskdataDataset } from "../utils/deskdata.types";
 import { ComplianceEditModal } from "./Compliance/ComplianceEditModal";
 import { DeskdataSelector } from "./Compliance/DeskdataSelector";
 import { UserSecurityModal } from "./Security/UserSecurityModal";

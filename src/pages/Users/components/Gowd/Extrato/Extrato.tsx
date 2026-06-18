@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { CardContainer } from "src/components/Layout/CardContainer";
-import { useGowdBalance } from "../../hooks/Gowd/useGowdBalance";
-import { useGowdStatement } from "../../hooks/Gowd/useGowdStatement";
-import { PixToolModal } from "./Pix/PixToolModal";
-import { StatementRedisModal } from "./StatementRedisModal";
+import { useGowdBalance } from "../../../hooks/Gowd/useGowdBalance";
+import { useGowdStatement } from "../../../hooks/Gowd/useGowdStatement";
+import { PixToolModal } from "../Pix/PixToolModal";
+import { StatementExportButtons } from "./StatementExportButtons";
 import { StatementTab } from "./StatementTab";
+import { StatementRedisModal } from "./StatementRedisModal";
 
 type TabKey = "extrato";
 
@@ -117,6 +118,20 @@ export const Extrato = () => {
     );
   }, [allStatementItems]);
 
+  const feeTotal = useMemo(() => {
+    return allStatementItems.reduce((acc: number, item: any) => {
+      const operation = String(item?.operation ?? item?.transactionType ?? "").toUpperCase();
+
+      if (!operation.includes("FEE")) return acc;
+
+      const amount = Math.abs(Number(item?.amount ?? 0));
+
+      if (!Number.isFinite(amount)) return acc;
+
+      return acc + amount;
+    }, 0);
+  }, [allStatementItems]);
+
   const applyStatementFilter = () => {
     setApplied({
       startDate,
@@ -165,7 +180,18 @@ export const Extrato = () => {
           <div className="flex flex-wrap items-center gap-2">
             <Button onClick={() => setOpen(true)}>Checar</Button>
             {open && <StatementRedisModal onClose={() => setOpen(false)} />}
+
             <Button onClick={() => setShowPixModal(true)}>Fazer PIX</Button>
+
+            <StatementExportButtons
+              items={allStatementItems}
+              startDate={applied.startDate}
+              endDate={applied.endDate}
+              balance={Number(gowdBalance ?? 0)}
+              entradas={totals.entradas}
+              saidas={totals.saidas}
+              taxas={feeTotal}
+            />
           </div>
         </div>
 

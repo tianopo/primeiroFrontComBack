@@ -1,5 +1,5 @@
 import { DESKDATA_LABELS } from "../../config/deskdataCatalog";
-import { DeskdataStoredDataset, DeskdataSummary } from "../../utils/deskdataTypes";
+import { DeskdataStoredDataset, DeskdataSummary } from "../../utils/deskdata.types";
 
 interface IDeskdataTab {
   summary: DeskdataSummary | Record<string, unknown> | null;

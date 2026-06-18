@@ -13,8 +13,8 @@ import { useSendChatMessageBybit } from "../hooks/Bybit/useSendChatMessageBybit"
 import { confirmContract } from "../utils/confirmContract";
 import { toBRDate } from "../utils/helpers";
 import { ChatBox } from "./ChatBox";
+import { StatementRedisPanel } from "./Gowd/Extrato/StatementRedisPanel";
 import { PixToolInitialValues, PixToolModal } from "./Gowd/Pix/PixToolModal";
-import { StatementRedisPanel } from "./Gowd/StatementRedisPanel";
 import { OrderMessages } from "./OrderMessages";
 import { BinanceOrders } from "./PendingOrders/BinanceOrders";
 import { CoinexOrders } from "./PendingOrders/CoinexOrders";

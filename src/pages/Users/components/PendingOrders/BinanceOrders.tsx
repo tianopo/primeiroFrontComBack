@@ -9,8 +9,8 @@ import {
 } from "../../hooks/Binance/useCheckAndReleaseCoinBinance";
 import { useMarkOrderAsPaidBinance } from "../../hooks/Binance/useMarkOrderAsPaidBinance";
 import { useSendChatMessageBinance } from "../../hooks/Binance/useSendChatMessageBinance";
+import { StatementRedisPanel } from "../Gowd/Extrato/StatementRedisPanel";
 import { PixToolInitialValues, PixToolModal } from "../Gowd/Pix/PixToolModal";
-import { StatementRedisPanel } from "../Gowd/StatementRedisPanel";
 import { OrderMessages } from "../OrderMessages";
 import { CompliancePopover } from "./CompliancePopover";
 

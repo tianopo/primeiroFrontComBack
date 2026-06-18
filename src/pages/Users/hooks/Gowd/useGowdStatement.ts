@@ -1,5 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+import { AxiosError } from "axios";
+import { useEffect } from "react";
 import { api } from "src/config/api";
+import { responseError } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
 
 export interface GowdStatementItem {
@@ -42,61 +45,43 @@ export interface GowdStatementItem {
   raw?: any;
 }
 
-export interface GowdStatementResponse {
-  count: number;
-  page: number;
-  items: GowdStatementItem[];
-}
-
-const toStartOfDayUtc = (value?: string) => {
-  if (!value) return undefined;
-
-  if (value.includes("T")) {
-    return value;
-  }
-
-  return `${value}T00:00:00.000Z`;
-};
-
-const toEndOfDayUtc = (value?: string) => {
-  if (!value) return undefined;
-
-  if (value.includes("T")) {
-    return value;
-  }
-
-  return `${value}T23:59:59.999Z`;
-};
-
-export const useGowdStatement = (params: {
-  startDate?: string;
-  endDate?: string;
+type UseGowdStatementParams = {
+  startDate: string;
+  endDate: string;
   page?: number;
   size?: number;
-}) => {
-  const { startDate, endDate, page = 1, size = 1000 } = params;
+};
 
-  const start = toStartOfDayUtc(startDate);
-  const end = toEndOfDayUtc(endDate);
-
-  return useQuery({
-    queryKey: ["gowd-statement", start, end, page, size],
-    enabled: !!start && !!end,
+export const useGowdStatement = ({
+  startDate,
+  endDate,
+  page = 1,
+  size = 1000,
+}: UseGowdStatementParams) => {
+  const query = useQuery({
+    queryKey: ["gowd-statement", startDate, endDate, page, size],
     queryFn: async () => {
-      const body = {
-        startDate: start,
-        endDate: end,
+      const response = await api().post(apiRoute.gowd.statement, {
+        startDate: `${startDate}T00:00:00.000Z`,
+        endDate: `${endDate}T23:59:59.999Z`,
         currency: "BRL",
         page,
         pageSize: size,
-        direction: "DESC" as const,
-      };
+        direction: "DESC",
+      });
 
-      const res = await api().post<GowdStatementResponse>(apiRoute.gowd.statement, body);
-
-      return res.data;
+      return response.data;
     },
+    enabled: !!startDate && !!endDate,
     refetchInterval: 30000,
-    retry: 1,
+    retry: false,
   });
+
+  useEffect(() => {
+    if (query.error) {
+      responseError(query.error as AxiosError);
+    }
+  }, [query.error]);
+
+  return query;
 };

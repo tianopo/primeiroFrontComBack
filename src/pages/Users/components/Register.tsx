@@ -9,13 +9,13 @@ import { CardContainer } from "src/components/Layout/CardContainer";
 import { responseSuccess } from "src/config/responseErrors";
 import { formatCPFOrCNPJ } from "src/utils/formats";
 import { exchangeOptions } from "src/utils/selectsOptions";
+import { useCompliance } from "../hooks/Compliance/useCompliance";
 import { useSyncDeskdata } from "../hooks/Compliance/useSyncDeskdata";
 import { IRegisterUser, useRegisterUser } from "../hooks/User/useRegisterUser";
 import { ComplianceProfileResponse } from "../utils/complianceProfileTypes";
-import { DeskdataDataset } from "../utils/deskdataTypes";
+import { DeskdataDataset } from "../utils/deskdata.types";
 import { ComplianceEditModal } from "./Compliance/ComplianceEditModal";
 import { DeskdataSelector } from "./Compliance/DeskdataSelector";
-import { useCompliance } from "../hooks/Compliance/useCompliance";
 
 interface IRegister {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -205,7 +205,11 @@ export const Register = ({ setForm, initialData }: IRegister) => {
                 Object.keys(errors).length > 0
               }
             >
-              {isPending || isLoadingCompliance ? "Salvando..." : nome.length > 0 ? "Salvar" : "Procurar"}
+              {isPending || isLoadingCompliance
+                ? "Salvando..."
+                : nome.length > 0
+                  ? "Salvar"
+                  : "Procurar"}
             </Button>
             {responseData && (
               <Button
@@ -213,7 +217,9 @@ export const Register = ({ setForm, initialData }: IRegister) => {
                 disabled={!responseData || isSyncingDeskdata || isLoadingCompliance}
                 onClick={() => setOpenEditModal(true)}
               >
-                {isSyncingDeskdata || isLoadingCompliance ? "Carregando compliance..." : "Compliance"}
+                {isSyncingDeskdata || isLoadingCompliance
+                  ? "Carregando compliance..."
+                  : "Compliance"}
               </Button>
             )}
           </div>

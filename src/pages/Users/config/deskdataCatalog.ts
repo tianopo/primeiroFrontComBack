@@ -1,4 +1,4 @@
-import { DeskdataDataset, DeskdataKind } from "../utils/deskdataTypes";
+import { DeskdataDataset, DeskdataKind } from "../utils/deskdata.types";
 
 export interface DeskdataOption {
   value: DeskdataDataset;

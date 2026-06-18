@@ -3,8 +3,8 @@ import { Button } from "src/components/Buttons/Button";
 import { Modal } from "src/components/Modal/Modal";
 import { generateStatementReceipt } from "src/pages/Home/config/handleReceipt";
 import { useAccessControl } from "src/routes/context/AccessControl";
-import { GowdStatementItem } from "../../hooks/Gowd/useGowdStatement";
-import { RefundModal } from "./Pix/RefundModal";
+import { GowdStatementItem } from "../../../hooks/Gowd/useGowdStatement";
+import { RefundModal } from "../Pix/RefundModal";
 import { StatementPagination } from "./StatementPagination";
 
 const formatBRL = (v: number) =>
@@ -123,7 +123,7 @@ export const StatementTab = ({
 
     return Array.isArray(rawItems) ? rawItems : [];
   }, [statementQ.data]);
-  console.log(items);
+
   const downloadReceipt = async (it: any) => {
     const base64 = await generateStatementReceipt(it);
     if (!base64) return;

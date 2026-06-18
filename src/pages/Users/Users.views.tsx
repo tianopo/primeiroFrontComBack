@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Compliance } from "./components/Compliance";
 import { Edit } from "./components/Edit";
-import { Extrato } from "./components/Gowd/Extrato";
+import { Extrato } from "./components/Gowd/Extrato/Extrato";
 import { PendingOrders } from "./components/PendingOrders";
 import { Register } from "./components/Register";
 
