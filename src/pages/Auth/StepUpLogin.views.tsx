@@ -47,6 +47,8 @@ type PasskeyLoginOptionsResponse = {
   options: RawPasskeyAuthenticationOptions;
 };
 
+type StrongMethod = "PASSKEY" | "TOTP";
+
 const readStoredMethods = (): string[] => {
   try {
     const raw = sessionStorage.getItem("availableMethods") ?? "[]";
@@ -84,6 +86,8 @@ export const StepUpLogin = () => {
   );
   const [availableMethods, setAvailableMethods] = useState<string[]>(() => readStoredMethods());
 
+  const [selectedStrongMethod, setSelectedStrongMethod] = useState<StrongMethod | null>(null);
+
   const [totpCode, setTotpCode] = useState("");
   const [thirdPassword, setThirdPassword] = useState("");
   const [alternativePassword, setAlternativePassword] = useState("");
@@ -111,8 +115,34 @@ export const StepUpLogin = () => {
     [availableMethods],
   );
 
-  const requiresStrongFactor = hasPasskey || hasTotp;
+  const strongMethods = useMemo(() => {
+    const methods: StrongMethod[] = [];
+    if (hasPasskey) methods.push("PASSKEY");
+    if (hasTotp) methods.push("TOTP");
+    return methods;
+  }, [hasPasskey, hasTotp]);
+
+  const requiresStrongFactor = strongMethods.length > 0;
   const requiresSecondaryFactor = hasThirdPassword || hasAlternativePassword || hasRecoveryCode;
+
+  useEffect(() => {
+    if (strongMethods.length === 0) {
+      setSelectedStrongMethod(null);
+      return;
+    }
+
+    if (strongMethods.length === 1) {
+      setSelectedStrongMethod(strongMethods[0]);
+      return;
+    }
+
+    setSelectedStrongMethod((prev) => {
+      if (prev && strongMethods.includes(prev)) {
+        return prev;
+      }
+      return null;
+    });
+  }, [strongMethods]);
 
   const moveToNextStep = (data: StepUpResponse) => {
     sessionStorage.setItem("loginTicket", data.loginTicket);
@@ -121,6 +151,7 @@ export const StepUpLogin = () => {
 
     setLoginTicket(data.loginTicket);
     setAvailableMethods(data.availableMethods ?? []);
+    setTotpCode("");
   };
 
   const finishSession = (data: FinalSessionResponse) => {
@@ -173,30 +204,6 @@ export const StepUpLogin = () => {
     }
 
     moveToNextStep(data);
-
-    const nextMethods = data.availableMethods ?? [];
-
-    const needsThirdPassword = nextMethods.includes("THIRD_PASSWORD");
-    const needsAlternativePassword = nextMethods.includes("ALTERNATIVE_PASSWORD");
-    const needsRecoveryCode = nextMethods.includes("RECOVERY_CODE");
-
-    const hasAllRequiredValues =
-      (!needsThirdPassword || thirdPassword.trim().length > 0) &&
-      (!needsAlternativePassword || alternativePassword.trim().length > 0) &&
-      (!needsRecoveryCode || recoveryCode.trim().length > 0);
-
-    if (!hasAllRequiredValues) {
-      return;
-    }
-
-    const secondaryResponse = await completeSecondary(data.loginTicket);
-
-    if (isStepUpResponse(secondaryResponse)) {
-      moveToNextStep(secondaryResponse);
-      return;
-    }
-
-    finishSession(secondaryResponse);
   };
 
   const handlePasskeyFlow = async () => {
@@ -258,13 +265,85 @@ export const StepUpLogin = () => {
     }
   };
 
+  const canSubmitSecondary =
+    (!hasThirdPassword || thirdPassword.trim().length > 0) &&
+    (!hasAlternativePassword || alternativePassword.trim().length > 0) &&
+    (!hasRecoveryCode || recoveryCode.trim().length > 0);
+
   return (
     <section className="flex min-h-screen items-center justify-center bg-gradient-to-r from-yellow-600 to-yellow-200 p-4">
       <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl">
         <h2 className="mb-4 text-2xl font-bold">Verificação adicional</h2>
 
         <div className="flex flex-col gap-3">
-          {requiresSecondaryFactor && (
+          {requiresStrongFactor && (
+            <>
+              {strongMethods.length > 1 && (
+                <div className="flex flex-col gap-2">
+                  <div className="text-sm text-gray-700">
+                    Escolha como deseja fazer a autenticação:
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    {hasPasskey && (
+                      <Button
+                        onClick={() => setSelectedStrongMethod("PASSKEY")}
+                        className={
+                          selectedStrongMethod === "PASSKEY" ? "border-2 border-black" : undefined
+                        }
+                      >
+                        Chave de acesso
+                      </Button>
+                    )}
+
+                    {hasTotp && (
+                      <Button
+                        onClick={() => setSelectedStrongMethod("TOTP")}
+                        className={
+                          selectedStrongMethod === "TOTP" ? "border-2 border-black" : undefined
+                        }
+                      >
+                        Google Authenticator
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {selectedStrongMethod === "PASSKEY" && (
+                <>
+                  <div className="text-sm text-gray-700">Use a chave de acesso para continuar.</div>
+
+                  <Button onClick={handlePasskeyFlow} disabled={loading}>
+                    {loading ? "Validando..." : "Entrar com chave de acesso"}
+                  </Button>
+                </>
+              )}
+
+              {selectedStrongMethod === "TOTP" && (
+                <>
+                  <div className="text-sm text-gray-700">
+                    Digite o código do Google Authenticator para continuar.
+                  </div>
+
+                  <input
+                    value={totpCode}
+                    onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    placeholder="Código de 6 dígitos"
+                    inputMode="numeric"
+                    maxLength={6}
+                    className="rounded border px-3 py-2"
+                  />
+
+                  <Button onClick={handleTotpFlow} disabled={loading || totpCode.length !== 6}>
+                    {loading ? "Validando..." : "Validar código"}
+                  </Button>
+                </>
+              )}
+            </>
+          )}
+
+          {!requiresStrongFactor && requiresSecondaryFactor && (
             <>
               {hasThirdPassword && (
                 <input
@@ -294,69 +373,11 @@ export const StepUpLogin = () => {
                   className="rounded border px-3 py-2"
                 />
               )}
-            </>
-          )}
 
-          {hasPasskey && (
-            <>
-              <div className="text-sm text-gray-700">Use a chave de acesso para continuar.</div>
-
-              <Button
-                onClick={handlePasskeyFlow}
-                disabled={
-                  loading ||
-                  (hasThirdPassword && !thirdPassword.trim()) ||
-                  (hasAlternativePassword && !alternativePassword.trim()) ||
-                  (hasRecoveryCode && !recoveryCode.trim())
-                }
-              >
-                {loading ? "Validando..." : "Entrar com chave de acesso"}
+              <Button onClick={handleOnlySecondaryFlow} disabled={loading || !canSubmitSecondary}>
+                {loading ? "Validando..." : "Concluir login"}
               </Button>
             </>
-          )}
-
-          {!hasPasskey && hasTotp && (
-            <>
-              <div className="text-sm text-gray-700">
-                Digite o código do Google Authenticator para continuar.
-              </div>
-
-              <input
-                value={totpCode}
-                onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                placeholder="Código de 6 dígitos"
-                inputMode="numeric"
-                maxLength={6}
-                className="rounded border px-3 py-2"
-              />
-
-              <Button
-                onClick={handleTotpFlow}
-                disabled={
-                  loading ||
-                  totpCode.length !== 6 ||
-                  (hasThirdPassword && !thirdPassword.trim()) ||
-                  (hasAlternativePassword && !alternativePassword.trim()) ||
-                  (hasRecoveryCode && !recoveryCode.trim())
-                }
-              >
-                {loading ? "Validando..." : "Validar código"}
-              </Button>
-            </>
-          )}
-
-          {!requiresStrongFactor && requiresSecondaryFactor && (
-            <Button
-              onClick={handleOnlySecondaryFlow}
-              disabled={
-                loading ||
-                (hasThirdPassword && !thirdPassword.trim()) ||
-                (hasAlternativePassword && !alternativePassword.trim()) ||
-                (hasRecoveryCode && !recoveryCode.trim())
-              }
-            >
-              {loading ? "Validando..." : "Concluir login"}
-            </Button>
           )}
 
           {!requiresStrongFactor && !requiresSecondaryFactor && (
