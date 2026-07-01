@@ -215,6 +215,9 @@ export const Extrato = () => {
               saidas={totals.saidas}
               taxas={feeTotal}
             />
+
+            <h5>CNPJ: 55.636.113/0001-70</h5>
+            <h5>Chave Pix: ab512de6-aa7b-4750-8321-914416061baa</h5>
           </div>
         </div>
 

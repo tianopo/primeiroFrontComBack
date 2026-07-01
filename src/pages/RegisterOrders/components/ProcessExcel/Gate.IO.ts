@@ -59,19 +59,67 @@ export const processExcelGateIO = (workbook: XLSX.WorkBook, selectedBroker: stri
     return Number.isFinite(n) ? n.toFixed(2).replace(".", ",") : "";
   };
 
+  const pad2 = (value: string | number) => String(value).padStart(2, "0");
+
+  const toFullYear = (year: string | number) => {
+    const y = Number(year);
+
+    if (!Number.isFinite(y)) return "";
+
+    if (y < 100) {
+      return String(2000 + y);
+    }
+
+    return String(y);
+  };
+
   const parseDateTime = (value: string | number): string => {
     if (value === "" || value == null) return "";
 
-    // se vier serial do Excel
+    // Se vier serial do Excel
     if (typeof value === "number" && Number.isFinite(value)) {
       return excelDateToJSDate(value);
     }
 
-    // Gate.io vem como "YYYY-MM-DD HH:mm:ss"
     const s = String(value).trim();
-    if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}$/.test(s)) return s;
 
-    // fallback
+    // Gate.io antigo: "YYYY-MM-DD HH:mm:ss"
+    if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}$/.test(s)) {
+      return s;
+    }
+
+    // Caso venha só "YYYY-MM-DD"
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+      return `${s} 00:00:00`;
+    }
+
+    // Novo caso Gate.io: "MM/DD/AA", "MM/DD/AAAA", com ou sem hora, com ou sem AM/PM
+    const match = s.match(
+      /^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?$/i,
+    );
+
+    if (match) {
+      const [, month, day, year, hourRaw = "00", minute = "00", second = "00", ampm] = match;
+
+      let hour = Number(hourRaw);
+
+      if (ampm) {
+        const upper = ampm.toUpperCase();
+
+        if (upper === "PM" && hour < 12) {
+          hour += 12;
+        }
+
+        if (upper === "AM" && hour === 12) {
+          hour = 0;
+        }
+      }
+
+      return `${toFullYear(year)}-${pad2(month)}-${pad2(day)} ${pad2(hour)}:${pad2(
+        minute,
+      )}:${pad2(second)}`;
+    }
+
     return s;
   };
 

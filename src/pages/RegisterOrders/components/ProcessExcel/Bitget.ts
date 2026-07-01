@@ -83,7 +83,7 @@ export const processExcelBitget = (workbook: XLSX.WorkBook, selectedBroker: stri
         dataHora: excelDateToString(createdAt),
         exchange: selectedBroker,
         ativo: String(crypto),
-        nome: counterparty ? String(counterparty) : "-", // ✅ não existe no seu arquivo
+        nome: counterparty ? String(counterparty) : "", // ✅ não existe no seu arquivo
         quantidade: String(quantity),
         valor: formatToTwoDecimalPlaces(totalPrice),
         valorToken: String(price),
