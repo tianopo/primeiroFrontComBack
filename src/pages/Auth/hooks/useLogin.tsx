@@ -51,6 +51,10 @@ export const useLogin = () => {
   const { mutate, isPending } = useMutation({
     mutationFn: path,
     onSuccess: (data: SignInResponse) => {
+      sessionStorage.removeItem("loginTicket");
+      sessionStorage.removeItem("availableMethods");
+      sessionStorage.removeItem("deviceLimited");
+
       if (data.requiresStepUp) {
         sessionStorage.setItem("loginTicket", data.loginTicket);
         sessionStorage.setItem("availableMethods", JSON.stringify(data.availableMethods ?? []));
