@@ -44,7 +44,7 @@ const getNavigatorVendor = (): string => {
 export const useLogin = () => {
   const navigate = useNavigate();
   const { t: translator } = useTranslation();
-  const { setAccessFromToken, acesso } = useAccessControl();
+  const { setAccessFromToken } = useAccessControl();
 
   const t = (key: string) => translator(`hooks.auth.${key}`);
 

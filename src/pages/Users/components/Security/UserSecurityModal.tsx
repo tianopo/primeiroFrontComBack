@@ -72,7 +72,7 @@ const SectionCard = ({
   children: React.ReactNode;
 }) => {
   return (
-    <section className="min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+    <section className="min-w-0 overflow-visible rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
       <div className="mb-4 min-w-0">
         <h3 className="break-words text-lg font-semibold">{title}</h3>
         {subtitle ? <p className="mt-1 break-words text-sm text-gray-600">{subtitle}</p> : null}
