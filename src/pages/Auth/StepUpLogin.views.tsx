@@ -155,20 +155,20 @@ export const StepUpLogin = () => {
   };
 
   const finishSession = (data: FinalSessionResponse) => {
-    if (data.deviceLimited) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
-      sessionStorage.removeItem("loginTicket");
-      sessionStorage.removeItem("availableMethods");
-      sessionStorage.removeItem("deviceLimited");
+    // if (data.deviceLimited) {
+    //   localStorage.removeItem("token");
+    //   localStorage.removeItem("refreshToken");
+    //   sessionStorage.removeItem("loginTicket");
+    //   sessionStorage.removeItem("availableMethods");
+    //   sessionStorage.removeItem("deviceLimited");
 
-      toast.warning(
-        "Mais de 2 dispositivos conectados. Este dispositivo precisa de confirmação por outro dispositivo já aprovado na página de Segurança.",
-      );
+    //   toast.warning(
+    //     "Mais de 2 dispositivos conectados. Este dispositivo precisa de confirmação por outro dispositivo já aprovado na página de Segurança.",
+    //   );
 
-      navigate(app.auth);
-      return;
-    }
+    //   navigate(app.auth);
+    //   return;
+    // }
 
     localStorage.setItem("token", data.token);
 

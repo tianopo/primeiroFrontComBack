@@ -4,7 +4,6 @@ import { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 import { api, queryClient } from "src/config/api";
 import { responseError, responseSuccess } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
@@ -52,21 +51,6 @@ export const useLogin = () => {
   const { mutate, isPending } = useMutation({
     mutationFn: path,
     onSuccess: (data: SignInResponse) => {
-      if (data.deviceLimited) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("refreshToken");
-        sessionStorage.removeItem("loginTicket");
-        sessionStorage.removeItem("availableMethods");
-        sessionStorage.removeItem("deviceLimited");
-
-        toast.warning(
-          "Mais de 2 dispositivos conectados. Este dispositivo precisa de confirmação por outro dispositivo já aprovado na página de Segurança.",
-        );
-
-        navigate(app.auth);
-        return;
-      }
-
       if (data.requiresStepUp) {
         sessionStorage.setItem("loginTicket", data.loginTicket);
         sessionStorage.setItem("availableMethods", JSON.stringify(data.availableMethods ?? []));

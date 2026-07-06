@@ -23,25 +23,71 @@ export const processExcelBinance = (workbook: XLSX.WorkBook, selectedBroker: str
     return Number.isNaN(numericValue) ? "" : numericValue.toFixed(2).replace(".", ",");
   };
 
-  // "26-03-01 12:23:29" -> "2026-03-01 12:23:29"
   const adjustDateTimeBinance = (dateTime: string | number): string => {
     const raw = String(dateTime ?? "").trim();
+
     if (!raw) return "";
 
-    const m = raw.match(/^(\d{2,4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})$/);
-    if (!m) return raw;
+    const pad2 = (value: string | number) => String(value).padStart(2, "0");
 
-    let year = m[1];
-    const month = m[2];
-    const day = m[3];
-    const hh = m[4];
-    const mm = m[5];
-    const ss = m[6];
+    const toFullYear = (year: string | number) => {
+      const parsed = Number(year);
 
-    // se vier "26" -> 2026
-    if (year.length === 2) year = `20${year}`;
+      if (!Number.isFinite(parsed)) return String(year);
 
-    return `${year}-${month}-${day} ${hh}:${mm}:${ss}`;
+      if (parsed < 100) {
+        return String(2000 + parsed);
+      }
+
+      return String(parsed);
+    };
+
+    // Formato já correto: "2026-03-01 12:23:29"
+    const alreadyFormatted = raw.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})$/);
+
+    if (alreadyFormatted) {
+      return raw;
+    }
+
+    // Formato antigo: "26-03-01 12:23:29" ou "2026-03-01 12:23:29"
+    const dashFormat = raw.match(/^(\d{2,4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{2}):(\d{2})$/);
+
+    if (dashFormat) {
+      const [, year, month, day, hour, minute, second] = dashFormat;
+
+      return `${toFullYear(year)}-${pad2(month)}-${pad2(day)} ${pad2(hour)}:${pad2(
+        minute,
+      )}:${pad2(second)}`;
+    }
+
+    // Formato Binance: "M/D/YY", "M/D/YYYY", com ou sem hora e com ou sem AM/PM
+    const slashFormat = raw.match(
+      /^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})(?:,?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?$/i,
+    );
+
+    if (slashFormat) {
+      const [, month, day, year, hourRaw = "00", minute = "00", second = "00", ampm] = slashFormat;
+
+      let hour = Number(hourRaw);
+
+      if (ampm) {
+        const upper = ampm.toUpperCase();
+
+        if (upper === "PM" && hour < 12) {
+          hour += 12;
+        }
+
+        if (upper === "AM" && hour === 12) {
+          hour = 0;
+        }
+      }
+
+      return `${toFullYear(year)}-${pad2(month)}-${pad2(day)} ${pad2(hour)}:${pad2(
+        minute,
+      )}:${pad2(second)}`;
+    }
+
+    return raw;
   };
 
   // acha a linha do header no CSV PT

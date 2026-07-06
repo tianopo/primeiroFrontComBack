@@ -118,8 +118,6 @@ export const Register = ({ setForm, initialData }: IRegister) => {
         setNome("");
         setValue("documento", "");
         setDocumento("");
-        setValue("exchange", "");
-        setExchange("");
 
         setDeskdataEnabled(false);
         setDeskdataDatasets([]);

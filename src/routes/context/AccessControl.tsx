@@ -85,15 +85,6 @@ export const AccessControlProvider = ({ children }: { children: React.ReactNode 
 
     const nextName = String(payload?.name ?? "");
     const nextAcesso = String(payload?.acesso ?? payload?.role ?? "");
-    const nextDeviceLimited = Boolean(payload?.deviceLimited);
-
-    if (nextDeviceLimited) {
-      clearAccess();
-      showLimitedDeviceWarning();
-      redirectToAuth();
-      return;
-    }
-
     setToken(nextToken);
     setName(nextName);
     setAcesso(nextAcesso);
@@ -111,16 +102,6 @@ export const AccessControlProvider = ({ children }: { children: React.ReactNode 
     }
 
     const payload = decodeJwtPayload(storedToken);
-    const storedDeviceLimited = Boolean(payload?.deviceLimited);
-
-    if (storedDeviceLimited) {
-      clearAccess();
-      showLimitedDeviceWarning();
-      setHydrated(true);
-      redirectToAuth();
-      return;
-    }
-
     setToken(storedToken);
     setName(String(payload?.name ?? ""));
     setAcesso(String(payload?.acesso ?? payload?.role ?? ""));
