@@ -17,6 +17,7 @@ export const app = {
   pld: "pld",
   //  CryptoTech
   registerOrders: "/register-orders",
+  bank: "/bank",
   users: "/users",
   documentsGenerator: "/generator-documents",
   convert: "/convert",

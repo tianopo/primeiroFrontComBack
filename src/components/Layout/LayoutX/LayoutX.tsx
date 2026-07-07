@@ -1,4 +1,5 @@
 import {
+  Bank,
   File,
   FileArchive,
   House,
@@ -27,6 +28,16 @@ export const LayoutX = () => {
       route: app.security,
       icon: <Lock width={20} height={17} weight="duotone" />,
     },
+    // Itens visíveis apenas se acesso usuário for User ou Master
+    ...(["User", "Master"].includes(acesso)
+      ? [
+          {
+            text: "Banco",
+            route: app.bank,
+            icon: <Bank width={20} height={17} weight="duotone" />,
+          },
+        ]
+      : []),
     // Itens visíveis apenas se acesso !== 'User'
     ...(acesso !== "User"
       ? [

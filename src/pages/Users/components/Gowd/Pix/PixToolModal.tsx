@@ -13,6 +13,7 @@ const KEY_TYPES: PixKeyType[] = ["CPF", "CNPJ", "EMAIL", "PHONE", "RANDOM"];
 const KEY_TYPES_WITH_AUTO = ["AUTO", ...KEY_TYPES] as const;
 
 type PixKeyTypeSelectable = PixKeyType | "AUTO";
+type GowdScope = "own" | "baas";
 
 export type PixToolInitialValues = {
   pixKey?: string;
@@ -24,6 +25,8 @@ export type PixToolInitialValues = {
 type PixToolModalProps = {
   onClose: () => void;
   initialValues?: PixToolInitialValues | null;
+  scope?: GowdScope;
+  accountId?: string;
 };
 
 const onlyDigits = (value: unknown) => String(value ?? "").replace(/\D/g, "");
@@ -381,12 +384,15 @@ const InfoRow = ({ label, value }: { label: string; value?: string }) => (
   </div>
 );
 
-export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
+export const PixToolModal = ({
+  onClose,
+  initialValues,
+  scope = "own",
+  accountId,
+}: PixToolModalProps) => {
   const { acesso } = useAccessControl();
-
   const role = normalizeRole(acesso);
-  const isMaster = role === "master";
-  const canUseDict = isMaster || role === "bank";
+  const canUseDict = role === "master" || role === "bank";
 
   const {
     mutate: pixOut,
@@ -403,21 +409,18 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
   } = useGowdPixDictCheck();
 
   const identifierRef = useRef(`pixout-${Date.now()}`);
-  const amountInputRef = useRef<HTMLInputElement | null>(null);
-  const amountCaretRef = useRef<number | null>(null);
 
   const initialPixKey = String(initialValues?.pixKey ?? "");
-  const initialPixKeyType = detectPixKeyType(initialPixKey);
+  const initialDetectedType = detectPixKeyType(initialPixKey);
 
   const [selectedKeyType, setSelectedKeyType] = useState<PixKeyTypeSelectable>("AUTO");
-  const [key, setKey] = useState(() => formatPixInputValue(initialPixKey, initialPixKeyType));
+  const [key, setKey] = useState(() => formatPixInputValue(initialPixKey, initialDetectedType));
   const [amount, setAmount] = useState(() => formatBRLInputValue(initialValues?.amount));
   const [description, setDescription] = useState(() => String(initialValues?.description ?? ""));
   const [dictError, setDictError] = useState("");
   const [lastCheckedPixKey, setLastCheckedPixKey] = useState("");
 
   const detectedType = useMemo(() => detectPixKeyType(key), [key]);
-
   const effectiveKeyType: PixKeyType = selectedKeyType === "AUTO" ? detectedType : selectedKeyType;
 
   const normalized = useMemo(
@@ -430,21 +433,8 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
   const dictReady =
     Boolean(dictData) &&
     Boolean(lastCheckedPixKey) &&
-    Boolean(normalizedPixKey) &&
     lastCheckedPixKey === normalizedPixKey &&
     !dictPending;
-
-  const canSearchDict = canUseDict && Boolean(normalizedPixKey) && !dictPending && !outPending;
-
-  const canSendPix =
-    canUseDict &&
-    dictReady &&
-    Boolean(amount.trim()) &&
-    Boolean(dictData?.name) &&
-    Boolean(dictData?.document?.number) &&
-    Boolean(dictData?.document?.type) &&
-    !dictPending &&
-    !outPending;
 
   const autoDescription = useMemo(() => {
     return buildDescription({
@@ -467,24 +457,13 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
   ]);
 
   useEffect(() => {
-    const pixKey = String(initialValues?.pixKey ?? "");
-    const pixKeyType = detectPixKeyType(pixKey);
-
-    setSelectedKeyType("AUTO");
-    setKey(formatPixInputValue(pixKey, pixKeyType));
-    setAmount(formatBRLInputValue(initialValues?.amount));
-    setDescription(String(initialValues?.description ?? ""));
-    setDictError("");
-    setLastCheckedPixKey("");
-    resetDict();
-  }, [initialValues, resetDict]);
-
-  useEffect(() => {
     setDescription(autoDescription);
   }, [autoDescription]);
 
   useEffect(() => {
-    if (!lastCheckedPixKey) return;
+    if (!lastCheckedPixKey) {
+      return;
+    }
 
     if (lastCheckedPixKey !== normalizedPixKey) {
       resetDict();
@@ -520,16 +499,14 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
     }
 
     try {
-      // limpa consulta Dict antiga antes de buscar uma nova
       resetDict();
+      resetPixOut();
       setDictError("");
       setLastCheckedPixKey("");
 
-      // limpa resposta de transferência antiga ao buscar novo Dict
-      resetPixOut();
-
       const dict = await checkPixKey({
         key: normalizedPixKey,
+        scope,
       });
 
       const dictKeyType = mapGowdKeyTypeToPixKeyType(dict.keyType);
@@ -551,9 +528,6 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
         }),
       );
 
-      // garante que, no sucesso da consulta Dict, a resposta PIX antiga desapareça
-      resetPixOut();
-
       toast.success("Consulta bem sucedida.");
     } catch {
       resetDict();
@@ -565,18 +539,18 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
   };
 
   const handleSubmit = () => {
+    if (scope === "baas" && !accountId) {
+      toast.error("Selecione uma conta BAAS antes de transferir.");
+      return;
+    }
+
     if (!canUseDict) {
       toast.warning("A consulta do Pix está disponível apenas para Master e Bank.");
       return;
     }
 
     if (!dictReady || !dictData) {
-      toast.error("Consulte antes de fazer o PIX.");
-      return;
-    }
-
-    if (!dictData.name || !dictData.document?.number || !dictData.document?.type) {
-      toast.error("A consulta retornou dados incompletos do titular.");
+      toast.error("Consulte a chave Pix antes de transferir.");
       return;
     }
 
@@ -587,72 +561,36 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
       return;
     }
 
-    const dictPixKeyType = mapGowdKeyTypeToPixKeyType(dictData.keyType);
-    const dictPixKey = normalizePixKeyForBackend(String(dictData.key ?? ""), dictPixKeyType);
+    const documentType = String(dictData.document?.type).toUpperCase() === "CNPJ" ? "CNPJ" : "CPF";
 
-    if (!String(dictPixKey.pixKey ?? "").trim()) {
-      toast.error("O Dict retornou uma chave Pix inválida.");
-      return;
-    }
-
-    const documentType = String(dictData.document.type).toUpperCase() === "CNPJ" ? "CNPJ" : "CPF";
-
-    pixOut(
-      {
-        idempotencyKey: identifierRef.current,
-        body: {
-          amount: {
-            currency: "BRL",
-            value: amountValue.toFixed(2),
-          },
-          paymentMethod: "PIX",
-          customer: {
-            fullName: dictData.name,
-            document: {
-              type: documentType,
-              number: onlyDigits(dictData.document.number),
-            },
-          },
-          bank: {
-            pix: {
-              type: dictPixKey.pixKeyType,
-              key: String(dictPixKey.pixKey ?? "").trim(),
-            },
-          },
-          description: description.trim() || autoDescription,
-          code: identifierRef.current,
+    pixOut({
+      idempotencyKey: identifierRef.current,
+      scope,
+      accountId,
+      body: {
+        amount: {
+          currency: "BRL",
+          value: amountValue.toFixed(2),
         },
-      },
-      {
-        onSuccess: () => {
-          // depois que a transferência for feita, limpa os dados da consulta Dict
-          resetDict();
-          setLastCheckedPixKey("");
-          setDictError("");
+        paymentMethod: "PIX",
+        customer: {
+          fullName: dictData.name,
+          document: {
+            type: documentType,
+            number: dictData.document?.number,
+          },
         },
+        bank: {
+          pix: {
+            type: normalized.pixKeyType,
+            key: normalized.pixKey,
+          },
+        },
+        description,
+        code: identifierRef.current,
       },
-    );
+    });
   };
-
-  const publicDictFields = [
-    { label: "Nome", value: dictData?.name ?? "-" },
-    { label: "Banco", value: dictData?.bankName ?? "-" },
-    { label: "Chave consultada", value: dictData?.key ?? "-" },
-    { label: "Tipo da chave", value: dictData?.keyType ?? "-" },
-  ];
-
-  const masterFields = [
-    { label: "Created at", value: formatDateTime(dictData?.createdAt) },
-    { label: "Possed at", value: formatDateTime(dictData?.possedAt) },
-    { label: "Document type", value: dictData?.document?.type ?? "-" },
-    { label: "Document number", value: dictData?.document?.number ?? "-" },
-    { label: "Account type", value: dictData?.accountType ?? "-" },
-    { label: "Branch", value: dictData?.branchNumber ?? "-" },
-    { label: "Account", value: dictData?.accountNumber ?? "-" },
-    { label: "Account created at", value: formatDateTime(dictData?.accountCreatedAt) },
-    { label: "ISPB", value: dictData?.ispb ?? "-" },
-    { label: "Code", value: dictData?.code ?? "-" },
-  ];
 
   const handleClose = () => {
     resetDict();
@@ -667,16 +605,15 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
       <div className="flex max-h-[78vh] w-full min-w-0 flex-col gap-4 overflow-y-auto pr-1 md:max-h-none md:overflow-visible md:pr-0">
         <p className="text-sm text-gray-600">Pagamento via chave Pix com consulta</p>
 
-        {!canUseDict && (
+        {!canUseDict ? (
           <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
             Disponível apenas para usuários Master e Bank.
           </div>
-        )}
+        ) : null}
 
         <div className="flex w-full min-w-0 flex-col gap-3">
           <label className="flex w-full min-w-0 flex-col gap-1">
             <span className="text-sm font-medium">Tipo da chave</span>
-
             <select
               value={selectedKeyType}
               onChange={(e) => handleTypeChange(e.target.value as PixKeyTypeSelectable)}
@@ -689,120 +626,63 @@ export const PixToolModal = ({ onClose, initialValues }: PixToolModalProps) => {
                 </option>
               ))}
             </select>
-
-            <span className="text-xs text-gray-500">
-              Detectado automaticamente: <strong>{detectedType}</strong>
-            </span>
           </label>
 
           <label className="flex w-full min-w-0 flex-col gap-1">
             <span className="text-sm font-medium">Chave Pix</span>
-
             <input
               value={key}
               onChange={(e) => handlePixKeyChange(e.target.value)}
               className="w-full rounded-lg border px-3 py-2"
-              placeholder="CPF / CNPJ / EMAIL / telefone / RANDOM"
+              placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatória"
               disabled={dictPending || outPending}
             />
-
-            <span className="text-xs text-gray-500">
-              Telefone{" "}
-              <strong>
-                {effectiveKeyType === "PHONE" ? normalizedPixKey || "+55..." : "+55..."}
-              </strong>
-              .
-            </span>
           </label>
 
           <label className="flex w-full min-w-0 flex-col gap-1">
             <span className="text-sm font-medium">Valor</span>
-
-            <BRLAmountInput
-              value={amount}
-              onChange={setAmount}
-              className="w-full rounded-lg border px-3 py-2"
-              placeholder="0,00"
-              disabled={outPending}
-            />
+            <BRLAmountInput value={amount} onChange={setAmount} disabled={outPending} />
           </label>
 
           <label className="flex w-full min-w-0 flex-col gap-1">
             <span className="text-sm font-medium">Descrição</span>
-
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="min-h-[110px] w-full rounded-lg border px-3 py-2"
+              className="min-h-[90px] w-full rounded-lg border px-3 py-2"
               disabled={outPending}
             />
           </label>
-        </div>
 
-        {canUseDict && (
-          <div className="flex max-h-[260px] flex-col gap-3 overflow-y-auto rounded-xl border border-gray-200 p-4 md:max-h-none md:overflow-visible">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="font-semibold text-gray-900">Consulta</h3>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={handleDictCheck} disabled={dictPending || outPending}>
+              {dictPending ? "Consultando..." : "Consultar chave"}
+            </Button>
+            <Button onClick={handleSubmit} disabled={outPending || dictPending}>
+              {outPending ? "Enviando..." : "Confirmar PIX"}
+            </Button>
+          </div>
 
-              {dictPending && <span className="text-sm text-gray-500">Consultando...</span>}
-
-              {dictReady && (
-                <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
-                  Chave pix consultada
-                </span>
-              )}
+          {dictError ? (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {dictError}
             </div>
+          ) : null}
 
-            {dictError ? (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
-                {dictError}
-              </div>
-            ) : !dictData ? (
-              <div className="rounded-lg border border-dashed border-gray-200 p-3 text-sm text-gray-500">
-                Digite uma chave Pix válida e clique em Buscar.
-              </div>
-            ) : (
-              <div className="flex flex-col gap-2">
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {publicDictFields.map((field) => (
-                    <InfoRow key={field.label} label={field.label} value={field.value} />
-                  ))}
-                </div>
+          {dictData ? (
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+              <InfoRow label="Nome" value={dictData.name} />
+              <InfoRow label="Banco" value={dictData.bankName} />
+              <InfoRow label="Chave consultada" value={dictData.key} />
+              <InfoRow label="Tipo da chave" value={dictData.keyType} />
+              <InfoRow label="Documento" value={dictData.document?.number} />
+              <InfoRow label="Tipo documento" value={dictData.document?.type} />
+              <InfoRow label="Agência" value={dictData.branchNumber} />
+              <InfoRow label="Conta" value={dictData.accountNumber} />
+            </div>
+          ) : null}
 
-                {isMaster && (
-                  <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    {masterFields.map((field) => (
-                      <InfoRow key={field.label} label={field.label} value={field.value} />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {outData && (
-          <div className="rounded-xl border border-gray-200 p-3">
-            <PixOutResponse data={outData} />
-          </div>
-        )}
-
-        <div className="sticky bottom-0 -mx-1 flex flex-col-reverse gap-2 border-t border-gray-100 bg-white/95 px-1 pt-3 backdrop-blur sm:flex-row sm:justify-end md:static md:border-t-0 md:bg-transparent md:px-0 md:backdrop-blur-0">
-          <Button onClick={handleClose} disabled={dictPending || outPending}>
-            Fechar
-          </Button>
-
-          {!outData && canUseDict && (
-            <Button onClick={handleDictCheck} disabled={!canSearchDict}>
-              {dictPending ? "Consultando Dict..." : "Buscar"}
-            </Button>
-          )}
-
-          {!outData && dictReady && (
-            <Button onClick={handleSubmit} disabled={!canSendPix}>
-              {outPending ? "Enviando..." : "Fazer PIX"}
-            </Button>
-          )}
+          {outData ? <PixOutResponse data={outData} /> : null}
         </div>
       </div>
     </Modal>

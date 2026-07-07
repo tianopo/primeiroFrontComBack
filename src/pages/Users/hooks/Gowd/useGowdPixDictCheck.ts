@@ -4,8 +4,11 @@ import { api } from "src/config/api";
 import { responseError } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
 
+type GowdScope = "own" | "baas";
+
 export type GowdPixDictCheckPayload = {
   key: string;
+  scope?: GowdScope;
 };
 
 export type GowdPixDictCheckResponse = {
@@ -32,10 +35,12 @@ export type GowdPixDictCheckResponse = {
 export const useGowdPixDictCheck = () => {
   return useMutation({
     mutationFn: async (payload: GowdPixDictCheckPayload) => {
-      const { data } = await api().post<GowdPixDictCheckResponse>(
-        apiRoute.gowd.dictKeyCheck,
-        payload,
-      );
+      const route =
+        payload.scope === "baas" ? apiRoute.gowd.baasDictKeyCheck : apiRoute.gowd.dictKeyCheck;
+
+      const { data } = await api().post<GowdPixDictCheckResponse>(route, {
+        key: payload.key,
+      });
 
       return data;
     },

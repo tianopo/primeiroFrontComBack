@@ -1,6 +1,4 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { toast } from "react-toastify";
-import { app } from "../app";
 
 type AccessControlContextType = {
   token: string;
@@ -8,6 +6,10 @@ type AccessControlContextType = {
   acesso: string;
   deviceLimited: boolean;
   hydrated: boolean;
+  bankAccountId: string;
+  bankBranchNumber: string;
+  bankAccountNumber: string;
+  bankPixKeys: Array<{ key: string }>;
   setAccessFromToken: (token: string) => void;
   clearAccess: () => void;
 };
@@ -17,6 +19,12 @@ type JwtPayload = {
   acesso?: string;
   role?: string;
   deviceLimited?: boolean;
+  bankAccountId?: string;
+  bankBranchNumber?: string;
+  bankAccountNumber?: string;
+  bankPixKeys?: Array<{
+    key: string;
+  }>;
 };
 
 const AccessControlContext = createContext<AccessControlContextType>({
@@ -25,6 +33,10 @@ const AccessControlContext = createContext<AccessControlContextType>({
   acesso: "",
   deviceLimited: false,
   hydrated: false,
+  bankAccountId: "",
+  bankBranchNumber: "",
+  bankAccountNumber: "",
+  bankPixKeys: [],
   setAccessFromToken: () => undefined,
   clearAccess: () => undefined,
 });
@@ -43,18 +55,6 @@ const decodeJwtPayload = (token: string): JwtPayload | null => {
   }
 };
 
-const redirectToAuth = () => {
-  if (window.location.pathname !== app.auth) {
-    window.location.replace(app.auth);
-  }
-};
-
-const showLimitedDeviceWarning = () => {
-  toast.warning(
-    "Mais de 2 dispositivos conectados. Este dispositivo precisa de confirmação por outro dispositivo já aprovado na página de Segurança.",
-  );
-};
-
 export const normalizeRole = (value: string) =>
   String(value ?? "")
     .trim()
@@ -66,12 +66,20 @@ export const AccessControlProvider = ({ children }: { children: React.ReactNode 
   const [acesso, setAcesso] = useState("");
   const [deviceLimited, setDeviceLimited] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [bankAccountId, setBankAccountId] = useState("");
+  const [bankBranchNumber, setBankBranchNumber] = useState("");
+  const [bankAccountNumber, setBankAccountNumber] = useState("");
+  const [bankPixKeys, setBankPixKeys] = useState<Array<{ key: string }>>([]);
 
   const clearAccess = () => {
     setToken("");
     setName("");
     setAcesso("");
     setDeviceLimited(false);
+    setBankAccountId("");
+    setBankBranchNumber("");
+    setBankAccountNumber("");
+    setBankPixKeys([]);
 
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
@@ -85,10 +93,16 @@ export const AccessControlProvider = ({ children }: { children: React.ReactNode 
 
     const nextName = String(payload?.name ?? "");
     const nextAcesso = String(payload?.acesso ?? payload?.role ?? "");
+
     setToken(nextToken);
     setName(nextName);
     setAcesso(nextAcesso);
     setDeviceLimited(false);
+
+    setBankAccountId(String(payload?.bankAccountId ?? ""));
+    setBankBranchNumber(String(payload?.bankBranchNumber ?? ""));
+    setBankAccountNumber(String(payload?.bankAccountNumber ?? ""));
+    setBankPixKeys(Array.isArray(payload?.bankPixKeys) ? payload.bankPixKeys : []);
 
     localStorage.setItem("token", nextToken);
   };
@@ -102,10 +116,17 @@ export const AccessControlProvider = ({ children }: { children: React.ReactNode 
     }
 
     const payload = decodeJwtPayload(storedToken);
+
     setToken(storedToken);
     setName(String(payload?.name ?? ""));
     setAcesso(String(payload?.acesso ?? payload?.role ?? ""));
     setDeviceLimited(false);
+
+    setBankAccountId(String(payload?.bankAccountId ?? ""));
+    setBankBranchNumber(String(payload?.bankBranchNumber ?? ""));
+    setBankAccountNumber(String(payload?.bankAccountNumber ?? ""));
+    setBankPixKeys(Array.isArray(payload?.bankPixKeys) ? payload.bankPixKeys : []);
+
     setHydrated(true);
   }, []);
 
@@ -116,10 +137,24 @@ export const AccessControlProvider = ({ children }: { children: React.ReactNode 
       acesso,
       deviceLimited,
       hydrated,
+      bankAccountId,
+      bankBranchNumber,
+      bankAccountNumber,
+      bankPixKeys,
       setAccessFromToken,
       clearAccess,
     }),
-    [token, name, acesso, deviceLimited, hydrated],
+    [
+      token,
+      name,
+      acesso,
+      deviceLimited,
+      hydrated,
+      bankAccountId,
+      bankBranchNumber,
+      bankAccountNumber,
+      bankPixKeys,
+    ],
   );
 
   return <AccessControlContext.Provider value={value}>{children}</AccessControlContext.Provider>;

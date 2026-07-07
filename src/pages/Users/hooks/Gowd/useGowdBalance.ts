@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "src/config/api";
 import { apiRoute } from "src/routes/api";
 
+type GowdScope = "own" | "baas";
+
 type GowdBalanceResponse = {
   id: string;
   fullName: string;
@@ -21,18 +23,19 @@ type GowdBalanceResponse = {
   }>;
 };
 
-export const useGowdBalance = () => {
+export const useGowdBalance = (scope: GowdScope = "own") => {
+  const route = scope === "baas" ? apiRoute.gowd.baasBalance : apiRoute.gowd.balance;
+
   return useQuery({
-    queryKey: ["gowd-balance"],
+    queryKey: ["gowd-balance", scope],
     queryFn: async () => {
-      const res = await api().get<GowdBalanceResponse>(apiRoute.gowd.balance, {
+      const res = await api().get<GowdBalanceResponse>(route, {
         params: {
           accountType: "PAYMENT",
         },
       });
 
       const paymentAccount = res.data.accounts?.find((account) => account.type === "PAYMENT");
-
       const brlBalance = paymentAccount?.balance?.find((item) => item.currency === "BRL");
 
       return brlBalance?.value ?? "0.00";

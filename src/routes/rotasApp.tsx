@@ -9,11 +9,12 @@ import { CryptoTech } from "src/pages/CryptoTech/CryptoTech.views";
 import { Home } from "src/pages/Home/Home";
 import { Record } from "src/pages/Record/Record";
 import { RegisterOrders } from "src/pages/RegisterOrders/RegisterOrders.views";
+import { SecurityPage } from "src/pages/Security/Security.views";
 import { Users } from "src/pages/Users/Users.views";
 import { app } from "./app";
 import { AuthenticatedRoute } from "./context/AuthenticatedRoute";
 import { RoleProtectedRoute } from "./context/RoleProtectedRoute";
-import { SecurityPage } from "src/pages/Security/Security.views";
+import { Bank } from "src/pages/Bank/Bank.views";
 
 export const browserRouter = createBrowserRouter([
   {
@@ -34,6 +35,10 @@ export const browserRouter = createBrowserRouter([
         children: [
           { path: app.home, element: <Home /> },
           { path: app.security, element: <SecurityPage /> },
+          {
+            element: <RoleProtectedRoute allowedRoles={["Master", "Bank"]} />,
+            children: [{ path: app.bank, element: <Bank /> }],
+          },
           {
             element: <RoleProtectedRoute allowedRoles={["Master"]} />,
             children: [

@@ -123,5 +123,14 @@ export const apiRoute = {
     dictKeyCheck: "/gowd/dict/key/check",
     statementRedis: `/gowd/statement/redis`,
     statementRedisVerificationBulk: "/gowd/statement/redis/verification/bulk",
+    /* BAAS */
+    baasBalance: "/gowd/baas/balance",
+    baasStatement: "/gowd/baas/statement",
+    baasDictKeyCheck: "/gowd/baas/dict/key/check",
+    baasPixOut: "/gowd/baas/payouts/brazil/pix",
+    baasRefund: "/gowd/baas/refund",
+
+    baasCreateAccount: "/gowd/baas/banking/accounts",
+    baasAccountById: (accountId: string) => `/gowd/baas/banking/accounts/${accountId}`,
   },
 };
