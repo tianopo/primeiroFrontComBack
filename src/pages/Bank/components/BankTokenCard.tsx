@@ -1,17 +1,54 @@
 import { CardContainer } from "src/components/Layout/CardContainer";
-import { useAccessControl } from "src/routes/context/AccessControl";
 
-export const BankTokenCard = () => {
-  const { bankAccountId, bankBranchNumber, bankAccountNumber, bankPixKeys } = useAccessControl();
+interface IBankTokenCard {
+  name: string;
+  acesso: string;
+  bankAccountId: string;
+  bankBranchNumber: string;
+  bankAccountNumber: string;
+  bankPixKeys: Array<{ key: string }>;
+}
 
+export const BankTokenCard = ({
+  name,
+  acesso,
+  bankAccountId,
+  bankBranchNumber,
+  bankAccountNumber,
+  bankPixKeys,
+}: IBankTokenCard) => {
   if (!bankAccountId) {
-    return null;
+    return (
+      <CardContainer full>
+        <div className="flex flex-col gap-2">
+          <h3 className="text-lg font-semibold">Dados bancários</h3>
+          <p className="text-sm text-gray-500">Nenhuma conta BAAS encontrada para este usuário.</p>
+        </div>
+      </CardContainer>
+    );
   }
 
   return (
     <CardContainer full>
       <div className="flex flex-col gap-4">
-        <h3 className="text-lg font-semibold">Dados bancários</h3>
+        <div>
+          <h3 className="text-lg font-semibold">Dados bancários</h3>
+          <p className="text-sm text-gray-500">
+            Dados carregados pelo token decodificado do usuário.
+          </p>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="rounded-lg border border-gray-200 p-3">
+            <div className="text-sm text-gray-500">Usuário</div>
+            <div className="break-all font-medium">{name || "—"}</div>
+          </div>
+
+          <div className="rounded-lg border border-gray-200 p-3">
+            <div className="text-sm text-gray-500">Role</div>
+            <div className="font-medium">{acesso || "—"}</div>
+          </div>
+        </div>
 
         <div className="grid gap-3 md:grid-cols-3">
           <div className="rounded-lg border border-gray-200 p-3">

@@ -156,7 +156,7 @@ export const AccessControlProvider = ({ children }: { children: React.ReactNode 
       bankPixKeys,
     ],
   );
-
+  console.log(acesso, bankAccountId, "AccessControl");
   return <AccessControlContext.Provider value={value}>{children}</AccessControlContext.Provider>;
 };
 

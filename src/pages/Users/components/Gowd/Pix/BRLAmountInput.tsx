@@ -180,6 +180,7 @@ export const BRLAmountInput = ({
       ref={inputRef}
       type="text"
       value={value}
+      className={"w-full rounded-lg border px-3 py-2"}
       onChange={handleChange}
       placeholder={placeholder}
       inputMode={inputMode}
