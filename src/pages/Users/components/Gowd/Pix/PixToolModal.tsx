@@ -666,7 +666,7 @@ export const PixToolModal = ({
             />
           </label>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="sticky bottom-0 -mx-1 flex flex-col-reverse gap-2 border-t border-gray-100 bg-white/95 px-1 pt-3 backdrop-blur sm:flex-row sm:justify-end md:static md:border-t-0 md:bg-transparent md:px-0 md:backdrop-blur-0">
             <Button onClick={handleClose} disabled={dictPending || outPending}>
               Fechar
             </Button>
