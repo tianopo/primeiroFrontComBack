@@ -21,6 +21,7 @@ import { DeskdataDataset } from "../utils/deskdata.types";
 import { ComplianceEditModal } from "./Compliance/ComplianceEditModal";
 import { DeskdataSelector } from "./Compliance/DeskdataSelector";
 import { UserSecurityModal } from "./Security/UserSecurityModal";
+import { BankEditModal } from "./Bank/BankEditModal";
 
 interface IEdit {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -38,6 +39,7 @@ export const Edit = ({ setForm }: IEdit) => {
   const [openEditModal, setOpenEditModal] = useState(false);
   const [complianceData, setComplianceData] = useState<any>(null);
 
+  const [openBankModal, setOpenBankModal] = useState(false);
   const [openSecurityModal, setOpenSecurityModal] = useState(false);
 
   const { data } = useListUsers();
@@ -337,6 +339,9 @@ export const Edit = ({ setForm }: IEdit) => {
                 <Button type="button" onClick={() => setOpenSecurityModal(true)}>
                   Security
                 </Button>
+                <Button type="button" onClick={() => setOpenBankModal(true)}>
+                  Bank
+                </Button>
               </>
             )}
           </div>
@@ -354,6 +359,15 @@ export const Edit = ({ setForm }: IEdit) => {
         open={openSecurityModal}
         onClose={() => setOpenSecurityModal(false)}
         userId={id}
+        userLabel={`${nome} - ${apelido}`}
+      />
+
+      <BankEditModal
+        open={openBankModal}
+        onClose={() => setOpenBankModal(false)}
+        userId={id}
+        userName={nome}
+        userDocument={documento}
         userLabel={`${nome} - ${apelido}`}
       />
 

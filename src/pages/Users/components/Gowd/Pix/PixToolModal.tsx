@@ -600,6 +600,18 @@ export const PixToolModal = ({
     onClose();
   };
 
+  const canSendPix =
+    canUseDict &&
+    dictReady &&
+    Boolean(amount.trim()) &&
+    Boolean(dictData?.name) &&
+    Boolean(dictData?.document?.number) &&
+    Boolean(dictData?.document?.type) &&
+    !dictPending &&
+    !outPending;
+
+  const canSearchDict = canUseDict && Boolean(normalizedPixKey) && !dictPending && !outPending;
+
   return (
     <Modal onClose={handleClose} title="Pix out" fit>
       <div className="flex max-h-[78vh] w-full min-w-0 flex-col gap-4 overflow-y-auto pr-1 md:max-h-none md:overflow-visible md:pr-0">
@@ -655,12 +667,19 @@ export const PixToolModal = ({
           </label>
 
           <div className="flex flex-wrap gap-2">
-            <Button onClick={handleDictCheck} disabled={dictPending || outPending}>
-              {dictPending ? "Consultando..." : "Consultar chave"}
+            <Button onClick={handleClose} disabled={dictPending || outPending}>
+              Fechar
             </Button>
-            <Button onClick={handleSubmit} disabled={outPending || dictPending}>
-              {outPending ? "Enviando..." : "Confirmar PIX"}
-            </Button>
+            {!outData && canUseDict && (
+              <Button onClick={handleDictCheck} disabled={!canSearchDict}>
+                {dictPending ? "Consultando..." : "Buscar"}
+              </Button>
+            )}
+            {!outData && dictReady && (
+              <Button onClick={handleSubmit} disabled={!canSendPix}>
+                {outPending ? "Enviando..." : "Enviar PIX"}
+              </Button>
+            )}
           </div>
 
           {dictError ? (

@@ -130,7 +130,15 @@ export const apiRoute = {
     baasPixOut: "/gowd/baas/payouts/brazil/pix",
     baasRefund: "/gowd/baas/refund",
 
-    baasCreateAccount: "/gowd/baas/banking/accounts",
+    baasCreateBankingAccount: "/gowd/baas/banking/accounts",
+    baasBankingAccount: (accountId: string) =>
+      `/gowd/baas/banking/accounts/${encodeURIComponent(accountId)}`,
+    baasBankingAccountKeys: (accountId: string) =>
+      `/gowd/baas/banking/accounts/${encodeURIComponent(accountId)}/keys`,
+    baasBankingAccountKey: (accountId: string, keyId: string) =>
+      `/gowd/baas/banking/accounts/${encodeURIComponent(accountId)}/keys/${encodeURIComponent(
+        keyId,
+      )}`,
     baasAccountById: (accountId: string) => `/gowd/baas/banking/accounts/${accountId}`,
   },
 };

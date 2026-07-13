@@ -4,19 +4,22 @@ import { api } from "src/config/api";
 import { responseError, responseSuccess } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
 
-export const useGowdBaasCreateAccount = () => {
+type DeleteBaasPixKeyPayload = {
+  accountId: string;
+  keyId: string;
+};
+
+export const useGowdBaasDeletePixKey = () => {
   return useMutation({
-    mutationFn: async (payload: Record<string, unknown>) => {
-      const { data } = await api().post(apiRoute.gowd.baasCreateBankingAccount, payload, {
-        headers: {
-          "idempotency-key": `gowd-baas-create-account-${Date.now()}`,
-        },
-      });
+    mutationFn: async (payload: DeleteBaasPixKeyPayload) => {
+      const { data } = await api().delete(
+        apiRoute.gowd.baasBankingAccountKey(payload.accountId, payload.keyId),
+      );
 
       return data;
     },
     onSuccess: () => {
-      responseSuccess("Conta BAAS solicitada com sucesso.");
+      responseSuccess("Chave Pix deletada com sucesso.");
     },
     onError: (error: AxiosError) => {
       responseError(error);
