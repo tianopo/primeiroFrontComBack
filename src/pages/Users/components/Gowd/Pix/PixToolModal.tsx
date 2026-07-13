@@ -392,7 +392,8 @@ export const PixToolModal = ({
 }: PixToolModalProps) => {
   const { acesso } = useAccessControl();
   const role = normalizeRole(acesso);
-  const canUseDict = role === "master" || role === "bank";
+  const isMaster = role === "master";
+  const canUseDict = isMaster || role === "bank";
 
   const {
     mutate: pixOut,
@@ -612,16 +613,36 @@ export const PixToolModal = ({
 
   const canSearchDict = canUseDict && Boolean(normalizedPixKey) && !dictPending && !outPending;
 
+  const publicDictFields = [
+    { label: "Nome", value: dictData?.name ?? "-" },
+    { label: "Banco", value: dictData?.bankName ?? "-" },
+    { label: "Chave consultada", value: dictData?.key ?? "-" },
+    { label: "Tipo da chave", value: dictData?.keyType ?? "-" },
+  ];
+
+  const masterFields = [
+    { label: "Created at", value: formatDateTime(dictData?.createdAt) },
+    { label: "Possed at", value: formatDateTime(dictData?.possedAt) },
+    { label: "Document type", value: dictData?.document?.type ?? "-" },
+    { label: "Document number", value: dictData?.document?.number ?? "-" },
+    { label: "Account type", value: dictData?.accountType ?? "-" },
+    { label: "Branch", value: dictData?.branchNumber ?? "-" },
+    { label: "Account", value: dictData?.accountNumber ?? "-" },
+    { label: "Account created at", value: formatDateTime(dictData?.accountCreatedAt) },
+    { label: "ISPB", value: dictData?.ispb ?? "-" },
+    { label: "Code", value: dictData?.code ?? "-" },
+  ];
+
   return (
     <Modal onClose={handleClose} title="Pix out" fit>
       <div className="flex max-h-[78vh] w-full min-w-0 flex-col gap-4 overflow-y-auto pr-1 md:max-h-none md:overflow-visible md:pr-0">
         <p className="text-sm text-gray-600">Pagamento via chave Pix com consulta</p>
 
-        {!canUseDict ? (
+        {!canUseDict && (
           <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
             Disponível apenas para usuários Master e Bank.
           </div>
-        ) : null}
+        )}
 
         <div className="flex w-full min-w-0 flex-col gap-3">
           <label className="flex w-full min-w-0 flex-col gap-1">
@@ -682,26 +703,53 @@ export const PixToolModal = ({
             )}
           </div>
 
-          {dictError ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {dictError}
-            </div>
-          ) : null}
+          {canUseDict && (
+            <div className="flex max-h-[260px] flex-col gap-3 overflow-y-auto rounded-xl border border-gray-200 p-4 md:max-h-none md:overflow-visible">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="font-semibold text-gray-900">Consulta</h3>
 
-          {dictData ? (
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-              <InfoRow label="Nome" value={dictData.name} />
-              <InfoRow label="Banco" value={dictData.bankName} />
-              <InfoRow label="Chave consultada" value={dictData.key} />
-              <InfoRow label="Tipo da chave" value={dictData.keyType} />
-              <InfoRow label="Documento" value={dictData.document?.number} />
-              <InfoRow label="Tipo documento" value={dictData.document?.type} />
-              <InfoRow label="Agência" value={dictData.branchNumber} />
-              <InfoRow label="Conta" value={dictData.accountNumber} />
-            </div>
-          ) : null}
+                {dictPending && <span className="text-sm text-gray-500">Consultando...</span>}
 
-          {outData ? <PixOutResponse data={outData} /> : null}
+                {dictReady && (
+                  <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                    Chave pix consultada
+                  </span>
+                )}
+              </div>
+
+              {dictError ? (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+                  {dictError}
+                </div>
+              ) : !dictData ? (
+                <div className="rounded-lg border border-dashed border-gray-200 p-3 text-sm text-gray-500">
+                  Digite uma chave Pix válida e clique em Buscar.
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {publicDictFields.map((field) => (
+                      <InfoRow key={field.label} label={field.label} value={field.value} />
+                    ))}
+                  </div>
+
+                  {isMaster && (
+                    <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      {masterFields.map((field) => (
+                        <InfoRow key={field.label} label={field.label} value={field.value} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {outData && (
+            <div className="rounded-xl border border-gray-200 p-3">
+              <PixOutResponse data={outData} />
+            </div>
+          )}
         </div>
       </div>
     </Modal>
