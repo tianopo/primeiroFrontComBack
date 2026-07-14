@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { Modal } from "src/components/Modal/Modal";
 import { responseError } from "src/config/responseErrors";
 import { Extrato } from "src/pages/Users/components/Gowd/Extrato/Extrato";
-import { useGowdBaasCreateAccount } from "../../hooks/Gowd/Baas/useGowdBaasCreateAccount";
 import { useGowdBaasCreatePixKey } from "../../hooks/Gowd/Baas/useGowdBaasCreatePixKey";
 import { useGowdBaasDeletePixKey } from "../../hooks/Gowd/Baas/useGowdBaasDeletePixKey";
 import { useGowdBaasGetAccount } from "../../hooks/Gowd/Baas/useGowdBaasGetAccount";
 import { useGowdBaasListPixKeys } from "../../hooks/Gowd/Baas/useGowdBaasListPixKeys";
+import { BankAccountCreateForm } from "./BankAccountCreateForm";
 
 type BankEditTabKey = "account" | "statement" | "pixKeys";
 
@@ -41,13 +41,11 @@ export const BankEditModal = ({
   const [accountId, setAccountId] = useState(initialAccountId);
   const [accountDetails, setAccountDetails] = useState<any>(null);
 
-  const [payloadText, setPayloadText] = useState("");
   const [pixKeyType, setPixKeyType] = useState<"CPF" | "CNPJ" | "EMAIL" | "PHONE" | "RANDOM">(
     "CPF",
   );
   const [pixKey, setPixKey] = useState("");
 
-  const createAccount = useGowdBaasCreateAccount();
   const getAccount = useGowdBaasGetAccount();
   const createPixKey = useGowdBaasCreatePixKey();
   const deletePixKey = useGowdBaasDeletePixKey();
@@ -56,31 +54,15 @@ export const BankEditModal = ({
     enabled: open && activeTab === "pixKeys" && Boolean(accountId),
   });
 
-  const defaultCreatePayload = useMemo(() => {
-    const documentNumber = onlyDigits(userDocument);
-
-    return {
-      userId,
-      name: userName || "Novo Cliente",
-      document: {
-        type: getDocumentType(userDocument),
-        number: documentNumber,
-      },
-      email: "",
-      phone: "",
-    };
-  }, [userId, userName, userDocument]);
-
   useEffect(() => {
     if (!open) return;
 
     setActiveTab("account");
     setAccountId(initialAccountId ?? "");
     setAccountDetails(null);
-    setPayloadText(JSON.stringify(defaultCreatePayload, null, 2));
     setPixKeyType(getDocumentType(userDocument) as "CPF" | "CNPJ");
     setPixKey(onlyDigits(userDocument));
-  }, [open, initialAccountId, defaultCreatePayload, userDocument]);
+  }, [open, initialAccountId, userDocument]);
 
   if (!open) return null;
 
@@ -90,34 +72,6 @@ export const BankEditModal = ({
         ? "bg-black text-white"
         : "border border-gray-300 bg-white text-black hover:bg-gray-100"
     }`;
-
-  const handleCreateAccount = async () => {
-    try {
-      if (!userId) {
-        responseError("Selecione um usuário antes de criar a conta BAAS.");
-        return;
-      }
-
-      const payload = JSON.parse(payloadText) as Record<string, unknown>;
-
-      const result = await createAccount.mutateAsync(payload);
-
-      const nextAccountId = String(
-        (result as any)?.accountId ??
-          (result as any)?.accountRequestId ??
-          (result as any)?.id ??
-          "",
-      );
-
-      if (nextAccountId) {
-        setAccountId(nextAccountId);
-      }
-
-      setAccountDetails(result);
-    } catch (error) {
-      responseError(error as any);
-    }
-  };
 
   const handleGetAccountDetails = async () => {
     if (!accountId.trim()) {
@@ -224,21 +178,25 @@ export const BankEditModal = ({
 
         {activeTab === "account" && (
           <div className="flex flex-col gap-4">
-            <section className="rounded-md border border-gray-200 p-4">
-              <h4 className="mb-3 text-lg font-bold">Criar conta BAAS</h4>
+            <BankAccountCreateForm
+              userId={userId}
+              userName={userName}
+              userDocument={userDocument}
+              onCreated={(result) => {
+                const nextAccountId = String(
+                  (result as any)?.accountId ??
+                    (result as any)?.accountRequestId ??
+                    (result as any)?.id ??
+                    "",
+                );
 
-              <textarea
-                className="min-h-[260px] w-full rounded-lg border px-3 py-2 font-mono text-sm"
-                value={payloadText}
-                onChange={(e) => setPayloadText(e.target.value)}
-              />
+                if (nextAccountId) {
+                  setAccountId(nextAccountId);
+                }
 
-              <div className="mt-3 flex justify-end">
-                <Button onClick={handleCreateAccount} disabled={createAccount.isPending}>
-                  {createAccount.isPending ? "Criando..." : "Criar conta"}
-                </Button>
-              </div>
-            </section>
+                setAccountDetails(result);
+              }}
+            />
 
             <section className="rounded-md border border-gray-200 p-4">
               <h4 className="mb-3 text-lg font-bold">Consultar detalhes da conta</h4>

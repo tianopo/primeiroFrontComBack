@@ -1,13 +1,13 @@
 import { CardContainer } from "src/components/Layout/CardContainer";
 
-interface IBankTokenCard {
+type BankTokenCardProps = {
   name: string;
   acesso: string;
   bankAccountId: string;
   bankBranchNumber: string;
   bankAccountNumber: string;
   bankPixKeys: Array<{ key: string }>;
-}
+};
 
 export const BankTokenCard = ({
   name,
@@ -16,7 +16,7 @@ export const BankTokenCard = ({
   bankBranchNumber,
   bankAccountNumber,
   bankPixKeys,
-}: IBankTokenCard) => {
+}: BankTokenCardProps) => {
   if (!bankAccountId) {
     return (
       <CardContainer full>
@@ -33,9 +33,7 @@ export const BankTokenCard = ({
       <div className="flex flex-col gap-4">
         <div>
           <h3 className="text-lg font-semibold">Dados bancários</h3>
-          <p className="text-sm text-gray-500">
-            Dados carregados pelo token decodificado do usuário.
-          </p>
+          <p className="text-sm text-gray-500">Dados da conta BAAS do usuário logado.</p>
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
