@@ -7,7 +7,9 @@ import { useGowdBaasCreatePixKey } from "../../hooks/Gowd/Baas/useGowdBaasCreate
 import { useGowdBaasDeletePixKey } from "../../hooks/Gowd/Baas/useGowdBaasDeletePixKey";
 import { useGowdBaasGetAccount } from "../../hooks/Gowd/Baas/useGowdBaasGetAccount";
 import { useGowdBaasListPixKeys } from "../../hooks/Gowd/Baas/useGowdBaasListPixKeys";
+import { useGowdBaasUserAccount } from "../../hooks/Gowd/Baas/useGowdBaasUserAccount";
 import { BankAccountCreateForm } from "./BankAccountCreateForm";
+import { BankAccountDetailsForm } from "./BankAccountDetailsForm";
 
 type BankEditTabKey = "account" | "statement" | "pixKeys";
 
@@ -41,6 +43,14 @@ export const BankEditModal = ({
   const [accountId, setAccountId] = useState(initialAccountId);
   const [accountDetails, setAccountDetails] = useState<any>(null);
 
+  const userAccount = useGowdBaasUserAccount(userId, userDocument, {
+    enabled: open,
+  });
+
+  const resolvedAccountId = String(userAccount.data?.accountId ?? accountId ?? "").trim();
+  const foundAccount = Boolean(userAccount.data?.found && userAccount.data?.account);
+  const canCreateAccount = Boolean(userAccount.data?.canCreate);
+
   const [pixKeyType, setPixKeyType] = useState<"CPF" | "CNPJ" | "EMAIL" | "PHONE" | "RANDOM">(
     "CPF",
   );
@@ -50,9 +60,17 @@ export const BankEditModal = ({
   const createPixKey = useGowdBaasCreatePixKey();
   const deletePixKey = useGowdBaasDeletePixKey();
 
-  const pixKeysQuery = useGowdBaasListPixKeys(accountId, {
-    enabled: open && activeTab === "pixKeys" && Boolean(accountId),
+  const pixKeysQuery = useGowdBaasListPixKeys(resolvedAccountId, {
+    enabled: open && activeTab === "pixKeys" && Boolean(resolvedAccountId),
   });
+
+  useEffect(() => {
+    const nextAccountId = String(userAccount.data?.accountId ?? "").trim();
+
+    if (nextAccountId) {
+      setAccountId(nextAccountId);
+    }
+  }, [userAccount.data?.accountId]);
 
   useEffect(() => {
     if (!open) return;
@@ -73,19 +91,9 @@ export const BankEditModal = ({
         : "border border-gray-300 bg-white text-black hover:bg-gray-100"
     }`;
 
-  const handleGetAccountDetails = async () => {
-    if (!accountId.trim()) {
-      responseError("Informe o accountId para consultar os detalhes da conta.");
-      return;
-    }
-
-    const result = await getAccount.mutateAsync(accountId.trim());
-    setAccountDetails(result);
-  };
-
   const handleCreatePixKey = async () => {
-    if (!accountId.trim()) {
-      responseError("Informe o accountId antes de criar a chave Pix.");
+    if (!resolvedAccountId) {
+      responseError("Conta BAAS não encontrada para criar chave Pix.");
       return;
     }
 
@@ -95,7 +103,7 @@ export const BankEditModal = ({
     }
 
     await createPixKey.mutateAsync({
-      accountId: accountId.trim(),
+      accountId: resolvedAccountId,
       body: {
         type: pixKeyType,
         key: pixKey.trim(),
@@ -107,13 +115,13 @@ export const BankEditModal = ({
   };
 
   const handleDeletePixKey = async (keyId: string) => {
-    if (!accountId.trim()) {
-      responseError("Informe o accountId antes de deletar a chave Pix.");
+    if (!resolvedAccountId) {
+      responseError("Conta BAAS não encontrada para deletar chave Pix.");
       return;
     }
 
     await deletePixKey.mutateAsync({
-      accountId: accountId.trim(),
+      accountId: resolvedAccountId,
       keyId,
     });
 
@@ -178,63 +186,60 @@ export const BankEditModal = ({
 
         {activeTab === "account" && (
           <div className="flex flex-col gap-4">
-            <BankAccountCreateForm
-              userId={userId}
-              userName={userName}
-              userDocument={userDocument}
-              onCreated={(result) => {
-                const nextAccountId = String(
-                  (result as any)?.accountId ??
-                    (result as any)?.accountRequestId ??
-                    (result as any)?.id ??
-                    "",
-                );
+            {userAccount.isLoading ? (
+              <section className="rounded-md border border-gray-200 p-4">
+                <h4 className="text-lg font-bold">Conta BAAS</h4>
+                <p className="mt-2 text-sm text-gray-500">Buscando conta BAAS do usuário...</p>
+              </section>
+            ) : foundAccount ? (
+              <BankAccountDetailsForm account={userAccount.data?.account} />
+            ) : canCreateAccount ? (
+              <BankAccountCreateForm
+                userId={userId}
+                userName={userName}
+                userDocument={userDocument}
+                onCreated={async (result) => {
+                  const nextAccountId = String(
+                    (result as { accountId?: string; accountRequestId?: string; id?: string })
+                      ?.accountId ??
+                      (result as { accountId?: string; accountRequestId?: string; id?: string })
+                        ?.accountRequestId ??
+                      (result as { accountId?: string; accountRequestId?: string; id?: string })
+                        ?.id ??
+                      "",
+                  );
 
-                if (nextAccountId) {
-                  setAccountId(nextAccountId);
-                }
+                  if (nextAccountId) {
+                    setAccountId(nextAccountId);
+                  }
 
-                setAccountDetails(result);
-              }}
-            />
-
-            <section className="rounded-md border border-gray-200 p-4">
-              <h4 className="mb-3 text-lg font-bold">Consultar detalhes da conta</h4>
-
-              <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
-                <input
-                  className="rounded-lg border px-3 py-2"
-                  placeholder="Informe o accountId"
-                  value={accountId}
-                  onChange={(e) => setAccountId(e.target.value)}
-                />
-
-                <Button onClick={handleGetAccountDetails} disabled={getAccount.isPending}>
-                  {getAccount.isPending ? "Consultando..." : "Buscar detalhes"}
-                </Button>
-              </div>
-
-              {accountDetails ? (
-                <pre className="mt-4 max-h-[360px] overflow-auto rounded-lg bg-gray-900 p-3 text-xs text-white">
-                  {JSON.stringify(accountDetails, null, 2)}
-                </pre>
-              ) : null}
-            </section>
+                  await userAccount.refetch();
+                }}
+              />
+            ) : (
+              <section className="rounded-md border border-yellow-200 bg-yellow-50 p-4">
+                <h4 className="text-lg font-bold text-yellow-900">Conta BAAS</h4>
+                <p className="mt-2 text-sm text-yellow-800">
+                  {userAccount.data?.message ||
+                    "Não foi possível carregar a conta BAAS deste usuário."}
+                </p>
+              </section>
+            )}
           </div>
         )}
 
         {activeTab === "statement" && (
           <div className="flex flex-col gap-3">
-            {!accountId ? (
+            {!resolvedAccountId ? (
               <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
-                Informe ou crie um accountId na aba Conta antes de consultar o extrato.
+                Crie uma conta BAAS na aba Conta antes de consultar o extrato.
               </div>
             ) : (
               <Extrato
                 scope="baas"
-                accountId={accountId}
+                accountId={resolvedAccountId}
                 title={`Extrato BAAS - ${userName || "Usuário"}`}
-                companyLabel={`Conta BAAS: ${accountId}`}
+                companyLabel={`Conta BAAS: ${resolvedAccountId}`}
                 pixKeyLabel="Chave Pix da conta BAAS"
               />
             )}
@@ -243,7 +248,7 @@ export const BankEditModal = ({
 
         {activeTab === "pixKeys" && (
           <div className="flex flex-col gap-4">
-            {!accountId ? (
+            {!resolvedAccountId ? (
               <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
                 Informe ou crie um accountId na aba Conta antes de gerenciar chaves Pix.
               </div>

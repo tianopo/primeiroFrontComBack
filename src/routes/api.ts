@@ -7,6 +7,7 @@ export const apiRoute = {
   validateToken: "/auth/validate-token",
 
   changePassword: "/auth/change-password",
+  masterChangeUserPassword: "/auth/master/change-user-password",
   completeTotpLogin: "/auth/complete-totp-login",
   passkeyLoginOptions: "/auth/passkey/login/options",
   passkeyLoginVerify: "/auth/passkey/login/verify",
@@ -129,6 +130,8 @@ export const apiRoute = {
     baasDictKeyCheck: "/gowd/baas/dict/key/check",
     baasPixOut: "/gowd/baas/payouts/brazil/pix",
     baasRefund: "/gowd/baas/refund",
+    baasUserBankingAccount: (userId: string) =>
+      `/gowd/baas/banking/users/${encodeURIComponent(userId)}/account`,
 
     baasCreateBankingAccount: "/gowd/baas/banking/accounts",
     baasBankingAccount: (accountId: string) =>

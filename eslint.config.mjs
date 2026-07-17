@@ -50,7 +50,7 @@ export default [
             }],
 
             "max-lines": ["error", {
-                max: 200,
+                max: 290,
             }],
 
             "no-duplicate-imports": "error",

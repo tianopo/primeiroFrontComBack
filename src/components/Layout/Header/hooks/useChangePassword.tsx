@@ -14,11 +14,12 @@ export interface IChangePassword {
   senhaAntiga: string;
   novaSenha: string;
   confirmarSenha: string;
+  actionTicketId?: string;
 }
 
 export const useChangePassword = () => {
   const { t: translator } = useTranslation();
-  const t = (t: string) => translator(`hooks.auth.${t}`);
+  const t = (value: string) => translator(`hooks.auth.${value}`);
   const { mutate: mutateLogout } = useLogout();
 
   const { mutate, isPending } = useMutation({
@@ -45,15 +46,26 @@ export const useChangePassword = () => {
       .required()
       .oneOf([Yup.ref("novaSenha")], t("passwordMatch"))
       .label("Confirmar Senha"),
+    actionTicketId: Yup.string().optional(),
   });
 
   const context = useForm<IChangePassword>({
     resolver: yupResolver(schema),
     reValidateMode: "onChange",
+    defaultValues: {
+      senhaAntiga: "",
+      novaSenha: "",
+      confirmarSenha: "",
+      actionTicketId: "",
+    },
   });
 
-  async function path(data: Yup.InferType<typeof schema>): Promise<void> {
-    await api().put(`${apiRoute.changePassword}`, data);
+  async function path(data: IChangePassword): Promise<void> {
+    await api().put(apiRoute.changePassword, {
+      senhaAntiga: data.senhaAntiga,
+      novaSenha: data.novaSenha,
+      actionTicketId: data.actionTicketId || undefined,
+    });
   }
 
   return { mutate, isPending, context };

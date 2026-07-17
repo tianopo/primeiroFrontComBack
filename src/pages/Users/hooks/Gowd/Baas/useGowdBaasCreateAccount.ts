@@ -18,8 +18,6 @@ export const useGowdBaasCreateAccount = () => {
     onSuccess: () => {
       responseSuccess("Conta BAAS solicitada com sucesso.");
     },
-    onError: (error: AxiosError) => {
-      responseError(error);
-    },
+    onError: (erro: AxiosError) => responseError(erro),
   });
 };

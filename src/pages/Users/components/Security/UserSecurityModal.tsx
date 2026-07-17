@@ -20,6 +20,7 @@ export enum Role {
 
 type UserSecurityProfile = {
   userId: string;
+  document: string;
   role: string;
   hasTotp: boolean;
   hasAlternativePassword: boolean;
@@ -142,6 +143,58 @@ export const UserSecurityModal = ({
   const [logsPage, setLogsPage] = useState(1);
   const [logsHasMore, setLogsHasMore] = useState(false);
   const [logsLoading, setLogsLoading] = useState(false);
+
+  const [masterNewPassword, setMasterNewPassword] = useState("");
+  const [masterConfirmPassword, setMasterConfirmPassword] = useState("");
+
+  const changeUserPasswordAsMaster = async () => {
+    if (!profile?.document) {
+      responseError({
+        response: {
+          data: {
+            message: "Documento do usuário não encontrado.",
+          },
+        },
+      } as AxiosError);
+      return;
+    }
+
+    if (!masterNewPassword || !masterConfirmPassword) {
+      responseError({
+        response: {
+          data: {
+            message: "Informe e confirme a nova senha.",
+          },
+        },
+      } as AxiosError);
+      return;
+    }
+
+    if (masterNewPassword !== masterConfirmPassword) {
+      responseError({
+        response: {
+          data: {
+            message: "As senhas não conferem.",
+          },
+        },
+      } as AxiosError);
+      return;
+    }
+
+    try {
+      await api().put(apiRoute.masterChangeUserPassword, {
+        document: profile.document,
+        novaSenha: masterNewPassword,
+      });
+
+      responseSuccess("Senha do usuário alterada com sucesso.");
+      setMasterNewPassword("");
+      setMasterConfirmPassword("");
+      await loadLogs(1, false);
+    } catch (error) {
+      responseError(error as AxiosError);
+    }
+  };
 
   const [confirmDelete, setConfirmDelete] = useState<{
     open: boolean;
@@ -541,6 +594,41 @@ export const UserSecurityModal = ({
                     <Actions>
                       <Button onClick={regenerateRecoveryCodes}>Gerar novos códigos</Button>
                     </Actions>
+                  </SectionCard>
+                  <SectionCard
+                    title="Alterar senha principal"
+                    subtitle="Apenas Master pode alterar a senha principal do usuário sem informar a senha antiga."
+                  >
+                    <ActionRow>
+                      <div className="grid w-full grid-cols-1 gap-3 md:grid-cols-2">
+                        <InputX
+                          title="Nova senha principal"
+                          value={masterNewPassword}
+                          onChange={(e) => setMasterNewPassword(e.target.value)}
+                        />
+
+                        <InputX
+                          title="Confirmar nova senha"
+                          value={masterConfirmPassword}
+                          onChange={(e) => setMasterConfirmPassword(e.target.value)}
+                        />
+                      </div>
+
+                      <Actions>
+                        <Button
+                          onClick={() =>
+                            setConfirmDelete({
+                              open: true,
+                              title: `Tem certeza que deseja alterar a senha principal de ${userLabel}?`,
+                              onConfirm: changeUserPasswordAsMaster,
+                            })
+                          }
+                          disabled={!masterNewPassword || !masterConfirmPassword}
+                        >
+                          Alterar senha
+                        </Button>
+                      </Actions>
+                    </ActionRow>
                   </SectionCard>
                 </div>
               )}

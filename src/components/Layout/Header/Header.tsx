@@ -1,6 +1,5 @@
 import { Gear, List } from "@phosphor-icons/react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAccessControl } from "src/routes/context/AccessControl";
 import { SidebarX } from "../Sidebar/SidebarX";
 import { ModalPassword } from "./components/ModalPassword";
@@ -19,11 +18,8 @@ interface IHeader {
 export const Header = ({ navbar }: IHeader) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const navigate = useNavigate();
   const { name } = useAccessControl();
 
-  // ✅ use o novo hook quando estiver pronto:
-  // const prices = useBinanceReferencePrices();
   const prices = useBinancePrices();
 
   const toggleMenu = () => setMenuOpen((prev) => !prev);
