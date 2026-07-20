@@ -120,17 +120,23 @@ export const BankEditModal = ({
       return;
     }
 
-    if (!pixKey.trim()) {
+    if (pixKeyType !== "RANDOM" && !pixKey.trim()) {
       responseError("Informe a chave Pix.");
       return;
     }
 
     await createPixKey.mutateAsync({
       accountId: resolvedAccountId,
-      body: {
-        type: pixKeyType,
-        key: pixKey.trim(),
-      },
+      body:
+        pixKeyType === "RANDOM"
+          ? { type: "RANDOM" }
+          : {
+              type: pixKeyType,
+              key:
+                pixKeyType === "CPF" || pixKeyType === "CNPJ"
+                  ? pixKey.replace(/\D/g, "")
+                  : pixKey.trim(),
+            },
     });
 
     setPixKey("");

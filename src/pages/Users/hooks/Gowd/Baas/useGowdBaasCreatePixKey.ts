@@ -1,39 +1,30 @@
 import { useMutation } from "@tanstack/react-query";
-import { AxiosError } from "axios";
+import { isAxiosError } from "axios";
 import { api } from "src/config/api";
 import { responseError, responseSuccess } from "src/config/responseErrors";
 import { apiRoute } from "src/routes/api";
 
+type PixKeyType = "CPF" | "CNPJ" | "EMAIL" | "PHONE" | "RANDOM";
+
 type CreateBaasPixKeyPayload = {
   accountId: string;
   body: {
-    type: "CPF" | "CNPJ" | "EMAIL" | "PHONE" | "RANDOM";
-    key: string;
+    type: PixKeyType;
+    key?: string;
   };
-  idempotencyKey?: string;
 };
 
 export const useGowdBaasCreatePixKey = () => {
   return useMutation({
-    mutationFn: async (payload: CreateBaasPixKeyPayload) => {
-      const { data } = await api().post(
-        apiRoute.gowd.baasBankingAccountKeys(payload.accountId),
-        payload.body,
-        {
-          headers: {
-            "idempotency-key":
-              payload.idempotencyKey ?? `gowd-baas-pix-key-${payload.accountId}-${Date.now()}`,
-          },
-        },
-      );
-
+    mutationFn: async ({ accountId, body }: CreateBaasPixKeyPayload) => {
+      const { data } = await api().post(apiRoute.gowd.baasBankingAccountKeys(accountId), body);
       return data;
     },
     onSuccess: () => {
       responseSuccess("Chave Pix criada com sucesso.");
     },
-    onError: (error: AxiosError) => {
-      responseError(error);
+    onError: (error: unknown) => {
+      responseError(isAxiosError(error) ? error : "Erro ao criar chave Pix BAAS.");
     },
   });
 };
