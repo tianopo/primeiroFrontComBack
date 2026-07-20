@@ -7,9 +7,11 @@ import { useGowdBaasCreatePixKey } from "../../hooks/Gowd/Baas/useGowdBaasCreate
 import { useGowdBaasDeletePixKey } from "../../hooks/Gowd/Baas/useGowdBaasDeletePixKey";
 import { useGowdBaasGetAccount } from "../../hooks/Gowd/Baas/useGowdBaasGetAccount";
 import { useGowdBaasListPixKeys } from "../../hooks/Gowd/Baas/useGowdBaasListPixKeys";
+import { useGowdBaasUpdateUserAccountId } from "../../hooks/Gowd/Baas/useGowdBaasUpdateUserAccountId";
 import { useGowdBaasUserAccount } from "../../hooks/Gowd/Baas/useGowdBaasUserAccount";
 import { BankAccountCreateForm } from "./BankAccountCreateForm";
 import { BankAccountDetailsForm } from "./BankAccountDetailsForm";
+import { UpdateBaasAccountIdForm } from "./UpdateBaasAccountIdForm";
 
 type BankEditTabKey = "account" | "statement" | "pixKeys";
 
@@ -43,13 +45,34 @@ export const BankEditModal = ({
   const [accountId, setAccountId] = useState(initialAccountId);
   const [accountDetails, setAccountDetails] = useState<any>(null);
 
+  const updateAccountId = useGowdBaasUpdateUserAccountId();
+  const [newAccountId, setNewAccountId] = useState("");
+
   const userAccount = useGowdBaasUserAccount(userId, userDocument, {
     enabled: open,
   });
 
   const resolvedAccountId = String(userAccount.data?.accountId ?? accountId ?? "").trim();
-  const foundAccount = Boolean(userAccount.data?.found && userAccount.data?.account);
-  const canCreateAccount = Boolean(userAccount.data?.canCreate);
+
+  const accountFromApi = userAccount.data?.account;
+
+  const hasRealGowdAccountDetails = Boolean(
+    accountFromApi?.country ||
+      accountFromApi?.holderType ||
+      accountFromApi?.email ||
+      accountFromApi?.phone ||
+      accountFromApi?.address ||
+      accountFromApi?.bankAccountData?.accountNumber ||
+      accountFromApi?.bankAccountData?.branchNumber,
+  );
+
+  const needsAccountIdUpdate = Boolean(
+    userAccount.data?.canUpdateAccountId ||
+      userAccount.data?.reason === "FOUND_IN_DATABASE_ONLY" ||
+      userAccount.data?.reason === "ACCOUNT_ID_UPDATE_REQUIRED" ||
+      userAccount.data?.reason === "ACCOUNT_NOT_AVAILABLE_YET" ||
+      (userAccount.data?.found && userAccount.data?.account && !hasRealGowdAccountDetails),
+  );
 
   const [pixKeyType, setPixKeyType] = useState<"CPF" | "CNPJ" | "EMAIL" | "PHONE" | "RANDOM">(
     "CPF",
@@ -136,6 +159,30 @@ export const BankEditModal = ({
         ? (pixKeysQuery.data as any).data
         : [];
 
+  const handleUpdateAccountId = async () => {
+    if (!userId) {
+      responseError("Selecione um usuário antes de atualizar o accountId.");
+      return;
+    }
+
+    if (!newAccountId.trim()) {
+      responseError("Informe o novo accountId ativo da Gowd.");
+      return;
+    }
+
+    await updateAccountId.mutateAsync({
+      userId,
+      currentAccountId: resolvedAccountId,
+      newAccountId: newAccountId.trim(),
+      documentNumber: userDocument,
+      status: "ACTIVE",
+    });
+
+    await userAccount.refetch();
+
+    onClose();
+  };
+
   return (
     <Modal onClose={onClose} title={`Bank BAAS${userLabel ? ` - ${userLabel}` : ""}`} fit>
       <div className="flex max-h-[80vh] w-full flex-col gap-4 overflow-y-auto">
@@ -191,9 +238,19 @@ export const BankEditModal = ({
                 <h4 className="text-lg font-bold">Conta BAAS</h4>
                 <p className="mt-2 text-sm text-gray-500">Buscando conta BAAS do usuário...</p>
               </section>
-            ) : foundAccount ? (
-              <BankAccountDetailsForm account={userAccount.data?.account} />
-            ) : canCreateAccount ? (
+            ) : needsAccountIdUpdate ? (
+              <UpdateBaasAccountIdForm
+                userId={userId}
+                userDocument={userDocument}
+                currentAccountId={resolvedAccountId}
+                onUpdated={async () => {
+                  await userAccount.refetch();
+                  onClose();
+                }}
+              />
+            ) : userAccount.data?.found && userAccount.data?.account ? (
+              <BankAccountDetailsForm account={userAccount.data.account} />
+            ) : userAccount.data?.canCreate ? (
               <BankAccountCreateForm
                 userId={userId}
                 userName={userName}

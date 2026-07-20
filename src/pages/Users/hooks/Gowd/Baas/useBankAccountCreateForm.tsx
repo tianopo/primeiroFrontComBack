@@ -26,6 +26,29 @@ export interface IBankAccountCreateSchema {
     zipCode: string;
     complement?: string;
   };
+  representatives?: Array<{
+    country?: string;
+    fullName?: string;
+    email?: string;
+    phone?: string;
+    birthdate?: string;
+    documentNumber?: string;
+  }>;
+  onboardingDocuments?: {
+    tradingName?: string;
+    businessName?: string;
+    contactNumber?: string;
+    site?: string;
+    socialContract?: string;
+    cnpjCard?: string;
+    proofAddress?: string;
+    proofBankAddress?: string;
+    partnerProofAddress?: string;
+    documentRepresentative?: string;
+    selfieRepresentative?: string;
+    ir?: string;
+    kyc?: string;
+  };
 }
 
 interface IUseBankAccountCreateForm {
@@ -34,7 +57,7 @@ interface IUseBankAccountCreateForm {
   userDocument: string;
 }
 
-const onlyDigits = (value: string) => String(value ?? "").replace(/\D/g, "");
+const onlyDigits = (value?: string | null) => String(value ?? "").replace(/\D/g, "");
 
 const getDocumentType = (document: string): BankAccountDocumentType => {
   return onlyDigits(document).length > 11 ? "CNPJ" : "CPF";
@@ -78,6 +101,35 @@ export const useBankAccountCreateForm = ({
         .label("CEP"),
       complement: Yup.string().optional().label("complemento"),
     }),
+    representatives: Yup.array()
+      .of(
+        Yup.object().shape({
+          country: Yup.string().optional(),
+          fullName: Yup.string().optional(),
+          email: Yup.string().optional(),
+          phone: Yup.string().optional(),
+          birthdate: Yup.string().optional(),
+          documentNumber: Yup.string().optional(),
+        }),
+      )
+      .optional(),
+    onboardingDocuments: Yup.object()
+      .shape({
+        tradingName: Yup.string().optional(),
+        businessName: Yup.string().optional(),
+        contactNumber: Yup.string().optional(),
+        site: Yup.string().optional(),
+        socialContract: Yup.string().optional(),
+        cnpjCard: Yup.string().optional(),
+        proofAddress: Yup.string().optional(),
+        proofBankAddress: Yup.string().optional(),
+        partnerProofAddress: Yup.string().optional(),
+        documentRepresentative: Yup.string().optional(),
+        selfieRepresentative: Yup.string().optional(),
+        ir: Yup.string().optional(),
+        kyc: Yup.string().optional(),
+      })
+      .optional(),
   });
 
   const defaultValues = useMemo<IBankAccountCreateSchema>(() => {
@@ -100,6 +152,31 @@ export const useBankAccountCreateForm = ({
         state: "",
         zipCode: "",
         complement: "",
+      },
+      representatives: [
+        {
+          country: "BRA",
+          fullName: "",
+          email: "",
+          phone: "",
+          birthdate: "",
+          documentNumber: "",
+        },
+      ],
+      onboardingDocuments: {
+        tradingName: "",
+        businessName: "",
+        contactNumber: "",
+        site: "",
+        socialContract: "",
+        cnpjCard: "",
+        proofAddress: "",
+        proofBankAddress: "",
+        partnerProofAddress: "",
+        documentRepresentative: "",
+        selfieRepresentative: "",
+        ir: "",
+        kyc: "",
       },
     };
   }, [userId, userName, userDocument]);

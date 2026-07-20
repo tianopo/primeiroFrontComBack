@@ -1,12 +1,13 @@
 import { get } from "react-hook-form";
 import { Button } from "src/components/Buttons/Button";
-import { useGowdBaasCreateAccount } from "../../hooks/Gowd/Baas/useGowdBaasCreateAccount";
 import {
-  useBankAccountCreateForm,
-  IBankAccountCreateSchema,
-  BankAccountHolderType,
   BankAccountDocumentType,
+  BankAccountHolderType,
+  IBankAccountCreateSchema,
+  useBankAccountCreateForm,
 } from "../../hooks/Gowd/Baas/useBankAccountCreateForm";
+import { useGowdBaasCreateAccount } from "../../hooks/Gowd/Baas/useGowdBaasCreateAccount";
+import { responseError } from "src/config/responseErrors";
 
 interface IBankAccountCreateForm {
   userId: string;
@@ -54,17 +55,53 @@ export const BankAccountCreateForm = ({
   };
 
   const createNewAccount = async (values: IBankAccountCreateSchema) => {
+    const documentNumber = onlyDigits(values.document.number);
+
+    const isCnpj = documentNumber.length === 14;
+    const isCpf = documentNumber.length === 11;
+
+    if (!isCpf && !isCnpj) {
+      responseError("Documento inválido. CPF deve ter 11 dígitos e CNPJ deve ter 14 dígitos.");
+      return;
+    }
+
+    const holderType: BankAccountHolderType = isCnpj ? "ORGANIZATION" : "INDIVIDUAL";
+    const documentType: BankAccountDocumentType = isCnpj ? "CNPJ" : "CPF";
+
+    const representatives = Array.isArray(values.representatives)
+      ? values.representatives
+          .map((representative) => ({
+            country: "BRA",
+            fullName: String(representative.fullName ?? "").trim(),
+            email: String(representative.email ?? "").trim(),
+            phone: String(representative.phone ?? "").trim(),
+            birthdate: String(representative.birthdate ?? "").trim(),
+            documentNumber: onlyDigits(representative.documentNumber ?? ""),
+          }))
+          .filter((representative) => {
+            return (
+              representative.fullName ||
+              representative.email ||
+              representative.phone ||
+              representative.birthdate ||
+              representative.documentNumber
+            );
+          })
+      : [];
+
+    const onboardingDocuments = cleanOptionalObject(values.onboardingDocuments);
+
     const payload = {
       userId: values.userId,
       country: values.country.trim(),
-      holderType: values.holderType,
+      holderType,
       fullName: values.fullName.replace(/\s+/g, " ").trim(),
       email: values.email.trim(),
       phone: values.phone.trim(),
       birthdate: values.birthdate.trim(),
       document: {
-        type: values.document.type,
-        number: onlyDigits(values.document.number),
+        type: documentType,
+        number: documentNumber,
       },
       address: {
         street: values.address.street.trim(),
@@ -74,11 +111,29 @@ export const BankAccountCreateForm = ({
         zipCode: onlyDigits(values.address.zipCode),
         complement: String(values.address.complement ?? "").trim(),
       },
+      ...(representatives.length > 0 ? { representatives } : {}),
+      ...(onboardingDocuments ? { onboardingDocuments } : {}),
     };
 
     const result = await createAccount.mutateAsync(payload);
 
     onCreated?.(result);
+  };
+
+  const cleanOptionalObject = (input?: Record<string, unknown>) => {
+    if (!input) return undefined;
+
+    const output: Record<string, string> = {};
+
+    Object.entries(input).forEach(([key, value]) => {
+      const normalizedValue = String(value ?? "").trim();
+
+      if (normalizedValue) {
+        output[key] = normalizedValue;
+      }
+    });
+
+    return Object.keys(output).length > 0 ? output : undefined;
   };
 
   return (
@@ -240,6 +295,173 @@ export const BankAccountCreateForm = ({
                 {...register("address.complement")}
               />
               <ErrorText message={getErrorMessage("address.complement")} />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-2">
+          <h5 className="mb-3 font-semibold">Representante</h5>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">Nome do representante</label>
+              <input
+                className="rounded-lg border px-3 py-2"
+                placeholder="João Silva"
+                {...register("representatives.0.fullName")}
+              />
+              <ErrorText message={getErrorMessage("representatives.0.fullName")} />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">E-mail do representante</label>
+              <input
+                className="rounded-lg border px-3 py-2"
+                placeholder="representante@email.com"
+                {...register("representatives.0.email")}
+              />
+              <ErrorText message={getErrorMessage("representatives.0.email")} />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">Telefone do representante</label>
+              <input
+                className="rounded-lg border px-3 py-2"
+                placeholder="+5511999999999"
+                {...register("representatives.0.phone")}
+              />
+              <ErrorText message={getErrorMessage("representatives.0.phone")} />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">Nascimento do representante</label>
+              <input
+                className="rounded-lg border px-3 py-2"
+                type="date"
+                {...register("representatives.0.birthdate")}
+              />
+              <ErrorText message={getErrorMessage("representatives.0.birthdate")} />
+            </div>
+
+            <div className="flex flex-col gap-1 md:col-span-2">
+              <label className="text-sm font-medium">CPF do representante</label>
+              <input
+                className="rounded-lg border px-3 py-2"
+                placeholder="12345678911"
+                {...register("representatives.0.documentNumber")}
+              />
+              <ErrorText message={getErrorMessage("representatives.0.documentNumber")} />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-2">
+          <h5 className="mb-3 font-semibold">Onboarding PJ</h5>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">Nome fantasia</label>
+              <input
+                className="rounded-lg border px-3 py-2"
+                {...register("onboardingDocuments.tradingName")}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">Razão social</label>
+              <input
+                className="rounded-lg border px-3 py-2"
+                {...register("onboardingDocuments.businessName")}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">Telefone de contato</label>
+              <input
+                className="rounded-lg border px-3 py-2"
+                {...register("onboardingDocuments.contactNumber")}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">Site</label>
+              <input
+                className="rounded-lg border px-3 py-2"
+                placeholder="https://empresa.com.br"
+                {...register("onboardingDocuments.site")}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1 md:col-span-2">
+              <label className="text-sm font-medium">Contrato social URL</label>
+              <input
+                className="rounded-lg border px-3 py-2"
+                {...register("onboardingDocuments.socialContract")}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">Cartão CNPJ URL</label>
+              <input
+                className="rounded-lg border px-3 py-2"
+                {...register("onboardingDocuments.cnpjCard")}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">Comprovante endereço URL</label>
+              <input
+                className="rounded-lg border px-3 py-2"
+                {...register("onboardingDocuments.proofAddress")}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">Comprovante banco URL</label>
+              <input
+                className="rounded-lg border px-3 py-2"
+                {...register("onboardingDocuments.proofBankAddress")}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">Comprovante sócio URL</label>
+              <input
+                className="rounded-lg border px-3 py-2"
+                {...register("onboardingDocuments.partnerProofAddress")}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">Documento representante URL</label>
+              <input
+                className="rounded-lg border px-3 py-2"
+                {...register("onboardingDocuments.documentRepresentative")}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">Selfie representante URL</label>
+              <input
+                className="rounded-lg border px-3 py-2"
+                {...register("onboardingDocuments.selfieRepresentative")}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">IR URL</label>
+              <input
+                className="rounded-lg border px-3 py-2"
+                {...register("onboardingDocuments.ir")}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">KYC URL</label>
+              <input
+                className="rounded-lg border px-3 py-2"
+                {...register("onboardingDocuments.kyc")}
+              />
             </div>
           </div>
         </div>

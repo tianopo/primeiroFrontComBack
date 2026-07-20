@@ -143,5 +143,7 @@ export const apiRoute = {
         keyId,
       )}`,
     baasAccountById: (accountId: string) => `/gowd/baas/banking/accounts/${accountId}`,
+    baasUpdateUserBankingAccountId: (userId: string) =>
+      `/gowd/baas/banking/users/${encodeURIComponent(userId)}/account-id`,
   },
 };

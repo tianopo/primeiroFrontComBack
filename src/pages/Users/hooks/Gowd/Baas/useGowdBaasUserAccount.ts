@@ -5,10 +5,37 @@ import { apiRoute } from "src/routes/api";
 export type GowdBaasUserAccountResponse = {
   found: boolean;
   canCreate: boolean;
+  canUpdateAccountId: boolean;
   reason: string;
   message: string;
   accountId: string | null;
-  account: any | null;
+  account: {
+    id?: string;
+    status?: string;
+    country?: string;
+    holderType?: string;
+    fullName?: string;
+    email?: string;
+    phone?: string;
+    birthdate?: string;
+    document?: {
+      type?: string;
+      number?: string;
+    };
+    address?: {
+      street?: string;
+      neighborhood?: string;
+      city?: string;
+      state?: string;
+      zipCode?: string;
+      complement?: string;
+    };
+    bankAccountData?: {
+      ispb?: string;
+      branchNumber?: string;
+      accountNumber?: string;
+    };
+  } | null;
   user: {
     id: string;
     name: string;
