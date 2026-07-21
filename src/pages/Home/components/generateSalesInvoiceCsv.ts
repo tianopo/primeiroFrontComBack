@@ -100,6 +100,17 @@ const isBtcOrEth = (symbol: string) => {
   return ["BTC", "ETH"].includes(String(symbol || "").toUpperCase());
 };
 
+const SERVICO_CNAE_PROMOCAO_INTERMEDIACAO = "Promoção de Vendas e Intermediação Comercial";
+
+const DESCRICAO_CNAE_PROMOCAO_INTERMEDIACAO =
+  "Prestação de serviços de promoção de vendas e intermediação comercial.";
+
+const OBSERVACAO_CNAE_PROMOCAO_INTERMEDIACAO =
+  "O CNAE é definido pela finalidade econômica da atividade exercida. " +
+  "A promoção de vendas pode envolver aproximação comercial e apoio à concretização de negócios. " +
+  "A nota fiscal refere-se à remuneração/spread pela prestação do serviço, " +
+  "e não ao valor total movimentado na operação.";
+
 const calculateSaleCommission = ({
   transaction,
   precoMedioVenda,
@@ -211,23 +222,27 @@ const buildDescricaoNf = ({
   precoMedioVenda: number;
   observacaoComissao: string;
 }) => {
-  return `- Serviço: Venda de Ativos Digitais
-- Comissão: ${comissao.toFixed(2)}%
+  return `- Serviço: ${SERVICO_CNAE_PROMOCAO_INTERMEDIACAO}
+- Descrição do Serviço: ${DESCRICAO_CNAE_PROMOCAO_INTERMEDIACAO}
+- Enquadramento/Natureza da Atividade: atividade de promoção de vendas e intermediação comercial.
+- Critério de Cálculo do Spread: ${comissao.toFixed(2)}% aplicado sobre o valor da operação.
+- Valor Total da Operação de Referência: ${transaction.valor}
 - Valor Referência da Comissão: ${formatMoneyForCsv(precoMedioVenda)} BRL
 - Identificador da Ordem: ${transaction.numeroOrdem}
 - Data: ${toBRDate(transaction.dataHora)}
 - Valor do Token: ${transaction.valorToken}
 - Ativo Digital: ${transaction.ativo}
 - Quantidade: ${transaction.quantidade}
-- Valor: ${transaction.valor}
 - Exchange/Corretora: ${String(transaction.exchange || "").split(" ")[0]}
 - Margem de Erro Por Token: ${formatMoneyForCsv(margemErroPorToken)} BRL
 
-Observação
+Observação Fiscal
+- ${OBSERVACAO_CNAE_PROMOCAO_INTERMEDIACAO}
+- A empresa não atua como instituição financeira, não concede crédito, não capta recursos do público e não mantém contas de pagamento.
 - ${observacaoComissao}
 
 Suporte de Dúvidas
-- Para informações do P2P, consulte a documentação ou o suporte da corretora, ou entre em contato no whatsapp: (12) 992546355`;
+- Para informações sobre a operação, registros ou documentação de suporte, entre em contato no whatsapp: (12) 992546355`;
 };
 
 const resolveInvoiceDate = (
@@ -256,7 +271,7 @@ export const generateSalesInvoiceCsv = ({
   fileName = `notas-fiscais-vendas-${Date.now()}.csv`,
   modeloNf = "nfse",
   produtoCod = "S100",
-  produtoDescricao = "Venda de Ativos Digitais",
+  produtoDescricao = SERVICO_CNAE_PROMOCAO_INTERMEDIACAO,
   commissionMode = "dinamica",
   comissaoFixaPercentual = 0.01,
   margemErroPorToken = 0.03,
