@@ -14,6 +14,8 @@ const INITIAL_FORM: TOffsetForm = {
   coinexBuyOffset: "0.10",
   mexcSellOffset: "0.10",
   mexcBuyOffset: "0.10",
+  bitgetSellOffset: "0.10",
+  bitgetBuyOffset: "0.10",
 };
 
 export const BallonEditPrice = () => {
@@ -34,6 +36,8 @@ export const BallonEditPrice = () => {
         coinexBuyOffset: String(data.coinexBuyOffset),
         mexcSellOffset: String(data.mexcSellOffset),
         mexcBuyOffset: String(data.mexcBuyOffset),
+        bitgetSellOffset: String(data.bitgetSellOffset),
+        bitgetBuyOffset: String(data.bitgetBuyOffset),
       });
     }
   }, [data]);
@@ -65,6 +69,8 @@ export const BallonEditPrice = () => {
       coinexBuyOffset: parseNumber(form.coinexBuyOffset),
       mexcSellOffset: parseNumber(form.mexcSellOffset),
       mexcBuyOffset: parseNumber(form.mexcBuyOffset),
+      bitgetSellOffset: parseNumber(form.bitgetSellOffset),
+      bitgetBuyOffset: parseNumber(form.bitgetBuyOffset),
     };
 
     const hasInvalid = Object.values(payload).some((value) => !Number.isFinite(value));
@@ -78,7 +84,7 @@ export const BallonEditPrice = () => {
 
   const summary = isLoading
     ? "Carregando..."
-    : `BINANCE___ SELL: ${form.binanceSellOffset} BUY: ${form.binanceBuyOffset} | BYBIT_____ SELL: ${form.bybitSellOffset} BUY: ${form.bybitBuyOffset} | COINEX____ SELL: ${form.coinexSellOffset} BUY: ${form.coinexBuyOffset} | MEXC______ SELL: ${form.mexcSellOffset} BUY: ${form.mexcBuyOffset}`;
+    : `BINANCE___ SELL: ${form.binanceSellOffset} BUY: ${form.binanceBuyOffset} | BYBIT_____ SELL: ${form.bybitSellOffset} BUY: ${form.bybitBuyOffset} | COINEX____ SELL: ${form.coinexSellOffset} BUY: ${form.coinexBuyOffset} | MEXC______ SELL: ${form.mexcSellOffset} BUY: ${form.mexcBuyOffset} | BITGET____ SELL: ${form.bitgetSellOffset} BUY: ${form.bitgetBuyOffset}`;
 
   const renderSection = (
     title: string,
@@ -153,6 +159,7 @@ export const BallonEditPrice = () => {
             {renderSection("Bybit", "bybitSellOffset", "bybitBuyOffset")}
             {renderSection("Coinex", "coinexSellOffset", "coinexBuyOffset")}
             {renderSection("Mexc", "mexcSellOffset", "mexcBuyOffset")}
+            {renderSection("Bitget", "bitgetSellOffset", "bitgetBuyOffset")}
           </div>
 
           <button

@@ -13,6 +13,8 @@ export interface IExchangeOffsets {
   coinexBuyOffset: number;
   mexcSellOffset: number;
   mexcBuyOffset: number;
+  bitgetSellOffset: number;
+  bitgetBuyOffset: number;
 }
 
 export const useUpdateExchangeOffsets = () => {
