@@ -18,6 +18,35 @@ interface IBankAccountCreateForm {
 
 const onlyDigits = (value: string) => String(value ?? "").replace(/\D/g, "");
 
+const isValidCpf = (value: string) => {
+  const cpf = onlyDigits(value);
+
+  if (cpf.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(cpf)) return false;
+
+  let sum = 0;
+
+  for (let i = 0; i < 9; i += 1) {
+    sum += Number(cpf[i]) * (10 - i);
+  }
+
+  let digit = 11 - (sum % 11);
+  const firstDigit = digit >= 10 ? 0 : digit;
+
+  if (firstDigit !== Number(cpf[9])) return false;
+
+  sum = 0;
+
+  for (let i = 0; i < 10; i += 1) {
+    sum += Number(cpf[i]) * (11 - i);
+  }
+
+  digit = 11 - (sum % 11);
+  const secondDigit = digit >= 10 ? 0 : digit;
+
+  return secondDigit === Number(cpf[10]);
+};
+
 const ErrorText = ({ message }: { message?: unknown }) => {
   if (typeof message !== "string" || !message) return null;
 
@@ -88,6 +117,31 @@ export const BankAccountCreateForm = ({
             );
           })
       : [];
+
+    if (isCnpj) {
+      if (representatives.length === 0) {
+        responseError("Para CNPJ, informe ao menos um representante.");
+        return;
+      }
+
+      const invalidRepresentative = representatives.find((representative) => {
+        return (
+          !representative.fullName ||
+          !representative.email ||
+          !representative.phone ||
+          !representative.birthdate ||
+          !representative.documentNumber ||
+          !isValidCpf(representative.documentNumber)
+        );
+      });
+
+      if (invalidRepresentative) {
+        responseError(
+          "Representante inválido. Informe nome, e-mail, telefone, nascimento e um CPF válido.",
+        );
+        return;
+      }
+    }
 
     const onboardingDocuments = cleanOptionalObject(values.onboardingDocuments);
 

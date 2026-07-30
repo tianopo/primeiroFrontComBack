@@ -7,59 +7,89 @@ interface OrderMessagesProps {
 
 const BYBIT_HOSTS = ["https://api.bybit.com", "https://api.bytick.com"];
 
+const CRYPTOTECH_ALIASES = [
+  "crypto tech dev",
+  "crypto tech dv",
+  "cryptotech desenvolvimento e trading ltda",
+];
+
 const buildMediaUrl = (pathOrUrl: string, hostIndex = 0) => {
   const value = String(pathOrUrl ?? "").trim();
-
   if (!value) return "";
 
-  // Binance já vem com URL completa
   if (/^https?:\/\//i.test(value)) return value;
 
-  // Bybit costuma vir como path relativo
   const host = BYBIT_HOSTS[Math.min(hostIndex, BYBIT_HOSTS.length - 1)];
 
   return `${host}${value.startsWith("/") ? "" : "/"}${value}`;
 };
 
 const getMessageText = (msg: any) => {
-  return String(msg?.message ?? msg?.content ?? "");
+  return String(msg?.mensagem ?? msg?.message ?? msg?.content ?? "");
+};
+
+const getFileName = (msg: any) => {
+  return String(msg?.arquivo ?? msg?.fileName ?? "").trim();
+};
+
+const getSender = (msg: any) => {
+  return String(msg?.apelido ?? msg?.fromNickName ?? msg?.nickName ?? "").toLowerCase();
+};
+
+const getType = (msg: any) => {
+  return String(msg?.tipo ?? msg?.type ?? msg?.contentType ?? "").toLowerCase();
 };
 
 const isImageMessage = (msg: any) => {
-  const type = String(msg?.type ?? "").toLowerCase();
-  const contentType = String(msg?.contentType ?? "").toLowerCase();
-
-  return type === "image" || contentType === "pic" || Boolean(msg?.imageUrl);
+  const type = getType(msg);
+  return type === "image" || type === "pic" || Boolean(msg?.imageUrl || msg?.thumbnailUrl);
 };
 
-const getImageRaw = (msg: any) => {
-  return String(msg?.imageUrl || msg?.thumbnailUrl || msg?.message || msg?.content || "").trim();
+const isPdfMessage = (msg: any) => {
+  const type = getType(msg);
+  const file = getFileName(msg).toLowerCase();
+
+  return type === "pdf" || file.endsWith(".pdf");
+};
+
+const getMediaRaw = (msg: any) => {
+  return String(
+    msg?.imageUrl ||
+      msg?.thumbnailUrl ||
+      msg?.url ||
+      msg?.fileUrl ||
+      msg?.mensagem ||
+      msg?.message ||
+      msg?.content ||
+      "",
+  ).trim();
 };
 
 export const OrderMessages = ({ messages }: OrderMessagesProps) => {
-  const [previewSrc, setPreviewSrc] = useState<string>("");
-  const [previewHostIdx, setPreviewHostIdx] = useState<number>(0);
+  const [previewSrc, setPreviewSrc] = useState("");
+  const [previewHostIdx, setPreviewHostIdx] = useState(0);
+  const [previewTitle, setPreviewTitle] = useState("MÍDIA");
 
-  if (!messages || messages.length === 0) return null;
+  if (!messages?.length) return null;
 
-  const cryptotechAliases = [
-    "crypto tech dev",
-    "crypto tech dv",
-    "cryptotech desenvolvimento e trading ltda",
-  ];
+  const modalSrc = previewSrc ? buildMediaUrl(previewSrc, previewHostIdx) : "";
 
-  const hasPreview = !!previewSrc;
-  const modalSrc = hasPreview ? buildMediaUrl(previewSrc, previewHostIdx) : "";
+  const openPreview = (src: string, title: string) => {
+    setPreviewSrc(src);
+    setPreviewHostIdx(0);
+    setPreviewTitle(title);
+  };
 
   return (
     <>
       <ModalMedia
-        open={hasPreview}
+        open={Boolean(previewSrc)}
         src={modalSrc}
-        title="IMAGEM"
+        title={previewTitle}
         onClose={() => {
           setPreviewSrc("");
           setPreviewHostIdx(0);
+          setPreviewTitle("MÍDIA");
         }}
       />
 
@@ -67,18 +97,20 @@ export const OrderMessages = ({ messages }: OrderMessagesProps) => {
         <p className="mb-1 text-sm font-semibold">Mensagens:</p>
 
         <div className="flex flex-col gap-1">
-          {messages.map((msg: any, i: number) => {
-            const sender = String(msg?.fromNickName || msg?.nickName || "").toLowerCase();
+          {messages.map((msg, i) => {
+            const sender = getSender(msg);
+            const type = getType(msg);
+            const text = getMessageText(msg);
+            const fileName = getFileName(msg);
+            const rawMedia = getMediaRaw(msg);
 
-            const isFromCryptotech = cryptotechAliases.includes(sender);
-
+            const isFromCryptotech = CRYPTOTECH_ALIASES.includes(sender);
             const isImage = isImageMessage(msg);
-            const rawImage = getImageRaw(msg);
-            const imgSrc = isImage ? buildMediaUrl(rawImage, 0) : "";
+            const isPdf = isPdfMessage(msg);
 
             const isRead =
               String(msg?.status ?? "").toLowerCase() === "unread" ||
-              Number(msg?.read ?? msg?.isRead ?? 0) === 1;
+              Number(msg?.read ?? msg?.lido ?? msg?.isRead ?? 0) === 1;
 
             const readCls = isRead ? "font-bold" : "font-normal";
 
@@ -89,37 +121,49 @@ export const OrderMessages = ({ messages }: OrderMessagesProps) => {
                   isFromCryptotech ? "bg-gray-100" : "bg-red-100"
                 }`}
               >
-                {isImage && rawImage ? (
+                {isImage && rawMedia ? (
                   <button
                     type="button"
                     className="group flex w-full flex-col items-start gap-2 text-left"
-                    onClick={() => {
-                      setPreviewSrc(rawImage);
-                      setPreviewHostIdx(0);
-                    }}
+                    onClick={() => openPreview(rawMedia, "IMAGEM")}
                     title="Clique para ampliar"
                   >
                     <img
-                      src={imgSrc}
-                      alt={`Imagem ${i + 1}`}
+                      src={buildMediaUrl(rawMedia, 0)}
+                      alt={fileName || `Imagem ${i + 1}`}
                       className="h-12 w-28 rounded-md border object-cover"
                       loading="lazy"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
-                        // fallback apenas para Bybit path relativo
-                        if (/^https?:\/\//i.test(rawImage)) return;
-
-                        const next = buildMediaUrl(rawImage, 1);
-                        e.currentTarget.src = next;
+                        if (/^https?:\/\//i.test(rawMedia)) return;
+                        e.currentTarget.src = buildMediaUrl(rawMedia, 1);
                       }}
                     />
 
                     <span className={`text-xs text-gray-600 group-hover:underline ${readCls}`}>
-                      Clique para ampliar
+                      {fileName || "Clique para ampliar"}
+                    </span>
+                  </button>
+                ) : isPdf && rawMedia ? (
+                  <button
+                    type="button"
+                    className={`flex w-full flex-col items-start rounded-6 border border-gray-200 bg-white px-2 py-1 text-left hover:bg-gray-100 ${readCls}`}
+                    onClick={() => openPreview(rawMedia, "PDF")}
+                    title="Clique para abrir PDF"
+                  >
+                    <span className="text-xs font-semibold text-gray-600">PDF</span>
+                    <span className="break-words text-sm text-gray-900">
+                      {fileName || "Abrir PDF"}
                     </span>
                   </button>
                 ) : (
-                  <p className={`whitespace-pre-wrap ${readCls}`}>{getMessageText(msg) || "-"}</p>
+                  <p className={`whitespace-pre-wrap break-words ${readCls}`}>
+                    {text || fileName || "-"}
+                  </p>
+                )}
+
+                {type === "SYS_ORDER_CARD" && (
+                  <span className="mt-1 block text-[10px] text-gray-500">Sistema</span>
                 )}
               </div>
             );

@@ -10,9 +10,10 @@ import { GenerateContractButton } from "./components/GenerateContractButton";
 import { generateSalesInvoiceCsv } from "./components/generateSalesInvoiceCsv";
 import { IN1888 } from "./components/IN1888";
 import { fortnigthlyFiduciaTable } from "./config/fortnigthlyFiduciaTable";
+import { handleCompraVendaDeCripto } from "./config/handleDeCripto";
 import { handleCompraVendaIN1888 } from "./config/handleDownload";
 import { handleReceipt } from "./config/handleReceipt";
-import { parseBRL, parseNum, toBRDate } from "./config/helpers";
+import { parseBRL, parseNum } from "./config/helpers";
 import { mensalFiduciaTable } from "./config/mensalFiduciaTable";
 import { useDeleteOrder } from "./hooks/useDeleteOrder";
 import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
@@ -202,136 +203,6 @@ export const Home = () => {
   const showFortnightButton = diffDays >= 12 && diffDays <= 16;
   const showMonthlyButton = diffDays >= 27;
 
-  const handleTransactions = async () => {
-    if (!filteredData) return;
-
-    // Config fixa
-    const hoje = new Date();
-    const monthName = hoje.toLocaleDateString("pt-BR", { month: "long" });
-    const comissaoFixa = 0.01; // % base para não-stable / fallback
-    const comissaoMargemErro = 3; // ajuste de margem
-    const codMunicipioServicoPrestado = 352440;
-    const codAtividade = 6619399;
-    const codListaServicos = 10.02;
-    const aliquota = 201; // 2,01% => "201" em centésimos de ponto
-    const inscricaoMunicipal = 90598;
-
-    // RPS sequencial (mantido)
-    let numeroRPS = parseInt(localStorage.getItem("numeroRPS") || "0", 10);
-
-    // Para o nome do arquivo
-    const buyerNames = buyer.split(" ");
-    const formattedBuyer =
-      `${buyerNames[0] || ""} ${buyerNames[buyerNames.length - 1] || ""}`.trim();
-
-    const isStable = (symbol: string) => ["USDT", "USDC"].includes(symbol);
-    const isBtcOrEth = (symbol: string) => ["BTC", "ETH"].includes(symbol);
-
-    // CSV header (mantido)
-    let csvContent = `Indicador de Tipo de Serviço,""Número RPS"",""Serie RPS"",""Data Prestação de Serviço"",""Data Emissão do RPS"",""RPS Substitutivo"",""Documento CPF/CNPJ"",""Inscrição Mobiliária"",""Razão Social"",Endereço,Número,Complemento,Bairro,""Código do Município"",""Código do País"",Cep,Telefone,Email,""ISS Retido no Tomador"",""Código do Município onde o Serviço foi Prestado"",""Código da Atividade"",""Código da Lista de Serviços"",Discriminação,""Valor NF"",""Valor Deduções"",""Valor Desconto Condicionado"",""Valor Desconto Incondicionado"",""Valor INSS"",""Valor Csll"",""Valor Outras Retenções"",""Valor Pis"",""Valor Cofins"",""Valor Ir"",""Valor Iss"",""Prestador Optante Simples Nacional"",Alíquota,""Código da Obra"",""Código ART"",""Inscrição Própria"",""Código do Benefício""\n`;
-
-    let somaTotalNFE = 0;
-
-    for (const t of filteredData) {
-      const buyerName = t.User?.name || "N/A";
-      const cpfCnpj = (t.User?.document || "").replace(/\D/g, "") || "00000000000";
-
-      // BASE SEMPRE EM BRL DA ORDEM
-      const valorBRL = parseBRL(t.valor);
-      const valorToken = parseNum(t.valorToken);
-      const ativo = String(t.ativo || "").toUpperCase();
-
-      const ehStable = isStable(ativo);
-      const ehBTCouETH = isBtcOrEth(ativo);
-
-      if (t.tipo === "compras") {
-        if (!ehStable) continue;
-        if (!(precoMedioCompra > 0 && valorToken < precoMedioCompra)) continue;
-      } else if (t.tipo !== "vendas") {
-        continue;
-      }
-
-      let comissao = comissaoFixa; // 0.1% mínimo
-
-      if (ehBTCouETH) {
-        comissao = 9.5;
-      } else if (ehStable) {
-        if (t.tipo === "vendas") {
-          const basePct =
-            precoMedioCompra > 0
-              ? ((valorToken - precoMedioCompra) / precoMedioCompra) * 100
-              : comissaoFixa;
-          const ajustada = basePct - comissaoMargemErro;
-          comissao = Math.max(comissaoFixa, ajustada);
-        } else {
-          const basePct =
-            precoMedioCompra > 0
-              ? ((precoMedioCompra - valorToken) / precoMedioCompra) * 100
-              : comissaoFixa;
-          const ajustada = basePct - comissaoMargemErro;
-          comissao = Math.max(comissaoFixa, ajustada);
-        }
-      } else {
-        // Outros ativos: fica na comissão fixa de 0,1%
-        comissao = comissaoFixa;
-      }
-
-      // =========================
-      // MONTAGEM DA LINHA CSV / CÁLCULO DA NF
-      // =========================
-      const valorNfe = Number((valorBRL * (comissao / 100)).toFixed(2));
-      const valorIss = Math.round(valorNfe * (aliquota / 10000));
-
-      // SOMA EM R$ (sem *100) PARA EXIBIÇÃO NA TELA
-      somaTotalNFE += valorNfe;
-
-      const _br = toBRDate(t.dataHora);
-      const dataPrestacaoServico = _br === "Invalid Date" ? toBRDate(new Date()) : _br;
-
-      const fileContent = `"- Serviço: Intermediação de Ativos Digitais
-- Operação: ${t.tipo}
-- Comissão aplicada: ${comissao.toFixed(2)}%
-- Identificador da Ordem: ${t.numeroOrdem}
-- Data/Hora: ${toBRDate(t.dataHora)}
-- Valor do Token: ${t.valorToken}
-- Ativo Digital: ${t.ativo}
-- Quantidade de Tokens: ${t.quantidade}
-- Valor Pago: ${t.valor}
-- Exchange/Corretora: ${String(t.exchange || "").split(" ")[0]}
-- Margem de Erro da Comissão:  Cerca de 0.0${comissaoMargemErro} BRL
-
-Suporte de Dúvidas
-- Para informações do P2P, consulte a documentação ou o suporte da corretora"`;
-
-      // Aqui sim, para o outro sistema, manda em CENTAVOS (valorNfe * 100)
-      const csvData =
-        `R,${numeroRPS},RPS,${dataPrestacaoServico},${toBRDate(hoje)},,${cpfCnpj},,${buyerName},,,,,,48,,,,S,` +
-        `${codMunicipioServicoPrestado},${codAtividade},${codListaServicos},${fileContent},` +
-        `${(valorNfe * 100).toFixed(2)},0,0,0,0,0,0,0,0,0,${valorIss},S,${aliquota},0,0,${inscricaoMunicipal},\n`;
-
-      csvContent += csvData;
-      numeroRPS += 1;
-    }
-
-    // Atualiza sequencial
-    localStorage.setItem("numeroRPS", String(numeroRPS));
-    setValorTotalNFE(somaTotalNFE);
-
-    // Nome do arquivo
-    const fileName = validationEmptyBuyers
-      ? `nota_fiscal_${monthName}.csv`
-      : `nota_fiscal_${formattedBuyer}_${monthName}.csv`;
-
-    // Download
-    const blobCsv = new Blob([csvContent], { type: "text/csv" });
-    const linkCsv = document.createElement("a");
-    linkCsv.href = URL.createObjectURL(blobCsv);
-    linkCsv.download = fileName;
-    document.body.appendChild(linkCsv);
-    linkCsv.click();
-    document.body.removeChild(linkCsv);
-  };
-
   const exportSalesInvoiceCsv = () => {
     if (!filteredData || filteredData.length === 0) {
       alert("Nenhuma ordem filtrada para gerar o CSV de notas fiscais.");
@@ -340,12 +211,12 @@ Suporte de Dúvidas
 
     const result = generateSalesInvoiceCsv({
       transactions: filteredData,
-      precoMedioVenda,
+      precoMedioCompraMensal: precoMedioCompra,
       endDate: filterDates.endDate,
       fileName: `notas-fiscais-vendas-${filterDates.startDate}_${filterDates.endDate}.csv`,
       modeloNf: "nfse",
       produtoCod: "S100",
-      produtoDescricao: "Venda de Ativos Digitais",
+      produtoDescricao: "Promoção de Vendas e Intermediação Comercial",
       commissionMode: "dinamica",
       comissaoFixaPercentual: 0.01,
       margemErroPorToken: 0.03,
@@ -354,6 +225,18 @@ Suporte de Dúvidas
     if (!result) return;
 
     setValorTotalNFE(result.totalValorNotas);
+  };
+
+  const handleGenerateDeCriptoVendas = async () => {
+    if (!filteredData || filteredData.length === 0) {
+      alert("Nenhuma ordem filtrada para gerar a DeCripto.");
+      return;
+    }
+
+    handleCompraVendaDeCripto(filteredData, acesso, {
+      onlyDeclaredSales: true,
+      filePrefix: `DeCripto_Vendas_${filterDates.startDate}_${filterDates.endDate}`,
+    });
   };
 
   return (
@@ -395,6 +278,7 @@ Suporte de Dúvidas
         {validationDates && (
           <>
             <Button onClick={handleGenerate}>Gerar IN188</Button>
+            <Button onClick={handleGenerateDeCriptoVendas}>Gerar DeCripto Vendas</Button>
             {acesso === "Master" && validationEmptyBuyers && (
               <>
                 {showFortnightButton && (
@@ -411,8 +295,6 @@ Suporte de Dúvidas
         )}
         {validationDates && acesso === "Master" && (
           <>
-            <Button onClick={handleTransactions}>Emitir NFE</Button>
-
             <Button onClick={exportSalesInvoiceCsv}>Exportar CSV Nota Fiscal Vendas</Button>
           </>
         )}
@@ -529,7 +411,11 @@ Suporte de Dúvidas
         </div>
       )}
 
-      {showModal && <IN1888 onClose={() => setShowModal(false)} />}
+      {showModal && (
+        <>
+          <IN1888 onClose={() => setShowModal(false)} />
+        </>
+      )}
 
       {showDeleteConfirmation && transactionToDelete && (
         <ConfirmationModalButton

@@ -10,7 +10,17 @@ type GenerateSalesInvoiceCsvResult = {
 
 type GenerateSalesInvoiceCsvParams = {
   transactions: any[];
-  precoMedioVenda: number;
+  /**
+   * Média ponderada de compra do período/mês filtrado.
+   * Será usada apenas quando não existir compra no mesmo dia da venda.
+   */
+  precoMedioCompraMensal?: number;
+
+  /**
+   * Compatibilidade com chamadas antigas. Evite usar em novas chamadas.
+   */
+  precoMedioVenda?: number;
+
   endDate: string;
   fileName?: string;
   modeloNf?: "nfse" | "nfe";
@@ -111,6 +121,118 @@ const OBSERVACAO_CNAE_PROMOCAO_INTERMEDIACAO =
   "A nota fiscal refere-se à remuneração/spread pela prestação do serviço, " +
   "e não ao valor total movimentado na operação.";
 
+const MAX_DESCRICAO_NF_LENGTH = 2000;
+
+const limitDescricaoNf = (value: string, maxLength = MAX_DESCRICAO_NF_LENGTH) => {
+  const text = String(value ?? "").trim();
+
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  const suffix = "\n- Texto limitado ao máximo aceito pela NFS-e.";
+  const available = Math.max(0, maxLength - suffix.length);
+
+  return `${text.slice(0, available).trimEnd()}${suffix}`;
+};
+
+const resolveDateKey = (value: string | Date | null | undefined) => {
+  if (!value) return "";
+
+  const raw = String(value).trim();
+
+  const isoMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    const [, yyyy, mm, dd] = isoMatch;
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  const brMatch = raw.match(/^(\d{2})[/-](\d{2})[/-](\d{4})/);
+  if (brMatch) {
+    const [, dd, mm, yyyy] = brMatch;
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  const brDate = toBRDate(value);
+  if (!brDate || brDate === "Invalid Date") return "";
+
+  const [dd, mm, yyyy] = String(brDate).split("/");
+  if (!dd || !mm || !yyyy) return "";
+
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+const buildDailyPurchaseAverageByDate = (transactions: any[]) => {
+  const grouped = new Map<string, { weightedSum: number; quantitySum: number }>();
+
+  for (const transaction of transactions) {
+    if (String(transaction?.tipo ?? "").toLowerCase() !== "compras") continue;
+
+    const ativo = String(transaction?.ativo || "").toUpperCase();
+    if (!isStable(ativo)) continue;
+
+    const dateKey = resolveDateKey(transaction?.dataHora ?? transaction?.data);
+    if (!dateKey) continue;
+
+    const precoTokenCompra = parseNum(transaction?.valorToken);
+    const quantidadeCompra = parseNum(transaction?.quantidade);
+
+    if (
+      !Number.isFinite(precoTokenCompra) ||
+      !Number.isFinite(quantidadeCompra) ||
+      precoTokenCompra <= 0 ||
+      quantidadeCompra <= 0
+    ) {
+      continue;
+    }
+
+    const current = grouped.get(dateKey) ?? { weightedSum: 0, quantitySum: 0 };
+
+    current.weightedSum += precoTokenCompra * quantidadeCompra;
+    current.quantitySum += quantidadeCompra;
+
+    grouped.set(dateKey, current);
+  }
+
+  const averages = new Map<string, number>();
+
+  grouped.forEach((value, dateKey) => {
+    if (value.quantitySum > 0) {
+      averages.set(dateKey, value.weightedSum / value.quantitySum);
+    }
+  });
+
+  return averages;
+};
+
+const resolvePrecoMedioCompraReferencia = ({
+  transaction,
+  dailyPurchaseAverageByDate,
+  precoMedioCompraMensal,
+}: {
+  transaction: any;
+  dailyPurchaseAverageByDate: Map<string, number>;
+  precoMedioCompraMensal: number;
+}) => {
+  const dateKey = resolveDateKey(transaction?.dataHora ?? transaction?.data);
+  const dailyAverage = dateKey ? dailyPurchaseAverageByDate.get(dateKey) : undefined;
+
+  if (Number.isFinite(dailyAverage) && Number(dailyAverage) > 0) {
+    return {
+      precoMedioCompraReferencia: Number(dailyAverage),
+      origemReferenciaComissao: "média ponderada de compra do dia",
+    };
+  }
+
+  return {
+    precoMedioCompraReferencia: Number.isFinite(precoMedioCompraMensal)
+      ? precoMedioCompraMensal
+      : 0,
+    origemReferenciaComissao:
+      "média ponderada de compra do período/mês por ausência de compra no dia",
+  };
+};
+
 const calculateSaleCommission = ({
   transaction,
   precoMedioVenda,
@@ -143,7 +265,7 @@ const calculateSaleCommission = ({
       precoAjustado: valorTokenVendido,
       diferencaPorToken: 0,
       tipoComissao: "fixa" as const,
-      observacaoComissao: "Valor abaixo do valor referência, implementando taxa fixa.",
+      observacaoComissao: "Valor abaixo do valor referência de compra, implementando taxa fixa.",
     };
   }
 
@@ -153,7 +275,7 @@ const calculateSaleCommission = ({
       precoAjustado: valorTokenVendido,
       diferencaPorToken: 0,
       tipoComissao: "fixa" as const,
-      observacaoComissao: "Valor abaixo do valor referência, implementando taxa fixa.",
+      observacaoComissao: "Valor abaixo do valor referência de compra, implementando taxa fixa.",
     };
   }
 
@@ -163,7 +285,7 @@ const calculateSaleCommission = ({
       precoAjustado: valorTokenVendido,
       diferencaPorToken: 0,
       tipoComissao: "fixa" as const,
-      observacaoComissao: "Valor abaixo do valor referência, implementando taxa fixa.",
+      observacaoComissao: "Valor abaixo do valor referência de compra, implementando taxa fixa.",
     };
   }
 
@@ -173,7 +295,7 @@ const calculateSaleCommission = ({
       precoAjustado: valorTokenVendido,
       diferencaPorToken: 0,
       tipoComissao: "fixa" as const,
-      observacaoComissao: "Valor abaixo do valor referência, implementando taxa fixa.",
+      observacaoComissao: "Valor abaixo do valor referência de compra, implementando taxa fixa.",
     };
   }
 
@@ -185,7 +307,7 @@ const calculateSaleCommission = ({
       precoAjustado,
       diferencaPorToken: 0,
       tipoComissao: "fixa" as const,
-      observacaoComissao: "Valor abaixo do valor referência, implementando taxa fixa.",
+      observacaoComissao: "Valor abaixo do valor referência de compra, implementando taxa fixa.",
     };
   }
 
@@ -204,33 +326,36 @@ const calculateSaleCommission = ({
     diferencaPorToken,
     tipoComissao: isDinamica ? ("dinamica" as const) : ("fixa" as const),
     observacaoComissao: isDinamica
-      ? "Valor acima do valor referência, implementando taxa dinâmica."
-      : "Valor abaixo do valor referência, implementando taxa fixa.",
+      ? "Valor acima do valor referência de compra, implementando taxa dinâmica."
+      : "Comissão calculada abaixo da taxa mínima de 0,01%, implementando taxa fixa.",
   };
 };
 
 const buildDescricaoNf = ({
   transaction,
   comissao,
+  valorNota,
   margemErroPorToken,
   precoMedioVenda,
+  origemReferenciaComissao,
   observacaoComissao,
 }: {
   transaction: any;
   comissao: number;
+  valorNota: number;
   margemErroPorToken: number;
   precoMedioVenda: number;
+  origemReferenciaComissao: string;
   observacaoComissao: string;
 }) => {
-  return `- Serviço: ${SERVICO_CNAE_PROMOCAO_INTERMEDIACAO}
+  const descricao = `- Serviço: ${SERVICO_CNAE_PROMOCAO_INTERMEDIACAO}
 - Descrição do Serviço: ${DESCRICAO_CNAE_PROMOCAO_INTERMEDIACAO}
-- Enquadramento/Natureza da Atividade: atividade de promoção de vendas e intermediação comercial.
+- Valor da Nota Fiscal: ${formatMoneyForCsv(valorNota)} BRL
 - Critério de Cálculo do Spread: ${comissao.toFixed(2)}% aplicado sobre o valor da operação.
 - Valor Total da Operação de Referência: ${transaction.valor}
-- Valor Referência da Comissão: ${formatMoneyForCsv(precoMedioVenda)} BRL
 - Identificador da Ordem: ${transaction.numeroOrdem}
 - Data: ${toBRDate(transaction.dataHora)}
-- Valor do Token: ${transaction.valorToken}
+- Valor do Token Vendido: ${transaction.valorToken}
 - Ativo Digital: ${transaction.ativo}
 - Quantidade: ${transaction.quantidade}
 - Exchange/Corretora: ${String(transaction.exchange || "").split(" ")[0]}
@@ -243,6 +368,8 @@ Observação Fiscal
 
 Suporte de Dúvidas
 - Para informações sobre a operação, registros ou documentação de suporte, entre em contato no whatsapp: (12) 992546355`;
+
+  return limitDescricaoNf(descricao);
 };
 
 const resolveInvoiceDate = (
@@ -266,6 +393,7 @@ const resolveInvoiceDate = (
 
 export const generateSalesInvoiceCsv = ({
   transactions,
+  precoMedioCompraMensal,
   precoMedioVenda,
   endDate,
   fileName = `notas-fiscais-vendas-${Date.now()}.csv`,
@@ -274,7 +402,7 @@ export const generateSalesInvoiceCsv = ({
   produtoDescricao = SERVICO_CNAE_PROMOCAO_INTERMEDIACAO,
   commissionMode = "dinamica",
   comissaoFixaPercentual = 0.01,
-  margemErroPorToken = 0.03,
+  margemErroPorToken = 0.05,
 }: GenerateSalesInvoiceCsvParams): GenerateSalesInvoiceCsvResult | null => {
   if (!transactions || transactions.length === 0) {
     alert("Nenhuma transação encontrada para gerar o CSV de notas fiscais.");
@@ -289,6 +417,12 @@ export const generateSalesInvoiceCsv = ({
     alert("Nenhuma venda encontrada para gerar o CSV de notas fiscais.");
     return null;
   }
+
+  const precoMedioCompraMensalFinal = Number.isFinite(precoMedioCompraMensal)
+    ? Number(precoMedioCompraMensal)
+    : Number(precoMedioVenda || 0);
+
+  const dailyPurchaseAverageByDate = buildDailyPurchaseAverageByDate(transactions);
 
   let totalValorNotas = 0;
 
@@ -314,9 +448,16 @@ export const generateSalesInvoiceCsv = ({
 
     const valorBRL = parseBRL(transaction?.valor);
 
+    const { precoMedioCompraReferencia, origemReferenciaComissao } =
+      resolvePrecoMedioCompraReferencia({
+        transaction,
+        dailyPurchaseAverageByDate,
+        precoMedioCompraMensal: precoMedioCompraMensalFinal,
+      });
+
     const { comissao, observacaoComissao } = calculateSaleCommission({
       transaction,
-      precoMedioVenda,
+      precoMedioVenda: precoMedioCompraReferencia,
       commissionMode,
       comissaoFixaPercentual,
       margemErroPorToken,
@@ -332,8 +473,10 @@ export const generateSalesInvoiceCsv = ({
     const descricaoNf = buildDescricaoNf({
       transaction,
       comissao,
+      valorNota,
       margemErroPorToken,
-      precoMedioVenda,
+      precoMedioVenda: precoMedioCompraReferencia,
+      origemReferenciaComissao,
       observacaoComissao,
     });
 

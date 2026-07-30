@@ -6,6 +6,7 @@ import { useAccessControl } from "src/routes/context/AccessControl";
 import { GowdStatementItem } from "../../../hooks/Gowd/useGowdStatement";
 import { RefundModal } from "../Pix/RefundModal";
 import { StatementPagination } from "./StatementPagination";
+import { formatBRLFromUnknown, hasGowdBatch } from "src/pages/Users/utils/gowdPixDireto.helpers";
 
 const formatBRL = (v: number) =>
   Number(v).toLocaleString("pt-BR", {
@@ -85,6 +86,18 @@ const getStatementName = (item: GowdStatementItem) => {
 
 const getStatementDocument = (item: GowdStatementItem) => {
   return String(item?.payer?.document ?? "").trim();
+};
+
+const getBatchId = (item?: GowdStatementItem | null) => {
+  return String(item?.batchId ?? item?.batch?.id ?? "").trim();
+};
+
+const getBatchSequence = (item?: GowdStatementItem | null) => {
+  return item?.batchSequence ?? item?.batch?.transactions?.[0]?.sequence;
+};
+
+const isBatchStatement = (item?: GowdStatementItem | null) => {
+  return Boolean(getBatchId(item) || hasGowdBatch(item?.batch));
 };
 
 type Props = {
@@ -206,6 +219,7 @@ export const StatementTab = ({
               <th className="px-3 py-2">Data</th>
               <th className="px-3 py-2">Nome</th>
               <th className="px-3 py-2">Documento</th>
+              <th className="px-3 py-2">Remessa</th>
               <th className="px-3 py-2">Valor</th>
             </tr>
           </thead>
@@ -213,19 +227,21 @@ export const StatementTab = ({
           <tbody>
             {statementQ.isLoading ? (
               <tr>
-                <td colSpan={7} className="px-3 py-4 text-center text-gray-500">
+                <td colSpan={5} className="px-3 py-4 text-center text-gray-500">
                   Carregando...
                 </td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-3 py-4 text-center text-gray-500">
+                <td colSpan={5} className="px-3 py-4 text-center text-gray-500">
                   Nenhum lançamento encontrado.
                 </td>
               </tr>
             ) : (
               items.map((item: GowdStatementItem) => {
                 const { rowClass, amountClass } = getAmountStyles(item);
+                const batchId = getBatchId(item);
+                const batchSequence = getBatchSequence(item);
 
                 return (
                   <tr
@@ -242,6 +258,16 @@ export const StatementTab = ({
 
                     <td className="cursor-pointer px-3 py-2" onClick={() => setSelected(item)}>
                       {getStatementDocument(item) || "-"}
+                    </td>
+
+                    <td className="cursor-pointer px-3 py-2" onClick={() => setSelected(item)}>
+                      {isBatchStatement(item) ? (
+                        <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                          Remessa{batchSequence ? ` #${batchSequence}` : ""}
+                        </span>
+                      ) : (
+                        "-"
+                      )}
                     </td>
 
                     <td
@@ -293,9 +319,38 @@ export const StatementTab = ({
             <Row label="Documento" value={selected.payer?.document} />
             <Row label="Data" value={formatDateTime(selected.timestamp)} />
             <Row label="Valor" value={formatBRL(Number(selected.amount ?? 0))} />
+            {isBatchStatement(selected) ? (
+              <>
+                <Row label="ID da remessa" value={getBatchId(selected)} />
+                <Row label="Sequência da remessa" value={getBatchSequence(selected)} />
+                <Row
+                  label="Quantidade de transações"
+                  value={selected.batchTransactionsCount ?? selected.batch?.transactionsCount}
+                />
+                <Row
+                  label="Valor total da remessa"
+                  value={formatBRLFromUnknown(
+                    selected.batchTotalAmount ?? selected.batch?.totalAmount,
+                  )}
+                />
+                <Row
+                  label="Valor pago da remessa"
+                  value={formatBRLFromUnknown(
+                    selected.batchPaidAmount ?? selected.batch?.paidAmount,
+                  )}
+                />
+                <Row
+                  label="Valor pendente da remessa"
+                  value={formatBRLFromUnknown(
+                    selected.batchPendingAmount ?? selected.batch?.pendingAmount,
+                  )}
+                />
+              </>
+            ) : null}
 
             {acesso === "Master" && (
               <>
+                <Row label="ExternalCode" value={selected.externalCode} />
                 <Row
                   label="Operação original"
                   value={selected.transactionType ?? selected.operation}
@@ -312,6 +367,28 @@ export const StatementTab = ({
             <Row label="Banco" value={selected.payer?.bankName} />
             <Row label="Agência" value={selected.payer?.branch} />
             <Row label="Conta" value={selected.payer?.account} />
+            {Array.isArray(selected.batch?.transactions) &&
+            selected.batch.transactions.length > 0 ? (
+              <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50 p-3">
+                <h4 className="mb-2 text-sm font-semibold text-blue-900">Transações da remessa</h4>
+
+                <div className="flex flex-col gap-2">
+                  {selected.batch.transactions.map((transaction) => (
+                    <div
+                      key={transaction.id ?? transaction.sequence}
+                      className="rounded-md border border-blue-100 bg-white p-2"
+                    >
+                      <Row label="Sequência" value={transaction.sequence} />
+                      <Row label="Valor" value={formatBRLFromUnknown(transaction.amount)} />
+                      <Row label="Status" value={transaction.status} />
+                      <Row label="EndToEndId" value={transaction.endToEndId} />
+                      <Row label="IdempotencyKey" value={transaction.idempotencyKey} />
+                      <Row label="Erro" value={transaction.errorMessage} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         </Modal>
       )}

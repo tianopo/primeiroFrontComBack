@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { Button } from "src/components/Buttons/Button";
 import { Modal } from "src/components/Modal/Modal";
@@ -8,6 +8,7 @@ import { PixKeyType } from "src/pages/Users/utils/Interface";
 import { useAccessControl } from "src/routes/context/AccessControl";
 import { BRLAmountInput, brlInputToNumber, formatBRLInputValue } from "./BRLAmountInput";
 import { PixOutResponse } from "./PixOutResponse";
+import { buildGowdIdempotencyKey } from "src/pages/Users/utils/gowdPixDireto.helpers";
 
 const KEY_TYPES: PixKeyType[] = ["CPF", "CNPJ", "EMAIL", "PHONE", "RANDOM"];
 const KEY_TYPES_WITH_AUTO = ["AUTO", ...KEY_TYPES] as const;
@@ -409,7 +410,7 @@ export const PixToolModal = ({
     reset: resetDict,
   } = useGowdPixDictCheck();
 
-  const identifierRef = useRef(`pixout-${Date.now()}`);
+  const identifierRef = useRef(buildGowdIdempotencyKey());
 
   const initialPixKey = String(initialValues?.pixKey ?? "");
   const initialDetectedType = detectPixKeyType(initialPixKey);
@@ -703,7 +704,7 @@ export const PixToolModal = ({
             )}
           </div>
 
-          {canUseDict && (
+          {canUseDict && !outData && (
             <div className="flex max-h-[260px] flex-col gap-3 overflow-y-auto rounded-xl border border-gray-200 p-4 md:max-h-none md:overflow-visible">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="font-semibold text-gray-900">Consulta</h3>

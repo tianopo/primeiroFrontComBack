@@ -9,48 +9,43 @@ interface ChatBoxProps {
   keyType: KeyType;
 }
 
+const fileToBase64 = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
 export const ChatBox = ({ orderId, keyType }: ChatBoxProps) => {
   const [message, setMessage] = useState("");
   const { mutate: sendChatMessage, isPending } = useSendChatMessageBybit();
   const { name } = useAccessControl();
-
   const imageInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
 
+  const send = (
+    payload: { message: string; contentType: "str" | "pic" | "pdf" },
+    onSuccess?: () => void,
+  ) => {
+    sendChatMessage({ ...payload, orderId, keyType }, { onSuccess });
+  };
+
   const handleSend = () => {
-    if (!message.trim()) return;
-
-    const firstName = name?.split(" ")[0];
-    const formattedMessage = `${firstName}: ${message}`;
-
-    sendChatMessage(
-      { message: formattedMessage, contentType: "str", orderId, keyType },
-      { onSuccess: () => setMessage("") },
+    const text = message.trim();
+    if (!text) return;
+    send({ message: `${name?.split(" ")[0] ?? ""}: ${text}`, contentType: "str" }, () =>
+      setMessage(""),
     );
   };
 
-  // converte arquivo para base64
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
-  const handleFileSend = async (file: File, type: "pic" | "pdf") => {
-    const base64 = await fileToBase64(file);
-
-    sendChatMessage(
-      { message: base64, contentType: type, orderId, keyType },
-      { onSuccess: () => console.log(`${type} enviado com sucesso`) },
-    );
+  const handleFileSend = async (file?: File, contentType?: "pic" | "pdf") => {
+    if (!file || !contentType) return;
+    send({ message: await fileToBase64(file), contentType });
   };
 
   return (
-    <div className="my-2 flex items-center gap-2 rounded-6 border-1 border-gray-300 p-1">
-      {/* Input de texto */}
+    <div className="my-2 flex w-full items-center gap-2 rounded-6 border-1 border-gray-300 p-1">
       <input
         id={`chat-input-${keyType}-${orderId}`}
         name={`chat-input-${keyType}-${orderId}`}
@@ -64,10 +59,9 @@ export const ChatBox = ({ orderId, keyType }: ChatBoxProps) => {
             handleSend();
           }
         }}
-        className="flex-1 rounded border-0 px-2 text-12 focus:outline-none"
+        className="w-full flex-1 rounded border-0 px-2 text-12 focus:outline-none"
       />
 
-      {/* Botão para selecionar imagem */}
       <button
         className="rounded-6 bg-blue-500 px-2 py-1.5 text-white hover:opacity-80"
         onClick={() => imageInputRef.current?.click()}
@@ -80,13 +74,9 @@ export const ChatBox = ({ orderId, keyType }: ChatBoxProps) => {
         type="file"
         accept="image/*"
         hidden
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) handleFileSend(file, "pic");
-        }}
+        onChange={(e) => handleFileSend(e.target.files?.[0], "pic")}
       />
 
-      {/* Botão para selecionar PDF */}
       <button
         className="rounded-6 bg-red-500 px-2 py-1.5 text-white hover:opacity-80"
         onClick={() => pdfInputRef.current?.click()}
@@ -99,13 +89,9 @@ export const ChatBox = ({ orderId, keyType }: ChatBoxProps) => {
         type="file"
         accept="application/pdf"
         hidden
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) handleFileSend(file, "pdf");
-        }}
+        onChange={(e) => handleFileSend(e.target.files?.[0], "pdf")}
       />
 
-      {/* Botão de enviar texto */}
       <button
         className="rounded-6 bg-primary px-2 py-1.5 text-white hover:opacity-80 disabled:cursor-not-allowed"
         onClick={handleSend}
