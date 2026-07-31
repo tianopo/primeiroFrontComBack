@@ -2,6 +2,10 @@ import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { api } from "src/config/api";
 import { responseError, responseSuccess } from "src/config/responseErrors";
+import {
+  buildGowdIdempotencyKey,
+  GowdPixOutResponseData,
+} from "src/pages/Users/utils/gowdPixDireto.helpers";
 import { apiRoute } from "src/routes/api";
 
 type GowdScope = "own" | "baas";
@@ -41,7 +45,7 @@ export type GowdPixOutPayload = {
 
 export const useGowdPixOut = () => {
   const { mutate, mutateAsync, isPending, data, reset } = useMutation<
-    any,
+    GowdPixOutResponseData,
     AxiosError,
     GowdPixOutPayload
   >({
@@ -57,15 +61,22 @@ export const useGowdPixOut = () => {
             }
           : payload.body;
 
-      const res = await api().put(route, body, {
+      const response = await api().put<GowdPixOutResponseData>(route, body, {
         headers: {
-          "idempotency-key": payload.idempotencyKey ?? `gowd-pixout-${Date.now()}`,
+          "idempotency-key": payload.idempotencyKey || buildGowdIdempotencyKey(),
         },
       });
 
-      return res.data;
+      return response.data;
     },
-    onSuccess: () => responseSuccess("PIX enviado"),
+    onSuccess: (response) => {
+      if (String(response?.status ?? "").toUpperCase() === "PARTIALLY_PAID") {
+        responseSuccess("PIX parcialmente pago. Verifique o valor pendente.");
+        return;
+      }
+
+      responseSuccess("PIX enviado");
+    },
     onError: (err: AxiosError) => responseError(err),
   });
 

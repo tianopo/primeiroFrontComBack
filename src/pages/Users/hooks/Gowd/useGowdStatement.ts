@@ -3,6 +3,7 @@ import { AxiosError } from "axios";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "src/config/api";
 import { responseError } from "src/config/responseErrors";
+import { GowdBatch } from "src/pages/Users/utils/gowdPixDireto.helpers";
 import { apiRoute } from "src/routes/api";
 
 export interface GowdStatementItem {
@@ -17,6 +18,17 @@ export interface GowdStatementItem {
   status?: string;
   direction?: "IN" | "OUT" | string;
   identifier?: string;
+
+  externalCode?: string;
+
+  batch?: GowdBatch;
+  batchId?: string;
+  batchSequence?: number;
+  batchTransactionsCount?: number;
+  batchTotalAmount?: number;
+  batchPaidAmount?: number;
+  batchPendingAmount?: number;
+
   payer?: {
     name?: string;
     document?: string;
@@ -26,6 +38,7 @@ export interface GowdStatementItem {
     account?: string;
     pixKey?: string;
   };
+
   payee?: {
     name?: string;
     document?: string;
@@ -35,6 +48,7 @@ export interface GowdStatementItem {
     account?: string;
     pixKey?: string;
   };
+
   endToEndId?: string;
   orderId?: string;
   code?: string;
@@ -135,17 +149,9 @@ export const useGowdStatement = ({
     scope !== "baas" ? false : manualRefreshCooldown <= 0 && !query.isFetching;
 
   const refreshNow = async () => {
-    if (scope !== "baas") {
-      return;
-    }
-
-    if (!accountId) {
-      return;
-    }
-
-    if (!canManualRefresh) {
-      return;
-    }
+    if (scope !== "baas") return;
+    if (!accountId) return;
+    if (!canManualRefresh) return;
 
     setLastManualRefreshAt(Date.now());
     await query.refetch();
