@@ -21,13 +21,14 @@ export const CSVUploader = () => {
       .toLowerCase();
   };
 
-  const parseMoney = (value: unknown): number => {
-    const raw = String(value ?? "")
-      .replace(/[R$\s]/gi, "")
+  const parseMoney = (value: unknown) => {
+    const normalized = String(value ?? "0")
+      .replace(/R\$/gi, "")
+      .replace(/\s/g, "")
       .replace(/\./g, "")
       .replace(",", ".");
 
-    const parsed = Number(raw);
+    const parsed = Number(normalized);
 
     return Number.isFinite(parsed) ? parsed : 0;
   };

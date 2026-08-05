@@ -15,6 +15,9 @@ import { IOrder, useOrders } from "./hooks/useOrders";
 import "./registerOrders.css";
 import { extractApelidosFromError } from "./Utils/extractApelidosFromError";
 import { extractExistingOrdersFromError } from "./Utils/extractExistingOrdersFromError";
+import { BitgetApiOrdersImport } from "./components/BitgetApiOrdersImport";
+import axios from "axios";
+import { responseError } from "src/config/responseErrors";
 
 export const RegisterOrders = () => {
   const { mutate, isPending, context } = useOrders();
@@ -35,8 +38,9 @@ export const RegisterOrders = () => {
   const [valorToken, setValorToken] = useState<string>("");
   const [taxa, setTaxa] = useState<string>("");
 
-  const [view, setView] = useState<"manual" | "automatic">("automatic");
-  const toggleView = (selectedView: "manual" | "automatic") => setView(selectedView);
+  const [view, setView] = useState<"manual" | "automatic" | "api">("automatic");
+
+  const toggleView = (selectedView: "manual" | "automatic" | "api") => setView(selectedView);
 
   const handleTipoChange = (e: { target: { value: string } }) => {
     setTipo(e.target.value);
@@ -121,22 +125,30 @@ export const RegisterOrders = () => {
   const [apelidosNaoEncontrados, setApelidosNaoEncontrados] = useState<Set<string>>(new Set());
   const [ordensJaCadastradas, setOrdensJaCadastradas] = useState<Set<string>>(new Set());
 
-  const handleSend = async () => {
+  const handleSend = () => {
     mutate(formData, {
       onSuccess: () => {
         setApelidosNaoEncontrados(new Set());
         setOrdensJaCadastradas(new Set());
       },
-      onError: (err: any) => {
-        const msg =
-          err?.response?.data?.message ??
-          err?.message ??
-          (typeof err === "string" ? err : JSON.stringify(err));
-        const notFound = extractApelidosFromError(msg);
-        const alreadyRegistered = extractExistingOrdersFromError(msg);
-        if (notFound.size > 0) setApelidosNaoEncontrados(notFound);
-        if (alreadyRegistered.size > 0) setOrdensJaCadastradas(alreadyRegistered);
-        else toast.error("Erro ao enviar ordens.");
+
+      onError: (error: any) => {
+        responseError(error);
+
+        const message =
+          typeof error === "string"
+            ? error
+            : axios.isAxiosError(error)
+              ? String(
+                  error.response?.data?.message ?? error.response?.data?.error ?? error.message,
+                )
+              : error instanceof Error
+                ? error.message
+                : "";
+
+        const alreadyRegistered = extractExistingOrdersFromError(message);
+
+        setOrdensJaCadastradas(alreadyRegistered);
       },
     });
   };
@@ -217,21 +229,38 @@ export const RegisterOrders = () => {
     <FlexCol className="w-full p-4 pb-2">
       <div className="card">
         <h1 className="text-28 font-bold">Formulário de Ordens</h1>
-        <div className="mb-4 flex gap-4">
+        <div className="mb-4 flex flex-wrap gap-4">
           <Button
             onClick={() => toggleView("automatic")}
-            className={`rounded-6 px-4 py-2 ${view === "automatic" ? "bg-primary text-white" : "bg-gray-200"}`}
+            className={`rounded-6 px-4 py-2 ${
+              view === "automatic" ? "bg-primary text-white" : "bg-gray-200"
+            }`}
           >
-            Registro Automático
+            Importar Arquivo
           </Button>
+
+          <Button
+            onClick={() => toggleView("api")}
+            className={`rounded-6 px-4 py-2 ${
+              view === "api" ? "bg-primary text-white" : "bg-gray-200"
+            }`}
+          >
+            Importar API
+          </Button>
+
           <Button
             onClick={() => toggleView("manual")}
-            className={`rounded-6 px-4 py-2 ${view === "manual" ? "bg-primary text-white" : "bg-gray-200"}`}
+            className={`rounded-6 px-4 py-2 ${
+              view === "manual" ? "bg-primary text-white" : "bg-gray-200"
+            }`}
           >
             Registro Manual
           </Button>
         </div>
         {view === "automatic" && <UploadXLSButton setFormData={setFormData} formData={formData} />}
+
+        {view === "api" && <BitgetApiOrdersImport formData={formData} setFormData={setFormData} />}
+
         {view === "manual" && (
           <>
             <div className="mb-4">

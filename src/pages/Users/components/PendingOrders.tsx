@@ -12,17 +12,17 @@ import { CompliancePopover } from "./PendingOrders/CompliancePopover";
 import { PaymentTermsBox } from "./PendingOrders/PaymentTermsBox";
 import { TABS } from "./PendingOrders/utils/pendingOrdersConfig";
 import {
-  getOrdersByTab,
-  complianceState,
-  isCpfCnpj,
-  isBotCancel,
-  canActByStatus,
-  statusLabel,
   brl,
-  onlyDigits,
+  canActByStatus,
+  complianceState,
   getEndToEnd,
-  isBybit,
+  getOrdersByTab,
   isBinance,
+  isBotCancel,
+  isBybit,
+  isCpfCnpj,
+  onlyDigits,
+  statusLabel,
 } from "./PendingOrders/utils/pendingOrdersHelpers";
 import { PendingOrdersProps } from "./PendingOrders/utils/pendingOrdersTypes";
 
@@ -60,7 +60,6 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
   if (isLoading) return <p>Carregando ordens...</p>;
   if (error) return <p>Erro ao carregar ordens.</p>;
   if (!data) return <p>Sem ordens pendentes.</p>;
-
   return (
     <CardContainer full>
       <h3 className="text-28 font-bold">ORDENS PENDENTES</h3>

@@ -7,7 +7,7 @@ export const processExcelBitget = (workbook: XLSX.WorkBook, selectedBroker: stri
 
   const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
   const [titlesRaw, ...rows] = json;
-
+  console.log(json);
   const normalize = (v: any) =>
     String(v ?? "")
       .trim()

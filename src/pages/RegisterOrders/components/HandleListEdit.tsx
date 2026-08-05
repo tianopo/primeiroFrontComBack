@@ -73,34 +73,50 @@ export const HandleListEdit = ({
                   </span>
                 )}
 
-                {/* resto igual */}
                 <p>
                   <strong>Número Ordem:</strong> {item.numeroOrdem}
                 </p>
+
                 <p>
                   <strong>Data e Hora:</strong> {item.dataHora}
                 </p>
+
                 <p>
                   <strong>Exchange:</strong> {item.exchange}
                 </p>
+
                 <p>
                   <strong>Ativo:</strong> {item.ativo}
                 </p>
+
+                {item.nome && (
+                  <p>
+                    <strong>Nome:</strong> {item.nome}
+                  </p>
+                )}
+
+                {item.apelido && (
+                  <p>
+                    <strong>Apelido:</strong> {item.apelido}
+                  </p>
+                )}
+
                 <p>
-                  <strong>Nome:</strong> {item.nome}
+                  <strong>Tipo:</strong> {item.tipo}
                 </p>
-                <p className={isNotFound ? "font-bold text-red-700" : ""}>
-                  <strong>Apelido:</strong> {item.apelido}
-                </p>
+
                 <p>
                   <strong>Quantidade:</strong> {item.quantidade}
                 </p>
+
                 <p>
                   <strong>Valor:</strong> {item.valor}
                 </p>
+
                 <p>
                   <strong>Valor do Token:</strong> {item.valorToken}
                 </p>
+
                 <p>
                   <strong>Taxa:</strong> {item.taxa}
                 </p>

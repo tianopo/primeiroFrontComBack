@@ -94,6 +94,12 @@ export const apiRoute = {
   sendChatMessageBinance: "binance/chat/send",
   binanceCheckAndReleaseCoin: "/binance/order/check-and-release-coin",
   binanceMarkOrderAsPaid: "binance/order/mark-paid-auto",
+  /* Bitget */
+  bitgetPendingOrders: "bitget/p2p/pending-orders",
+  bitgetAllOrders: "bitget/p2p/all-orders",
+  bitgetOrderInfo: "bitget/p2p/order-info",
+  bitgetConfirmPayment: "bitget/p2p/order-pay",
+  bitgetReleaseAsset: "bitget/p2p/order-release",
   /* EXCHANGES */
   pendingOrders: "exchanges/pending-orders",
   /* WHATSAPP */
