@@ -5,8 +5,21 @@ export const processExcelCoinEx = (workbook: XLSX.WorkBook, selectedBroker: stri
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
 
-  const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
-  const [titles, ...rows] = json;
+  const json = XLSX.utils.sheet_to_json(worksheet, {
+    header: 1,
+    raw: false,
+    defval: "",
+  }) as Array<Array<string | number>>;
+
+  const normalize = (value: unknown) =>
+    String(value ?? "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+
+  const titles = json[0] ?? [];
+  const rows = json.slice(1);
 
   const expectedTitles = [
     "Order ID",
@@ -16,12 +29,16 @@ export const processExcelCoinEx = (workbook: XLSX.WorkBook, selectedBroker: stri
     "Price",
     "Total Value",
     "Amount",
+    "Fee",
     "Real Name",
     "Payment Method",
     "Status",
+    "Order Type",
   ];
 
-  const isValid = expectedTitles.every((title, index) => titles[index] === title);
+  const isValid = expectedTitles.every(
+    (title, index) => normalize(titles[index]) === normalize(title),
+  );
 
   if (!isValid) {
     toast.error(`Esta planilha não pertence a ${selectedBroker.split(" ")[0]}`);
@@ -31,7 +48,6 @@ export const processExcelCoinEx = (workbook: XLSX.WorkBook, selectedBroker: stri
   const parseNumber = (value: unknown): number => {
     const raw = String(value ?? "")
       .replace(/[^\d,.-]/g, "")
-      .replace(/\./g, "")
       .replace(",", ".");
 
     const parsed = Number(raw);
@@ -43,12 +59,28 @@ export const processExcelCoinEx = (workbook: XLSX.WorkBook, selectedBroker: stri
     return parseNumber(value).toFixed(2).replace(".", ",");
   };
 
-  const calculateFee = (valueInBrl: unknown): string => {
-    const valor = parseNumber(valueInBrl);
+  const isCompleted = (status: unknown) => {
+    const value = normalize(status);
 
-    const taxa = valor * 0.002; // 0.2%
+    return (
+      value === "finished" || value === "completed" || value === "concluido" || value === "已完成"
+    );
+  };
 
-    return taxa.toFixed(2).replace(".", ",");
+  const mapSide = (side: unknown) => {
+    const value = normalize(side);
+
+    if (value === "buy") return "compras";
+    if (value === "sell") return "vendas";
+
+    return "vendas";
+  };
+
+  const calculateFeeInBrl = (feeCrypto: unknown, price: unknown): string => {
+    const fee = parseNumber(feeCrypto);
+    const tokenPrice = parseNumber(price);
+
+    return (fee * tokenPrice).toFixed(2).replace(".", ",");
   };
 
   return rows
@@ -57,30 +89,31 @@ export const processExcelCoinEx = (workbook: XLSX.WorkBook, selectedBroker: stri
         orderId,
         createdAt,
         side,
-        legalCurrency,
-        legalAmount,
+        coin,
         price,
-        total,
-        traderName,
-        ,
+        totalValue,
+        amount,
+        fee,
+        realName,
+        paymentMethod,
         status,
       ] = row;
 
-      if (status?.trim().toLowerCase() !== "finished") return false;
+      if (!orderId) return false;
+      if (!isCompleted(status)) return false;
 
       return {
-        numeroOrdem: orderId,
-        tipo: side === "BUY" ? "compras" : "vendas",
-        dataHora: createdAt,
+        numeroOrdem: String(orderId).trim(),
+        tipo: mapSide(side),
+        dataHora: String(createdAt ?? "").trim(),
         exchange: selectedBroker,
-        ativo: legalCurrency,
-        nome: traderName,
-        quantidade: total,
-        valor: formatNumber(price),
-        valorToken: legalAmount,
-
-        // Taxa de 0,2% sobre o valor total em reais
-        taxa: calculateFee(price),
+        ativo: String(coin ?? "").trim(),
+        nome: String(realName ?? "").trim(),
+        quantidade: formatNumber(amount),
+        valor: formatNumber(totalValue),
+        valorToken: formatNumber(price),
+        taxa: calculateFeeInBrl(fee, price),
+        pagamento: String(paymentMethod ?? "").trim(),
       };
     })
     .filter(Boolean);

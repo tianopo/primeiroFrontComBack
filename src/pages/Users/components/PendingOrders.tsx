@@ -18,6 +18,7 @@ import {
   getEndToEnd,
   getOrdersByTab,
   isBinance,
+  isBitget,
   isBotCancel,
   isBybit,
   isCpfCnpj,
@@ -44,6 +45,8 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
     isMarkPaidBybitPending,
     isMarkPaidBinancePending,
     isReleaseBinancePending,
+    isMarkPaidBitgetPending,
+    isReleaseBitgetPending,
     modalAction,
     openActionModal,
     openPixModal,
@@ -94,18 +97,33 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
           {orders.map((order) => {
             const isBuyOrder = Number(order.side) === 0;
             const compliance = (order.compliance ?? null) as Record<string, unknown> | null;
-            const documento = String(order.documento ?? compliance?.documento ?? "");
+
+            const orderDocument = String(order.documento ?? "");
+            const complianceDocument = String(compliance?.documento ?? "");
+
+            const documento = isCpfCnpj(onlyDigits(orderDocument))
+              ? orderDocument
+              : isCpfCnpj(onlyDigits(complianceDocument))
+                ? complianceDocument
+                : "";
+
             const mensagens = Array.isArray(order.mensagens) ? order.mensagens : [];
             const pagamento = Array.isArray(order.pagamento) ? order.pagamento : [];
             const [cardClass, badgeClass, badgeLabel] = complianceState(compliance);
             const isPendingAny =
-              isMarkPaidBybitPending || isMarkPaidBinancePending || isReleaseBinancePending;
+              isMarkPaidBybitPending ||
+              isMarkPaidBinancePending ||
+              isMarkPaidBitgetPending ||
+              isReleaseBinancePending ||
+              isReleaseBitgetPending;
+            const requiresMessages = !isBitget(activeConfig);
+
             const disabledAction =
               isPendingAny ||
               acesso !== "Master" ||
-              mensagens.length === 0 ||
+              (requiresMessages && mensagens.length === 0) ||
               !isCpfCnpj(documento) ||
-              mensagens.slice(0).reverse().slice(-10).some(isBotCancel) ||
+              (requiresMessages && mensagens.slice(0).reverse().slice(-10).some(isBotCancel)) ||
               !canActByStatus(activeConfig, order, isBuyOrder);
 
             return (
@@ -213,7 +231,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
                   </p>
                 )}
 
-                <OrderMessages messages={mensagens} />
+                {mensagens.length > 0 && <OrderMessages messages={mensagens} />}
 
                 {isBybit(activeConfig) && (
                   <ChatBox orderId={String(order.id)} keyType={activeBybitKeyType} />

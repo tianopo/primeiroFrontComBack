@@ -1,32 +1,33 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { generateSingleReceipt } from "src/pages/Home/config/handleReceipt";
 import { useAccessControl } from "src/routes/context/AccessControl";
 import { PixToolInitialValues } from "../components/Gowd/Pix/PixToolModal";
 import { TABS } from "../components/PendingOrders/utils/pendingOrdersConfig";
 import {
-  getSavedTab,
+  buildBinanceOrderContext,
+  getEndToEnd,
   getOrdersByTab,
+  getSavedTab,
+  isBinance,
+  isBitget,
+  isBybit,
+  isCpfCnpj,
   legacyOrder,
   onlyDigits,
-  isCpfCnpj,
-  getEndToEnd,
-  buildBinanceOrderContext,
-  isBinance,
-  isBybit,
 } from "../components/PendingOrders/utils/pendingOrdersHelpers";
 import {
-  TabKey,
+  BybitKeyType,
   ConfirmAction,
   OrderLike,
   TabConfig,
-  BybitKeyType,
+  TabKey,
 } from "../components/PendingOrders/utils/pendingOrdersTypes";
 import { confirmContract } from "../utils/confirmContract";
 import { toBRDate } from "../utils/helpers";
 import {
-  useCheckAndReleaseCoinBinance,
   BinancePostReleaseOrderContext,
+  useCheckAndReleaseCoinBinance,
 } from "./Binance/useCheckAndReleaseCoinBinance";
 import { useMarkOrderAsPaidBinance } from "./Binance/useMarkOrderAsPaidBinance";
 import { useSendChatMessageBinance } from "./Binance/useSendChatMessageBinance";
@@ -34,6 +35,8 @@ import { useListPendingOrders } from "./Bybit/useListPendingOrders";
 import { useMarkOrderAsPaidBybit } from "./Bybit/useMarkOrderAsPaidBybit";
 import { useReleaseAssets } from "./Bybit/useReleaseAssets";
 import { useSendChatMessageBybit } from "./Bybit/useSendChatMessageBybit";
+import { useMarkOrderAsPaidBitget } from "./Bitget/useMarkOrderAsPaidBitget";
+import { useReleaseAssetsBitget } from "./Bitget/useReleaseAssetsBitget";
 
 export const usePendingOrdersController = () => {
   const { data, isLoading, error } = useListPendingOrders();
@@ -47,6 +50,9 @@ export const usePendingOrdersController = () => {
   const { mutate: markPaidBinance, isPending: isMarkPaidBinancePending } =
     useMarkOrderAsPaidBinance();
   const { mutate: sendChatBinance, isPending: isChatBinancePending } = useSendChatMessageBinance();
+
+  const { mutate: releaseBitget, isPending: isReleaseBitgetPending } = useReleaseAssetsBitget();
+  const { mutate: markPaidBitget, isPending: isMarkPaidBitgetPending } = useMarkOrderAsPaidBitget();
 
   const { acesso } = useAccessControl();
 
@@ -65,6 +71,7 @@ export const usePendingOrdersController = () => {
   const activeBybitKeyType: BybitKeyType =
     activeConfig.keyType === "pessoal" ? "pessoal" : "empresa";
   const modalBybitKeyType: BybitKeyType = modalConfig.keyType === "pessoal" ? "pessoal" : "empresa";
+  const modalBitgetKeyType = modalConfig.keyType === "pessoal" ? "pessoal" : "empresa";
   const orders = useMemo(() => getOrdersByTab(data, activeTab), [data, activeTab]);
 
   const changeTab = (tab: TabKey) => {
@@ -227,6 +234,40 @@ export const usePendingOrdersController = () => {
     );
   };
 
+  const confirmBitgetMarkPaid = (order: OrderLike) => {
+    markPaidBitget(
+      {
+        orderId: String(order.id),
+        keyType: modalBitgetKeyType,
+      },
+      {
+        onSuccess: () => {
+          closeModal();
+        },
+        onError: () => {
+          closeModal();
+        },
+      },
+    );
+  };
+
+  const confirmBitgetRelease = (order: OrderLike) => {
+    releaseBitget(
+      {
+        orderId: String(order.id),
+        keyType: modalBitgetKeyType,
+      },
+      {
+        onSuccess: () => {
+          closeModal();
+        },
+        onError: () => {
+          closeModal();
+        },
+      },
+    );
+  };
+
   const handleConfirm = () => {
     if (!selectedOrder) return;
 
@@ -235,9 +276,21 @@ export const usePendingOrdersController = () => {
       return confirmBinanceRelease(selectedOrder);
     }
 
-    if (isBybit(modalConfig) && modalAction === "markPaid")
+    if (isBybit(modalConfig) && modalAction === "markPaid") {
       return confirmBybitMarkPaid(selectedOrder);
-    if (isBybit(modalConfig)) return confirmBybitRelease(selectedOrder);
+    }
+
+    if (isBybit(modalConfig)) {
+      return confirmBybitRelease(selectedOrder);
+    }
+
+    if (isBitget(modalConfig) && modalAction === "markPaid") {
+      return confirmBitgetMarkPaid(selectedOrder);
+    }
+
+    if (isBitget(modalConfig)) {
+      return confirmBitgetRelease(selectedOrder);
+    }
   };
 
   return {
@@ -255,6 +308,8 @@ export const usePendingOrdersController = () => {
     isMarkPaidBybitPending,
     isMarkPaidBinancePending,
     isReleaseBinancePending,
+    isMarkPaidBitgetPending,
+    isReleaseBitgetPending,
     modalAction,
     openActionModal,
     openPixModal,

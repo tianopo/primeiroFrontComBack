@@ -2,22 +2,34 @@ import type { Dispatch, SetStateAction } from "react";
 
 export type BybitKeyType = "empresa" | "pessoal";
 
-export type TabKey = "bybitCryptotech" | "bybitPessoal" | "binance";
+export type TabKey =
+  | "bybitCryptotech"
+  | "bybitPessoal"
+  | "binance"
+  | "bitgetCryptotech"
+  | "bitgetPessoal";
+
 export type ExchangeKeyType = BybitKeyType | "binance";
+
 export type ConfirmAction = "release" | "markPaid";
+
 export type OrderLike = Record<string, unknown>;
 
 export type TabConfig = {
   tab: TabKey;
   keyType: ExchangeKeyType;
   label: string;
-  exchangeName: "Bybit" | "Binance";
+  exchangeName: "Bybit" | "Binance" | "Bitget";
   registerExchange: string;
 };
 
 export type PendingOrdersProps = {
   setForm: Dispatch<SetStateAction<boolean>>;
   setInitialRegisterData: Dispatch<
-    SetStateAction<{ apelido: string; nome: string; exchange: string }>
+    SetStateAction<{
+      apelido: string;
+      nome: string;
+      exchange: string;
+    }>
   >;
 };
