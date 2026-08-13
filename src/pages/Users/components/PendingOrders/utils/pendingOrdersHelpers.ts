@@ -15,6 +15,9 @@ export const isBitget = (config: TabConfig) => config.exchangeName === "Bitget";
 
 export const isMexc = (config: TabConfig) => config.exchangeName === "MEXC";
 
+export const isCoinex = (config: TabConfig) =>
+  String(config.exchangeName).toUpperCase() === "COINEX";
+
 export const getEndToEnd = (value: unknown) => {
   if (typeof value === "string") return value.trim();
   if (!value || typeof value !== "object") return "";
@@ -83,6 +86,8 @@ export const getSavedTab = (): TabKey => {
   if (stored === "bitgetCryptotech") return "bitgetCryptotech";
   if (stored === "bitgetPessoal") return "bitgetPessoal";
   if (stored === "mexcPessoal") return "mexcPessoal";
+  if (stored === "coinexEmpresa") return "coinexEmpresa";
+  if (stored === "coinexPessoal") return "coinexPessoal";
 
   return "bybitCryptotech";
 };
@@ -136,6 +141,7 @@ export const complianceState = (c: unknown) => {
 
 export const statusLabel = (config: TabConfig, status: unknown) => {
   const n = Number(status);
+  const raw = String(status ?? "").toUpperCase();
 
   if (isBinance(config)) {
     if (n === 1) return "Aguardando pagamento";
@@ -145,12 +151,13 @@ export const statusLabel = (config: TabConfig, status: unknown) => {
     return String(status ?? "N/A");
   }
 
-  if (isBitget(config) || isMexc(config)) {
-    if (n === 10) return "Aguardando pagamento";
-    if (n === 20) return "Pago / Aguardando liberação";
+  if (isBitget(config) || isMexc(config) || isCoinex(config)) {
+    if (n === 10 || raw === "CREATED" || raw === "CONFIRMED") return "Aguardando pagamento";
+    if (n === 20 || raw === "PAID") return "Pago";
     if (n === 30) return "Apelando";
-    if (n === 40) return "Concluída";
-    if (n === 50) return "Cancelada";
+    if (n === 40 || raw === "FINISHED") return "Concluída";
+    if (n === 50 || raw === "CANCELED" || raw === "CANCELLED") return "Cancelada";
+
     return String(status ?? "N/A");
   }
 
@@ -163,6 +170,8 @@ export const statusLabel = (config: TabConfig, status: unknown) => {
 
 export const canActByStatus = (config: TabConfig, order: OrderLike, isBuyOrder: boolean) => {
   const status = Number(order.status);
+
+  if (isCoinex(config)) return false;
 
   if (isBinance(config)) return isBuyOrder ? status === 1 : status === 2;
 

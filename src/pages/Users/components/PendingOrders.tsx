@@ -8,6 +8,7 @@ import { PixToolModal } from "./Gowd/Pix/PixToolModal";
 import { OrderMessages } from "./OrderMessages";
 import { BinanceChatBox } from "./PendingOrders/Chat/BinanceChatBox";
 import { ChatBox } from "./PendingOrders/Chat/ChatBox";
+import { MexcChatBox } from "./PendingOrders/Chat/MexcChatBox";
 import { CompliancePopover } from "./PendingOrders/CompliancePopover";
 import { PaymentTermsBox } from "./PendingOrders/PaymentTermsBox";
 import { TABS } from "./PendingOrders/utils/pendingOrdersConfig";
@@ -21,13 +22,13 @@ import {
   isBitget,
   isBotCancel,
   isBybit,
+  isCoinex,
   isCpfCnpj,
   isMexc,
   onlyDigits,
   statusLabel,
 } from "./PendingOrders/utils/pendingOrdersHelpers";
 import { PendingOrdersProps } from "./PendingOrders/utils/pendingOrdersTypes";
-import { MexcChatBox } from "./PendingOrders/Chat/MexcChatBox";
 
 export type KeyType = "empresa" | "pessoal";
 
@@ -118,13 +119,15 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
               isMarkPaidBybitPending ||
               isMarkPaidBinancePending ||
               isMarkPaidBitgetPending ||
+              isMarkPaidMexcPending ||
               isReleaseBinancePending ||
               isReleaseBitgetPending ||
               isReleaseBitgetPending ||
               isReleaseMexcPending;
-            const requiresMessages = !isBitget(activeConfig);
+            const requiresMessages = !isBitget(activeConfig) && !isCoinex(activeConfig);
 
             const disabledAction =
+              isCoinex(activeConfig) ||
               isPendingAny ||
               acesso !== "Master" ||
               (requiresMessages && mensagens.length === 0) ||
@@ -258,12 +261,16 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
                   />
                 )}
 
-                <Button
-                  disabled={disabledAction}
-                  onClick={() => openActionModal(order, isBuyOrder ? "markPaid" : "release")}
-                >
-                  {statusLabel(activeConfig, order.status)}
-                </Button>
+                {isCoinex(activeConfig) ? (
+                  <Button disabled>Somente consulta</Button>
+                ) : (
+                  <Button
+                    disabled={disabledAction}
+                    onClick={() => openActionModal(order, isBuyOrder ? "markPaid" : "release")}
+                  >
+                    {statusLabel(activeConfig, order.status)}
+                  </Button>
+                )}
 
                 {openedComplianceOrderId === String(order.id) && compliance && (
                   <div className="absolute left-[calc(100%+12px)] top-0 z-50">
