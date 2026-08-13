@@ -81,85 +81,165 @@ const parseAmountBR = (v: any): number => {
   return negative ? -n : n;
 };
 
-const parseDateTimeAny = (value: any) => {
-  if (value == null || value === "") return { iso: "", ofx: "" };
+const parseDateTimeAny = (value: unknown) => {
+  if (value == null || value === "") {
+    return { iso: "", ofx: "" };
+  }
 
-  // Excel serial number
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    const yyyy = value.getFullYear();
+    const mm = value.getMonth() + 1;
+    const dd = value.getDate();
+    const HH = value.getHours();
+    const MI = value.getMinutes();
+    const SS = value.getSeconds();
+
+    return {
+      iso: `${yyyy}-${pad2(mm)}-${pad2(dd)} ${pad2(HH)}:${pad2(MI)}:${pad2(SS)}`,
+      ofx: `${yyyy}${pad2(mm)}${pad2(dd)}${pad2(HH)}${pad2(MI)}${pad2(SS)}`,
+    };
+  }
+
+  // Serial de data do Excel
   if (typeof value === "number") {
     const parsed = XLSX.SSF.parse_date_code(value);
+
     if (parsed) {
       const yyyy = parsed.y;
       const mm = parsed.m;
       const dd = parsed.d;
-      const HH = parsed.H;
-      const MI = parsed.M;
-      const SS = Math.floor(parsed.S);
+      const HH = parsed.H ?? 0;
+      const MI = parsed.M ?? 0;
+      const SS = Math.floor(parsed.S ?? 0);
 
-      const iso = `${yyyy}-${pad2(mm)}-${pad2(dd)} ${pad2(HH)}:${pad2(MI)}:${pad2(SS)}`;
-      const ofx = `${yyyy}${pad2(mm)}${pad2(dd)}${pad2(HH)}${pad2(MI)}${pad2(SS)}`;
-      return { iso, ofx };
+      return {
+        iso: `${yyyy}-${pad2(mm)}-${pad2(dd)} ${pad2(HH)}:${pad2(MI)}:${pad2(SS)}`,
+        ofx: `${yyyy}${pad2(mm)}${pad2(dd)}${pad2(HH)}${pad2(MI)}${pad2(SS)}`,
+      };
     }
   }
 
-  // "30/04/2026 20:36:19"
   const raw = String(value).trim();
-  const m = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/);
-  if (m) {
-    const dd = Number(m[1]);
-    const mm = Number(m[2]);
-    const yyyy = Number(m[3]);
-    const HH = Number(m[4]);
-    const MI = Number(m[5]);
-    const SS = Number(m[6]);
 
-    const iso = `${yyyy}-${pad2(mm)}-${pad2(dd)} ${pad2(HH)}:${pad2(MI)}:${pad2(SS)}`;
-    const ofx = `${yyyy}${pad2(mm)}${pad2(dd)}${pad2(HH)}${pad2(MI)}${pad2(SS)}`;
-    return { iso, ofx };
+  // 31/07/2026 16:52:45
+  // 31/07/2026 16:52
+  const br = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+
+  if (br) {
+    const dd = Number(br[1]);
+    const mm = Number(br[2]);
+    const yyyy = Number(br[3]);
+    const HH = Number(br[4] ?? 0);
+    const MI = Number(br[5] ?? 0);
+    const SS = Number(br[6] ?? 0);
+
+    return {
+      iso: `${yyyy}-${pad2(mm)}-${pad2(dd)} ${pad2(HH)}:${pad2(MI)}:${pad2(SS)}`,
+      ofx: `${yyyy}${pad2(mm)}${pad2(dd)}${pad2(HH)}${pad2(MI)}${pad2(SS)}`,
+    };
   }
 
-  return { iso: raw, ofx: "" };
+  // 2026-07-31 16:52:45 / 2026-07-31T16:52:45
+  const isoMatch = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})[T\s](\d{1,2}):(\d{2})(?::(\d{2}))?/);
+
+  if (isoMatch) {
+    const yyyy = Number(isoMatch[1]);
+    const mm = Number(isoMatch[2]);
+    const dd = Number(isoMatch[3]);
+    const HH = Number(isoMatch[4]);
+    const MI = Number(isoMatch[5]);
+    const SS = Number(isoMatch[6] ?? 0);
+
+    return {
+      iso: `${yyyy}-${pad2(mm)}-${pad2(dd)} ${pad2(HH)}:${pad2(MI)}:${pad2(SS)}`,
+      ofx: `${yyyy}${pad2(mm)}${pad2(dd)}${pad2(HH)}${pad2(MI)}${pad2(SS)}`,
+    };
+  }
+
+  return {
+    iso: "",
+    ofx: "",
+  };
 };
+
+const normalizeHeader = (value: unknown): string =>
+  String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+
+const escapeOfx = (value: unknown): string =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+const sanitizeFitId = (value: string): string =>
+  value
+    .replace(/[<>&\r\n\t]/g, "")
+    .replace(/\s+/g, "-")
+    .slice(0, 240);
 
 const buildOfx = (resume: GowdResume | null, txns: GowdTxn[]) => {
   const now = new Date();
+
   const dtServer =
     `${now.getFullYear()}${pad2(now.getMonth() + 1)}${pad2(now.getDate())}` +
     `${pad2(now.getHours())}${pad2(now.getMinutes())}${pad2(now.getSeconds())}`;
 
-  const bankId = resume?.bankId || "00000000";
+  const bankId = resume?.bankId || "33630661";
   const acctId = resume?.account || "0000000000";
   const acctType = "CHECKING";
 
   const sorted = [...txns]
-    .filter((t) => t.dtPostedOfx)
-    .sort((a, b) => (a.dtPostedOfx > b.dtPostedOfx ? 1 : -1));
+    .filter(
+      (transaction) => Boolean(transaction.dtPostedOfx) && Number.isFinite(transaction.amount),
+    )
+    .sort((a, b) => a.dtPostedOfx.localeCompare(b.dtPostedOfx));
+
   const dtStart = sorted[0]?.dtPostedOfx || dtServer;
   const dtEnd = sorted[sorted.length - 1]?.dtPostedOfx || dtServer;
 
-  const trns = sorted
-    .map((t) => {
-      const trnType = t.amount < 0 ? "DEBIT" : "CREDIT";
-      const amt = t.amount.toFixed(2);
-      const name = (t.memo || "").slice(0, 32).replace(/[<>]/g, "");
-      const memo =
-        `${t.name || ""}${t.bankName ? ` | ${t.bankName}` : ""}${t.e2eId ? ` | E2E: ${t.e2eId}` : ""}`
-          .trim()
-          .replace(/[<>]/g, "");
+  const transactionLines = sorted.map((transaction) => {
+    const trnType = transaction.amount < 0 ? "DEBIT" : "CREDIT";
 
-      return [
-        "<STMTTRN>",
-        `<TRNTYPE>${trnType}`,
-        `<DTPOSTED>${t.dtPostedOfx}`,
-        `<TRNAMT>${amt}`,
-        `<FITID>${t.fitId}`,
-        `<NAME>${name || "TX"}`,
-        `<MEMO>${memo}`,
-        "</STMTTRN>",
-      ].join("\n");
-    })
-    .join("\n");
+    const name = transaction.memo.trim() || transaction.name.trim() || "GOWD";
 
-  return [
+    const memoParts = [
+      transaction.memo,
+      transaction.name,
+      transaction.document ? `Document: ${transaction.document}` : "",
+      transaction.bankName ? `Bank: ${transaction.bankName}` : "",
+      transaction.branchNumber ? `Branch: ${transaction.branchNumber}` : "",
+      transaction.accountNumber ? `Account: ${transaction.accountNumber}` : "",
+      transaction.e2eId ? `E2E: ${transaction.e2eId}` : "",
+    ].filter(Boolean);
+
+    return [
+      "<STMTTRN>",
+      `<TRNTYPE>${trnType}`,
+      `<DTPOSTED>${transaction.dtPostedOfx}`,
+      `<TRNAMT>${transaction.amount.toFixed(2)}`,
+      `<FITID>${escapeOfx(transaction.fitId)}`,
+      `<NAME>${escapeOfx(name.slice(0, 32))}`,
+      `<MEMO>${escapeOfx(memoParts.join(" | "))}`,
+      "</STMTTRN>",
+    ].join("\r\n");
+  });
+
+  /*
+   * Tenta utilizar o saldo informado pela Gowd.
+   * Ex.: "R$ 1.324,30"
+   */
+  const parsedBalance = parseAmountBR(resume?.balance);
+
+  const finalBalance = Number.isFinite(parsedBalance)
+    ? parsedBalance
+    : sorted.reduce((acc, transaction) => acc + transaction.amount, 0);
+
+  const lines = [
     "OFXHEADER:100",
     "DATA:OFXSGML",
     "VERSION:102",
@@ -173,7 +253,10 @@ const buildOfx = (resume: GowdResume | null, txns: GowdTxn[]) => {
     "<OFX>",
     "<SIGNONMSGSRSV1>",
     "<SONRS>",
-    "<STATUS><CODE>0<SEVERITY>INFO</STATUS>",
+    "<STATUS>",
+    "<CODE>0",
+    "<SEVERITY>INFO",
+    "</STATUS>",
     `<DTSERVER>${dtServer}`,
     "<LANGUAGE>POR",
     "</SONRS>",
@@ -181,25 +264,37 @@ const buildOfx = (resume: GowdResume | null, txns: GowdTxn[]) => {
     "<BANKMSGSRSV1>",
     "<STMTTRNRS>",
     "<TRNUID>1",
-    "<STATUS><CODE>0<SEVERITY>INFO</STATUS>",
+    "<STATUS>",
+    "<CODE>0",
+    "<SEVERITY>INFO",
+    "</STATUS>",
     "<STMTRS>",
     "<CURDEF>BRL",
     "<BANKACCTFROM>",
-    `<BANKID>${bankId}`,
-    `<ACCTID>${acctId}`,
+    `<BANKID>${escapeOfx(bankId)}`,
+    `<ACCTID>${escapeOfx(acctId)}`,
     `<ACCTTYPE>${acctType}`,
     "</BANKACCTFROM>",
     "<BANKTRANLIST>",
     `<DTSTART>${dtStart}`,
     `<DTEND>${dtEnd}`,
-    trns,
+    ...transactionLines,
     "</BANKTRANLIST>",
+
+    // Alguns importadores exigem saldo contábil.
+    "<LEDGERBAL>",
+    `<BALAMT>${finalBalance.toFixed(2)}`,
+    `<DTASOF>${dtEnd}`,
+    "</LEDGERBAL>",
+
     "</STMTRS>",
     "</STMTTRNRS>",
     "</BANKMSGSRSV1>",
     "</OFX>",
     "",
-  ].join("\n");
+  ];
+
+  return lines.join("\r\n");
 };
 
 export const GowdOFXUploader = () => {
@@ -210,85 +305,162 @@ export const GowdOFXUploader = () => {
   const triggerFileInput = () => fileInputRef.current?.click();
 
   const parseResumeSheet = (ws: XLSX.WorkSheet): GowdResume => {
-    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: "" }) as any[][];
-    const map = new Map<string, string>();
+    const rows = XLSX.utils.sheet_to_json(ws, {
+      header: 1,
+      raw: true,
+      defval: "",
+    }) as unknown[][];
 
-    for (const r of rows) {
-      const k = String(r?.[0] ?? "").trim();
-      const v = String(r?.[1] ?? "").trim();
-      if (k) map.set(k, v);
-    }
+    const getValue = (...names: string[]): string => {
+      const normalizedNames = names.map(normalizeHeader);
+
+      for (const row of rows) {
+        const key = normalizeHeader(row?.[0]);
+
+        if (normalizedNames.some((name) => key === name || key.startsWith(name))) {
+          return String(row?.[1] ?? "").trim();
+        }
+      }
+
+      return "";
+    };
 
     return {
-      bankId: map.get("ISPB") || "",
-      institution: map.get("Institution") || "",
-      branch: map.get("Branch") || "",
-      account: map.get("Account") || "",
-      holderName: map.get("Name") || "",
-      holderDocument: map.get("Document") || "",
-      period: map.get("Period") || "",
-      balance: map.get("Balance") || "",
+      bankId: getValue("ISPB"),
+      institution: getValue("Institution", "Instituição"),
+      branch: getValue("Branch", "Agência"),
+      account: getValue("Account", "Conta"),
+      holderName: getValue("Name", "Nome"),
+      holderDocument: getValue("Document", "Documento"),
+      period: getValue("Period", "Período"),
+
+      // Agora encontra "Balance of the day ..."
+      balance: getValue("Balance of the day", "Balance", "Saldo do dia", "Saldo"),
     };
   };
 
   const parseBankStatementSheet = (ws: XLSX.WorkSheet): GowdTxn[] => {
-    // ✅ raw:true para pegar números de verdade (evita "5.000" virar 5)
-    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: "" }) as any[][];
+    const rows = XLSX.utils.sheet_to_json(ws, {
+      header: 1,
+      raw: true,
+      defval: "",
+    }) as unknown[][];
+
     if (!rows.length) return [];
 
-    const header = rows[0].map((h: any) =>
-      String(h ?? "")
-        .trim()
-        .toLowerCase(),
-    );
-    const idx = (name: string) => header.indexOf(name.toLowerCase());
+    // Procura o cabeçalho nas primeiras 20 linhas.
+    // Assim não depende obrigatoriamente de estar na linha 1.
+    const headerRowIndex = rows.slice(0, 20).findIndex((row) => {
+      const normalized = row.map(normalizeHeader);
 
-    const iCreatedAt = idx("Created At");
-    const iAmount = idx("Amount");
-    const iDescription = idx("Description");
-    const iName = idx("Name");
-    const iDocument = idx("Document");
-    const iBankName = idx("Bank Name");
-    const iBranch = idx("Branch Number");
-    const iAccount = idx("Account Number");
-    const iExternal = idx("External Code");
-    const iIdentifier = idx("Identifier");
-    const iE2E = idx("E2E ID");
+      return normalized.includes("created at") && normalized.includes("amount");
+    });
 
-    if (iCreatedAt === -1 || iAmount === -1) {
-      toast.error("Estrutura do extrato Gowd não reconhecida (aba Bank Statement).");
+    if (headerRowIndex === -1) {
+      toast.error("Estrutura do extrato Gowd não reconhecida: não encontrei Created At e Amount.");
+
       return [];
     }
 
-    // ✅ pega TODAS as transações (sem filtro de entrada/saída)
+    const header = rows[headerRowIndex].map(normalizeHeader);
+
+    const idx = (...names: string[]): number => {
+      for (const name of names) {
+        const index = header.indexOf(normalizeHeader(name));
+
+        if (index !== -1) return index;
+      }
+
+      return -1;
+    };
+
+    const iCreatedAt = idx("Created At", "Data", "Timestamp");
+    const iAmount = idx("Amount", "Valor");
+    const iDescription = idx("Description", "Descrição");
+    const iName = idx("Name", "Nome");
+    const iDocument = idx("Document", "Documento");
+    const iBankName = idx("Bank Name", "Banco");
+    const iBranch = idx("Branch Number", "Branch", "Agência");
+    const iAccount = idx("Account Number", "Account", "Conta");
+    const iExternal = idx("External Code");
+    const iIdentifier = idx("Identifier");
+    const iE2E = idx("E2E ID", "EndToEnd", "End To End");
+    const iIdentifierRefund = idx("Identifier Refund");
+    const iE2ERefund = idx("E2E ID Refund");
+
+    if (iCreatedAt === -1 || iAmount === -1) {
+      toast.error("Estrutura do extrato Gowd não reconhecida: Created At ou Amount ausente.");
+
+      return [];
+    }
+
     return rows
-      .slice(1)
-      .map((r, line) => {
-        const createdAt = r[iCreatedAt];
-        const amountRaw = r[iAmount];
+      .slice(headerRowIndex + 1)
+      .map((row, index) => {
+        const createdAt = row[iCreatedAt];
+        const amountRaw = row[iAmount];
 
         const amountNum = parseAmountBR(amountRaw);
         const { iso, ofx } = parseDateTimeAny(createdAt);
 
-        // se não tiver data ou valor, ignora linha vazia
-        if (!iso || !Number.isFinite(amountNum)) return null;
+        if (!iso || !ofx || !Number.isFinite(amountNum)) {
+          return null;
+        }
 
-        const memo = String(r[iDescription] ?? "").trim();
-        const name = String(r[iName] ?? "").trim();
-        const document = String(r[iDocument] ?? "").trim();
-        const bankName = String(r[iBankName] ?? "").trim();
-        const branchNumber = String(r[iBranch] ?? "").trim();
-        const accountNumber = String(r[iAccount] ?? "").trim();
+        const valueAt = (column: number): string =>
+          column >= 0 ? String(row[column] ?? "").trim() : "";
 
-        const externalCode = String(r[iExternal] ?? "").trim();
-        const identifier = String(r[iIdentifier] ?? "").trim();
-        const e2eId = String(r[iE2E] ?? "").trim();
+        const memo = valueAt(iDescription);
+        const name = valueAt(iName);
+        const document = valueAt(iDocument);
+        const bankName = valueAt(iBankName);
+        const branchNumber = valueAt(iBranch);
+        const accountNumber = valueAt(iAccount);
 
-        const fitId = identifier || externalCode || e2eId || `${ofx || "0"}-${line}`;
+        const externalCode = valueAt(iExternal);
+        const identifier = valueAt(iIdentifier);
+        const e2eOriginal = valueAt(iE2E);
+
+        const identifierRefund = valueAt(iIdentifierRefund);
+        const e2eRefund = valueAt(iE2ERefund);
+
+        const e2eId = e2eOriginal || e2eRefund;
+
+        /*
+         * IMPORTANTE:
+         *
+         * Na Gowd, duas linhas diferentes podem ter o MESMO:
+         * Identifier
+         * External Code
+         * E2E ID
+         *
+         * Exemplo:
+         * Payout transfer  -9578,00
+         * Fixed fee transfer -0,85
+         *
+         * Se os dois tiverem o mesmo FITID, programas contábeis
+         * entendem uma das operações como duplicada.
+         *
+         * Por isso incluímos:
+         * - identificador
+         * - data/hora
+         * - valor
+         * - descrição
+         *
+         * tornando o FITID único e determinístico.
+         */
+        const fitIdBase = [
+          identifier || identifierRefund || externalCode || e2eId || "GOWD",
+          ofx,
+          amountNum.toFixed(2),
+          memo || "TX",
+        ].join("-");
+
+        const fitId = sanitizeFitId(fitIdBase);
 
         return {
           dateISO: iso,
-          dtPostedOfx: ofx || "",
+          dtPostedOfx: ofx,
           amount: amountNum,
           memo,
           name,
@@ -298,9 +470,9 @@ export const GowdOFXUploader = () => {
           accountNumber,
           e2eId,
           fitId,
-        } as GowdTxn;
+        } satisfies GowdTxn;
       })
-      .filter(Boolean) as GowdTxn[];
+      .filter((transaction): transaction is GowdTxn => transaction !== null);
   };
 
   const handleImportGowd = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -310,10 +482,30 @@ export const GowdOFXUploader = () => {
 
     try {
       const buf = await file.arrayBuffer();
-      const wb = XLSX.read(buf, { type: "array", cellDates: false });
+      const wb = XLSX.read(buf, {
+        type: "array",
+        cellDates: true,
+        raw: true,
+      });
 
-      const resumeSheetName = wb.SheetNames.find((n) => n.toLowerCase().includes("resume"));
-      const bankSheetName = wb.SheetNames.find((n) => n.toLowerCase().includes("bank statement"));
+      const resumeSheetName = wb.SheetNames.find((name) => {
+        const normalized = normalizeHeader(name);
+
+        return (
+          normalized === "resume" || normalized.includes("resume") || normalized.includes("resumo")
+        );
+      });
+
+      const bankSheetName = wb.SheetNames.find((name) => {
+        const normalized = normalizeHeader(name);
+
+        return (
+          normalized === "bank statement" ||
+          normalized.includes("bank statement") ||
+          normalized.includes("statement") ||
+          normalized.includes("extrato")
+        );
+      });
 
       if (!bankSheetName) {
         toast.error("Não encontrei a aba 'Bank Statement' no arquivo da Gowd.");

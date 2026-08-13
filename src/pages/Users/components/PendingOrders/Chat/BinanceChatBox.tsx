@@ -1,6 +1,6 @@
 import { ArrowCircleRight, ImageSquare } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
-import { useSendChatMessageBinance } from "../hooks/Binance/useSendChatMessageBinance";
+import { useSendChatMessageBinance } from "../../../hooks/Binance/useSendChatMessageBinance";
 
 const fileToBase64 = (file: File) =>
   new Promise<string>((resolve, reject) => {

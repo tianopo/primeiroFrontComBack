@@ -38,4 +38,11 @@ export const TABS: TabConfig[] = [
     exchangeName: "Bitget",
     registerExchange: "Bitget https://www.bitget.com/ SC",
   },
+  {
+    tab: "mexcPessoal",
+    keyType: "pessoal",
+    label: "MEXC P",
+    exchangeName: "MEXC",
+    registerExchange: "MEXC https://www.mexc.com/ SC",
+  },
 ];

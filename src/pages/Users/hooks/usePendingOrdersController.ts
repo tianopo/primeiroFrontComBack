@@ -13,6 +13,7 @@ import {
   isBitget,
   isBybit,
   isCpfCnpj,
+  isMexc,
   legacyOrder,
   onlyDigits,
 } from "../components/PendingOrders/utils/pendingOrdersHelpers";
@@ -31,12 +32,14 @@ import {
 } from "./Binance/useCheckAndReleaseCoinBinance";
 import { useMarkOrderAsPaidBinance } from "./Binance/useMarkOrderAsPaidBinance";
 import { useSendChatMessageBinance } from "./Binance/useSendChatMessageBinance";
+import { useMarkOrderAsPaidBitget } from "./Bitget/useMarkOrderAsPaidBitget";
+import { useReleaseAssetsBitget } from "./Bitget/useReleaseAssetsBitget";
 import { useListPendingOrders } from "./Bybit/useListPendingOrders";
 import { useMarkOrderAsPaidBybit } from "./Bybit/useMarkOrderAsPaidBybit";
 import { useReleaseAssets } from "./Bybit/useReleaseAssets";
 import { useSendChatMessageBybit } from "./Bybit/useSendChatMessageBybit";
-import { useMarkOrderAsPaidBitget } from "./Bitget/useMarkOrderAsPaidBitget";
-import { useReleaseAssetsBitget } from "./Bitget/useReleaseAssetsBitget";
+import { useMarkOrderAsPaidMexc } from "./MEXC/useMarkOrderAsPaidMexc";
+import { useReleaseCoinMexc } from "./MEXC/useReleaseCoinMexc";
 
 export const usePendingOrdersController = () => {
   const { data, isLoading, error } = useListPendingOrders();
@@ -53,6 +56,9 @@ export const usePendingOrdersController = () => {
 
   const { mutate: releaseBitget, isPending: isReleaseBitgetPending } = useReleaseAssetsBitget();
   const { mutate: markPaidBitget, isPending: isMarkPaidBitgetPending } = useMarkOrderAsPaidBitget();
+
+  const { mutate: releaseMexc, isPending: isReleaseMexcPending } = useReleaseCoinMexc();
+  const { mutate: markPaidMexc, isPending: isMarkPaidMexcPending } = useMarkOrderAsPaidMexc();
 
   const { acesso } = useAccessControl();
 
@@ -72,6 +78,7 @@ export const usePendingOrdersController = () => {
     activeConfig.keyType === "pessoal" ? "pessoal" : "empresa";
   const modalBybitKeyType: BybitKeyType = modalConfig.keyType === "pessoal" ? "pessoal" : "empresa";
   const modalBitgetKeyType = modalConfig.keyType === "pessoal" ? "pessoal" : "empresa";
+  const modalMexcKeyType = modalConfig.keyType === "pessoal" ? "pessoal" : "empresa";
   const orders = useMemo(() => getOrdersByTab(data, activeTab), [data, activeTab]);
 
   const changeTab = (tab: TabKey) => {
@@ -268,6 +275,42 @@ export const usePendingOrdersController = () => {
     );
   };
 
+  const confirmMexcMarkPaid = (order: OrderLike) => {
+    markPaidMexc(
+      {
+        advOrderNo: String(order.id),
+        keyType: modalMexcKeyType,
+        userConfirmPaymentId: String(order.userConfirmPaymentId ?? order.payId ?? "") || undefined,
+        payId: String(order.payId ?? "") || undefined,
+      },
+      {
+        onSuccess: () => {
+          closeModal();
+        },
+        onError: () => {
+          closeModal();
+        },
+      },
+    );
+  };
+
+  const confirmMexcRelease = (order: OrderLike) => {
+    releaseMexc(
+      {
+        advOrderNo: String(order.id),
+        keyType: modalMexcKeyType,
+      },
+      {
+        onSuccess: () => {
+          closeModal();
+        },
+        onError: () => {
+          closeModal();
+        },
+      },
+    );
+  };
+
   const handleConfirm = () => {
     if (!selectedOrder) return;
 
@@ -291,6 +334,14 @@ export const usePendingOrdersController = () => {
     if (isBitget(modalConfig)) {
       return confirmBitgetRelease(selectedOrder);
     }
+
+    if (isMexc(modalConfig) && modalAction === "markPaid") {
+      return confirmMexcMarkPaid(selectedOrder);
+    }
+
+    if (isMexc(modalConfig)) {
+      return confirmMexcRelease(selectedOrder);
+    }
   };
 
   return {
@@ -310,6 +361,8 @@ export const usePendingOrdersController = () => {
     isReleaseBinancePending,
     isMarkPaidBitgetPending,
     isReleaseBitgetPending,
+    isMarkPaidMexcPending,
+    isReleaseMexcPending,
     modalAction,
     openActionModal,
     openPixModal,

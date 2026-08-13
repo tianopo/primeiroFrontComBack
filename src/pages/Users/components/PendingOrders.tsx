@@ -3,11 +3,11 @@ import { Button } from "src/components/Buttons/Button";
 import { CardContainer } from "src/components/Layout/CardContainer";
 import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalButton";
 import { usePendingOrdersController } from "../hooks/usePendingOrdersController";
-import { BinanceChatBox } from "./BinanceChatBox";
-import { ChatBox } from "./ChatBox";
 import { StatementRedisPanel } from "./Gowd/Extrato/StatementRedisPanel";
 import { PixToolModal } from "./Gowd/Pix/PixToolModal";
 import { OrderMessages } from "./OrderMessages";
+import { BinanceChatBox } from "./PendingOrders/Chat/BinanceChatBox";
+import { ChatBox } from "./PendingOrders/Chat/ChatBox";
 import { CompliancePopover } from "./PendingOrders/CompliancePopover";
 import { PaymentTermsBox } from "./PendingOrders/PaymentTermsBox";
 import { TABS } from "./PendingOrders/utils/pendingOrdersConfig";
@@ -22,10 +22,12 @@ import {
   isBotCancel,
   isBybit,
   isCpfCnpj,
+  isMexc,
   onlyDigits,
   statusLabel,
 } from "./PendingOrders/utils/pendingOrdersHelpers";
 import { PendingOrdersProps } from "./PendingOrders/utils/pendingOrdersTypes";
+import { MexcChatBox } from "./PendingOrders/Chat/MexcChatBox";
 
 export type KeyType = "empresa" | "pessoal";
 
@@ -47,6 +49,8 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
     isReleaseBinancePending,
     isMarkPaidBitgetPending,
     isReleaseBitgetPending,
+    isMarkPaidMexcPending,
+    isReleaseMexcPending,
     modalAction,
     openActionModal,
     openPixModal,
@@ -115,7 +119,9 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
               isMarkPaidBinancePending ||
               isMarkPaidBitgetPending ||
               isReleaseBinancePending ||
-              isReleaseBitgetPending;
+              isReleaseBitgetPending ||
+              isReleaseBitgetPending ||
+              isReleaseMexcPending;
             const requiresMessages = !isBitget(activeConfig);
 
             const disabledAction =
@@ -242,6 +248,13 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
                     orderId={String(order.id)}
                     isPending={isChatBinancePending}
                     sendChatBinance={sendChatBinance}
+                  />
+                )}
+
+                {isMexc(activeConfig) && (
+                  <MexcChatBox
+                    orderId={String(order.id)}
+                    keyType={activeConfig.keyType === "pessoal" ? "pessoal" : "empresa"}
                   />
                 )}
 

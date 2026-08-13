@@ -10,6 +10,8 @@ const BYBIT_HOSTS = ["https://api.bybit.com", "https://api.bytick.com"];
 const CRYPTOTECH_ALIASES = [
   "crypto tech dev",
   "crypto tech dv",
+  "cryptotech",
+  "cryptotech dev e trading ltda",
   "cryptotech desenvolvimento e trading ltda",
 ];
 
@@ -42,14 +44,20 @@ const getType = (msg: any) => {
 
 const isImageMessage = (msg: any) => {
   const type = getType(msg);
-  return type === "image" || type === "pic" || Boolean(msg?.imageUrl || msg?.thumbnailUrl);
+
+  return (
+    type === "image" ||
+    type === "pic" ||
+    type === "2" ||
+    Boolean(msg?.imageUrl || msg?.thumbnailUrl || msg?.arquivo)
+  );
 };
 
 const isPdfMessage = (msg: any) => {
   const type = getType(msg);
   const file = getFileName(msg).toLowerCase();
 
-  return type === "pdf" || file.endsWith(".pdf");
+  return type === "pdf" || type === "4" || file.endsWith(".pdf");
 };
 
 const getMediaRaw = (msg: any) => {
@@ -58,6 +66,7 @@ const getMediaRaw = (msg: any) => {
       msg?.thumbnailUrl ||
       msg?.url ||
       msg?.fileUrl ||
+      msg?.arquivo ||
       msg?.mensagem ||
       msg?.message ||
       msg?.content ||

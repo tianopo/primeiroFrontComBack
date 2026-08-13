@@ -94,12 +94,18 @@ export const apiRoute = {
   sendChatMessageBinance: "binance/chat/send",
   binanceCheckAndReleaseCoin: "/binance/order/check-and-release-coin",
   binanceMarkOrderAsPaid: "binance/order/mark-paid-auto",
-  /* Bitget */
+  /* BITGET */
   bitgetPendingOrders: "bitget/p2p/pending-orders",
   bitgetAllOrders: "bitget/p2p/all-orders",
   bitgetOrderInfo: "bitget/p2p/order-info",
   bitgetMarkPaid: "bitget/p2p/order-pay",
   bitgetReleaseAssets: "bitget/p2p/order-release",
+  /* MEXC */
+  mexcMarkPaid: (advOrderNo: string) => `/mexc/orders/${advOrderNo}/paid`,
+  mexcReleaseCoin: (advOrderNo: string) => `/mexc/orders/${advOrderNo}/release`,
+  mexcSendChatMessage: "/mexc/chat/messages",
+  mexcUploadFile: "/mexc/files/upload",
+  mexcDownloadFile: (fileId: string) => `/mexc/files/${fileId}`,
   /* EXCHANGES */
   pendingOrders: "exchanges/pending-orders",
   /* WHATSAPP */

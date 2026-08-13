@@ -1,54 +1,60 @@
 import { ArrowCircleRight, FilePdf, ImageSquare } from "@phosphor-icons/react/dist/ssr";
 import { useRef, useState } from "react";
+import { useSendChatMessageMexc } from "src/pages/Users/hooks/MEXC/useSendChatMessageMexc";
 import { useAccessControl } from "src/routes/context/AccessControl";
-import { useSendChatMessageBybit } from "../hooks/Bybit/useSendChatMessageBybit";
-import { KeyType } from "./PendingOrders";
 
-interface ChatBoxProps {
+type MexcKeyType = "empresa" | "pessoal";
+
+type MexcChatBoxProps = {
   orderId: string;
-  keyType: KeyType;
-}
+  keyType: MexcKeyType;
+};
 
-const fileToBase64 = (file: File) =>
-  new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-
-export const ChatBox = ({ orderId, keyType }: ChatBoxProps) => {
+export const MexcChatBox = ({ orderId, keyType }: MexcChatBoxProps) => {
   const [message, setMessage] = useState("");
-  const { mutate: sendChatMessage, isPending } = useSendChatMessageBybit();
+  const { mutate: sendChatMexc, isPending } = useSendChatMessageMexc();
   const { name } = useAccessControl();
+
   const imageInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
 
-  const send = (
-    payload: { message: string; contentType: "str" | "pic" | "pdf" },
-    onSuccess?: () => void,
-  ) => {
-    sendChatMessage({ ...payload, orderId, keyType }, { onSuccess });
-  };
-
   const handleSend = () => {
     const text = message.trim();
-    if (!text) return;
-    send({ message: `${name?.split(" ")[0] ?? ""}: ${text}`, contentType: "str" }, () =>
-      setMessage(""),
+
+    if (!text || isPending) return;
+
+    setMessage("");
+
+    sendChatMexc(
+      {
+        orderNo: orderId,
+        keyType,
+        content: `${name?.split(" ")[0] ?? ""}: ${text}`,
+        type: "text",
+      },
+      {
+        onError: () => setMessage(text),
+      },
     );
   };
 
-  const handleFileSend = async (file?: File, contentType?: "pic" | "pdf") => {
-    if (!file || !contentType) return;
-    send({ message: await fileToBase64(file), contentType });
+  const handleFileSend = async (file?: File, type?: "image" | "file") => {
+    if (!file || !type || isPending) return;
+
+    sendChatMexc({
+      orderNo: orderId,
+      keyType,
+      file,
+      type,
+      content: file.name,
+    });
   };
 
   return (
     <div className="my-2 flex w-full items-center gap-2 rounded-6 border-1 border-gray-300 p-1">
       <input
-        id={`chat-input-${keyType}-${orderId}`}
-        name={`chat-input-${keyType}-${orderId}`}
+        id={`chat-input-mexc-${keyType}-${orderId}`}
+        name={`chat-input-mexc-${keyType}-${orderId}`}
         type="text"
         placeholder="Digite sua mensagem..."
         value={message}
@@ -63,33 +69,45 @@ export const ChatBox = ({ orderId, keyType }: ChatBoxProps) => {
       />
 
       <button
-        className="rounded-6 bg-blue-500 px-2 py-1.5 text-white hover:opacity-80"
+        className="rounded-6 bg-blue-500 px-2 py-1.5 text-white hover:opacity-80 disabled:cursor-not-allowed"
         onClick={() => imageInputRef.current?.click()}
         disabled={isPending}
+        title="Enviar imagem"
       >
         <ImageSquare size={22} weight="duotone" />
       </button>
+
       <input
         ref={imageInputRef}
         type="file"
         accept="image/*"
         hidden
-        onChange={(e) => handleFileSend(e.target.files?.[0], "pic")}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = "";
+          handleFileSend(file, "image");
+        }}
       />
 
       <button
-        className="rounded-6 bg-red-500 px-2 py-1.5 text-white hover:opacity-80"
+        className="rounded-6 bg-red-500 px-2 py-1.5 text-white hover:opacity-80 disabled:cursor-not-allowed"
         onClick={() => pdfInputRef.current?.click()}
         disabled={isPending}
+        title="Enviar PDF"
       >
         <FilePdf size={22} weight="duotone" />
       </button>
+
       <input
         ref={pdfInputRef}
         type="file"
         accept="application/pdf"
         hidden
-        onChange={(e) => handleFileSend(e.target.files?.[0], "pdf")}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = "";
+          handleFileSend(file, "file");
+        }}
       />
 
       <button
