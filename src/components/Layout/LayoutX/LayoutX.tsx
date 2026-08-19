@@ -29,7 +29,7 @@ export const LayoutX = () => {
       icon: <Lock width={20} height={17} weight="duotone" />,
     },
     // Itens visíveis apenas se acesso usuário for User ou Master
-    ...(["User", "Master"].includes(acesso)
+    ...(["Bank", "Master"].includes(acesso)
       ? [
           {
             text: "Banco",
@@ -39,7 +39,7 @@ export const LayoutX = () => {
         ]
       : []),
     // Itens visíveis apenas se acesso !== 'User'
-    ...(acesso !== "User"
+    ...(!["User", "Bank"].includes(acesso)
       ? [
           {
             text: "Usuários",

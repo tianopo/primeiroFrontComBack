@@ -13,26 +13,6 @@ export const GOWD_PAYOUT_STATUSES = [
 
 export type GowdPayoutStatus = (typeof GOWD_PAYOUT_STATUSES)[number];
 
-export type GowdBatchTransaction = {
-  id?: string;
-  idempotencyKey?: string;
-  sequence?: number;
-  amount?: string;
-  status?: GowdPayoutStatus | string;
-  endToEndId?: string | null;
-  paidAt?: string | null;
-  errorMessage?: string | null;
-};
-
-export type GowdBatch = {
-  id?: string;
-  transactionsCount?: number;
-  totalAmount?: string;
-  paidAmount?: string;
-  pendingAmount?: string;
-  transactions?: GowdBatchTransaction[];
-};
-
 export type GowdPixOutResponseData = {
   id?: string;
   externalId?: string;
@@ -48,29 +28,6 @@ export type GowdPixOutResponseData = {
     variable?: string | number;
     additional?: string | number;
   };
-  batch?: GowdBatch;
-};
-
-export const normalizeGowdStatus = (value: unknown) =>
-  String(value ?? "")
-    .trim()
-    .toUpperCase();
-
-export const isPartiallyPaid = (value: unknown) => normalizeGowdStatus(value) === "PARTIALLY_PAID";
-
-export const hasGowdBatch = (value: unknown): value is GowdBatch => {
-  if (!value || typeof value !== "object") return false;
-
-  const batch = value as GowdBatch;
-
-  return Boolean(
-    batch.id ||
-      batch.transactionsCount ||
-      batch.totalAmount ||
-      batch.paidAmount ||
-      batch.pendingAmount ||
-      (Array.isArray(batch.transactions) && batch.transactions.length > 0),
-  );
 };
 
 export const formatBRLFromUnknown = (value?: string | number | null) => {
@@ -85,6 +42,11 @@ export const formatBRLFromUnknown = (value?: string | number | null) => {
     currency: "BRL",
   });
 };
+
+export const normalizeGowdStatus = (value: unknown) =>
+  String(value ?? "")
+    .trim()
+    .toUpperCase();
 
 export const buildGowdIdempotencyKey = () => {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {

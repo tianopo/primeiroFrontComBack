@@ -1,9 +1,7 @@
 import { useState } from "react";
 import {
   formatBRLFromUnknown,
-  GowdBatch,
   GowdPixOutResponseData,
-  isPartiallyPaid,
 } from "src/pages/Users/utils/gowdPixDireto.helpers";
 import { useAccessControl } from "src/routes/context/AccessControl";
 
@@ -91,49 +89,6 @@ const getAmountCurrency = (data?: GowdPixOutResponseData) => {
   return data.currency ?? "BRL";
 };
 
-const BatchPanel = ({ batch }: { batch?: GowdBatch }) => {
-  if (!batch) return null;
-
-  const transactions = Array.isArray(batch.transactions) ? batch.transactions : [];
-
-  return (
-    <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm">
-      <h4 className="mb-2 font-semibold text-blue-900">Remessa Pix</h4>
-
-      <div className="grid gap-2 md:grid-cols-2">
-        <Row label="ID da remessa" value={batch.id} />
-        <Row label="Quantidade de transações" value={batch.transactionsCount} />
-        <Row label="Valor total" value={formatBRLFromUnknown(batch.totalAmount)} />
-        <Row label="Valor pago" value={formatBRLFromUnknown(batch.paidAmount)} />
-        <Row label="Valor pendente" value={formatBRLFromUnknown(batch.pendingAmount)} />
-      </div>
-
-      {transactions.length > 0 ? (
-        <div className="mt-3 flex flex-col gap-2">
-          <h5 className="text-xs font-semibold uppercase text-blue-900">Transações da remessa</h5>
-
-          {transactions.map((transaction) => (
-            <div
-              key={transaction.id ?? transaction.sequence}
-              className="rounded-md border border-blue-100 bg-white p-2"
-            >
-              <div className="grid gap-1 md:grid-cols-2">
-                <Row label="Sequência" value={transaction.sequence} />
-                <Row label="Status" value={transaction.status} />
-                <Row label="Valor" value={formatBRLFromUnknown(transaction.amount)} />
-                <Row label="E2E" value={transaction.endToEndId} />
-                <Row label="IdempotencyKey" value={transaction.idempotencyKey} />
-                <Row label="Pago em" value={formatDateTime(transaction.paidAt ?? undefined)} />
-                <Row label="Erro" value={transaction.errorMessage} />
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
-};
-
 export const PixOutResponse = ({ data }: { data?: GowdPixOutResponseData }) => {
   const { acesso } = useAccessControl();
 
@@ -147,7 +102,6 @@ export const PixOutResponse = ({ data }: { data?: GowdPixOutResponseData }) => {
 
   const amountValue = getAmountValue(data);
   const amountCurrency = getAmountCurrency(data);
-  const batch = data.batch;
   const status = String(data.status ?? "");
 
   return (
@@ -159,14 +113,6 @@ export const PixOutResponse = ({ data }: { data?: GowdPixOutResponseData }) => {
         <StatusBadge status={status} />
       </div>
 
-      {isPartiallyPaid(status) ? (
-        <div className="mb-3 rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
-          Este Pix foi parcialmente pago. Não reenvie o valor total. Faça um novo payout apenas do
-          valor pendente:
-          <strong> {formatBRLFromUnknown(batch?.pendingAmount)}</strong>.
-        </div>
-      ) : null}
-
       <div className="flex flex-col">
         <div className="flex items-center justify-between gap-2 border-b border-gray-100 py-2">
           <span className="text-xs font-semibold text-gray-600">ID</span>
@@ -177,7 +123,6 @@ export const PixOutResponse = ({ data }: { data?: GowdPixOutResponseData }) => {
         </div>
 
         <Row label="ExternalId" value={data.externalId} />
-        <Row label="Valor" value={formatBRLFromUnknown(amountValue)} />
         <Row label="Moeda" value={amountCurrency} />
         <Row label="Status" value={data.status} />
         <Row label="EndToEndId" value={data.endToEndId} />
@@ -193,8 +138,6 @@ export const PixOutResponse = ({ data }: { data?: GowdPixOutResponseData }) => {
           </>
         )}
       </div>
-
-      <BatchPanel batch={batch} />
     </div>
   );
 };

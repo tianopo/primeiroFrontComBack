@@ -3,7 +3,6 @@ import { AxiosError } from "axios";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "src/config/api";
 import { responseError } from "src/config/responseErrors";
-import { GowdBatch } from "src/pages/Users/utils/gowdPixDireto.helpers";
 import { apiRoute } from "src/routes/api";
 
 export interface GowdStatementItem {
@@ -18,16 +17,6 @@ export interface GowdStatementItem {
   status?: string;
   direction?: "IN" | "OUT" | string;
   identifier?: string;
-
-  externalCode?: string;
-
-  batch?: GowdBatch;
-  batchId?: string;
-  batchSequence?: number;
-  batchTransactionsCount?: number;
-  batchTotalAmount?: number;
-  batchPaidAmount?: number;
-  batchPendingAmount?: number;
 
   payer?: {
     name?: string;
@@ -61,7 +50,7 @@ export interface GowdStatementResponse {
   page: number;
   limit: number;
   sort: "asc" | "desc" | string;
-  hasNext: boolean;
+  hasNext?: boolean;
   items: GowdStatementItem[];
 }
 
@@ -94,7 +83,7 @@ export const useGowdStatement = ({
   const query = useQuery<GowdStatementResponse>({
     queryKey: ["gowd-statement", scope, accountId, startDate, endDate, page, size],
     queryFn: async () => {
-      const response = await api().post<GowdStatementResponse>(
+      const { data } = await api().post<GowdStatementResponse>(
         route,
         {
           startDate: `${startDate}T00:00:00.000Z`,
@@ -109,9 +98,9 @@ export const useGowdStatement = ({
         },
       );
 
-      return response.data;
+      return data;
     },
-    enabled: !!startDate && !!endDate && (scope === "own" || !!accountId),
+    enabled: Boolean(startDate && endDate) && (scope === "own" || Boolean(accountId)),
     refetchInterval: scope === "own" ? 30_000 : false,
     retry: false,
   });
@@ -123,9 +112,7 @@ export const useGowdStatement = ({
   }, [query.error]);
 
   useEffect(() => {
-    if (scope !== "baas") {
-      return;
-    }
+    if (scope !== "baas") return;
 
     const interval = window.setInterval(() => {
       setNow(Date.now());
@@ -137,16 +124,14 @@ export const useGowdStatement = ({
   }, [scope]);
 
   const manualRefreshCooldown = useMemo(() => {
-    if (scope !== "baas") {
-      return 0;
-    }
+    if (scope !== "baas") return 0;
 
     const remaining = MANUAL_REFRESH_COOLDOWN_MS - (now - lastManualRefreshAt);
+
     return remaining > 0 ? Math.ceil(remaining / 1000) : 0;
   }, [scope, now, lastManualRefreshAt]);
 
-  const canManualRefresh =
-    scope !== "baas" ? false : manualRefreshCooldown <= 0 && !query.isFetching;
+  const canManualRefresh = scope === "baas" && manualRefreshCooldown <= 0 && !query.isFetching;
 
   const refreshNow = async () => {
     if (scope !== "baas") return;

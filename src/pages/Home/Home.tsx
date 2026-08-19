@@ -18,6 +18,7 @@ import { mensalFiduciaTable } from "./config/mensalFiduciaTable";
 import { useDeleteOrder } from "./hooks/useDeleteOrder";
 import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
 import { useUpdateOrder } from "./hooks/useUpdateOrder";
+import { generateRpsNfseTxt } from "./components/generateRpsNfseTxt";
 
 export const Home = () => {
   const { acesso } = useAccessControl();
@@ -227,6 +228,41 @@ export const Home = () => {
     setValorTotalNFE(result.totalValorNotas);
   };
 
+  const exportRpsNfseTxt = () => {
+    if (!filteredData || filteredData.length === 0) {
+      alert("Nenhuma ordem filtrada para gerar o TXT de RPS.");
+      return;
+    }
+
+    const result = generateRpsNfseTxt({
+      transactions: filteredData,
+      precoMedioCompraMensal: precoMedioCompra,
+      startDate: filterDates.startDate,
+      endDate: filterDates.endDate,
+      fileName: `rps-nfse-v002-${filterDates.startDate}_${filterDates.endDate}.txt`,
+
+      // preencher com os dados reais da sua empresa
+      prestadorCcm: "SEU_CCM_AQUI",
+
+      // confirme com sua contabilidade/prefeitura
+      codigoServico: "02496",
+      aliquotaPercentual: 5,
+      issRetido: "2",
+      situacaoRps: "T",
+
+      rpsSerie: "RPS",
+      rpsNumeroInicial: 1,
+
+      commissionMode: "dinamica",
+      comissaoFixaPercentual: 0.01,
+      margemErroPorToken: 0.03,
+    });
+
+    if (!result) return;
+
+    setValorTotalNFE(result.totalValorNotas);
+  };
+
   const handleGenerateDeCriptoVendas = async () => {
     if (!filteredData || filteredData.length === 0) {
       alert("Nenhuma ordem filtrada para gerar a DeCripto.");
@@ -296,6 +332,7 @@ export const Home = () => {
         {validationDates && acesso === "Master" && (
           <>
             <Button onClick={exportSalesInvoiceCsv}>Exportar CSV Nota Fiscal Vendas</Button>
+            <Button onClick={exportRpsNfseTxt}>Exportar TXT RPS NFS-e V.002</Button>
           </>
         )}
         {validationDates && <Button onClick={() => handleReceipt(filteredData)}>Recibo</Button>}

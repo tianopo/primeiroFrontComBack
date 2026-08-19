@@ -15,33 +15,6 @@ export type StatementExportItem = {
   code?: string;
   transactionId?: string;
 
-  externalCode?: string;
-
-  batch?: {
-    id?: string;
-    transactionsCount?: number;
-    totalAmount?: string;
-    paidAmount?: string;
-    pendingAmount?: string;
-    transactions?: Array<{
-      id?: string;
-      idempotencyKey?: string;
-      sequence?: number;
-      amount?: string;
-      status?: string;
-      endToEndId?: string | null;
-      paidAt?: string | null;
-      errorMessage?: string | null;
-    }>;
-  };
-
-  batchId?: string;
-  batchSequence?: number;
-  batchTransactionsCount?: number;
-  batchTotalAmount?: number;
-  batchPaidAmount?: number;
-  batchPendingAmount?: number;
-
   payer?: {
     name?: string;
     document?: string;

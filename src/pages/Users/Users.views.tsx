@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAccessControl } from "src/routes/context/AccessControl";
 import { Compliance } from "./components/Compliance";
 import { Edit } from "./components/Edit";
 import { Extrato } from "./components/Gowd/Extrato/Extrato";
@@ -10,6 +11,7 @@ type TabKey = "register" | "edit" | "compliance";
 export const Users = () => {
   const [form, setForm] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>(form ? "register" : "edit");
+  const { bankPixKeys } = useAccessControl();
 
   const [initialRegisterData, setInitialRegisterData] = useState({
     apelido: "",
@@ -56,7 +58,7 @@ export const Users = () => {
         {activeTab === "compliance" && <Compliance />}
       </div>
       <PendingOrders setForm={setForm} setInitialRegisterData={setInitialRegisterData} />
-      <Extrato />
+      <Extrato companyLabel="Conta Corporativa" pixKeyLabel={`Chave Pix: ${bankPixKeys}`} />
     </div>
   );
 };
