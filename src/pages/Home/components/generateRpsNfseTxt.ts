@@ -2,6 +2,10 @@ import { parseBRL, parseNum, toBRDate } from "../config/helpers";
 
 type CommissionMode = "fixa" | "dinamica";
 
+type SituacaoRps = "T" | "F" | "A" | "B" | "D" | "M" | "N" | "R" | "S" | "X" | "V" | "P" | "C";
+
+type IssRetido = "1" | "2" | "3";
+
 type GenerateRpsNfseTxtParams = {
   transactions: any[];
   precoMedioCompraMensal?: number;
@@ -9,14 +13,14 @@ type GenerateRpsNfseTxtParams = {
   endDate: string;
   fileName?: string;
 
-  prestadorCcm: string;
+  prestadorCcm?: string;
   rpsSerie?: string;
   rpsNumeroInicial?: number;
 
-  codigoServico: string;
+  codigoServico?: string;
   aliquotaPercentual?: number;
-  issRetido?: "1" | "2" | "3";
-  situacaoRps?: "T" | "F" | "A" | "B" | "D" | "M" | "N" | "R" | "S" | "X" | "V" | "P" | "C";
+  issRetidoPadrao?: IssRetido;
+  situacaoRps?: SituacaoRps;
 
   commissionMode?: CommissionMode;
   comissaoFixaPercentual?: number;
@@ -29,7 +33,92 @@ type GenerateRpsNfseTxtResult = {
   quantidadeNotas: number;
 };
 
+const CRYPTOTECH_RPS_CONFIG = {
+  prestadorCcm: "4251350",
+  codigoServico: "02496",
+  aliquotaPercentual: 5,
+  situacaoRps: "T" as SituacaoRps,
+  issRetidoPadrao: "2" as IssRetido,
+  rpsSerie: "",
+};
+
 const onlyDigits = (value: unknown) => String(value ?? "").replace(/\D/g, "");
+
+const blank = (size: number) => "".padEnd(size, " ");
+
+const optionalNumBlank = (value: unknown, size: number) => {
+  const digits = onlyDigits(value);
+
+  if (!digits) return blank(size);
+
+  return digits.slice(-size).padStart(size, "0");
+};
+
+const isValidCep = (value: unknown) => {
+  const digits = onlyDigits(value);
+
+  if (digits.length !== 8) return false;
+  if (digits === "00000000") return false;
+
+  return true;
+};
+
+const cepField = (value: unknown) => {
+  if (!isValidCep(value)) return blank(8);
+
+  return num(value, 8);
+};
+
+const isValidCpf = (value: unknown) => {
+  const cpf = onlyDigits(value);
+
+  if (cpf.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(cpf)) return false;
+
+  let sum = 0;
+
+  for (let i = 0; i < 9; i += 1) {
+    sum += Number(cpf[i]) * (10 - i);
+  }
+
+  let digit = (sum * 10) % 11;
+  if (digit === 10) digit = 0;
+
+  if (digit !== Number(cpf[9])) return false;
+
+  sum = 0;
+
+  for (let i = 0; i < 10; i += 1) {
+    sum += Number(cpf[i]) * (11 - i);
+  }
+
+  digit = (sum * 10) % 11;
+  if (digit === 10) digit = 0;
+
+  return digit === Number(cpf[10]);
+};
+
+const isValidCnpj = (value: unknown) => {
+  const cnpj = onlyDigits(value);
+
+  if (cnpj.length !== 14) return false;
+  if (/^(\d)\1{13}$/.test(cnpj)) return false;
+
+  const calc = (base: string, factors: number[]) => {
+    const sum = factors.reduce((acc, factor, index) => {
+      return acc + Number(base[index]) * factor;
+    }, 0);
+
+    const rest = sum % 11;
+
+    return rest < 2 ? 0 : 11 - rest;
+  };
+
+  const digit1 = calc(cnpj, [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+  const digit2 = calc(cnpj, [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+
+  return digit1 === Number(cnpj[12]) && digit2 === Number(cnpj[13]);
+};
 
 const isStable = (symbol: string) => ["USDT", "USDC"].includes(String(symbol).toUpperCase());
 
@@ -40,8 +129,8 @@ const moneyDisplay = (value: number) =>
     .toFixed(2)
     .replace(".", ",");
 
-const toLatin1Safe = (value: unknown) =>
-  String(value ?? "")
+const sanitizeText = (value: unknown) => {
+  return String(value ?? "")
     .normalize("NFC")
     .replace(/\r\n|\n|\r/g, "|")
     .replace(/[“”]/g, '"')
@@ -49,26 +138,33 @@ const toLatin1Safe = (value: unknown) =>
     .replace(/[–—]/g, "-")
     .replace(/[^\x20-\x7E\xA0-\xFF]/g, "")
     .trim();
+};
 
 const txt = (value: unknown, size: number) => {
-  return toLatin1Safe(value).slice(0, size).padEnd(size, " ");
+  return sanitizeText(value).slice(0, size).padEnd(size, " ");
 };
 
 const num = (value: unknown, size: number) => {
   return onlyDigits(value).slice(-size).padStart(size, "0");
 };
 
-const money15 = (value: unknown) => {
-  const parsed =
-    typeof value === "number"
-      ? value
-      : Number(
-          String(value ?? "0")
-            .replace(/\./g, "")
-            .replace(",", "."),
-        );
+const parseMoney = (value: unknown) => {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : 0;
+  }
 
-  const cents = Math.round((Number.isFinite(parsed) ? parsed : 0) * 100);
+  const raw = String(value ?? "")
+    .replace(/[^\d,.-]/g, "")
+    .replace(/\./g, "")
+    .replace(",", ".");
+
+  const parsed = Number(raw);
+
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const money15 = (value: unknown) => {
+  const cents = Math.round(parseMoney(value) * 100);
 
   return String(Math.max(0, cents)).padStart(15, "0").slice(-15);
 };
@@ -241,6 +337,7 @@ const calculateSaleCommission = ({
   }
 
   const diferencaPorToken = Number((precoAjustado - precoMedioCompraReferencia).toFixed(8));
+
   const comissaoCalculada = Number(
     ((diferencaPorToken / precoMedioCompraReferencia) * 100).toFixed(2),
   );
@@ -251,7 +348,10 @@ const calculateSaleCommission = ({
 const getUserField = (user: any, keys: string[]) => {
   for (const key of keys) {
     const value = user?.[key];
-    if (value !== undefined && value !== null && String(value).trim()) return value;
+
+    if (value !== undefined && value !== null && String(value).trim()) {
+      return value;
+    }
   }
 
   return "";
@@ -259,26 +359,95 @@ const getUserField = (user: any, keys: string[]) => {
 
 const getTomador = (transaction: any) => {
   const user = transaction?.User ?? {};
-  const document = onlyDigits(user?.document ?? transaction?.document ?? transaction?.cpfCnpj);
-  const indicator = document.length === 14 ? "2" : document.length === 11 ? "1" : "3";
+
+  const rawDocument = onlyDigits(user?.document ?? transaction?.document ?? transaction?.cpfCnpj);
+
+  const validCpf = isValidCpf(rawDocument);
+  const validCnpj = isValidCnpj(rawDocument);
+
+  const rawCep = getUserField(user, ["cep", "zipCode", "postalCode"]);
+  const hasValidCep = isValidCep(rawCep);
+
+  /**
+   * Regra prática:
+   *
+   * CPF válido:
+   * envia CPF e não força endereço/CEP.
+   *
+   * CNPJ válido com CEP válido:
+   * envia CNPJ e endereço.
+   *
+   * CNPJ sem CEP, CPF inválido ou documento ausente:
+   * envia como CPF não-informado.
+   *
+   * Isso evita:
+   * - erro 231: CEP 00000000 inválido
+   * - erro 337: CPF com dígito verificador inválido
+   */
+  const shouldSendCpf = validCpf;
+  const shouldSendCnpj = validCnpj && hasValidCep;
+
+  const indicator = shouldSendCpf ? "1" : shouldSendCnpj ? "2" : "3";
+
+  const document =
+    indicator === "1"
+      ? rawDocument.padStart(11, "0")
+      : indicator === "2"
+        ? rawDocument.padStart(14, "0")
+        : "00000000000000";
+
+  const shouldSendAddress = indicator === "2" && hasValidCep;
 
   return {
     indicator,
-    document: indicator === "3" ? "00000000000000" : document,
-    inscricaoMunicipal: getUserField(user, ["inscricaoMunicipal", "municipalRegistration", "ccm"]),
-    inscricaoEstadual: getUserField(user, ["inscricaoEstadual", "stateRegistration"]),
+    document,
+
+    inscricaoMunicipal:
+      indicator === "2"
+        ? getUserField(user, ["inscricaoMunicipal", "municipalRegistration", "ccm"])
+        : "",
+
+    inscricaoEstadual:
+      indicator === "2" ? getUserField(user, ["inscricaoEstadual", "stateRegistration"]) : "",
+
     nome: String(user?.name ?? transaction?.nome ?? "Consumidor Final").trim(),
 
-    tipoEndereco: getUserField(user, ["tipoEndereco", "addressType"]) || "Rua",
-    endereco: getUserField(user, ["logradouro", "street", "addressStreet", "endereco"]),
-    numero: getUserField(user, ["numero", "number", "addressNumber"]),
-    complemento: getUserField(user, ["complemento", "complement", "addressComplement"]),
-    bairro: getUserField(user, ["bairro", "neighborhood", "district"]),
-    cidade: getUserField(user, ["cidade", "city"]),
-    uf: getUserField(user, ["uf", "state"]),
-    cep: getUserField(user, ["cep", "zipCode", "postalCode"]),
+    tipoEndereco: shouldSendAddress
+      ? getUserField(user, ["tipoEndereco", "addressType"]) || "Rua"
+      : "",
+    endereco: shouldSendAddress
+      ? getUserField(user, ["logradouro", "street", "addressStreet", "endereco"])
+      : "",
+    numero: shouldSendAddress ? getUserField(user, ["numero", "number", "addressNumber"]) : "",
+    complemento: shouldSendAddress
+      ? getUserField(user, ["complemento", "complement", "addressComplement"])
+      : "",
+    bairro: shouldSendAddress ? getUserField(user, ["bairro", "neighborhood", "district"]) : "",
+    cidade: shouldSendAddress ? getUserField(user, ["cidade", "city"]) : "",
+    uf: shouldSendAddress ? getUserField(user, ["uf", "state"]) : "",
+    cep: shouldSendAddress ? rawCep : "",
     email: getUserField(user, ["email"]),
   };
+};
+
+const resolveIssRetido = (transaction: any, issRetidoPadrao: IssRetido): IssRetido => {
+  const user = transaction?.User ?? {};
+
+  const explicit =
+    transaction?.issRetido ??
+    transaction?.issRetidoTomador ??
+    user?.issRetido ??
+    user?.issRetidoTomador;
+
+  if (explicit === true || explicit === "true" || explicit === "1" || explicit === 1) {
+    return "1";
+  }
+
+  if (explicit === false || explicit === "false" || explicit === "2" || explicit === 2) {
+    return "2";
+  }
+
+  return issRetidoPadrao;
 };
 
 const buildDescricaoRps = ({
@@ -292,18 +461,20 @@ const buildDescricaoRps = ({
   comissao: number;
   precoMedioCompraReferencia: number;
 }) => {
-  return toLatin1Safe(
+  return sanitizeText(
     [
       "Prestacao de servicos de promocao de vendas e intermediacao comercial.",
       `Valor da nota fiscal: ${moneyDisplay(valorNota)} BRL.`,
       `Criterio de calculo do spread/comissao: ${comissao.toFixed(2)}% sobre a operacao.`,
       `Valor total da operacao de referencia: ${transaction?.valor ?? ""}.`,
       `Identificador da ordem: ${transaction?.numeroOrdem ?? ""}.`,
-      `Data da operacao: ${toBRDate(transaction?.dataHora ?? transaction?.data)}`,
+      `Data da operacao: ${toBRDate(transaction?.dataHora ?? transaction?.data)}.`,
       `Ativo digital: ${transaction?.ativo ?? ""}.`,
       `Quantidade: ${transaction?.quantidade ?? ""}.`,
       `Valor unitario do token: ${transaction?.valorToken ?? ""}.`,
-      `Preco medio de compra usado como referencia: ${moneyDisplay(precoMedioCompraReferencia)} BRL.`,
+      `Preco medio de compra usado como referencia: ${moneyDisplay(
+        precoMedioCompraReferencia,
+      )} BRL.`,
       `Exchange/corretora: ${String(transaction?.exchange ?? "").split(" ")[0]}.`,
       "A nota fiscal refere-se a remuneracao pela prestacao do servico, e nao ao valor total movimentado na operacao.",
     ].join("|"),
@@ -311,32 +482,25 @@ const buildDescricaoRps = ({
 };
 
 const resolveRpsNumber = ({
-  transaction,
   index,
   rpsNumeroInicial,
-  used,
+  usedRpsNumbers,
 }: {
-  transaction: any;
   index: number;
   rpsNumeroInicial: number;
-  used: Set<string>;
+  usedRpsNumbers: Set<string>;
 }) => {
-  const orderDigits = onlyDigits(transaction?.numeroOrdem);
-  let candidate = orderDigits ? orderDigits.slice(-12).padStart(12, "0") : "";
+  let nextNumber = rpsNumeroInicial + index;
+  let rpsNumber = String(nextNumber).padStart(12, "0").slice(-12);
 
-  if (!candidate || used.has(candidate)) {
-    let next = rpsNumeroInicial + index;
-    candidate = String(next).padStart(12, "0").slice(-12);
-
-    while (used.has(candidate)) {
-      next += 1;
-      candidate = String(next).padStart(12, "0").slice(-12);
-    }
+  while (usedRpsNumbers.has(rpsNumber)) {
+    nextNumber += 1;
+    rpsNumber = String(nextNumber).padStart(12, "0").slice(-12);
   }
 
-  used.add(candidate);
+  usedRpsNumbers.add(rpsNumber);
 
-  return candidate;
+  return rpsNumber;
 };
 
 const buildHeader = ({
@@ -355,10 +519,11 @@ const buildDetail = ({
   transaction,
   index,
   rpsNumeroInicial,
+  usedRpsNumbers,
   rpsSerie,
   codigoServico,
   aliquotaPercentual,
-  issRetido,
+  issRetidoPadrao,
   situacaoRps,
   valorNota,
   comissao,
@@ -367,25 +532,23 @@ const buildDetail = ({
   transaction: any;
   index: number;
   rpsNumeroInicial: number;
+  usedRpsNumbers: Set<string>;
   rpsSerie: string;
   codigoServico: string;
   aliquotaPercentual: number;
-  issRetido: "1" | "2" | "3";
-  situacaoRps: string;
+  issRetidoPadrao: IssRetido;
+  situacaoRps: SituacaoRps;
   valorNota: number;
   comissao: number;
   precoMedioCompraReferencia: number;
 }) => {
-  const used = buildDetail.used ?? new Set<string>();
-  buildDetail.used = used;
-
   const tomador = getTomador(transaction);
+  const issRetido = resolveIssRetido(transaction, issRetidoPadrao);
 
   const rpsNumber = resolveRpsNumber({
-    transaction,
     index,
     rpsNumeroInicial,
-    used,
+    usedRpsNumbers,
   });
 
   const descricao = buildDescricaoRps({
@@ -409,8 +572,8 @@ const buildDetail = ({
     issRetido,
     tomador.indicator,
     num(tomador.document, 14),
-    num(tomador.inscricaoMunicipal, 8),
-    num(tomador.inscricaoEstadual, 12),
+    optionalNumBlank(tomador.inscricaoMunicipal, 8),
+    optionalNumBlank(tomador.inscricaoEstadual, 12),
     txt(tomador.nome, 75),
     txt(tomador.tipoEndereco, 3),
     txt(tomador.endereco, 50),
@@ -419,37 +582,31 @@ const buildDetail = ({
     txt(tomador.bairro, 30),
     txt(tomador.cidade, 50),
     txt(tomador.uf, 2),
-    num(tomador.cep, 8),
+    cepField(tomador.cep),
     txt(tomador.email, 75),
 
-    // Retenções federais layout V.002
     money15(0), // PIS/PASEP
     money15(0), // COFINS
     money15(0), // INSS
     money15(0), // IR
     money15(0), // CSLL/CSSL
 
-    // Carga tributária
-    money15(0),
-    num(0, 5),
-    txt("", 10),
+    money15(0), // Carga tributária valor
+    num(0, 5), // Carga tributária percentual
+    txt("", 10), // Fonte da carga tributária
 
-    // CEI / Obra / Município / Encapsulamento / Reservados
-    num(0, 12),
-    num(0, 12),
-    num(0, 7),
-    num(0, 10),
-    txt("", 10),
+    num(0, 12), // CEI
+    num(0, 12), // Matrícula da obra
+    num(0, 7), // Município prestação cód. IBGE
+    num(0, 10), // Número de encapsulamento
+    txt("", 10), // Reservado
 
-    // Valor Total Recebido: deixei zerado porque o manual restringe esse campo a códigos específicos
-    money15(0),
+    money15(0), // Valor Total Recebido
 
-    txt("", 175),
+    txt("", 175), // Reservado
     descricao,
   ].join("");
 };
-
-buildDetail.used = undefined as Set<string> | undefined;
 
 const buildFooter = ({ count, totalServicos }: { count: number; totalServicos: number }) => {
   return ["9", num(count, 7), money15(totalServicos), money15(0)].join("");
@@ -460,65 +617,101 @@ export const generateRpsNfseTxt = ({
   precoMedioCompraMensal = 0,
   startDate,
   endDate,
-  fileName = `rps-nfse-v002-${startDate}_${endDate}.txt`,
+  fileName,
 
-  prestadorCcm,
-  rpsSerie = "RPS",
+  prestadorCcm = CRYPTOTECH_RPS_CONFIG.prestadorCcm,
+  rpsSerie = CRYPTOTECH_RPS_CONFIG.rpsSerie,
   rpsNumeroInicial = 1,
 
-  codigoServico,
-  aliquotaPercentual = 5,
-  issRetido = "2",
-  situacaoRps = "T",
+  codigoServico = CRYPTOTECH_RPS_CONFIG.codigoServico,
+  aliquotaPercentual = CRYPTOTECH_RPS_CONFIG.aliquotaPercentual,
+  issRetidoPadrao = CRYPTOTECH_RPS_CONFIG.issRetidoPadrao,
+  situacaoRps = CRYPTOTECH_RPS_CONFIG.situacaoRps,
 
   commissionMode = "dinamica",
   comissaoFixaPercentual = 0.01,
   margemErroPorToken = 0.03,
 }: GenerateRpsNfseTxtParams): GenerateRpsNfseTxtResult | null => {
-  if (onlyDigits(prestadorCcm).length !== 8) {
-    alert("Informe o CCM/Inscrição Municipal do prestador com 8 dígitos.");
-    return null;
-  }
+  const allTransactions = Array.isArray(transactions) ? transactions : [];
 
-  if (onlyDigits(codigoServico).length === 0 || onlyDigits(codigoServico).length > 5) {
-    alert("Informe o código de serviço da Prefeitura de São Paulo com até 5 dígitos.");
-    return null;
-  }
+  const validPrestadorCcm =
+    onlyDigits(prestadorCcm).length === 8 ? prestadorCcm : CRYPTOTECH_RPS_CONFIG.prestadorCcm;
 
-  if (!toYYYYMMDD(startDate) || !toYYYYMMDD(endDate)) {
-    alert("Data inicial ou final inválida para gerar o RPS.");
-    return null;
-  }
+  const validCodigoServico =
+    onlyDigits(codigoServico).length > 0 && onlyDigits(codigoServico).length <= 5
+      ? codigoServico
+      : CRYPTOTECH_RPS_CONFIG.codigoServico;
 
-  const salesTransactions = (transactions ?? []).filter((transaction) => {
+  const numeroInicial = Number(rpsNumeroInicial);
+
+  const validRpsNumeroInicial =
+    Number.isFinite(numeroInicial) && numeroInicial > 0 ? numeroInicial : 1;
+
+  const salesTransactions = allTransactions.filter((transaction) => {
     return String(transaction?.tipo ?? "").toLowerCase() === "vendas";
   });
 
-  if (salesTransactions.length === 0) {
-    alert("Nenhuma venda encontrada para gerar o TXT de RPS.");
-    return null;
-  }
+  const transactionsToGenerate = salesTransactions.length > 0 ? salesTransactions : allTransactions;
 
-  buildDetail.used = new Set<string>();
+  const fallbackDate = new Date().toISOString().slice(0, 10);
 
-  const dailyPurchaseAverageByDate = buildDailyPurchaseAverageByDate(transactions);
+  const firstTransactionDate =
+    transactionsToGenerate.find((transaction) =>
+      toYYYYMMDD(transaction?.dataHora ?? transaction?.data),
+    )?.dataHora ??
+    transactionsToGenerate.find((transaction) =>
+      toYYYYMMDD(transaction?.dataHora ?? transaction?.data),
+    )?.data;
+
+  const headerStartDate =
+    toYYYYMMDD(startDate) || toYYYYMMDD(firstTransactionDate) || toYYYYMMDD(fallbackDate);
+
+  const headerEndDate =
+    toYYYYMMDD(endDate) || toYYYYMMDD(firstTransactionDate) || toYYYYMMDD(fallbackDate);
+
+  const normalizedStartDate = `${headerStartDate.slice(0, 4)}-${headerStartDate.slice(
+    4,
+    6,
+  )}-${headerStartDate.slice(6, 8)}`;
+
+  const normalizedEndDate = `${headerEndDate.slice(0, 4)}-${headerEndDate.slice(
+    4,
+    6,
+  )}-${headerEndDate.slice(6, 8)}`;
+
+  const dailyPurchaseAverageByDate = buildDailyPurchaseAverageByDate(allTransactions);
+  const usedRpsNumbers = new Set<string>();
 
   let totalValorNotas = 0;
 
-  const details = salesTransactions
+  const details = transactionsToGenerate
     .map((transaction, index) => {
       const valorBRL = parseBRL(transaction?.valor);
 
-      if (!Number.isFinite(valorBRL) || valorBRL <= 0) return "";
+      if (!Number.isFinite(valorBRL) || valorBRL <= 0) {
+        return "";
+      }
+
+      const dataOriginal = transaction?.dataHora ?? transaction?.data;
+      const dataRps = toYYYYMMDD(dataOriginal) || headerStartDate || toYYYYMMDD(fallbackDate);
+
+      if (!dataRps) {
+        return "";
+      }
+
+      const transactionForRps = {
+        ...transaction,
+        dataHora: transaction?.dataHora || dataRps,
+      };
 
       const precoMedioCompraReferencia = resolvePrecoMedioCompraReferencia({
-        transaction,
+        transaction: transactionForRps,
         dailyPurchaseAverageByDate,
         precoMedioCompraMensal,
       });
 
       const comissao = calculateSaleCommission({
-        transaction,
+        transaction: transactionForRps,
         precoMedioCompraReferencia,
         commissionMode,
         comissaoFixaPercentual,
@@ -527,18 +720,21 @@ export const generateRpsNfseTxt = ({
 
       const valorNota = Number((valorBRL * (comissao / 100)).toFixed(2));
 
-      if (!Number.isFinite(valorNota) || valorNota <= 0) return "";
+      if (!Number.isFinite(valorNota) || valorNota <= 0) {
+        return "";
+      }
 
       totalValorNotas += valorNota;
 
       return buildDetail({
-        transaction,
+        transaction: transactionForRps,
         index,
-        rpsNumeroInicial,
+        rpsNumeroInicial: validRpsNumeroInicial,
+        usedRpsNumbers,
         rpsSerie,
-        codigoServico,
+        codigoServico: validCodigoServico,
         aliquotaPercentual,
-        issRetido,
+        issRetidoPadrao,
         situacaoRps,
         valorNota,
         comissao,
@@ -547,16 +743,11 @@ export const generateRpsNfseTxt = ({
     })
     .filter(Boolean);
 
-  if (details.length === 0) {
-    alert("Nenhuma venda válida encontrada para gerar o TXT de RPS.");
-    return null;
-  }
-
   const content = [
     buildHeader({
-      prestadorCcm,
-      startDate,
-      endDate,
+      prestadorCcm: validPrestadorCcm,
+      startDate: normalizedStartDate,
+      endDate: normalizedEndDate,
     }),
     ...details,
     buildFooter({
@@ -566,7 +757,10 @@ export const generateRpsNfseTxt = ({
     "",
   ].join("\r\n");
 
-  downloadIso88591Txt(content, fileName);
+  const outputFileName =
+    fileName || `rps-nfse-v002-${normalizedStartDate}_${normalizedEndDate}.txt`;
+
+  downloadIso88591Txt(content, outputFileName);
 
   return {
     totalValorNotas: Number(totalValorNotas.toFixed(2)),

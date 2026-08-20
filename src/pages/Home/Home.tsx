@@ -241,16 +241,18 @@ export const Home = () => {
       endDate: filterDates.endDate,
       fileName: `rps-nfse-v002-${filterDates.startDate}_${filterDates.endDate}.txt`,
 
-      // preencher com os dados reais da sua empresa
-      prestadorCcm: "SEU_CCM_AQUI",
-
-      // confirme com sua contabilidade/prefeitura
+      prestadorCcm: "4251350",
       codigoServico: "02496",
       aliquotaPercentual: 5,
-      issRetido: "2",
+
+      // T = Tributado em São Paulo
       situacaoRps: "T",
 
-      rpsSerie: "RPS",
+      // 2 = sem ISS retido por padrão
+      // se algum cliente tiver issRetido: true, o gerador troca para 1
+      issRetidoPadrao: "2",
+
+      rpsSerie: "",
       rpsNumeroInicial: 1,
 
       commissionMode: "dinamica",
