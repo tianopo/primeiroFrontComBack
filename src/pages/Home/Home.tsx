@@ -18,7 +18,7 @@ import { mensalFiduciaTable } from "./config/mensalFiduciaTable";
 import { useDeleteOrder } from "./hooks/useDeleteOrder";
 import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
 import { useUpdateOrder } from "./hooks/useUpdateOrder";
-import { generateRpsNfseTxt } from "./components/generateRpsNfseTxt";
+import { generateRpsNfseTxt, getNextRpsNumber } from "./components/generateRpsNfseTxt";
 
 export const Home = () => {
   const { acesso } = useAccessControl();
@@ -43,6 +43,9 @@ export const Home = () => {
   const [transactionToDelete, setTransactionToDelete] = useState<any | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [transactionToEdit, setTransactionToEdit] = useState<any | null>(null);
+  const [rpsNumeroInicial, setRpsNumeroInicial] = useState(() => {
+    return String(getNextRpsNumber());
+  });
 
   const { data, error, isLoading } = useListTransactionsInDate(
     filterDates.startDate,
@@ -244,16 +247,11 @@ export const Home = () => {
       prestadorCcm: "4251350",
       codigoServico: "02496",
       aliquotaPercentual: 5,
-
-      // T = Tributado em São Paulo
       situacaoRps: "T",
-
-      // 2 = sem ISS retido por padrão
-      // se algum cliente tiver issRetido: true, o gerador troca para 1
       issRetidoPadrao: "2",
 
       rpsSerie: "",
-      rpsNumeroInicial: 1,
+      rpsNumeroInicial: Number(rpsNumeroInicial),
 
       commissionMode: "dinamica",
       comissaoFixaPercentual: 0.01,
@@ -263,6 +261,7 @@ export const Home = () => {
     if (!result) return;
 
     setValorTotalNFE(result.totalValorNotas);
+    setRpsNumeroInicial(String(result.proximoRps));
   };
 
   const handleGenerateDeCriptoVendas = async () => {

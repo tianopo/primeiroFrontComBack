@@ -31,6 +31,8 @@ type GenerateRpsNfseTxtResult = {
   totalValorNotas: number;
   totalValorNotasFormatado: string;
   quantidadeNotas: number;
+  primeiroRps: number;
+  proximoRps: number;
 };
 
 const CRYPTOTECH_RPS_CONFIG = {
@@ -40,6 +42,39 @@ const CRYPTOTECH_RPS_CONFIG = {
   situacaoRps: "T" as SituacaoRps,
   issRetidoPadrao: "2" as IssRetido,
   rpsSerie: "",
+};
+
+const RPS_LOCAL_STORAGE_KEY = "cryptotech:nfse:rps:nextNumber";
+const RPS_INITIAL_NUMBER = 35;
+
+const getNextRpsNumberFromStorage = () => {
+  if (typeof window === "undefined") return RPS_INITIAL_NUMBER;
+
+  const saved = Number(window.localStorage.getItem(RPS_LOCAL_STORAGE_KEY));
+
+  if (!Number.isFinite(saved) || saved < RPS_INITIAL_NUMBER) {
+    window.localStorage.setItem(RPS_LOCAL_STORAGE_KEY, String(RPS_INITIAL_NUMBER));
+    return RPS_INITIAL_NUMBER;
+  }
+
+  return saved;
+};
+
+const setNextRpsNumberToStorage = (nextNumber: number) => {
+  if (typeof window === "undefined") return;
+
+  if (!Number.isFinite(nextNumber) || nextNumber < RPS_INITIAL_NUMBER) {
+    window.localStorage.setItem(RPS_LOCAL_STORAGE_KEY, String(RPS_INITIAL_NUMBER));
+    return;
+  }
+
+  window.localStorage.setItem(RPS_LOCAL_STORAGE_KEY, String(nextNumber));
+};
+
+export const getNextRpsNumber = () => getNextRpsNumberFromStorage();
+
+export const resetNextRpsNumber = (nextNumber = RPS_INITIAL_NUMBER) => {
+  setNextRpsNumberToStorage(nextNumber);
 };
 
 const onlyDigits = (value: unknown) => String(value ?? "").replace(/\D/g, "");
@@ -642,10 +677,12 @@ export const generateRpsNfseTxt = ({
       ? codigoServico
       : CRYPTOTECH_RPS_CONFIG.codigoServico;
 
-  const numeroInicial = Number(rpsNumeroInicial);
+  const numeroInicialParam = Number(rpsNumeroInicial);
 
   const validRpsNumeroInicial =
-    Number.isFinite(numeroInicial) && numeroInicial > 0 ? numeroInicial : 1;
+    Number.isFinite(numeroInicialParam) && numeroInicialParam > 0
+      ? numeroInicialParam
+      : getNextRpsNumberFromStorage();
 
   const salesTransactions = allTransactions.filter((transaction) => {
     return String(transaction?.tipo ?? "").toLowerCase() === "vendas";
@@ -762,9 +799,15 @@ export const generateRpsNfseTxt = ({
 
   downloadIso88591Txt(content, outputFileName);
 
+  const proximoRps = validRpsNumeroInicial + details.length;
+
+  setNextRpsNumberToStorage(proximoRps);
+
   return {
     totalValorNotas: Number(totalValorNotas.toFixed(2)),
     totalValorNotasFormatado: moneyDisplay(totalValorNotas),
     quantidadeNotas: details.length,
+    primeiroRps: validRpsNumeroInicial,
+    proximoRps,
   };
 };
