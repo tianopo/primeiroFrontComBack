@@ -59,4 +59,18 @@ export const TABS: TabConfig[] = [
     exchangeName: "CoinEx",
     registerExchange: "CoinEx https://www.coinex.com/ HK",
   },
+  {
+    tab: "gateEmpresa",
+    keyType: "empresa",
+    label: "Gate E",
+    exchangeName: "Gate",
+    registerExchange: "Gate.IO https://www.gate.io/ AE",
+  },
+  {
+    tab: "gatePessoal",
+    keyType: "pessoal",
+    label: "Gate P",
+    exchangeName: "Gate",
+    registerExchange: "Gate.IO https://www.gate.io/ AE",
+  },
 ];

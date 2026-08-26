@@ -16,6 +16,8 @@ const INITIAL_FORM: TOffsetForm = {
   mexcBuyOffset: "0.10",
   bitgetSellOffset: "0.10",
   bitgetBuyOffset: "0.10",
+  gateSellOffset: "0.10",
+  gateBuyOffset: "0.10",
 };
 
 export const BallonEditPrice = () => {
@@ -38,6 +40,8 @@ export const BallonEditPrice = () => {
         mexcBuyOffset: String(data.mexcBuyOffset),
         bitgetSellOffset: String(data.bitgetSellOffset),
         bitgetBuyOffset: String(data.bitgetBuyOffset),
+        gateSellOffset: String(data.gateSellOffset),
+        gateBuyOffset: String(data.gateBuyOffset),
       });
     }
   }, [data]);
@@ -71,6 +75,8 @@ export const BallonEditPrice = () => {
       mexcBuyOffset: parseNumber(form.mexcBuyOffset),
       bitgetSellOffset: parseNumber(form.bitgetSellOffset),
       bitgetBuyOffset: parseNumber(form.bitgetBuyOffset),
+      gateSellOffset: parseNumber(form.gateSellOffset),
+      gateBuyOffset: parseNumber(form.gateBuyOffset),
     };
 
     const hasInvalid = Object.values(payload).some((value) => !Number.isFinite(value));
@@ -84,7 +90,7 @@ export const BallonEditPrice = () => {
 
   const summary = isLoading
     ? "Carregando..."
-    : `BINANCE___ SELL: ${form.binanceSellOffset} BUY: ${form.binanceBuyOffset} | BYBIT_____ SELL: ${form.bybitSellOffset} BUY: ${form.bybitBuyOffset} | COINEX____ SELL: ${form.coinexSellOffset} BUY: ${form.coinexBuyOffset} | MEXC______ SELL: ${form.mexcSellOffset} BUY: ${form.mexcBuyOffset} | BITGET____ SELL: ${form.bitgetSellOffset} BUY: ${form.bitgetBuyOffset}`;
+    : `BINANCE___ SELL: ${form.binanceSellOffset} BUY: ${form.binanceBuyOffset} | BYBIT_____ SELL: ${form.bybitSellOffset} BUY: ${form.bybitBuyOffset} | COINEX____ SELL: ${form.coinexSellOffset} BUY: ${form.coinexBuyOffset} | MEXC______ SELL: ${form.mexcSellOffset} BUY: ${form.mexcBuyOffset} | BITGET____ SELL: ${form.bitgetSellOffset} BUY: ${form.bitgetBuyOffset} | GATE______ SELL: ${form.gateSellOffset} BUY: ${form.gateBuyOffset} `;
 
   const renderSection = (
     title: string,
@@ -160,6 +166,7 @@ export const BallonEditPrice = () => {
             {renderSection("Coinex", "coinexSellOffset", "coinexBuyOffset")}
             {renderSection("Mexc", "mexcSellOffset", "mexcBuyOffset")}
             {renderSection("Bitget", "bitgetSellOffset", "bitgetBuyOffset")}
+            {renderSection("Gate", "gateSellOffset", "gateBuyOffset")}
           </div>
 
           <button

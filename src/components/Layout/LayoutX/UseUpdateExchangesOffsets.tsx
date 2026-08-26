@@ -15,6 +15,8 @@ export interface IExchangeOffsets {
   mexcBuyOffset: number;
   bitgetSellOffset: number;
   bitgetBuyOffset: number;
+  gateSellOffset: number;
+  gateBuyOffset: number;
 }
 
 export const useUpdateExchangeOffsets = () => {

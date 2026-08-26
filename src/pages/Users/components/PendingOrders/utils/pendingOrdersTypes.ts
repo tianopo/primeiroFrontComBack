@@ -10,7 +10,9 @@ export type TabKey =
   | "bitgetPessoal"
   | "mexcPessoal"
   | "coinexEmpresa"
-  | "coinexPessoal";
+  | "coinexPessoal"
+  | "gateEmpresa"
+  | "gatePessoal";
 
 export type ExchangeKeyType = BybitKeyType | "binance";
 
@@ -22,7 +24,7 @@ export type TabConfig = {
   tab: TabKey;
   keyType: ExchangeKeyType;
   label: string;
-  exchangeName: "Bybit" | "Binance" | "Bitget" | "MEXC" | "CoinEx";
+  exchangeName: "Bybit" | "Binance" | "Bitget" | "MEXC" | "CoinEx" | "Gate";
   registerExchange: string;
 };
 

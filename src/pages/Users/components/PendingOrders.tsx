@@ -24,11 +24,13 @@ import {
   isBybit,
   isCoinex,
   isCpfCnpj,
+  isGate,
   isMexc,
   onlyDigits,
   statusLabel,
 } from "./PendingOrders/utils/pendingOrdersHelpers";
 import { PendingOrdersProps } from "./PendingOrders/utils/pendingOrdersTypes";
+import { GateChatBox } from "./PendingOrders/Chat/GateChatBox";
 
 export type KeyType = "empresa" | "pessoal";
 
@@ -52,6 +54,8 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
     isReleaseBitgetPending,
     isMarkPaidMexcPending,
     isReleaseMexcPending,
+    isMarkPaidGatePending,
+    isReleaseGatePending,
     modalAction,
     openActionModal,
     openPixModal,
@@ -120,10 +124,12 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
               isMarkPaidBinancePending ||
               isMarkPaidBitgetPending ||
               isMarkPaidMexcPending ||
+              isMarkPaidGatePending ||
               isReleaseBinancePending ||
               isReleaseBitgetPending ||
               isReleaseBitgetPending ||
-              isReleaseMexcPending;
+              isReleaseMexcPending ||
+              isReleaseGatePending;
             const requiresMessages = !isBitget(activeConfig) && !isCoinex(activeConfig);
 
             const disabledAction =
@@ -256,6 +262,13 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
 
                 {isMexc(activeConfig) && (
                   <MexcChatBox
+                    orderId={String(order.id)}
+                    keyType={activeConfig.keyType === "pessoal" ? "pessoal" : "empresa"}
+                  />
+                )}
+
+                {isGate(activeConfig) && (
+                  <GateChatBox
                     orderId={String(order.id)}
                     keyType={activeConfig.keyType === "pessoal" ? "pessoal" : "empresa"}
                   />

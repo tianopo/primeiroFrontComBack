@@ -106,6 +106,11 @@ export const apiRoute = {
   mexcSendChatMessage: "/mexc/chat/messages",
   mexcUploadFile: "/mexc/files/upload",
   mexcDownloadFile: (fileId: string) => `/mexc/files/${fileId}`,
+  /* GATE */
+  gateMarkPaid: (txid: string) => `/gate/orders/${txid}/pay`,
+  gateRelease: (txid: string) => `/gate/orders/${txid}/release`,
+  gateSendChat: (txid: string) => `/gate/chat/${txid}`,
+  gateUploadChat: "/gate/chat/upload",
   /* EXCHANGES */
   pendingOrders: "exchanges/pending-orders",
   /* WHATSAPP */

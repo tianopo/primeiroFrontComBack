@@ -13,6 +13,7 @@ import {
   isBitget,
   isBybit,
   isCpfCnpj,
+  isGate,
   isMexc,
   legacyOrder,
   onlyDigits,
@@ -38,6 +39,8 @@ import { useListPendingOrders } from "./Bybit/useListPendingOrders";
 import { useMarkOrderAsPaidBybit } from "./Bybit/useMarkOrderAsPaidBybit";
 import { useReleaseAssets } from "./Bybit/useReleaseAssets";
 import { useSendChatMessageBybit } from "./Bybit/useSendChatMessageBybit";
+import { useMarkOrderAsPaidGate } from "./Gate/useMarkOrderAsPaidGate";
+import { useReleaseGate } from "./Gate/useReleaseGate";
 import { useMarkOrderAsPaidMexc } from "./MEXC/useMarkOrderAsPaidMexc";
 import { useReleaseCoinMexc } from "./MEXC/useReleaseCoinMexc";
 
@@ -60,6 +63,9 @@ export const usePendingOrdersController = () => {
   const { mutate: releaseMexc, isPending: isReleaseMexcPending } = useReleaseCoinMexc();
   const { mutate: markPaidMexc, isPending: isMarkPaidMexcPending } = useMarkOrderAsPaidMexc();
 
+  const { mutate: releaseGate, isPending: isReleaseGatePending } = useReleaseGate();
+  const { mutate: markPaidGate, isPending: isMarkPaidGatePending } = useMarkOrderAsPaidGate();
+
   const { acesso } = useAccessControl();
 
   const [activeTab, setActiveTab] = useState<TabKey>(getSavedTab);
@@ -79,6 +85,7 @@ export const usePendingOrdersController = () => {
   const modalBybitKeyType: BybitKeyType = modalConfig.keyType === "pessoal" ? "pessoal" : "empresa";
   const modalBitgetKeyType = modalConfig.keyType === "pessoal" ? "pessoal" : "empresa";
   const modalMexcKeyType = modalConfig.keyType === "pessoal" ? "pessoal" : "empresa";
+  const modalGateKeyType = modalConfig.keyType === "pessoal" ? "pessoal" : "empresa";
   const orders = useMemo(() => getOrdersByTab(data, activeTab), [data, activeTab]);
 
   const changeTab = (tab: TabKey) => {
@@ -311,6 +318,44 @@ export const usePendingOrdersController = () => {
     );
   };
 
+  const confirmGateMarkPaid = (order: OrderLike) => {
+    const paymentTerms = Array.isArray(order.pagamento) ? order.pagamento : [];
+    const firstPayment = paymentTerms[0] as { paymentType?: unknown } | undefined;
+
+    markPaidGate(
+      {
+        txid: String(order.id),
+        keyType: modalGateKeyType,
+        paymentMethod: firstPayment?.paymentType ? String(firstPayment.paymentType) : undefined,
+      },
+      {
+        onSuccess: () => {
+          closeModal();
+        },
+        onError: () => {
+          closeModal();
+        },
+      },
+    );
+  };
+
+  const confirmGateRelease = (order: OrderLike) => {
+    releaseGate(
+      {
+        txid: String(order.id),
+        keyType: modalGateKeyType,
+      },
+      {
+        onSuccess: () => {
+          closeModal();
+        },
+        onError: () => {
+          closeModal();
+        },
+      },
+    );
+  };
+
   const handleConfirm = () => {
     if (!selectedOrder) return;
 
@@ -342,6 +387,14 @@ export const usePendingOrdersController = () => {
     if (isMexc(modalConfig)) {
       return confirmMexcRelease(selectedOrder);
     }
+
+    if (isGate(modalConfig) && modalAction === "markPaid") {
+      return confirmGateMarkPaid(selectedOrder);
+    }
+
+    if (isGate(modalConfig)) {
+      return confirmGateRelease(selectedOrder);
+    }
   };
 
   return {
@@ -363,6 +416,8 @@ export const usePendingOrdersController = () => {
     isReleaseBitgetPending,
     isMarkPaidMexcPending,
     isReleaseMexcPending,
+    isMarkPaidGatePending,
+    isReleaseGatePending,
     modalAction,
     openActionModal,
     openPixModal,
