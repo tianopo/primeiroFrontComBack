@@ -22,47 +22,40 @@ type SendGateImagePayload = {
 export type SendChatMessageGatePayload = SendGateTextPayload | SendGateImagePayload;
 
 const fileToBase64 = (file: File) =>
-  new Promise<{ contentType: "image/jpeg" | "image/jpg" | "image/png"; base64: string }>(
-    (resolve, reject) => {
-      const reader = new FileReader();
+  new Promise<{
+    contentType: "image/jpeg" | "image/jpg" | "image/png";
+    base64: string;
+  }>((resolve, reject) => {
+    const reader = new FileReader();
 
-      reader.onload = () => {
-        const value = String(reader.result ?? "");
-        const match = value.match(/^data:([^;]+);base64,(.+)$/i);
+    reader.onload = () => {
+      const value = String(reader.result ?? "");
+      const match = value.match(/^data:([^;]+);base64,(.+)$/i);
 
-        const contentType = String(match?.[1] ?? file.type ?? "image/png");
+      const contentType = String(match?.[1] ?? file.type ?? "image/png");
 
-        if (
-          contentType !== "image/jpeg" &&
-          contentType !== "image/jpg" &&
-          contentType !== "image/png"
-        ) {
-          reject(new Error("A Gate aceita apenas JPEG, JPG ou PNG no chat."));
-          return;
-        }
+      if (
+        contentType !== "image/jpeg" &&
+        contentType !== "image/jpg" &&
+        contentType !== "image/png"
+      ) {
+        reject(new Error("A Gate aceita apenas JPEG, JPG ou PNG no chat."));
+        return;
+      }
 
-        resolve({
-          contentType,
-          base64: String(match?.[2] ?? ""),
-        });
-      };
+      resolve({
+        contentType,
+        base64: String(match?.[2] ?? ""),
+      });
+    };
 
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    },
-  );
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 
-const pickUploadUrl = (value: any) => {
+const pickFileKey = (value: any) => {
   return String(
-    value?.data?.url ??
-      value?.data?.file_url ??
-      value?.data?.fileUrl ??
-      value?.data?.path ??
-      value?.url ??
-      value?.file_url ??
-      value?.fileUrl ??
-      value?.path ??
-      "",
+    value?.data?.file_key ?? value?.data?.fileKey ?? value?.file_key ?? value?.fileKey ?? "",
   ).trim();
 };
 
@@ -103,16 +96,16 @@ export const useSendChatMessageGate = () => {
         },
       );
 
-      const uploadedUrl = pickUploadUrl(upload.data);
+      const fileKey = pickFileKey(upload.data);
 
-      if (!uploadedUrl) {
-        throw new Error("A Gate não retornou URL do arquivo enviado.");
+      if (!fileKey) {
+        throw new Error("A Gate não retornou file_key do arquivo enviado.");
       }
 
       const response = await api().post(
         apiRoute.gateSendChat(payload.txid),
         {
-          message: uploadedUrl,
+          message: fileKey,
           type: 1,
         },
         {
@@ -127,7 +120,8 @@ export const useSendChatMessageGate = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pending-orders"] });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("[GATE_CHAT] Falha ao enviar mensagem", error);
       toast.error("Falha ao enviar mensagem na Gate.");
     },
   });

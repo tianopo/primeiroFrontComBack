@@ -1,13 +1,15 @@
 import { Copy } from "@phosphor-icons/react";
+import { useRef } from "react";
 import { Button } from "src/components/Buttons/Button";
 import { CardContainer } from "src/components/Layout/CardContainer";
 import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalButton";
 import { usePendingOrdersController } from "../hooks/usePendingOrdersController";
-import { StatementRedisPanel } from "./Gowd/Extrato/StatementRedisPanel";
+import { StatementRedisPanel, StatementRedisPanelHandle } from "./Gowd/Extrato/StatementRedisPanel";
 import { PixToolModal } from "./Gowd/Pix/PixToolModal";
 import { OrderMessages } from "./OrderMessages";
 import { BinanceChatBox } from "./PendingOrders/Chat/BinanceChatBox";
 import { ChatBox } from "./PendingOrders/Chat/ChatBox";
+import { GateChatBox } from "./PendingOrders/Chat/GateChatBox";
 import { MexcChatBox } from "./PendingOrders/Chat/MexcChatBox";
 import { CompliancePopover } from "./PendingOrders/CompliancePopover";
 import { PaymentTermsBox } from "./PendingOrders/PaymentTermsBox";
@@ -30,7 +32,6 @@ import {
   statusLabel,
 } from "./PendingOrders/utils/pendingOrdersHelpers";
 import { PendingOrdersProps } from "./PendingOrders/utils/pendingOrdersTypes";
-import { GateChatBox } from "./PendingOrders/Chat/GateChatBox";
 
 export type KeyType = "empresa" | "pessoal";
 
@@ -68,6 +69,16 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
     setPixModalInitialValues,
     showModal,
   } = usePendingOrdersController();
+
+  const statementRedisRef = useRef<StatementRedisPanelHandle>(null);
+
+  const handleConfirmWithRedisVerification = async () => {
+    const ok = await statementRedisRef.current?.verifySelectedTrue();
+
+    if (ok === false) return;
+
+    handleConfirm();
+  };
 
   if (isLoading) return <p>Carregando ordens...</p>;
   if (error) return <p>Erro ao carregar ordens.</p>;
@@ -309,13 +320,15 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
           }a quantidade de ${String(selectedOrder.quantidade ?? "")} ${String(
             selectedOrder.token ?? "",
           )} no valor de ${String(selectedOrder.valor ?? "")} ${String(selectedOrder.moeda ?? "")}?`}
-          onConfirm={handleConfirm}
+          onConfirm={handleConfirmWithRedisVerification}
           onCancel={closeModal}
-          showExtra={Boolean(getEndToEnd(selectedOrder.endtoend))}
+          showExtra
           extra={
-            getEndToEnd(selectedOrder.endtoend) ? (
-              <StatementRedisPanel autoSelectEndToEnd={getEndToEnd(selectedOrder.endtoend)} />
-            ) : undefined
+            <StatementRedisPanel
+              ref={statementRedisRef}
+              autoSelectEndToEnd={getEndToEnd(selectedOrder.endtoend)}
+              hideVerifyButton
+            />
           }
         />
       )}

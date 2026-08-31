@@ -1,4 +1,3 @@
-// StatementRedisModal.tsx
 import { Modal } from "src/components/Modal/Modal";
 import { StatementRedisPanel } from "./StatementRedisPanel";
 
