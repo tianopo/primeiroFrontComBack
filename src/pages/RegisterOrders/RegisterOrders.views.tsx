@@ -1,6 +1,8 @@
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, Dispatch, SetStateAction, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { toast } from "react-toastify";
+import { Modal } from "src/components/Modal/Modal";
+import { Register } from "../Users/components/Register";
 import { Button } from "src/components/Buttons/Button";
 import { FlexCol } from "src/components/Flex/FlexCol";
 import { FormX } from "src/components/Form/FormX";
@@ -21,7 +23,7 @@ import { responseError } from "src/config/responseErrors";
 
 export const RegisterOrders = () => {
   const { mutate, isPending, context } = useOrders();
-  const { data } = useListUsers();
+  const { data, refetch: refetchUsers } = useListUsers();
   const { reset, getValues, setValue } = context;
 
   const [tipo, setTipo] = useState<string>("");
@@ -37,6 +39,11 @@ export const RegisterOrders = () => {
   const [valor, setValor] = useState<string>("");
   const [valorToken, setValorToken] = useState<string>("");
   const [taxa, setTaxa] = useState<string>("");
+  const [registerModalData, setRegisterModalData] = useState<{
+    apelido: string;
+    nome: string;
+    exchange: string;
+  } | null>(null);
 
   const [view, setView] = useState<"manual" | "automatic" | "api">("automatic");
 
@@ -125,7 +132,60 @@ export const RegisterOrders = () => {
   const [apelidosNaoEncontrados, setApelidosNaoEncontrados] = useState<Set<string>>(new Set());
   const [ordensJaCadastradas, setOrdensJaCadastradas] = useState<Set<string>>(new Set());
 
+  const openRegisterUserModalFromOrder = (order: any) => {
+    setRegisterModalData({
+      apelido: String(order?.apelido ?? "").trim(),
+      nome: String(order?.nome ?? "").trim(),
+      exchange: String(order?.exchange ?? "").trim(),
+    });
+  };
+
+  const normalizeSearch = (value: unknown) => {
+    return String(value ?? "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+  };
+
+  const resolveMissingUsersFromError = (message: string, orders: any[]) => {
+    const detected = extractApelidosFromError(message);
+    const normalizedMessage = normalizeSearch(message);
+
+    const hasMissingUserText =
+      normalizedMessage.includes("apelido") ||
+      normalizedMessage.includes("usuario nao encontrado") ||
+      normalizedMessage.includes("usuarios nao encontrados") ||
+      normalizedMessage.includes("nao cadastrado") ||
+      normalizedMessage.includes("nao encontrado");
+
+    if (!hasMissingUserText) return detected;
+
+    for (const order of orders) {
+      const candidates = [
+        order?.apelido,
+        order?.nome,
+        order?.counterparty,
+        order?.User?.counterparty,
+        order?.User?.name,
+      ]
+        .map((item) => String(item ?? "").trim())
+        .filter(Boolean);
+
+      for (const candidate of candidates) {
+        if (normalizedMessage.includes(normalizeSearch(candidate))) {
+          detected.add(candidate);
+        }
+      }
+    }
+
+    return detected;
+  };
+
   const handleSend = () => {
+    setApelidosNaoEncontrados(new Set());
+    setOrdensJaCadastradas(new Set());
+
     mutate(formData, {
       onSuccess: () => {
         setApelidosNaoEncontrados(new Set());
@@ -147,8 +207,10 @@ export const RegisterOrders = () => {
                 : "";
 
         const alreadyRegistered = extractExistingOrdersFromError(message);
+        const notFoundNicknames = resolveMissingUsersFromError(message, formData);
 
         setOrdensJaCadastradas(alreadyRegistered);
+        setApelidosNaoEncontrados(notFoundNicknames);
       },
     });
   };
@@ -387,7 +449,20 @@ export const RegisterOrders = () => {
           handleEdit={handleEdit}
           notFoundNicknames={apelidosNaoEncontrados}
           existingOrders={ordensJaCadastradas}
+          onOpenRegisterUser={openRegisterUserModalFromOrder}
         />
+      )}
+      {registerModalData && (
+        <Modal onClose={() => setRegisterModalData(null)} fit={false}>
+          <Register
+            setForm={(() => undefined) as Dispatch<SetStateAction<boolean>>}
+            initialData={registerModalData}
+            onSuccessRegistered={() => {
+              refetchUsers?.();
+              setRegisterModalData(null);
+            }}
+          />
+        </Modal>
       )}
     </FlexCol>
   );

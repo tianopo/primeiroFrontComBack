@@ -8,12 +8,12 @@ export const useListUsers = () => {
     return result.data;
   };
 
-  const { data, error, isLoading } = useQuery({
+  const { data, error, isLoading, refetch } = useQuery({
     queryKey: ["users-data"],
     queryFn: path,
     staleTime: Infinity,
     refetchOnWindowFocus: false,
   });
 
-  return { data, error, isLoading };
+  return { data, error, isLoading, refetch };
 };

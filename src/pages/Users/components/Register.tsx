@@ -24,9 +24,10 @@ interface IRegister {
     nome: string;
     exchange: string;
   };
+  onSuccessRegistered?: () => void;
 }
 
-export const Register = ({ setForm, initialData }: IRegister) => {
+export const Register = ({ setForm, initialData, onSuccessRegistered }: IRegister) => {
   const [documento, setDocumento] = useState<string>("");
   const [nome, setNome] = useState<string>("");
   const [apelido, setApelido] = useState<string>("");
@@ -122,6 +123,8 @@ export const Register = ({ setForm, initialData }: IRegister) => {
         setDeskdataEnabled(false);
         setDeskdataDatasets([]);
         setDeskdataOwnerDatasets([]);
+
+        onSuccessRegistered?.();
       },
     });
   };

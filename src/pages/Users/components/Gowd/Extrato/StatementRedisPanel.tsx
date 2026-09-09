@@ -232,7 +232,7 @@ export const StatementRedisPanel = forwardRef<StatementRedisPanelHandle, Stateme
         ) : q.error ? (
           <p className="mt-4">Erro ao carregar transações do Redis.</p>
         ) : !items.length ? (
-          <p className="mt-4">Sem transações no Redis.</p>
+          <p className="mt-4">Sem transações</p>
         ) : (
           <>
             <div className="mt-4 overflow-auto">

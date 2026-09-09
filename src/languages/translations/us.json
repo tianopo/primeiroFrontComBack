@@ -9,7 +9,7 @@
     "introduction": {
       "trading": "trading",
       "crypto": "crypto",
-      "intermediate": "intermediate",
+      "intermediate": "view",
       "negociateCrypto": "Trade and obtain crypto in your wallet",
       "exchangesAndContract": "Trade via contract or P2P on exchanges",
       "search": "Search",
@@ -63,10 +63,10 @@
       "title": "How We Deliver High Quality",
       "subtitle1": "Client Communication",
       "subtitle2": "Trading & Development",
-      "subtitle3": "Digital Asset Intermediation",
+      "subtitle3": "Digital Asset View",
       "text1": "We maintain an open and transparent communication channel with our clients, ensuring that all transactions are conducted privately and securely. Security is our priority, and we use advanced technologies to ensure the confidentiality and integrity of transactions.",
-      "text2": "We combine our expertise in technology development with advanced knowledge in digital asset trading to offer customized solutions. Our team is highly skilled in developing robust brokerage algorithms, as well as structuring customized investments with a high probability of positive returns.",
-      "text3": "We work with digital asset intermediation through several reliable platforms, always seeking the best solution for each client. In addition, we offer the possibility of direct transfer to digital wallets through digital contracts, ensuring legal security and transparency in each transaction.",
+      "text2": "We combine our expertise in technology development with advanced knowledge in digital asset trading to offer customized solutions. Our team is highly skilled in developing robust brokerage algorithms.",
+      "text3": "We work with digital asset promotion through several reliable platforms, always seeking the best solution for each client. In addition, we offer the possibility of direct transfer to digital wallets through digital contracts, ensuring legal security and transparency in each transaction.",
       "button": "More Details"
     },
     "cryptotech": {

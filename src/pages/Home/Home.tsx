@@ -7,6 +7,7 @@ import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalB
 import { useAccessControl } from "src/routes/context/AccessControl";
 import { EditOrderModal } from "./components/EditOrderModal";
 import { GenerateContractButton } from "./components/GenerateContractButton";
+import { generateRpsNfseTxt, getNextRpsNumber } from "./components/generateRpsNfseTxt";
 import { generateSalesInvoiceCsv } from "./components/generateSalesInvoiceCsv";
 import { IN1888 } from "./components/IN1888";
 import { fortnigthlyFiduciaTable } from "./config/fortnigthlyFiduciaTable";
@@ -18,7 +19,6 @@ import { mensalFiduciaTable } from "./config/mensalFiduciaTable";
 import { useDeleteOrder } from "./hooks/useDeleteOrder";
 import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
 import { useUpdateOrder } from "./hooks/useUpdateOrder";
-import { generateRpsNfseTxt, getNextRpsNumber } from "./components/generateRpsNfseTxt";
 
 export const Home = () => {
   const { acesso } = useAccessControl();
@@ -220,10 +220,10 @@ export const Home = () => {
       fileName: `notas-fiscais-vendas-${filterDates.startDate}_${filterDates.endDate}.csv`,
       modeloNf: "nfse",
       produtoCod: "S100",
-      produtoDescricao: "Promoção de Vendas e Intermediação Comercial",
+      produtoDescricao: "Promoção de Vendas de Ativos Digitais",
       commissionMode: "dinamica",
       comissaoFixaPercentual: 0.01,
-      margemErroPorToken: 0.03,
+      margemErroPorToken: 0.01,
     });
 
     if (!result) return;
@@ -255,7 +255,7 @@ export const Home = () => {
 
       commissionMode: "dinamica",
       comissaoFixaPercentual: 0.01,
-      margemErroPorToken: 0.03,
+      margemErroPorToken: 0.01,
     });
 
     if (!result) return;

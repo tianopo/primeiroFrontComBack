@@ -35,21 +35,19 @@ export const SectionServicesTechnology = () => {
       ],
     },
     {
-      title: "Intermediate",
+      title: "View",
       price: "$20,000.00",
       onClick: () =>
-        message(
-          `Hi! I would like to contract your intermediate development package, can we talk ?`,
-        ),
+        message(`Hi! I would like to contract your view development package, can we talk ?`),
       features: [
         "Free Domain",
         "Free Hosting",
-        "Intermediate Application Development",
+        "View Application Development",
         "Process Automation with Employee Assistance",
         "Monitoring with Weekly Traffic Reports",
         "Technical Support via Email and WhatsApp within 6 Hours",
         "Basic Performance Analysis",
-        "Intermediate SEO with Keyword Research",
+        "View SEO with Keyword Research",
         "Biweekly Security Updates with Patches",
         "Detailed UX/UI Analysis and Improvement",
         "Basic Content and Database Migrations",

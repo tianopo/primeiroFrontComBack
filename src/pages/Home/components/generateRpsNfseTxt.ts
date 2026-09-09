@@ -498,7 +498,7 @@ const buildDescricaoRps = ({
 }) => {
   return sanitizeText(
     [
-      "Prestacao de servicos de promocao de vendas e intermediacao comercial.",
+      "Prestacao de servicos de promocao de vendas de trading.",
       `Valor da nota fiscal: ${moneyDisplay(valorNota)} BRL.`,
       `Criterio de calculo do spread/comissao: ${comissao.toFixed(2)}% sobre a operacao.`,
       `Valor total da operacao de referencia: ${transaction?.valor ?? ""}.`,
@@ -665,7 +665,7 @@ export const generateRpsNfseTxt = ({
 
   commissionMode = "dinamica",
   comissaoFixaPercentual = 0.01,
-  margemErroPorToken = 0.03,
+  margemErroPorToken = 0.01,
 }: GenerateRpsNfseTxtParams): GenerateRpsNfseTxtResult | null => {
   const allTransactions = Array.isArray(transactions) ? transactions : [];
 

@@ -110,12 +110,12 @@ const isBtcOrEth = (symbol: string) => {
   return ["BTC", "ETH"].includes(String(symbol || "").toUpperCase());
 };
 
-const SERVICO_CNAE_PROMOCAO_INTERMEDIACAO = "Promoção de Vendas e Intermediação Comercial";
+const SERVICO_CNAE_PROMOCAO_VIEW = "Promoção de Vendas de Ativos Digitais";
 
-const DESCRICAO_CNAE_PROMOCAO_INTERMEDIACAO =
-  "Prestação de serviços de promoção de vendas e intermediação comercial.";
+const DESCRICAO_CNAE_PROMOCAO_VIEW =
+  "Prestação de serviços de promoção de vendas de ativos digitais.";
 
-const OBSERVACAO_CNAE_PROMOCAO_INTERMEDIACAO =
+const OBSERVACAO_CNAE_PROMOCAO_VIEW =
   "O CNAE é definido pela finalidade econômica da atividade exercida. " +
   "A promoção de vendas pode envolver aproximação comercial e apoio à concretização de negócios. " +
   "A nota fiscal refere-se à remuneração/spread pela prestação do serviço, " +
@@ -348,8 +348,8 @@ const buildDescricaoNf = ({
   origemReferenciaComissao: string;
   observacaoComissao: string;
 }) => {
-  const descricao = `- Serviço: ${SERVICO_CNAE_PROMOCAO_INTERMEDIACAO}
-- Descrição do Serviço: ${DESCRICAO_CNAE_PROMOCAO_INTERMEDIACAO}
+  const descricao = `- Serviço: ${SERVICO_CNAE_PROMOCAO_VIEW}
+- Descrição do Serviço: ${DESCRICAO_CNAE_PROMOCAO_VIEW}
 - Valor da Nota Fiscal: ${formatMoneyForCsv(valorNota)} BRL
 - Critério de Cálculo do Spread: ${comissao.toFixed(2)}% aplicado sobre o valor da operação.
 - Valor Total da Operação de Referência: ${transaction.valor}
@@ -362,7 +362,7 @@ const buildDescricaoNf = ({
 - Margem de Erro Por Token: ${formatMoneyForCsv(margemErroPorToken)} BRL
 
 Observação Fiscal
-- ${OBSERVACAO_CNAE_PROMOCAO_INTERMEDIACAO}
+- ${OBSERVACAO_CNAE_PROMOCAO_VIEW}
 - A empresa não atua como instituição financeira, não concede crédito, não capta recursos do público e não mantém contas de pagamento.
 - ${observacaoComissao}
 
@@ -399,7 +399,7 @@ export const generateSalesInvoiceCsv = ({
   fileName = `notas-fiscais-vendas-${Date.now()}.csv`,
   modeloNf = "nfse",
   produtoCod = "S100",
-  produtoDescricao = SERVICO_CNAE_PROMOCAO_INTERMEDIACAO,
+  produtoDescricao = SERVICO_CNAE_PROMOCAO_VIEW,
   commissionMode = "dinamica",
   comissaoFixaPercentual = 0.01,
   margemErroPorToken = 0.05,
