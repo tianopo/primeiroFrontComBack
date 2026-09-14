@@ -58,7 +58,10 @@ export const Users = () => {
         {activeTab === "compliance" && <Compliance />}
       </div>
       <PendingOrders setForm={setForm} setInitialRegisterData={setInitialRegisterData} />
-      <Extrato companyLabel="Conta Corporativa" pixKeyLabel={`Chave Pix: ${bankPixKeys}`} />
+      <Extrato
+        companyLabel={"CNPJ: 55.636.113/0001-70"}
+        pixKeyLabel={`Chave Pix: ab512de6-aa7b-4750-8321-914416061baa`}
+      />
     </div>
   );
 };

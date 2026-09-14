@@ -89,7 +89,7 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
 
       <div className="flex flex-wrap gap-2">
         {TABS.map(({ tab, label }) => {
-          const hasOrders = getOrdersByTab(data, tab).length > 0;
+          const orderCount = getOrdersByTab(data, tab).length;
 
           return (
             <div key={tab} className="relative">
@@ -102,8 +102,13 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
                 {label}
               </Button>
 
-              {hasOrders && (
-                <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-red-500" />
+              {orderCount > 0 && (
+                <span
+                  className="pointer-events-none absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white"
+                  aria-label={`${orderCount} ordens pendentes em ${label}`}
+                >
+                  {orderCount}
+                </span>
               )}
             </div>
           );
