@@ -8,7 +8,6 @@ import { processExcelBinance } from "./ProcessExcel/Binance";
 import { processExcelBingX } from "./ProcessExcel/BingX";
 import { processExcelBitget } from "./ProcessExcel/Bitget";
 import { processExcelBybit } from "./ProcessExcel/Bybit";
-import { processExcelCoinEx } from "./ProcessExcel/CoinEx";
 import { processExcelGateIO } from "./ProcessExcel/Gate.IO";
 import { processExcelHuobi } from "./ProcessExcel/Huobi";
 import { processExcelKucoin } from "./ProcessExcel/Kucoin";
@@ -112,8 +111,6 @@ export const UploadXLSButton = ({ setFormData, formData }: IUploadXLSButton) => 
         return processExcelGateIO(workbook, broker);
       case "Kucoin https://www.kucoin.com/ SC":
         return processExcelKucoin(workbook, broker);
-      case "CoinEx https://www.coinex.com/ HK":
-        return processExcelCoinEx(workbook, broker);
       case "Bitget https://www.bitget.com/ SC":
         return processExcelBitget(workbook, broker);
       case "Huobi https://www.htx.com/ CN":

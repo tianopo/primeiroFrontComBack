@@ -24,7 +24,6 @@ import {
   isBitget,
   isBotCancel,
   isBybit,
-  isCoinex,
   isCpfCnpj,
   isGate,
   isMexc,
@@ -146,13 +145,11 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
               isReleaseBitgetPending ||
               isReleaseMexcPending ||
               isReleaseGatePending;
-            const requiresMessages = !isBitget(activeConfig) && !isCoinex(activeConfig);
+            const requiresMessages = !isBitget(activeConfig);
 
             const disabledAction =
-              isCoinex(activeConfig) ||
               isPendingAny ||
               acesso !== "Master" ||
-              (requiresMessages && mensagens.length === 0) ||
               !isCpfCnpj(documento) ||
               (requiresMessages && mensagens.slice(0).reverse().slice(-10).some(isBotCancel)) ||
               !canActByStatus(activeConfig, order, isBuyOrder);
@@ -288,17 +285,6 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
                     orderId={String(order.id)}
                     keyType={activeConfig.keyType === "pessoal" ? "pessoal" : "empresa"}
                   />
-                )}
-
-                {isCoinex(activeConfig) ? (
-                  <Button disabled>Somente consulta</Button>
-                ) : (
-                  <Button
-                    disabled={disabledAction}
-                    onClick={() => openActionModal(order, isBuyOrder ? "markPaid" : "release")}
-                  >
-                    {statusLabel(activeConfig, order.status)}
-                  </Button>
                 )}
 
                 {openedComplianceOrderId === String(order.id) && compliance && (

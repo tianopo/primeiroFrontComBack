@@ -4,7 +4,6 @@ export const exchangeOptions = [
   "CRYPTOTECH https://www.cryptotechdev.com/ BR",
   "Huobi https://www.htx.com/ CN",
   "Kucoin https://www.kucoin.com/ SC",
-  "CoinEx https://www.coinex.com/ HK",
   "Bitget https://www.bitget.com/ SC",
   "MEXC https://www.mexc.com/ SC",
   "BingX https://www.bingx.com/ AU",
@@ -48,7 +47,6 @@ export const walletOptions = [
   "Binance",
   "Gate.IO",
   "Kucoin",
-  "CoinEx",
   "Huobi",
 ];
 

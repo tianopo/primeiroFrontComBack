@@ -43,11 +43,6 @@ export const SectionIntroduction = () => {
               link: "https://www.bybit.com/pt-BR/fiat/trade/otc/profile/sa14f0f123e284b0abf336c9bd881a78e/USDT/BRL/item",
             },
             {
-              label: "Coinex Empresarial",
-              link: "https://www.coinex.com/pt/p2p/user/info/DDF466CD",
-            },
-            { label: "Coinex Pessoal", link: "https://www.coinex.com/pt/p2p/user/info/E5D70F69" },
-            {
               label: "Kucoin Empresarial",
               link: "https://www.kucoin.com/pt/otc/merchant?id=67a0d7b59fd9f300014ea947",
             },

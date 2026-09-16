@@ -10,8 +10,6 @@ const INITIAL_FORM: TOffsetForm = {
   binanceBuyOffset: "0.10",
   bybitSellOffset: "0.10",
   bybitBuyOffset: "0.10",
-  coinexSellOffset: "0.10",
-  coinexBuyOffset: "0.10",
   mexcSellOffset: "0.10",
   mexcBuyOffset: "0.10",
   bitgetSellOffset: "0.10",
@@ -34,8 +32,6 @@ export const BallonEditPrice = () => {
         binanceBuyOffset: String(data.binanceBuyOffset),
         bybitSellOffset: String(data.bybitSellOffset),
         bybitBuyOffset: String(data.bybitBuyOffset),
-        coinexSellOffset: String(data.coinexSellOffset),
-        coinexBuyOffset: String(data.coinexBuyOffset),
         mexcSellOffset: String(data.mexcSellOffset),
         mexcBuyOffset: String(data.mexcBuyOffset),
         bitgetSellOffset: String(data.bitgetSellOffset),
@@ -69,8 +65,6 @@ export const BallonEditPrice = () => {
       binanceBuyOffset: parseNumber(form.binanceBuyOffset),
       bybitSellOffset: parseNumber(form.bybitSellOffset),
       bybitBuyOffset: parseNumber(form.bybitBuyOffset),
-      coinexSellOffset: parseNumber(form.coinexSellOffset),
-      coinexBuyOffset: parseNumber(form.coinexBuyOffset),
       mexcSellOffset: parseNumber(form.mexcSellOffset),
       mexcBuyOffset: parseNumber(form.mexcBuyOffset),
       bitgetSellOffset: parseNumber(form.bitgetSellOffset),
@@ -90,7 +84,7 @@ export const BallonEditPrice = () => {
 
   const summary = isLoading
     ? "Carregando..."
-    : `BINANCE___ SELL: ${form.binanceSellOffset} BUY: ${form.binanceBuyOffset} | BYBIT_____ SELL: ${form.bybitSellOffset} BUY: ${form.bybitBuyOffset} | COINEX____ SELL: ${form.coinexSellOffset} BUY: ${form.coinexBuyOffset} | MEXC______ SELL: ${form.mexcSellOffset} BUY: ${form.mexcBuyOffset} | BITGET____ SELL: ${form.bitgetSellOffset} BUY: ${form.bitgetBuyOffset} | GATE______ SELL: ${form.gateSellOffset} BUY: ${form.gateBuyOffset} `;
+    : `BINANCE___ SELL: ${form.binanceSellOffset} BUY: ${form.binanceBuyOffset} | BYBIT_____ SELL: ${form.bybitSellOffset} BUY: ${form.bybitBuyOffset} | MEXC______ SELL: ${form.mexcSellOffset} BUY: ${form.mexcBuyOffset} | BITGET____ SELL: ${form.bitgetSellOffset} BUY: ${form.bitgetBuyOffset} | GATE______ SELL: ${form.gateSellOffset} BUY: ${form.gateBuyOffset} `;
 
   const renderSection = (
     title: string,
@@ -163,7 +157,6 @@ export const BallonEditPrice = () => {
           <div className="mt-1 flex flex-col gap-2">
             {renderSection("Binance", "binanceSellOffset", "binanceBuyOffset")}
             {renderSection("Bybit", "bybitSellOffset", "bybitBuyOffset")}
-            {renderSection("Coinex", "coinexSellOffset", "coinexBuyOffset")}
             {renderSection("Mexc", "mexcSellOffset", "mexcBuyOffset")}
             {renderSection("Bitget", "bitgetSellOffset", "bitgetBuyOffset")}
             {renderSection("Gate", "gateSellOffset", "gateBuyOffset")}

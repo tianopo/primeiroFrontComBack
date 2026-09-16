@@ -15,9 +15,6 @@ export const isBitget = (config: TabConfig) => config.exchangeName === "Bitget";
 
 export const isMexc = (config: TabConfig) => config.exchangeName === "MEXC";
 
-export const isCoinex = (config: TabConfig) =>
-  String(config.exchangeName).toUpperCase() === "COINEX";
-
 export const isGate = (config: TabConfig) => config.exchangeName === "Gate";
 
 export const getEndToEnd = (value: unknown) => {
@@ -88,8 +85,6 @@ export const getSavedTab = (): TabKey => {
   if (stored === "bitgetCryptotech") return "bitgetCryptotech";
   if (stored === "bitgetPessoal") return "bitgetPessoal";
   if (stored === "mexcPessoal") return "mexcPessoal";
-  if (stored === "coinexEmpresa") return "coinexEmpresa";
-  if (stored === "coinexPessoal") return "coinexPessoal";
   if (stored === "gateEmpresa") return "gateEmpresa";
   if (stored === "gatePessoal") return "gatePessoal";
 
@@ -155,7 +150,7 @@ export const statusLabel = (config: TabConfig, status: unknown) => {
     return String(status ?? "N/A");
   }
 
-  if (isBitget(config) || isMexc(config) || isCoinex(config) || isGate(config)) {
+  if (isBitget(config) || isMexc(config) || isGate(config)) {
     if (n === 10 || raw === "CREATED" || raw === "CONFIRMED") return "Aguardando pagamento";
     if (n === 20 || raw === "PAID") return "Pago";
     if (n === 30) return "Apelando";
@@ -174,8 +169,6 @@ export const statusLabel = (config: TabConfig, status: unknown) => {
 
 export const canActByStatus = (config: TabConfig, order: OrderLike, isBuyOrder: boolean) => {
   const status = Number(order.status);
-
-  if (isCoinex(config)) return false;
 
   if (isBinance(config)) return isBuyOrder ? status === 1 : status === 2;
 

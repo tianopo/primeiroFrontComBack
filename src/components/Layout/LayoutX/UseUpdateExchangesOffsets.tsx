@@ -9,8 +9,6 @@ export interface IExchangeOffsets {
   binanceBuyOffset: number;
   bybitSellOffset: number;
   bybitBuyOffset: number;
-  coinexSellOffset: number;
-  coinexBuyOffset: number;
   mexcSellOffset: number;
   mexcBuyOffset: number;
   bitgetSellOffset: number;

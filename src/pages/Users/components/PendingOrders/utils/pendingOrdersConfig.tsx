@@ -46,20 +46,6 @@ export const TABS: TabConfig[] = [
     registerExchange: "MEXC https://www.mexc.com/ SC",
   },
   {
-    tab: "coinexEmpresa",
-    keyType: "empresa",
-    label: "CoinEx E",
-    exchangeName: "CoinEx",
-    registerExchange: "CoinEx https://www.coinex.com/ HK",
-  },
-  {
-    tab: "coinexPessoal",
-    keyType: "pessoal",
-    label: "CoinEx P",
-    exchangeName: "CoinEx",
-    registerExchange: "CoinEx https://www.coinex.com/ HK",
-  },
-  {
     tab: "gateEmpresa",
     keyType: "empresa",
     label: "Gate E",
