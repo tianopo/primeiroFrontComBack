@@ -85,6 +85,7 @@ export const getSavedTab = (): TabKey => {
   if (stored === "bitgetCryptotech") return "bitgetCryptotech";
   if (stored === "bitgetPessoal") return "bitgetPessoal";
   if (stored === "mexcPessoal") return "mexcPessoal";
+  if (stored === "mexcEmpresa") return "mexcEmpresa";
   if (stored === "gateEmpresa") return "gateEmpresa";
   if (stored === "gatePessoal") return "gatePessoal";
 

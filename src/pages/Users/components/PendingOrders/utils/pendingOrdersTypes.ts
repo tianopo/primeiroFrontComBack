@@ -9,6 +9,7 @@ export type TabKey =
   | "bitgetCryptotech"
   | "bitgetPessoal"
   | "mexcPessoal"
+  | "mexcEmpresa"
   | "gateEmpresa"
   | "gatePessoal";
 

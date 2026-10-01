@@ -287,6 +287,13 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
                   />
                 )}
 
+                <Button
+                  disabled={disabledAction}
+                  onClick={() => openActionModal(order, isBuyOrder ? "markPaid" : "release")}
+                >
+                  {statusLabel(activeConfig, order.status)}
+                </Button>
+
                 {openedComplianceOrderId === String(order.id) && compliance && (
                   <div className="absolute left-[calc(100%+12px)] top-0 z-50">
                     <CompliancePopover

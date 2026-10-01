@@ -46,6 +46,13 @@ export const TABS: TabConfig[] = [
     registerExchange: "MEXC https://www.mexc.com/ SC",
   },
   {
+    tab: "mexcEmpresa",
+    keyType: "empresa",
+    label: "MEXC E",
+    exchangeName: "MEXC",
+    registerExchange: "MEXC https://www.mexc.com/ SC",
+  },
+  {
     tab: "gateEmpresa",
     keyType: "empresa",
     label: "Gate E",
