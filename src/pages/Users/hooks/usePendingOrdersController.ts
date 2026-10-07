@@ -192,8 +192,6 @@ export const usePendingOrdersController = () => {
       } else {
         throw new Error(`Corretora não suportada: ${config.exchangeName}`);
       }
-      setPixOrderContext(null);
-      toast.success(`Pix enviado e ordem ${orderId} marcada como paga na ${config.exchangeName}.`);
     } catch (error) {
       console.error(
         `[PIX][MARK_PAID] O Pix da ordem ${orderId} foi enviado, mas a marcação falhou:`,
@@ -202,18 +200,68 @@ export const usePendingOrdersController = () => {
       toast.error(
         `O Pix foi enviado, mas não foi possível marcar a ordem ${orderId} como paga na ${config.exchangeName}. Use o botão manual para tentar novamente.`,
       );
+      return;
+    }
+
+    setPixOrderContext(null);
+
+    try {
+      if (isBinance(config)) {
+        await sendBinanceReceipt(order);
+        toast.success(
+          `Pix enviado, ordem ${orderId} marcada como paga e comprovante enviado no chat da Binance.`,
+        );
+        return;
+      }
+
+      if (isBybit(config)) {
+        await sendBybitReceiptAndContract(order, keyType, true);
+        toast.success(
+          `Pix enviado, ordem ${orderId} marcada como paga e recibo e contrato enviados no chat da Bybit.`,
+        );
+        return;
+      }
+
+      toast.success(`Pix enviado e ordem ${orderId} marcada como paga na ${config.exchangeName}.`);
+    } catch (error) {
+      console.error(
+        `[PIX][DOCUMENTS] A ordem ${orderId} foi marcada como paga, mas o envio dos documentos falhou:`,
+        error,
+      );
+
+      const documentDescription = isBinance(config)
+        ? "o comprovante no chat da Binance"
+        : "todos os documentos (recibo e contrato) no chat da Bybit";
+
+      toast.error(
+        `O Pix foi enviado e a ordem ${orderId} foi marcada como paga, mas não foi possível enviar ${documentDescription}.`,
+      );
     }
   };
-  const sendBybitReceiptAndContract = async (order: OrderLike, cryptotechIsBuyer?: boolean) => {
+
+  async function sendBybitReceiptAndContract(
+    order: OrderLike,
+    keyType: BybitKeyType,
+    cryptotechIsBuyer?: boolean,
+  ): Promise<void> {
     const base64Image = await generateSingleReceipt(legacyOrder(order, "Bybit"));
-    if (base64Image) {
-      sendChatMessageBybit({
-        message: base64Image,
-        contentType: "pic",
-        orderId: String(order.id),
-        keyType: modalBybitKeyType,
-      });
+
+    if (!base64Image) {
+      throw new Error("Não foi possível gerar o recibo da Bybit.");
     }
+
+    await waitForMutation((completion) => {
+      sendChatMessageBybit(
+        {
+          message: base64Image,
+          contentType: "pic",
+          orderId: String(order.id),
+          keyType,
+        },
+        completion,
+      );
+    });
+
     const contract = await confirmContract({
       usuario: {
         apelido: String(order.apelido ?? "-"),
@@ -229,16 +277,44 @@ export const usePendingOrdersController = () => {
       ativo: String(order.token ?? "-"),
       cryptotechIsBuyer,
     });
-    sendChatMessageBybit(
-      {
-        message: contract.pdfBase64,
-        contentType: "pdf",
-        orderId: String(order.id),
-        keyType: modalBybitKeyType,
-      },
-      { onError: () => toast.error("Falha ao enviar contrato no chat") },
-    );
-  };
+
+    if (!contract?.pdfBase64) {
+      throw new Error("Não foi possível gerar o contrato da Bybit.");
+    }
+
+    await waitForMutation((completion) => {
+      sendChatMessageBybit(
+        {
+          message: contract.pdfBase64,
+          contentType: "pdf",
+          orderId: String(order.id),
+          keyType,
+        },
+        completion,
+      );
+    });
+  }
+
+  async function sendBinanceReceipt(order: OrderLike): Promise<void> {
+    const orderId = String(order.id);
+    const base64Image = await generateSingleReceipt(legacyOrder(order, "Binance"));
+
+    if (!base64Image) {
+      throw new Error("Não foi possível gerar o comprovante da Binance.");
+    }
+
+    await waitForMutation((completion) => {
+      sendChatBinance(
+        {
+          orderNo: orderId,
+          content: base64Image,
+          type: "pic",
+          fileName: `recibo-${orderId}.png`,
+        },
+        completion,
+      );
+    });
+  }
   const confirmBybitMarkPaid = (order: OrderLike) => {
     markPaidBybit(
       { orderId: String(order.id), keyType: modalBybitKeyType },
@@ -246,7 +322,7 @@ export const usePendingOrdersController = () => {
         onSuccess: async () => {
           closeModal();
           try {
-            await sendBybitReceiptAndContract(order, true);
+            await sendBybitReceiptAndContract(order, modalBybitKeyType, true);
           } catch {
             toast.error("Falha ao gerar/enviar recibo e contrato");
           }
@@ -262,7 +338,7 @@ export const usePendingOrdersController = () => {
         onSuccess: async () => {
           closeModal();
           try {
-            await sendBybitReceiptAndContract(order);
+            await sendBybitReceiptAndContract(order, modalBybitKeyType);
           } catch {
             toast.error("Falha ao emitir o contrato assinado");
           }
@@ -270,24 +346,22 @@ export const usePendingOrdersController = () => {
       },
     );
   };
-  const confirmBinanceMarkPaid = async (order: OrderLike) => {
+  const confirmBinanceMarkPaid = (order: OrderLike) => {
     const orderId = String(order.id);
-    const base64Image = await generateSingleReceipt(legacyOrder(order, "Binance"));
-    if (!base64Image) return;
     markPaidBinance(
       {
         orderNumber: orderId,
         advNo: String(order.advNo ?? ""),
       },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
           closeModal();
-          sendChatBinance({
-            orderNo: orderId,
-            content: base64Image,
-            type: "pic",
-            fileName: `recibo-${orderId}.png`,
-          });
+
+          try {
+            await sendBinanceReceipt(order);
+          } catch {
+            toast.error("Ordem marcada como paga, mas o comprovante não foi enviado na Binance");
+          }
         },
         onError: () => closeModal(),
       },
