@@ -31,9 +31,7 @@ import {
   statusLabel,
 } from "./PendingOrders/utils/pendingOrdersHelpers";
 import { PendingOrdersProps } from "./PendingOrders/utils/pendingOrdersTypes";
-
 export type KeyType = "empresa" | "pessoal";
-
 export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrdersProps) => {
   const {
     acesso,
@@ -41,10 +39,12 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
     activeConfig,
     activeTab,
     changeTab,
+    closePixModal,
     closeModal,
     data,
     error,
     handleConfirm,
+    handlePixSuccess,
     isChatBinancePending,
     isLoading,
     isMarkPaidBybitPending,
@@ -65,31 +65,23 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
     selectedOrder,
     sendChatBinance,
     setOpenedComplianceOrderId,
-    setPixModalInitialValues,
     showModal,
   } = usePendingOrdersController();
-
   const statementRedisRef = useRef<StatementRedisPanelHandle>(null);
-
   const handleConfirmWithRedisVerification = async () => {
     const ok = await statementRedisRef.current?.verifySelectedTrue();
-
     if (ok === false) return;
-
     handleConfirm();
   };
-
   if (isLoading) return <p>Carregando ordens...</p>;
   if (error) return <p>Erro ao carregar ordens.</p>;
   if (!data) return <p>Sem ordens pendentes.</p>;
   return (
     <CardContainer full>
       <h3 className="text-28 font-bold">ORDENS PENDENTES</h3>
-
       <div className="flex flex-wrap gap-2">
         {TABS.map(({ tab, label }) => {
           const orderCount = getOrdersByTab(data, tab).length;
-
           return (
             <div key={tab} className="relative">
               <Button
@@ -100,7 +92,6 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
               >
                 {label}
               </Button>
-
               {orderCount > 0 && (
                 <span
                   className="pointer-events-none absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white"
@@ -113,7 +104,6 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
           );
         })}
       </div>
-
       {orders.length === 0 ? (
         <p>Sem ordens em {activeConfig.label}</p>
       ) : (
@@ -121,16 +111,13 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
           {orders.map((order) => {
             const isBuyOrder = Number(order.side) === 0;
             const compliance = (order.compliance ?? null) as Record<string, unknown> | null;
-
             const orderDocument = String(order.documento ?? "");
             const complianceDocument = String(compliance?.documento ?? "");
-
             const documento = isCpfCnpj(onlyDigits(orderDocument))
               ? orderDocument
               : isCpfCnpj(onlyDigits(complianceDocument))
                 ? complianceDocument
                 : "";
-
             const mensagens = Array.isArray(order.mensagens) ? order.mensagens : [];
             const pagamento = Array.isArray(order.pagamento) ? order.pagamento : [];
             const [cardClass, badgeClass, badgeLabel] = complianceState(compliance);
@@ -146,14 +133,12 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
               isReleaseMexcPending ||
               isReleaseGatePending;
             const requiresMessages = !isBitget(activeConfig);
-
             const disabledAction =
               isPendingAny ||
               acesso !== "Master" ||
               !isCpfCnpj(documento) ||
               (requiresMessages && mensagens.slice(0).reverse().slice(-10).some(isBotCancel)) ||
               !canActByStatus(activeConfig, order, isBuyOrder);
-
             return (
               <div
                 key={`${String(order.keyType ?? activeConfig.keyType)}-${String(order.id)}`}
@@ -162,7 +147,6 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
                 {isBuyOrder && pagamento.length > 0 && (
                   <PaymentTermsBox terms={pagamento} title="Dados para pagamento" />
                 )}
-
                 <button
                   className="absolute right-2 top-2 rounded-6 border border-gray-200 bg-white p-2 hover:bg-gray-100 hover:opacity-80"
                   onClick={() => {
@@ -177,7 +161,6 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
                 >
                   <Copy width={20} height={20} weight="duotone" />
                 </button>
-
                 {badgeLabel && (
                   <span
                     className={`absolute left-2 top-2 rounded-full px-2 py-1 text-xs font-semibold ${badgeClass}`}
@@ -185,7 +168,6 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
                     {badgeLabel}
                   </span>
                 )}
-
                 {isCpfCnpj(documento) && compliance && (
                   <button
                     type="button"
@@ -199,7 +181,6 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
                     Compliance
                   </button>
                 )}
-
                 {isCpfCnpj(documento) &&
                   isBuyOrder &&
                   canActByStatus(activeConfig, order, isBuyOrder) && (
@@ -211,7 +192,6 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
                       Pix
                     </button>
                   )}
-
                 <p>
                   <strong>Exchange:</strong> {activeConfig.exchangeName}
                 </p>
@@ -252,19 +232,15 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
                 <p>
                   <strong>CPF/CNPJ:</strong> {documento || "Não informado"}
                 </p>
-
                 {onlyDigits(documento).length === 11 && getEndToEnd(order.endtoend) && (
                   <p>
                     <strong>EndToEnd:</strong> {getEndToEnd(order.endtoend)}
                   </p>
                 )}
-
                 {mensagens.length > 0 && <OrderMessages messages={mensagens} />}
-
                 {isBybit(activeConfig) && (
                   <ChatBox orderId={String(order.id)} keyType={activeBybitKeyType} />
                 )}
-
                 {isBinance(activeConfig) && (
                   <BinanceChatBox
                     orderId={String(order.id)}
@@ -272,28 +248,24 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
                     sendChatBinance={sendChatBinance}
                   />
                 )}
-
                 {isMexc(activeConfig) && (
                   <MexcChatBox
                     orderId={String(order.id)}
                     keyType={activeConfig.keyType === "pessoal" ? "pessoal" : "empresa"}
                   />
                 )}
-
                 {isGate(activeConfig) && (
                   <GateChatBox
                     orderId={String(order.id)}
                     keyType={activeConfig.keyType === "pessoal" ? "pessoal" : "empresa"}
                   />
                 )}
-
                 <Button
                   disabled={disabledAction}
                   onClick={() => openActionModal(order, isBuyOrder ? "markPaid" : "release")}
                 >
                   {statusLabel(activeConfig, order.status)}
                 </Button>
-
                 {openedComplianceOrderId === String(order.id) && compliance && (
                   <div className="absolute left-[calc(100%+12px)] top-0 z-50">
                     <CompliancePopover
@@ -308,7 +280,6 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
           })}
         </div>
       )}
-
       {showModal && selectedOrder && (
         <ConfirmationModalButton
           text={`${
@@ -330,11 +301,11 @@ export const PendingOrders = ({ setForm, setInitialRegisterData }: PendingOrders
           }
         />
       )}
-
       {pixModalInitialValues && (
         <PixToolModal
           initialValues={pixModalInitialValues}
-          onClose={() => setPixModalInitialValues(null)}
+          onClose={closePixModal}
+          onPixSuccess={handlePixSuccess}
         />
       )}
     </CardContainer>

@@ -43,31 +43,41 @@ import { useMarkOrderAsPaidGate } from "./Gate/useMarkOrderAsPaidGate";
 import { useReleaseGate } from "./Gate/useReleaseGate";
 import { useMarkOrderAsPaidMexc } from "./MEXC/useMarkOrderAsPaidMexc";
 import { useReleaseCoinMexc } from "./MEXC/useReleaseCoinMexc";
+type PixOrderContext = {
+  order: OrderLike;
+  config: TabConfig;
+};
+
+type MutationCompletion = {
+  onSuccess: () => void;
+  onError: (error: unknown) => void;
+};
+
+const waitForMutation = (startMutation: (completion: MutationCompletion) => void): Promise<void> =>
+  new Promise<void>((resolve, reject) => {
+    startMutation({
+      onSuccess: () => resolve(),
+      onError: (error: unknown) => reject(error),
+    });
+  });
 
 export const usePendingOrdersController = () => {
   const { data, isLoading, error } = useListPendingOrders();
-
   const { mutate: sendChatMessageBybit } = useSendChatMessageBybit();
   const { mutate: releaseBybit } = useReleaseAssets();
   const { mutate: markPaidBybit, isPending: isMarkPaidBybitPending } = useMarkOrderAsPaidBybit();
-
   const { mutate: releaseBinance, isPending: isReleaseBinancePending } =
     useCheckAndReleaseCoinBinance();
   const { mutate: markPaidBinance, isPending: isMarkPaidBinancePending } =
     useMarkOrderAsPaidBinance();
   const { mutate: sendChatBinance, isPending: isChatBinancePending } = useSendChatMessageBinance();
-
   const { mutate: releaseBitget, isPending: isReleaseBitgetPending } = useReleaseAssetsBitget();
   const { mutate: markPaidBitget, isPending: isMarkPaidBitgetPending } = useMarkOrderAsPaidBitget();
-
   const { mutate: releaseMexc, isPending: isReleaseMexcPending } = useReleaseCoinMexc();
   const { mutate: markPaidMexc, isPending: isMarkPaidMexcPending } = useMarkOrderAsPaidMexc();
-
   const { mutate: releaseGate, isPending: isReleaseGatePending } = useReleaseGate();
   const { mutate: markPaidGate, isPending: isMarkPaidGatePending } = useMarkOrderAsPaidGate();
-
   const { acesso } = useAccessControl();
-
   const [activeTab, setActiveTab] = useState<TabKey>(getSavedTab);
   const [modalAction, setModalAction] = useState<ConfirmAction>("release");
   const [showModal, setShowModal] = useState(false);
@@ -77,7 +87,7 @@ export const usePendingOrdersController = () => {
   const [pixModalInitialValues, setPixModalInitialValues] = useState<PixToolInitialValues | null>(
     null,
   );
-
+  const [pixOrderContext, setPixOrderContext] = useState<PixOrderContext | null>(null);
   const activeConfig = TABS.find((t) => t.tab === activeTab) ?? TABS[0];
   const modalConfig = selectedConfig ?? activeConfig;
   const activeBybitKeyType: BybitKeyType =
@@ -87,28 +97,27 @@ export const usePendingOrdersController = () => {
   const modalMexcKeyType = modalConfig.keyType === "pessoal" ? "pessoal" : "empresa";
   const modalGateKeyType = modalConfig.keyType === "pessoal" ? "pessoal" : "empresa";
   const orders = useMemo(() => getOrdersByTab(data, activeTab), [data, activeTab]);
-
   const changeTab = (tab: TabKey) => {
     setActiveTab(tab);
     window.localStorage.setItem("pendingOrdersActiveTab", tab);
   };
-
   const closeModal = () => {
     setShowModal(false);
     setSelectedOrder(null);
     setSelectedConfig(null);
   };
-
   const openActionModal = (order: OrderLike, action: ConfirmAction) => {
     setSelectedOrder(order);
     setSelectedConfig(activeConfig);
     setModalAction(action);
     setShowModal(true);
   };
-
   const openPixModal = (order: OrderLike) => {
     const pagamento = Array.isArray(order.pagamento) ? order.pagamento : [];
-
+    setPixOrderContext({
+      order,
+      config: activeConfig,
+    });
     setPixModalInitialValues({
       pixKey: String(pagamento.find((p) => (p as { pix?: unknown })?.pix)?.pix ?? ""),
       amount: String(order.valor ?? ""),
@@ -116,10 +125,87 @@ export const usePendingOrdersController = () => {
       description: `Pagamento da ordem '${String(order.id ?? "")}'`,
     });
   };
+  const closePixModal = () => {
+    setPixModalInitialValues(null);
+    setPixOrderContext(null);
+  };
+  const handlePixSuccess = async () => {
+    if (!pixOrderContext) {
+      toast.error("Pix enviado, mas não foi possível identificar a ordem para marcar como paga.");
+      return;
+    }
+    const { order, config } = pixOrderContext;
+    const orderId = String(order.id ?? "").trim();
+    const keyType: BybitKeyType = config.keyType === "pessoal" ? "pessoal" : "empresa";
+    if (!orderId) {
+      toast.error("Pix enviado, mas a ordem não possui um identificador válido.");
+      return;
+    }
+    try {
+      if (isBinance(config)) {
+        await waitForMutation((completion) => {
+          markPaidBinance(
+            {
+              orderNumber: orderId,
+              advNo: String(order.advNo ?? ""),
+            },
+            completion,
+          );
+        });
+      } else if (isBybit(config)) {
+        await waitForMutation((completion) => {
+          markPaidBybit({ orderId, keyType }, completion);
+        });
+      } else if (isBitget(config)) {
+        await waitForMutation((completion) => {
+          markPaidBitget({ orderId, keyType }, completion);
+        });
+      } else if (isMexc(config)) {
+        await waitForMutation((completion) => {
+          markPaidMexc(
+            {
+              advOrderNo: orderId,
+              keyType,
+              userConfirmPaymentId:
+                String(order.userConfirmPaymentId ?? order.payId ?? "") || undefined,
+              payId: String(order.payId ?? "") || undefined,
+            },
+            completion,
+          );
+        });
+      } else if (isGate(config)) {
+        const paymentTerms = Array.isArray(order.pagamento) ? order.pagamento : [];
+        const firstPayment = paymentTerms[0] as { paymentType?: unknown } | undefined;
 
+        await waitForMutation((completion) => {
+          markPaidGate(
+            {
+              txid: orderId,
+              keyType,
+              paymentMethod: firstPayment?.paymentType
+                ? String(firstPayment.paymentType)
+                : undefined,
+            },
+            completion,
+          );
+        });
+      } else {
+        throw new Error(`Corretora não suportada: ${config.exchangeName}`);
+      }
+      setPixOrderContext(null);
+      toast.success(`Pix enviado e ordem ${orderId} marcada como paga na ${config.exchangeName}.`);
+    } catch (error) {
+      console.error(
+        `[PIX][MARK_PAID] O Pix da ordem ${orderId} foi enviado, mas a marcação falhou:`,
+        error,
+      );
+      toast.error(
+        `O Pix foi enviado, mas não foi possível marcar a ordem ${orderId} como paga na ${config.exchangeName}. Use o botão manual para tentar novamente.`,
+      );
+    }
+  };
   const sendBybitReceiptAndContract = async (order: OrderLike, cryptotechIsBuyer?: boolean) => {
     const base64Image = await generateSingleReceipt(legacyOrder(order, "Bybit"));
-
     if (base64Image) {
       sendChatMessageBybit({
         message: base64Image,
@@ -128,7 +214,6 @@ export const usePendingOrdersController = () => {
         keyType: modalBybitKeyType,
       });
     }
-
     const contract = await confirmContract({
       usuario: {
         apelido: String(order.apelido ?? "-"),
@@ -144,7 +229,6 @@ export const usePendingOrdersController = () => {
       ativo: String(order.token ?? "-"),
       cryptotechIsBuyer,
     });
-
     sendChatMessageBybit(
       {
         message: contract.pdfBase64,
@@ -155,14 +239,12 @@ export const usePendingOrdersController = () => {
       { onError: () => toast.error("Falha ao enviar contrato no chat") },
     );
   };
-
   const confirmBybitMarkPaid = (order: OrderLike) => {
     markPaidBybit(
       { orderId: String(order.id), keyType: modalBybitKeyType },
       {
         onSuccess: async () => {
           closeModal();
-
           try {
             await sendBybitReceiptAndContract(order, true);
           } catch {
@@ -173,14 +255,12 @@ export const usePendingOrdersController = () => {
       },
     );
   };
-
   const confirmBybitRelease = (order: OrderLike) => {
     releaseBybit(
       { orderId: String(order.id), keyType: modalBybitKeyType },
       {
         onSuccess: async () => {
           closeModal();
-
           try {
             await sendBybitReceiptAndContract(order);
           } catch {
@@ -190,13 +270,10 @@ export const usePendingOrdersController = () => {
       },
     );
   };
-
   const confirmBinanceMarkPaid = async (order: OrderLike) => {
     const orderId = String(order.id);
     const base64Image = await generateSingleReceipt(legacyOrder(order, "Binance"));
-
     if (!base64Image) return;
-
     markPaidBinance(
       {
         orderNumber: orderId,
@@ -205,7 +282,6 @@ export const usePendingOrdersController = () => {
       {
         onSuccess: () => {
           closeModal();
-
           sendChatBinance({
             orderNo: orderId,
             content: base64Image,
@@ -217,13 +293,11 @@ export const usePendingOrdersController = () => {
       },
     );
   };
-
   const confirmBinanceRelease = (order: OrderLike) => {
     const orderId = String(order.id);
     const documentDigits = onlyDigits(String(order.documento ?? ""));
     const document = isCpfCnpj(documentDigits) ? documentDigits : undefined;
     const endToEnd = getEndToEnd(order.endtoend) || undefined;
-
     releaseBinance(
       {
         orderNumber: orderId,
@@ -234,7 +308,6 @@ export const usePendingOrdersController = () => {
       {
         onSuccess: (response) => {
           closeModal();
-
           if (response?.postRelease?.orderSaved === false) {
             console.error(
               `[BINANCE][RELEASE] Ordem ${orderId} foi liberada, mas não foi cadastrada: ${
@@ -247,7 +320,6 @@ export const usePendingOrdersController = () => {
       },
     );
   };
-
   const confirmBitgetMarkPaid = (order: OrderLike) => {
     markPaidBitget(
       {
@@ -264,7 +336,6 @@ export const usePendingOrdersController = () => {
       },
     );
   };
-
   const confirmBitgetRelease = (order: OrderLike) => {
     releaseBitget(
       {
@@ -281,7 +352,6 @@ export const usePendingOrdersController = () => {
       },
     );
   };
-
   const confirmMexcMarkPaid = (order: OrderLike) => {
     markPaidMexc(
       {
@@ -300,7 +370,6 @@ export const usePendingOrdersController = () => {
       },
     );
   };
-
   const confirmMexcRelease = (order: OrderLike) => {
     releaseMexc(
       {
@@ -317,11 +386,9 @@ export const usePendingOrdersController = () => {
       },
     );
   };
-
   const confirmGateMarkPaid = (order: OrderLike) => {
     const paymentTerms = Array.isArray(order.pagamento) ? order.pagamento : [];
     const firstPayment = paymentTerms[0] as { paymentType?: unknown } | undefined;
-
     markPaidGate(
       {
         txid: String(order.id),
@@ -338,7 +405,6 @@ export const usePendingOrdersController = () => {
       },
     );
   };
-
   const confirmGateRelease = (order: OrderLike) => {
     releaseGate(
       {
@@ -355,58 +421,49 @@ export const usePendingOrdersController = () => {
       },
     );
   };
-
   const handleConfirm = () => {
     if (!selectedOrder) return;
-
     if (isBinance(modalConfig)) {
       if (modalAction === "markPaid") return confirmBinanceMarkPaid(selectedOrder);
       return confirmBinanceRelease(selectedOrder);
     }
-
     if (isBybit(modalConfig) && modalAction === "markPaid") {
       return confirmBybitMarkPaid(selectedOrder);
     }
-
     if (isBybit(modalConfig)) {
       return confirmBybitRelease(selectedOrder);
     }
-
     if (isBitget(modalConfig) && modalAction === "markPaid") {
       return confirmBitgetMarkPaid(selectedOrder);
     }
-
     if (isBitget(modalConfig)) {
       return confirmBitgetRelease(selectedOrder);
     }
-
     if (isMexc(modalConfig) && modalAction === "markPaid") {
       return confirmMexcMarkPaid(selectedOrder);
     }
-
     if (isMexc(modalConfig)) {
       return confirmMexcRelease(selectedOrder);
     }
-
     if (isGate(modalConfig) && modalAction === "markPaid") {
       return confirmGateMarkPaid(selectedOrder);
     }
-
     if (isGate(modalConfig)) {
       return confirmGateRelease(selectedOrder);
     }
   };
-
   return {
     acesso,
     activeBybitKeyType,
     activeConfig,
     activeTab,
     changeTab,
+    closePixModal,
     closeModal,
     data,
     error,
     handleConfirm,
+    handlePixSuccess,
     isChatBinancePending,
     isLoading,
     isMarkPaidBybitPending,
@@ -427,7 +484,6 @@ export const usePendingOrdersController = () => {
     selectedOrder,
     sendChatBinance,
     setOpenedComplianceOrderId,
-    setPixModalInitialValues,
     showModal,
   };
 };
