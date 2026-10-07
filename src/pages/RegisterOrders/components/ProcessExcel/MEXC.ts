@@ -370,7 +370,7 @@ export const processMexcRows = (
       dataHora: dateTime,
       exchange: selectedBroker,
       ativo: asset,
-      apelido: cellToText(readCell(row, columns.counterparty)),
+      apelido: normalizeMexcNickname(readCell(row, columns.counterparty)),
       quantidade: quantity,
       valor: amount,
       valorToken: price,
@@ -386,6 +386,10 @@ export const processMexcRows = (
   }
 
   return transactions;
+};
+
+const normalizeMexcNickname = (value: unknown): string => {
+  return cellToText(value).replace(/^Common-user-/i, "");
 };
 
 /**
