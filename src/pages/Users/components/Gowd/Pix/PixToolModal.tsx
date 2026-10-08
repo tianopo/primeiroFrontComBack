@@ -4,11 +4,11 @@ import { Button } from "src/components/Buttons/Button";
 import { Modal } from "src/components/Modal/Modal";
 import { useGowdPixDictCheck } from "src/pages/Users/hooks/Gowd/useGowdPixDictCheck";
 import { useGowdPixOut } from "src/pages/Users/hooks/Gowd/useGowdPixOut";
-import { buildGowdIdempotencyKey } from "src/pages/Users/utils/gowdPixDireto.helpers";
 import { PixKeyType } from "src/pages/Users/utils/Interface";
 import { useAccessControl } from "src/routes/context/AccessControl";
 import { BRLAmountInput, brlInputToNumber, formatBRLInputValue } from "./BRLAmountInput";
 import { PixOutResponse } from "./PixOutResponse";
+import { buildGowdIdempotencyKey } from "src/pages/Users/utils/gowdPixDireto.helpers";
 const KEY_TYPES: PixKeyType[] = ["CPF", "CNPJ", "EMAIL", "PHONE", "RANDOM"];
 const KEY_TYPES_WITH_AUTO = ["AUTO", ...KEY_TYPES] as const;
 type PixKeyTypeSelectable = PixKeyType | "AUTO";
@@ -332,6 +332,7 @@ export const PixToolModal = ({
     reset: resetDict,
   } = useGowdPixDictCheck();
   const identifierRef = useRef(buildGowdIdempotencyKey());
+  const pixSubmitLockedRef = useRef(false);
   const initialPixKey = String(initialValues?.pixKey ?? "");
   const initialDetectedType = detectPixKeyType(initialPixKey);
   const [selectedKeyType, setSelectedKeyType] = useState<PixKeyTypeSelectable>("AUTO");
@@ -404,6 +405,7 @@ export const PixToolModal = ({
       return;
     }
     try {
+      pixSubmitLockedRef.current = false;
       resetDict();
       resetPixOut();
       setDictError("");
@@ -438,6 +440,10 @@ export const PixToolModal = ({
     }
   };
   const handleSubmit = () => {
+    if (pixSubmitLockedRef.current || outPending || outData) {
+      return;
+    }
+
     if (scope === "baas" && !accountId) {
       toast.error("Selecione uma conta BAAS antes de transferir.");
       return;
@@ -455,6 +461,9 @@ export const PixToolModal = ({
       toast.error("Informe um valor válido.");
       return;
     }
+
+    pixSubmitLockedRef.current = true;
+
     const documentType = String(dictData.document?.type).toUpperCase() === "CNPJ" ? "CNPJ" : "CPF";
     pixOut(
       {
@@ -493,10 +502,14 @@ export const PixToolModal = ({
               toast.error("O Pix foi enviado, mas a ação posterior não foi concluída.");
             });
         },
+        onError: () => {
+          pixSubmitLockedRef.current = false;
+        },
       },
     );
   };
   const handleClose = () => {
+    pixSubmitLockedRef.current = false;
     resetDict();
     resetPixOut();
     setLastCheckedPixKey("");

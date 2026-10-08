@@ -10,44 +10,64 @@ type MexcChatBoxProps = {
   keyType: MexcKeyType;
 };
 
+const getOperatorPrefix = (name: unknown) => {
+  const firstName = String(name ?? "")
+    .trim()
+    .split(/\s+/)[0];
+  return firstName ? `${firstName}: ` : "";
+};
+
 export const MexcChatBox = ({ orderId, keyType }: MexcChatBoxProps) => {
   const [message, setMessage] = useState("");
   const { mutate: sendChatMexc, isPending } = useSendChatMessageMexc();
   const { name } = useAccessControl();
-
   const imageInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
+  const sendLockedRef = useRef(false);
 
   const handleSend = () => {
     const text = message.trim();
 
-    if (!text || isPending) return;
+    if (!text || isPending || sendLockedRef.current) return;
 
+    sendLockedRef.current = true;
     setMessage("");
 
     sendChatMexc(
       {
         orderNo: orderId,
         keyType,
-        content: `${name?.split(" ")[0] ?? ""}: ${text}`,
+        content: `${getOperatorPrefix(name)}${text}`,
         type: "text",
       },
       {
         onError: () => setMessage(text),
+        onSettled: () => {
+          sendLockedRef.current = false;
+        },
       },
     );
   };
 
-  const handleFileSend = async (file?: File, type?: "image" | "file") => {
-    if (!file || !type || isPending) return;
+  const handleFileSend = (file: File | undefined, type: "image" | "file") => {
+    if (!file || isPending || sendLockedRef.current) return;
 
-    sendChatMexc({
-      orderNo: orderId,
-      keyType,
-      file,
-      type,
-      content: file.name,
-    });
+    sendLockedRef.current = true;
+
+    sendChatMexc(
+      {
+        orderNo: orderId,
+        keyType,
+        file,
+        type,
+        content: file.name,
+      },
+      {
+        onSettled: () => {
+          sendLockedRef.current = false;
+        },
+      },
+    );
   };
 
   return (
@@ -58,10 +78,10 @@ export const MexcChatBox = ({ orderId, keyType }: MexcChatBoxProps) => {
         type="text"
         placeholder="Digite sua mensagem..."
         value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !isPending && message.trim()) {
-            e.preventDefault();
+        onChange={(event) => setMessage(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && !isPending && message.trim()) {
+            event.preventDefault();
             handleSend();
           }
         }}
@@ -69,6 +89,7 @@ export const MexcChatBox = ({ orderId, keyType }: MexcChatBoxProps) => {
       />
 
       <button
+        type="button"
         className="rounded-6 bg-blue-500 px-2 py-1.5 text-white hover:opacity-80 disabled:cursor-not-allowed"
         onClick={() => imageInputRef.current?.click()}
         disabled={isPending}
@@ -80,16 +101,17 @@ export const MexcChatBox = ({ orderId, keyType }: MexcChatBoxProps) => {
       <input
         ref={imageInputRef}
         type="file"
-        accept="image/*"
+        accept=".png,.jpg,.jpeg,image/png,image/jpeg"
         hidden
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          e.target.value = "";
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = "";
           handleFileSend(file, "image");
         }}
       />
 
       <button
+        type="button"
         className="rounded-6 bg-red-500 px-2 py-1.5 text-white hover:opacity-80 disabled:cursor-not-allowed"
         onClick={() => pdfInputRef.current?.click()}
         disabled={isPending}
@@ -101,16 +123,17 @@ export const MexcChatBox = ({ orderId, keyType }: MexcChatBoxProps) => {
       <input
         ref={pdfInputRef}
         type="file"
-        accept="application/pdf"
+        accept=".pdf,application/pdf"
         hidden
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          e.target.value = "";
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = "";
           handleFileSend(file, "file");
         }}
       />
 
       <button
+        type="button"
         className="rounded-6 bg-primary px-2 py-1.5 text-white hover:opacity-80 disabled:cursor-not-allowed"
         onClick={handleSend}
         disabled={isPending || !message.trim()}

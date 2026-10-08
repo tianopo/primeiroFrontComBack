@@ -10,42 +10,62 @@ type GateChatBoxProps = {
   keyType: GateKeyType;
 };
 
+const getOperatorPrefix = (name: unknown) => {
+  const firstName = String(name ?? "")
+    .trim()
+    .split(/\s+/)[0];
+  return firstName ? `${firstName}: ` : "";
+};
+
 export const GateChatBox = ({ orderId, keyType }: GateChatBoxProps) => {
   const [message, setMessage] = useState("");
   const { mutate: sendChatGate, isPending } = useSendChatMessageGate();
   const { name } = useAccessControl();
-
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const sendLockedRef = useRef(false);
 
   const handleSend = () => {
     const text = message.trim();
 
-    if (!text || isPending) return;
+    if (!text || isPending || sendLockedRef.current) return;
 
+    sendLockedRef.current = true;
     setMessage("");
 
     sendChatGate(
       {
         txid: orderId,
         keyType,
-        message: `${name?.split(" ")[0] ?? ""}: ${text}`,
+        message: `${getOperatorPrefix(name)}${text}`,
         type: "text",
       },
       {
         onError: () => setMessage(text),
+        onSettled: () => {
+          sendLockedRef.current = false;
+        },
       },
     );
   };
 
-  const handleFileSend = async (file?: File) => {
-    if (!file || isPending) return;
+  const handleFileSend = (file?: File) => {
+    if (!file || isPending || sendLockedRef.current) return;
 
-    sendChatGate({
-      txid: orderId,
-      keyType,
-      file,
-      type: "image",
-    });
+    sendLockedRef.current = true;
+
+    sendChatGate(
+      {
+        txid: orderId,
+        keyType,
+        file,
+        type: "image",
+      },
+      {
+        onSettled: () => {
+          sendLockedRef.current = false;
+        },
+      },
+    );
   };
 
   return (
@@ -56,10 +76,10 @@ export const GateChatBox = ({ orderId, keyType }: GateChatBoxProps) => {
         type="text"
         placeholder="Digite sua mensagem..."
         value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !isPending && message.trim()) {
-            e.preventDefault();
+        onChange={(event) => setMessage(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && !isPending && message.trim()) {
+            event.preventDefault();
             handleSend();
           }
         }}
@@ -67,6 +87,7 @@ export const GateChatBox = ({ orderId, keyType }: GateChatBoxProps) => {
       />
 
       <button
+        type="button"
         className="rounded-6 bg-blue-500 px-2 py-1.5 text-white hover:opacity-80 disabled:cursor-not-allowed"
         onClick={() => imageInputRef.current?.click()}
         disabled={isPending}
@@ -78,16 +99,17 @@ export const GateChatBox = ({ orderId, keyType }: GateChatBoxProps) => {
       <input
         ref={imageInputRef}
         type="file"
-        accept="image/png,image/jpeg,image/jpg"
+        accept=".png,.jpg,.jpeg,image/png,image/jpeg"
         hidden
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          e.target.value = "";
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = "";
           handleFileSend(file);
         }}
       />
 
       <button
+        type="button"
         className="rounded-6 bg-primary px-2 py-1.5 text-white hover:opacity-80 disabled:cursor-not-allowed"
         onClick={handleSend}
         disabled={isPending || !message.trim()}
