@@ -1,25 +1,28 @@
+import axios from "axios";
 import { ChangeEvent, Dispatch, SetStateAction, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { toast } from "react-toastify";
-import { Modal } from "src/components/Modal/Modal";
-import { Register } from "../Users/components/Register";
 import { Button } from "src/components/Buttons/Button";
 import { FlexCol } from "src/components/Flex/FlexCol";
 import { FormX } from "src/components/Form/FormX";
 import { InputX } from "src/components/Form/Input/InputX";
 import { Select } from "src/components/Form/Select/Select";
+import { Modal } from "src/components/Modal/Modal";
+import { responseError } from "src/config/responseErrors";
 import { formatCurrency, formatDateTime } from "src/utils/formats";
 import { assetsOptions, exchangeOptions } from "src/utils/selectsOptions";
+import { Register } from "../Users/components/Register";
+import { BitgetApiOrdersImport } from "./components/BitgetApiOrdersImport";
 import { HandleListEdit } from "./components/HandleListEdit";
 import { UploadXLSButton } from "./components/UploadXLSButton";
 import { useListUsers } from "./hooks/useListUsers";
 import { IOrder, useOrders } from "./hooks/useOrders";
 import "./registerOrders.css";
 import { extractApelidosFromError } from "./Utils/extractApelidosFromError";
-import { extractExistingOrdersFromError } from "./Utils/extractExistingOrdersFromError";
-import { BitgetApiOrdersImport } from "./components/BitgetApiOrdersImport";
-import axios from "axios";
-import { responseError } from "src/config/responseErrors";
+import {
+  extractExistingOrdersFromError,
+  makeOrderKey,
+} from "./Utils/extractExistingOrdersFromError";
 
 export const RegisterOrders = () => {
   const { mutate, isPending, context } = useOrders();
@@ -224,6 +227,28 @@ export const RegisterOrders = () => {
     }
 
     setFormData((prevData) => prevData.filter((item) => !(item.numeroOrdem === numeroOrdem)));
+  };
+
+  const ordensDuplicadasNaLista = formData.filter((order) =>
+    ordensJaCadastradas.has(makeOrderKey(order.numeroOrdem, order.exchange)),
+  );
+
+  const handleDeleteExistingOrders = () => {
+    const quantidade = ordensDuplicadasNaLista.length;
+
+    if (!quantidade || isPending) return;
+
+    setFormData((prev) =>
+      prev.filter(
+        (order) => !ordensJaCadastradas.has(makeOrderKey(order.numeroOrdem, order.exchange)),
+      ),
+    );
+
+    setOrdensJaCadastradas(new Set());
+
+    toast.success(
+      `${quantidade} ${quantidade === 1 ? "ordem já existente removida" : "ordens já existentes removidas"} da lista.`,
+    );
   };
 
   const handleEdit = (numeroOrdem: string) => {
@@ -436,6 +461,16 @@ export const RegisterOrders = () => {
           {view === "manual" && (
             <Button onClick={handleSave} disabled={isPending}>
               Salvar
+            </Button>
+          )}
+          {ordensDuplicadasNaLista.length > 0 && (
+            <Button
+              onClick={handleDeleteExistingOrders}
+              disabled={isPending}
+              className="rounded-6 bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+            >
+              Excluir {ordensDuplicadasNaLista.length}{" "}
+              {ordensDuplicadasNaLista.length === 1 ? "ordem já existente" : "ordens já existentes"}
             </Button>
           )}
           <Button onClick={handleSend} disabled={isPending || formData.length === 0}>
