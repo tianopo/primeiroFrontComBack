@@ -164,4 +164,6 @@ export const apiRoute = {
     baasUpdateUserBankingAccountId: (userId: string) =>
       `/gowd/baas/banking/users/${encodeURIComponent(userId)}/account-id`,
   },
+  /* NFE */
+  brasilNfeListarEBaixar: "/brasil-nfe/notas/listar-e-baixar",
 };

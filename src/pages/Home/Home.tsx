@@ -17,6 +17,7 @@ import { handleReceipt } from "./config/handleReceipt";
 import { parseBRL, parseNum } from "./config/helpers";
 import { mensalFiduciaTable } from "./config/mensalFiduciaTable";
 import { useDeleteOrder } from "./hooks/useDeleteOrder";
+import { useDownloadNotasFiscaisXml } from "./hooks/useDownloadNotasFiscaisXml";
 import { useListTransactionsInDate } from "./hooks/useListTransactionsInDate";
 import { useUpdateOrder } from "./hooks/useUpdateOrder";
 
@@ -37,6 +38,8 @@ export const Home = () => {
   const [users, setUsers] = useState<string[]>([]);
   const [visibleExchanges, setVisibleExchanges] = useState<{ [key: string]: boolean }>({});
   const [valorTotalNFE, setValorTotalNFE] = useState(0);
+
+  const { baixarNotasXml, isDownloading } = useDownloadNotasFiscaisXml();
 
   // estado para confirmação de deleção e edição
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
@@ -107,6 +110,16 @@ export const Home = () => {
   const handleOrder = (e: React.FormEvent) => {
     e.preventDefault();
     setFilterDates({ startDate, endDate });
+  };
+
+  const handleDownloadNotasXml = async () => {
+    try {
+      const quantidade = await baixarNotasXml(startDate, endDate);
+
+      alert(`Download iniciado! ${quantidade} XML(s) incluídos no ZIP.`);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Não foi possível baixar as notas fiscais.");
+    }
   };
 
   const calculateTotals = (filteredData: any[]) => {
@@ -344,6 +357,12 @@ export const Home = () => {
           <>
             <Button onClick={exportSalesInvoiceCsv}>Exportar CSV Nota Fiscal Vendas</Button>
             <Button onClick={exportRpsNfseTxt}>Exportar TXT RPS NFS-e V.002</Button>
+            <Button
+              onClick={handleDownloadNotasXml}
+              disabled={isDownloading || startDate.length !== 10 || endDate.length !== 10}
+            >
+              {isDownloading ? "Baixando notas fiscais..." : "Obter notas fiscais em XML"}
+            </Button>
           </>
         )}
         {validationDates && <Button onClick={() => handleReceipt(filteredData)}>Recibo</Button>}
