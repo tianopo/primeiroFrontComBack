@@ -2,158 +2,105 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { api } from "src/config/api";
 import { apiRoute } from "src/routes/api";
-
 export type GateKeyType = "empresa" | "pessoal";
-
-type GateImageContentType = "image/jpeg" | "image/jpg" | "image/png";
-
-type SendGateTextPayload = {
-  txid: string;
-  keyType: GateKeyType;
-  message: string;
-  type: "text";
+type ImageMime = "image/jpeg" | "image/png";
+type ChatContext = { txid: string; keyType: GateKeyType };
+export type SendChatMessageGatePayload = ChatContext &
+  ({ type: "text"; message: string } | { type: "image"; file: File });
+const MAX_BASE64_BYTES = 20_000_000;
+const record = (value: unknown): Record<string, unknown> =>
+  value !== null && typeof value === "object" ? (value as Record<string, unknown>) : {};
+const errorMessage = (error: unknown): string => {
+  const response = record(record(error).response);
+  const body = record(response.data);
+  if (response.status === 413)
+    return "HTTP 413: o servidor ou proxy recusou o tamanho da imagem. Confira o limite do JSON no backend.";
+  const message = body.message ?? body.msg ?? record(error).message;
+  const detail = Array.isArray(message)
+    ? message.join("; ")
+    : String(message || "Falha ao comunicar com a Gate.");
+  return response.status ? `HTTP ${String(response.status)}: ${detail}` : detail;
 };
-
-type SendGateImagePayload = {
-  txid: string;
-  keyType: GateKeyType;
-  file: File;
-  type: "image";
+const assertSuccess = (value: unknown): Record<string, unknown> => {
+  const response = record(value);
+  if (response.code !== 0 && response.code !== "0") {
+    throw new Error(String(response.message ?? response.msg ?? "Resposta inválida da Gate."));
+  }
+  return record(response.data);
 };
-
-type GateUploadChatResponse = {
-  data?: {
-    file_key?: unknown;
-    fileKey?: unknown;
-  };
-  file_key?: unknown;
-  fileKey?: unknown;
+const imageToBase64 = async (file: File): Promise<{ contentType: ImageMime; base64: string }> => {
+  if (!file.size) throw new Error("A imagem está vazia.");
+  if (4 * Math.ceil(file.size / 3) > MAX_BASE64_BYTES) {
+    throw new Error(
+      "A Gate limita o Base64 a 20 MB. Escolha uma imagem de até aproximadamente 15 MB.",
+    );
+  }
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const contentType: ImageMime | undefined =
+    bytes.slice(0, 8).join(",") === "137,80,78,71,13,10,26,10"
+      ? "image/png"
+      : bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255
+        ? "image/jpeg"
+        : undefined;
+  if (!contentType) throw new Error("Envie uma imagem PNG ou JPEG válida.");
+  let binary = "";
+  for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+  }
+  return { contentType, base64: btoa(binary) };
 };
-
-export type SendChatMessageGatePayload = SendGateTextPayload | SendGateImagePayload;
-
-const GATE_MAX_FILE_SIZE = 20 * 1024 * 1024;
-
-const isGateImageContentType = (value: string): value is GateImageContentType =>
-  value === "image/jpeg" || value === "image/jpg" || value === "image/png";
-
-const fileToBase64 = (
-  file: File,
-): Promise<{
-  contentType: GateImageContentType;
-  base64: string;
-}> =>
-  new Promise((resolve, reject) => {
-    if (file.size <= 0) {
-      reject(new Error("O arquivo da Gate está vazio."));
-      return;
-    }
-
-    if (file.size > GATE_MAX_FILE_SIZE) {
-      reject(new Error("A Gate aceita arquivos de chat com no máximo 20 MB."));
-      return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      const value = String(reader.result ?? "");
-      const match = value.match(/^data:([^;]+);base64,(.+)$/i);
-      const contentType = String(match?.[1] ?? file.type ?? "image/png").toLowerCase();
-      const base64 = String(match?.[2] ?? "").trim();
-
-      if (!isGateImageContentType(contentType)) {
-        reject(new Error("A Gate aceita apenas JPEG, JPG ou PNG no chat."));
-        return;
-      }
-
-      if (!base64) {
-        reject(new Error("Não foi possível converter a imagem para Base64."));
-        return;
-      }
-
-      resolve({
-        contentType,
-        base64,
-      });
-    };
-
-    reader.onerror = () => {
-      reject(reader.error ?? new Error("Não foi possível ler a imagem da Gate."));
-    };
-
-    reader.readAsDataURL(file);
-  });
-
-const pickFileKey = (value: GateUploadChatResponse): string =>
-  String(
-    value.data?.file_key ?? value.data?.fileKey ?? value.file_key ?? value.fileKey ?? "",
-  ).trim();
-
 export const useSendChatMessageGate = () => {
   const queryClient = useQueryClient();
-
   return useMutation({
+    retry: false,
     mutationFn: async (payload: SendChatMessageGatePayload): Promise<unknown> => {
-      if (payload.type === "text") {
+      let stage = "Envio da mensagem";
+      try {
+        const params = { keyType: payload.keyType };
+        let message: string;
+        let type: 0 | 1;
+        if (payload.type === "image") {
+          stage = "Upload da imagem";
+          const image = await imageToBase64(payload.file);
+          const upload = await api().post<unknown>(
+            apiRoute.gateUploadChat,
+            {
+              image_content_type: image.contentType,
+              base64_img: image.base64,
+            },
+            { params, timeout: 60_000 },
+          );
+          const fileKey = assertSuccess(upload.data).file_key;
+          if (typeof fileKey !== "string" || !fileKey.trim()) {
+            throw new Error("A Gate não retornou file_key.");
+          }
+          message = fileKey.trim();
+          type = 1;
+        } else {
+          message = payload.message.trim();
+          if (!message || message.length > 500)
+            throw new Error("A mensagem deve ter entre 1 e 500 caracteres.");
+          type = 0;
+        }
+        stage = "Envio ao chat";
         const response = await api().post<unknown>(
           apiRoute.gateSendChat(payload.txid),
-          {
-            message: payload.message,
-            type: 0,
-          },
-          {
-            params: {
-              keyType: payload.keyType,
-            },
-          },
+          { message, type },
+          { params, timeout: 60_000 },
         );
-
+        const data = assertSuccess(response.data);
+        if (Number(data.risk_type) === 1)
+          toast.warning(String(data.toast_msg || "A Gate sinalizou um risco nesta mensagem."));
         return response.data;
+      } catch (error: unknown) {
+        throw new Error(`${stage}: ${errorMessage(error)}`);
       }
-
-      const file = await fileToBase64(payload.file);
-
-      const upload = await api().post<GateUploadChatResponse>(
-        apiRoute.gateUploadChat,
-        {
-          image_content_type: file.contentType,
-          base64_img: file.base64,
-        },
-        {
-          params: {
-            keyType: payload.keyType,
-          },
-        },
-      );
-
-      const fileKey = pickFileKey(upload.data);
-
-      if (!fileKey) {
-        throw new Error("A Gate não retornou file_key do arquivo enviado.");
-      }
-
-      const response = await api().post<unknown>(
-        apiRoute.gateSendChat(payload.txid),
-        {
-          message: fileKey,
-          type: 1,
-        },
-        {
-          params: {
-            keyType: payload.keyType,
-          },
-        },
-      );
-
-      return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pending-orders"] });
+      void queryClient.invalidateQueries({ queryKey: ["pending-orders"] });
     },
     onError: (error: unknown) => {
-      console.error("[GATE_CHAT] Falha ao enviar mensagem", error);
-      toast.error(error instanceof Error ? error.message : "Falha ao enviar mensagem na Gate.");
+      toast.error(errorMessage(error));
     },
   });
 };

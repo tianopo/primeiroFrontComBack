@@ -82,6 +82,7 @@ export const apiRoute = {
   /* USER */
   user: "user",
   account: "user/account",
+  accountSearch: "user/account/search",
   userId: (id: string) => `user/account/${id}`,
   /* BYBIT */
   sendChatMessageBybit: "bybit/send-chat-message",

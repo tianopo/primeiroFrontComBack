@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useAccessControl } from "src/routes/context/AccessControl";
-import { Compliance } from "./components/Compliance";
-import { Edit } from "./components/Edit";
 import { Extrato } from "./components/Gowd/Extrato/Extrato";
 import { PendingOrders } from "./components/PendingOrders";
-import { Register } from "./components/Register";
+import { Compliance } from "./components/Users/Compliance";
+import { Edit } from "./components/Users/Edit";
+import { Register } from "./components/Users/Register";
 
 type TabKey = "register" | "edit" | "compliance";
 

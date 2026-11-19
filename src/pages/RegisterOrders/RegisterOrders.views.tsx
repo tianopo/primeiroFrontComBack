@@ -11,14 +11,15 @@ import { Modal } from "src/components/Modal/Modal";
 import { responseError } from "src/config/responseErrors";
 import { formatCurrency, formatDateTime } from "src/utils/formats";
 import { assetsOptions, exchangeOptions } from "src/utils/selectsOptions";
-import { Register } from "../Users/components/Register";
+import { Register } from "../Users/components/Users/Register";
 import { BitgetApiOrdersImport } from "./components/BitgetApiOrdersImport";
 import { HandleListEdit } from "./components/HandleListEdit";
 import { UploadXLSButton } from "./components/UploadXLSButton";
-import { useListUsers } from "./hooks/useListUsers";
 import { IOrder, useOrders } from "./hooks/useOrders";
 import "./registerOrders.css";
 import { extractApelidosFromError } from "./Utils/extractApelidosFromError";
+import { useQueryClient } from "@tanstack/react-query";
+import { AccountSearchInput } from "../Users/components/Users/AccountSearchInput";
 import {
   extractExistingOrdersFromError,
   makeOrderKey,
@@ -26,7 +27,7 @@ import {
 
 export const RegisterOrders = () => {
   const { mutate, isPending, context } = useOrders();
-  const { data, refetch: refetchUsers } = useListUsers();
+  const queryClient = useQueryClient();
   const { reset, getValues, setValue } = context;
 
   const [tipo, setTipo] = useState<string>("");
@@ -57,20 +58,22 @@ export const RegisterOrders = () => {
   };
 
   const onSubmit = (data: IOrder) => {
-    const newData = {
-      ...data,
-      tipo: tipo,
-    };
-
+    if (Boolean(nome.trim()) === Boolean(apelido.trim())) {
+      toast.error("Preencha apenas o nome ou apenas o apelido.");
+      return;
+    }
+    const newData = { ...data, nome: nome.trim(), apelido: apelido.trim(), tipo };
     setFormData((prevData) => [...prevData, newData]);
-
     reset();
+    handleIdentificacaoChange("nome", "");
   };
 
   const handleSave = async () => {
     const values = getValues();
     const updatedValues: any = {
       ...values,
+      nome: nome.trim(),
+      apelido: apelido.trim(),
       tipo,
     };
 
@@ -269,10 +272,6 @@ export const RegisterOrders = () => {
     setExchange(item.exchange);
     setAtivo(item.ativo);
     setValue("ativo", item.ativo);
-    setNome(item.nome);
-    setValue("nome", item.nome);
-    setApelido(item.apelido);
-    setValue("apelido", item.apelido);
     setQuantidade(item.quantidade);
     setValue("quantidade", item.quantidade);
     setValor(item.valor);
@@ -281,6 +280,11 @@ export const RegisterOrders = () => {
     setValue("valorToken", item.valorToken);
     setTaxa(item.taxa);
     setValue("taxa", item.taxa);
+    const nickname = String(item.apelido ?? "").trim();
+    handleIdentificacaoChange(
+      nickname ? "apelido" : "nome",
+      nickname || String(item.nome ?? "").trim(),
+    );
 
     handleDelete(numeroOrdem);
   };
@@ -290,20 +294,14 @@ export const RegisterOrders = () => {
     setDataHora(formattedDate);
   };
 
-  const handleNomeChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const nome = e.target.value;
-    setNome(nome);
-
-    if (nome.trim() === "") return;
-
-    const userEncontrado = data?.find(
-      (user: { name: string; counterparty: string }) => user?.name === nome,
-    );
-
-    if (userEncontrado) {
-      setApelido(userEncontrado.counterparty);
-      context.setValue("apelido", userEncontrado.counterparty);
-    } else return;
+  const handleIdentificacaoChange = (field: "nome" | "apelido", value: string) => {
+    const name = field === "nome" ? value : "";
+    const nickname = field === "apelido" ? value : "";
+    setNome(name);
+    setApelido(nickname);
+    setValue("nome", name);
+    setValue("apelido", nickname);
+    context.clearErrors(["nome", "apelido"]);
   };
 
   const handleValorChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -397,32 +395,23 @@ export const RegisterOrders = () => {
                   />
                 </div>
                 <div className={"flex w-full flex-col flex-wrap gap-2 md:w-5/12 md:flex-row"}>
-                  <InputX
+                  <AccountSearchInput
                     title="Nome"
+                    field="nome"
                     placeholder="Fulano Ciclano Banano"
                     value={nome || ""}
-                    onChange={handleNomeChange}
-                    busca
-                    options={data
-                      ?.filter((item: any) =>
-                        (item?.User?.name || "").toLowerCase().includes((nome || "").toLowerCase()),
-                      )
-                      .map((item: any) => item?.User?.name)}
+                    onChange={(e) => handleIdentificacaoChange("nome", e.target.value)}
+                    onPick={(account) => handleIdentificacaoChange("nome", account.User.name)}
+                    required={!apelido.trim()}
                   />
-                  <InputX
+                  <AccountSearchInput
                     title="Apelido"
+                    field="apelido"
                     placeholder="User9079vYwmKU"
                     value={apelido || ""}
-                    onChange={(e) => setApelido(e.target.value)}
-                    busca
-                    options={data
-                      ?.filter((item: any) =>
-                        (item.counterparty || "")
-                          .toLowerCase()
-                          .includes((apelido || "").toLowerCase()),
-                      )
-                      .map((item: any) => item.counterparty)}
-                    required
+                    onChange={(e) => handleIdentificacaoChange("apelido", e.target.value)}
+                    onPick={(account) => handleIdentificacaoChange("apelido", account.counterparty)}
+                    required={!nome.trim()}
                   />
                   <InputX
                     title="Quantidade"
@@ -493,7 +482,7 @@ export const RegisterOrders = () => {
             setForm={(() => undefined) as Dispatch<SetStateAction<boolean>>}
             initialData={registerModalData}
             onSuccessRegistered={() => {
-              refetchUsers?.();
+              void queryClient.invalidateQueries({ queryKey: ["users-data"] });
               setRegisterModalData(null);
             }}
           />

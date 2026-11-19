@@ -7,7 +7,7 @@ import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalB
 import { useAccessControl } from "src/routes/context/AccessControl";
 import { EditOrderModal } from "./components/EditOrderModal";
 import { GenerateContractButton } from "./components/GenerateContractButton";
-import { generateRpsNfseTxt, getNextRpsNumber } from "./components/generateRpsNfseTxt";
+import { generateNfseLoteXlsx } from "./components/generateNfseLoteXlsx";
 import { generateSalesInvoiceCsv } from "./components/generateSalesInvoiceCsv";
 import { IN1888 } from "./components/IN1888";
 import { fortnigthlyFiduciaTable } from "./config/fortnigthlyFiduciaTable";
@@ -43,9 +43,6 @@ export const Home = () => {
   const [transactionToDelete, setTransactionToDelete] = useState<any | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [transactionToEdit, setTransactionToEdit] = useState<any | null>(null);
-  const [rpsNumeroInicial, setRpsNumeroInicial] = useState(() => {
-    return String(getNextRpsNumber());
-  });
 
   const { data, error, isLoading } = useListTransactionsInDate(
     filterDates.startDate,
@@ -222,7 +219,7 @@ export const Home = () => {
       produtoCod: "S100",
       produtoDescricao: "Promoção de Vendas de Ativos Digitais",
       commissionMode: "dinamica",
-      comissaoFixaPercentual: 0.01,
+      comissaoFixaPercentual: 0.0025,
       margemErroPorToken: 0.01,
     });
 
@@ -231,37 +228,50 @@ export const Home = () => {
     setValorTotalNFE(result.totalValorNotas);
   };
 
-  const exportRpsNfseTxt = () => {
+  const exportRpsNfseTxt = async () => {
     if (!filteredData || filteredData.length === 0) {
-      alert("Nenhuma ordem filtrada para gerar o TXT de RPS.");
+      alert("Nenhuma ordem filtrada para gerar as planilhas de NFS-e.");
       return;
     }
 
-    const result = generateRpsNfseTxt({
+    const result = await generateNfseLoteXlsx({
       transactions: filteredData,
       precoMedioCompraMensal: precoMedioCompra,
       startDate: filterDates.startDate,
       endDate: filterDates.endDate,
-      fileName: `rps-nfse-v002-${filterDates.startDate}_${filterDates.endDate}.txt`,
+      fileName: `nfse-lote-${filterDates.startDate}_${filterDates.endDate}.xlsx`,
 
-      prestadorCcm: "4251350",
-      codigoServico: "02496",
+      // CONFIRMAR E PREENCHER: códigos oficiais do serviço na plataforma de importação.
+      // O antigo codigoServico "02496" não corresponde necessariamente ao Item Lista/NBS.
+      itemListaServico: "17.06",
+      codigoTributacaoMunicipio: "001",
+      codigoCnae: "7319002",
+      codigoNbs: "114061900",
+      municipioPrestacaoIbge: "3550308",
+      municipioIncidenciaIbge: "3550308",
+
+      regimeEspecialTributacao: 0, // confirmar enquadramento fiscal
+      naturezaOperacao: 1, // confirmar natureza tributável
+      exigibilidadeIss: 1, // confirmar exigibilidade
       aliquotaPercentual: 5,
-      situacaoRps: "T",
-      issRetidoPadrao: "2",
-
-      rpsSerie: "",
-      rpsNumeroInicial: Number(rpsNumeroInicial),
+      issRetidoPadrao: "2", // 2 => "N" no modelo Excel
+      incentivadorCultural: false,
 
       commissionMode: "dinamica",
       comissaoFixaPercentual: 0.01,
       margemErroPorToken: 0.01,
+      // O piso de R$0,01 precisa corresponder à política real de remuneração.
+      valorMinimoNota: 0.01,
+      maxNotasPorArquivo: 500,
     });
 
     if (!result) return;
-
     setValorTotalNFE(result.totalValorNotas);
-    setRpsNumeroInicial(String(result.proximoRps));
+    // NÃO avançar RPS: o XLSX do modelo não contém série/número de RPS.
+    alert(
+      `${result.quantidadeNotas} notas em ${result.quantidadeArquivos} arquivo(s) XLSX. ` +
+        `Faturamento por serviços: R$ ${result.totalValorNotasFormatado}`,
+    );
   };
 
   const handleGenerateDeCriptoVendas = async () => {

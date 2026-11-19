@@ -1,10 +1,10 @@
 import { Trash } from "@phosphor-icons/react";
-import { ChangeEvent, Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { ChangeEvent, Dispatch, SetStateAction, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { Button } from "src/components/Buttons/Button";
 import { Checkbox } from "src/components/Form/Checkbox";
 import { FormX } from "src/components/Form/FormX";
-import { InputX } from "src/components/Form/Input/InputX";
 import { Select } from "src/components/Form/Select/Select";
 import { IconX } from "src/components/Icons/IconX";
 import { CardContainer } from "src/components/Layout/CardContainer";
@@ -12,16 +12,16 @@ import { ConfirmationModalButton } from "src/components/Modal/ConfirmationModalB
 import { responseError } from "src/config/responseErrors";
 import { formatCPFOrCNPJ } from "src/utils/formats";
 import { exchangeOptions } from "src/utils/selectsOptions";
-import { useCompliance } from "../hooks/Compliance/useCompliance";
-import { useSyncDeskdata } from "../hooks/Compliance/useSyncDeskdata";
-import { useDelUser } from "../hooks/User/useDelUser";
-import { useListUsers } from "../hooks/User/useListUsers";
-import { IUpdateUserPayload, useUpdateUser } from "../hooks/User/useUpdateUser";
-import { DeskdataDataset } from "../utils/deskdata.types";
-import { ComplianceEditModal } from "./Compliance/ComplianceEditModal";
-import { DeskdataSelector } from "./Compliance/DeskdataSelector";
-import { UserSecurityModal } from "./Security/UserSecurityModal";
-import { BankEditModal } from "./Bank/BankEditModal";
+import { useCompliance } from "../../hooks/Compliance/useCompliance";
+import { useSyncDeskdata } from "../../hooks/Compliance/useSyncDeskdata";
+import { useDelUser } from "../../hooks/User/useDelUser";
+import { IUpdateUserPayload, useUpdateUser } from "../../hooks/User/useUpdateUser";
+import { DeskdataDataset } from "../../utils/deskdata.types";
+import { BankEditModal } from "../Bank/BankEditModal";
+import { ComplianceEditModal } from "../Compliance/ComplianceEditModal";
+import { DeskdataSelector } from "../Compliance/DeskdataSelector";
+import { UserSecurityModal } from "../Security/UserSecurityModal";
+import { AccountSearchInput } from "./AccountSearchInput";
 
 interface IEdit {
   setForm: Dispatch<SetStateAction<boolean>>;
@@ -42,7 +42,7 @@ export const Edit = ({ setForm }: IEdit) => {
   const [openBankModal, setOpenBankModal] = useState(false);
   const [openSecurityModal, setOpenSecurityModal] = useState(false);
 
-  const { data } = useListUsers();
+  const queryClient = useQueryClient();
   const { mutate, isPending, context } = useUpdateUser();
   const { mutate: fetchCompliance, isPending: isLoadingCompliance } = useCompliance();
 
@@ -62,25 +62,8 @@ export const Edit = ({ setForm }: IEdit) => {
   const canUseDeskdata = Boolean(nome && apelido && exchange && documento);
 
   const handleNomeChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const fullValue = e.target.value;
-
-    const match = data?.find((user: any) => {
-      const nomeComExchange = `${user?.User.name} - ${user?.exchange.split(" ")[0]}`;
-      return nomeComExchange === fullValue;
-    });
-
-    if (match) {
-      const userName = match.User.name;
-      const userExchange = match.exchange;
-
-      setNome(userName);
-      setValue("nome", userName);
-      setExchange(userExchange);
-      setValue("exchange", userExchange);
-    } else {
-      setNome(fullValue);
-      setValue("nome", fullValue);
-    }
+    setNome(e.target.value);
+    setValue("nome", e.target.value);
   };
 
   const handleApelidoChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -94,29 +77,15 @@ export const Edit = ({ setForm }: IEdit) => {
   };
 
   const handleDocumentoChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const fullValue = e.target.value;
-    const [rawDocument, rawExchange] = fullValue.split(" - ");
-    const formattedDocumento = formatCPFOrCNPJ(rawDocument?.trim());
-
-    setDocumento(formattedDocumento);
-    setValue("documento", formattedDocumento);
-
-    const isFromOptions = data?.some(
-      (user: any) =>
-        `${user?.User.document} - ${user?.exchange.split(" ")[0]}` === fullValue.trim(),
-    );
-
-    if (isFromOptions) {
-      setExchange(rawExchange?.trim());
-      setValue("exchange", rawExchange?.trim());
-    }
+    const value = formatCPFOrCNPJ(e.target.value);
+    setDocumento(value);
+    setValue("documento", value);
   };
 
   const handleBlockChange = (e: ChangeEvent<HTMLInputElement>) => {
     const checked = e.target.checked;
     setIsBlocked(checked);
-    setValue("nome", nome);
-    setNome(nome);
+    setValue("bloqueado", checked);
   };
 
   const updateUserFields = (selectedUser: any) => {
@@ -134,36 +103,6 @@ export const Edit = ({ setForm }: IEdit) => {
     setValue("bloqueado", selectedUser.User.blocked);
   };
 
-  useEffect(() => {
-    if (data && apelido) {
-      const selectedUser = data.find((user: any) => user.counterparty === apelido);
-      if (selectedUser) updateUserFields(selectedUser);
-    }
-  }, [apelido, data, setValue]);
-
-  useEffect(() => {
-    if (data && nome && exchange) {
-      const selectedUser = data.find(
-        (user: any) =>
-          user.User.name === nome && user.exchange.split(" ")[0] === exchange.split(" ")[0],
-      );
-
-      if (selectedUser) updateUserFields(selectedUser);
-    }
-  }, [nome, exchange, data, setValue]);
-
-  useEffect(() => {
-    if (data && documento && exchange) {
-      const selectedUser = data.find(
-        (user: any) =>
-          user.User.document === documento &&
-          user.exchange.split(" ")[0] === exchange.split(" ")[0],
-      );
-
-      if (selectedUser) updateUserFields(selectedUser);
-    }
-  }, [documento, exchange, data, setValue]);
-
   const handleSubmit = (formData: IUpdateUserPayload) => {
     if (!id) {
       responseError("Selecione um usuário antes de salvar.");
@@ -174,6 +113,7 @@ export const Edit = ({ setForm }: IEdit) => {
       { id, payload: formData },
       {
         onSuccess: async () => {
+          void queryClient.invalidateQueries({ queryKey: ["users-data"] });
           if (deskdataEnabled && deskdataDatasets.length > 0 && documento) {
             await syncDeskdata({
               documento,
@@ -198,6 +138,7 @@ export const Edit = ({ setForm }: IEdit) => {
         onSuccess: (result) => {
           setComplianceData(result);
           setOpenEditModal(true);
+          void queryClient.invalidateQueries({ queryKey: ["users-data"] });
         },
       },
     );
@@ -206,8 +147,9 @@ export const Edit = ({ setForm }: IEdit) => {
   const handleDelete = () => setIsConfirming(!isConfirming);
 
   const handleConfirmDelete = () => {
-    deletar(data, {
+    deletar(undefined, {
       onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: ["users-data"] });
         setIsConfirming(false);
         setValue("apelido", "");
         setApelido("");
@@ -218,7 +160,9 @@ export const Edit = ({ setForm }: IEdit) => {
         setValue("exchange", "");
         setExchange("");
         setIsBlocked(false);
+        setValue("bloqueado", false);
         setComplianceData(null);
+        setId("");
       },
     });
   };
@@ -253,30 +197,23 @@ export const Edit = ({ setForm }: IEdit) => {
             />
           )}
 
-          <InputX
+          <AccountSearchInput
             title="Apelido"
+            field="apelido"
             placeholder="User9855-54d4df"
             value={apelido}
             onChange={handleApelidoChange}
-            busca
-            options={data
-              ?.filter((user: any) => user?.counterparty && user.counterparty.includes(apelido))
-              .map((user: any) => user?.counterparty)}
+            onPick={updateUserFields}
             required
           />
 
-          <InputX
+          <AccountSearchInput
             title="Nome"
+            field="nome"
             placeholder="Fulano Ciclano"
             value={nome}
             onChange={handleNomeChange}
-            busca
-            options={Array.from(
-              new Set(
-                data?.map((user: any) => `${user?.User.name} - ${user?.exchange.split(" ")[0]}`) ||
-                  [],
-              ),
-            )}
+            onPick={updateUserFields}
             required
           />
 
@@ -289,19 +226,13 @@ export const Edit = ({ setForm }: IEdit) => {
             required
           />
 
-          <InputX
+          <AccountSearchInput
             title="Documento"
+            field="documento"
             placeholder="CPF/CNPJ"
             value={documento}
             onChange={handleDocumentoChange}
-            busca
-            options={Array.from(
-              new Set(
-                data?.map(
-                  (user: any) => `${user?.User.document} - ${user?.exchange.split(" ")[0]}`,
-                ) || [],
-              ),
-            )}
+            onPick={updateUserFields}
             required
           />
 

@@ -2,201 +2,136 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { api } from "src/config/api";
 import { apiRoute } from "src/routes/api";
-import { MexcKeyType } from "./useReleaseCoinMexc";
-
-type SendTextPayload = {
-  orderNo: string;
-  keyType: MexcKeyType;
-  content: string;
-  type: "text";
+import type { MexcKeyType } from "./useReleaseCoinMexc";
+type ChatContext = { orderNo: string; keyType: MexcKeyType };
+export type SendChatMessageMexcPayload = ChatContext &
+  ({ type: "text"; content: string } | { type: "image" | "file"; file: File; content?: string });
+const record = (value: unknown): Record<string, unknown> =>
+  value !== null && typeof value === "object" ? (value as Record<string, unknown>) : {};
+const errorMessage = (error: unknown): string => {
+  const response = record(record(error).response);
+  const body = record(response.data);
+  if (response.status === 413) return "HTTP 413: o servidor ou proxy recusou o tamanho do arquivo.";
+  const message = body.message ?? body.msg ?? record(error).message;
+  const detail = Array.isArray(message)
+    ? message.join("; ")
+    : String(message || "Falha ao comunicar com a MEXC.");
+  return response.status ? `HTTP ${String(response.status)}: ${detail}` : detail;
 };
-
-type SendFilePayload = {
-  orderNo: string;
-  keyType: MexcKeyType;
-  file: File;
-  type: "image" | "file";
-  content?: string;
-};
-
-export type SendChatMessageMexcPayload = SendTextPayload | SendFilePayload;
-
-type UnknownRecord = Record<string, unknown>;
-
-const MEXC_FILE_SCAN_RETRY_MS = 10_000;
-const MEXC_FILE_SCAN_MAX_ATTEMPTS = 7;
-
-const isRecord = (value: unknown): value is UnknownRecord =>
-  typeof value === "object" && value !== null;
-
-const getDataRecord = (value: unknown): UnknownRecord | undefined => {
-  if (!isRecord(value)) return undefined;
-  return isRecord(value.data) ? value.data : value;
-};
-
-const getString = (value: unknown, key: string): string => {
-  const field = getDataRecord(value)?.[key];
-  return typeof field === "string" ? field.trim() : "";
-};
-
-const getNumber = (value: unknown, key: string): number | undefined => {
-  if (!isRecord(value)) return undefined;
-  const numericValue = Number(value[key]);
-  return Number.isFinite(numericValue) ? numericValue : undefined;
-};
-
-const getBoolean = (value: unknown, key: string): boolean | undefined => {
-  if (!isRecord(value)) return undefined;
-  const field = value[key];
-  return typeof field === "boolean" ? field : undefined;
-};
-
-const getErrorMessage = (value: unknown): string => {
-  if (!isRecord(value)) return "";
-
-  const message = value.msg ?? value.message;
-  return typeof message === "string" ? message.trim() : "";
-};
-
-const wait = (milliseconds: number) =>
-  new Promise<void>((resolve) => {
-    window.setTimeout(resolve, milliseconds);
-  });
-
-const validateFile = (file: File, type: "image" | "file") => {
-  if (file.size <= 0) {
-    throw new Error("O arquivo da MEXC está vazio.");
+const assertSuccess = (value: unknown): Record<string, unknown> => {
+  const response = record(value);
+  if (response.code !== 0 && response.code !== "0") {
+    throw new Error(String(response.msg ?? response.message ?? "Resposta inválida da MEXC."));
   }
-
-  if (type === "image") {
-    const allowedImageTypes = ["image/jpeg", "image/jpg", "image/png"];
-
-    if (!allowedImageTypes.includes(file.type.toLowerCase())) {
-      throw new Error("Envie uma imagem JPG, JPEG ou PNG para a MEXC.");
-    }
-
-    return;
-  }
-
-  const isPdf =
-    file.type.toLowerCase() === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
-
-  if (!isPdf) {
-    throw new Error("O contrato enviado como arquivo para a MEXC deve ser PDF.");
-  }
+  return record(response.data);
 };
-
+const normalizeFile = async (file: File, type: "image" | "file"): Promise<File> => {
+  if (!file.size) throw new Error("O arquivo está vazio.");
+  if (file.size > 20 * 1024 * 1024) throw new Error("O limite de upload desta aplicação é 20 MB.");
+  const head = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+  const mime =
+    type === "file"
+      ? head.slice(0, 5).join(",") === "37,80,68,70,45"
+        ? "application/pdf"
+        : ""
+      : head.join(",") === "137,80,78,71,13,10,26,10"
+        ? "image/png"
+        : head[0] === 255 && head[1] === 216 && head[2] === 255
+          ? "image/jpeg"
+          : "";
+  if (!mime)
+    throw new Error(
+      type === "file" ? "Envie o contrato PDF válido." : "Envie uma imagem PNG ou JPEG válida.",
+    );
+  return new File([file], file.name, { type: mime });
+};
 const waitForFileUrl = async (fileId: string, keyType: MexcKeyType): Promise<string> => {
-  for (let attempt = 1; attempt <= MEXC_FILE_SCAN_MAX_ATTEMPTS; attempt += 1) {
+  for (let attempt = 0; attempt < 7; attempt++) {
     const response = await api().get<unknown>(apiRoute.mexcDownloadFile(fileId), {
       params: { keyType },
+      timeout: 60_000,
     });
-
-    const fileUrl = getString(response.data, "fileUrl");
-
-    if (fileUrl) {
-      return fileUrl;
+    const body = record(response.data);
+    const code = Number(body.code);
+    if (code === 80016) throw new Error("A MEXC bloqueou o arquivo na análise de segurança.");
+    if (body.code !== undefined && code === 0) {
+      const fileUrl = assertSuccess(body).fileUrl;
+      if (typeof fileUrl === "string" && fileUrl.trim()) return fileUrl.trim();
+      throw new Error("A MEXC não retornou fileUrl.");
     }
-
-    const code = getNumber(response.data, "code");
-
-    if (code === 80016) {
-      throw new Error("A MEXC bloqueou o arquivo por considerá-lo inseguro.");
-    }
-
-    const scanIsPending = code === 80014 || code === 80015;
-
-    if (!scanIsPending) {
-      throw new Error(
-        getErrorMessage(response.data) || `A MEXC não retornou fileUrl para o arquivo ${fileId}.`,
-      );
-    }
-
-    if (attempt === MEXC_FILE_SCAN_MAX_ATTEMPTS) {
-      throw new Error("A varredura de segurança do arquivo na MEXC excedeu o tempo esperado.");
-    }
-
-    await wait(MEXC_FILE_SCAN_RETRY_MS);
+    if (code !== 80014 && code !== 80015)
+      throw new Error(String(body.msg ?? body.message ?? "Falha ao consultar o arquivo."));
+    if (attempt < 6)
+      await new Promise<void>((resolve) => {
+        window.setTimeout(resolve, 10_000);
+      });
   }
-
-  throw new Error("Não foi possível obter a URL do arquivo na MEXC.");
+  throw new Error("O arquivo ainda está em análise na MEXC. Nenhuma mensagem foi enviada.");
 };
-
-const assertWebSocketSendSucceeded = (value: unknown) => {
-  const success = getBoolean(value, "success");
-
-  if (success !== true) {
-    throw new Error(
-      getErrorMessage(value) || "A MEXC não confirmou o envio da mensagem no WebSocket.",
-    );
-  }
-};
-
 export const useSendChatMessageMexc = () => {
   const queryClient = useQueryClient();
-
   return useMutation({
+    retry: false,
     mutationFn: async (payload: SendChatMessageMexcPayload): Promise<unknown> => {
-      if (payload.type === "text") {
+      let stage = "Envio da mensagem";
+      try {
+        const params = { keyType: payload.keyType };
+        let fileUrl: string | undefined;
+        if (payload.type !== "text") {
+          stage = "Upload do arquivo";
+          const file = await normalizeFile(payload.file, payload.type);
+          const form = new FormData();
+          form.append("file", file, file.name);
+          const upload = await api().post<unknown>(apiRoute.mexcUploadFile, form, {
+            params,
+            timeout: 60_000,
+            transformRequest: [
+              (_body: unknown, headers) => {
+                headers.delete("Content-Type");
+                return form;
+              },
+            ],
+          });
+          const fileId = assertSuccess(upload.data).fileId;
+          if (typeof fileId !== "string" || !fileId.trim())
+            throw new Error("A MEXC não retornou fileId.");
+          stage = "Análise do arquivo";
+          fileUrl = await waitForFileUrl(fileId.trim(), payload.keyType);
+        } else if (!payload.content.trim()) {
+          throw new Error("A mensagem está vazia.");
+        }
+        stage = "Envio ao chat";
         const response = await api().post<unknown>(
           apiRoute.mexcSendChatMessage,
           {
             orderNo: payload.orderNo,
-            content: payload.content,
-            type: "text",
+            content:
+              payload.type === "text" ? payload.content : (payload.content ?? payload.file.name),
+            type: payload.type,
+            imageUrl: payload.type === "image" ? fileUrl : undefined,
+            imageThumbUrl: payload.type === "image" ? fileUrl : undefined,
+            fileUrl: payload.type === "file" ? fileUrl : undefined,
           },
-          {
-            params: { keyType: payload.keyType },
-          },
+          { params, timeout: 60_000 },
         );
-
-        assertWebSocketSendSucceeded(response.data);
+        const acknowledgement = record(response.data);
+        if (acknowledgement.success !== true || acknowledgement.method !== "SEND_MESSAGE") {
+          throw new Error(
+            String(
+              acknowledgement.msg ?? acknowledgement.message ?? "A MEXC não confirmou o envio.",
+            ),
+          );
+        }
         return response.data;
+      } catch (error: unknown) {
+        throw new Error(`${stage}: ${errorMessage(error)}`);
       }
-
-      validateFile(payload.file, payload.type);
-
-      const form = new FormData();
-      form.append("file", payload.file, payload.file.name);
-
-      const upload = await api().post<unknown>(apiRoute.mexcUploadFile, form, {
-        params: { keyType: payload.keyType },
-      });
-
-      const fileId = getString(upload.data, "fileId");
-
-      if (!fileId) {
-        throw new Error(
-          getErrorMessage(upload.data) || "A MEXC não retornou fileId do arquivo enviado.",
-        );
-      }
-
-      const fileUrl = await waitForFileUrl(fileId, payload.keyType);
-
-      const response = await api().post<unknown>(
-        apiRoute.mexcSendChatMessage,
-        {
-          orderNo: payload.orderNo,
-          content: payload.content ?? payload.file.name,
-          type: payload.type,
-          imageUrl: payload.type === "image" ? fileUrl : undefined,
-          imageThumbUrl: payload.type === "image" ? fileUrl : undefined,
-          fileUrl: payload.type === "file" ? fileUrl : undefined,
-        },
-        {
-          params: { keyType: payload.keyType },
-        },
-      );
-
-      assertWebSocketSendSucceeded(response.data);
-      return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pending-orders"] });
+      void queryClient.invalidateQueries({ queryKey: ["pending-orders"] });
     },
     onError: (error: unknown) => {
-      console.error("[MEXC_CHAT] Falha ao enviar mensagem", error);
-      toast.error(error instanceof Error ? error.message : "Falha ao enviar mensagem na MEXC.");
+      toast.error(errorMessage(error));
     },
   });
 };

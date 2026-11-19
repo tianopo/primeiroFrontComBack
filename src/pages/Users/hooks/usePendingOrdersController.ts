@@ -28,8 +28,8 @@ import type {
 import { confirmContract } from "../utils/confirmContract";
 import { toBRDate } from "../utils/helpers";
 import {
-  BinancePostReleaseOrderContext,
   useCheckAndReleaseCoinBinance,
+  type BinancePostReleaseOrderContext,
 } from "./Binance/useCheckAndReleaseCoinBinance";
 import { useMarkOrderAsPaidBinance } from "./Binance/useMarkOrderAsPaidBinance";
 import { useSendChatMessageBinance } from "./Binance/useSendChatMessageBinance";
@@ -311,6 +311,60 @@ export const usePendingOrdersController = () => {
       );
     });
   }
+  async function sendMexcReceiptAndContract(
+    order: OrderLike,
+    keyType: "empresa" | "pessoal",
+    cryptotechIsBuyer = false,
+  ): Promise<void> {
+    const orderId = String(order.id);
+    const [receiptBase64, contract] = await Promise.all([
+      generateSingleReceipt(legacyOrder(order, "MEXC")),
+      confirmContract({
+        usuario: {
+          apelido: String(order.apelido ?? "-"),
+          name: String((cryptotechIsBuyer ? order.vendedor : order.comprador) ?? "-"),
+          document: String(order.documento ?? "-"),
+        },
+        ordem: orderId,
+        data: toBRDate(String(order.data ?? "")),
+        exchange: "MEXC",
+        quantidade: String(order.quantidade ?? "-"),
+        valor: String(order.valor ?? "-"),
+        ativo: String(order.token ?? "-"),
+        cryptotechIsBuyer,
+      }),
+    ]);
+    if (!receiptBase64) throw new Error("Não foi possível gerar o comprovante da MEXC.");
+    if (!contract?.pdfBase64) throw new Error("Não foi possível gerar o contrato da MEXC.");
+    const attachments: { file: File; type: "image" | "file" }[] = [
+      { file: base64ToFile(receiptBase64, `recibo-${orderId}.png`, "image/png"), type: "image" },
+      {
+        file: base64ToFile(
+          contract.pdfBase64,
+          contract.fileName || `contrato-${orderId}.pdf`,
+          "application/pdf",
+        ),
+        type: "file",
+      },
+    ];
+    for (const { file, type } of attachments) {
+      await waitForMutation((completion) =>
+        sendChatMessageMexc(
+          { orderNo: orderId, keyType, file, type, content: file.name },
+          completion,
+        ),
+      );
+    }
+  }
+  async function sendGateReceipt(order: OrderLike, keyType: "empresa" | "pessoal"): Promise<void> {
+    const orderId = String(order.id);
+    const receiptBase64 = await generateSingleReceipt(legacyOrder(order, "Gate"));
+    if (!receiptBase64) throw new Error("Não foi possível gerar o comprovante da Gate.");
+    const file = base64ToFile(receiptBase64, `recibo-${orderId}.png`, "image/png");
+    await waitForMutation((completion) =>
+      sendChatMessageGate({ txid: orderId, keyType, file, type: "image" }, completion),
+    );
+  }
   const confirmBybitMarkPaid = (order: OrderLike) => {
     markPaidBybit(
       { orderId: String(order.id), keyType: modalBybitKeyType },
@@ -434,58 +488,7 @@ export const usePendingOrdersController = () => {
         onSuccess: async () => {
           closeModal();
           try {
-            const [receiptBase64, contract] = await Promise.all([
-              generateSingleReceipt(legacyOrder(order, "MEXC")),
-              confirmContract({
-                usuario: {
-                  apelido: String(order.apelido ?? "-"),
-                  name:
-                    Number(order.side) === 0
-                      ? String(order.vendedor ?? "-")
-                      : String(order.comprador ?? "-"),
-                  document: String(order.documento ?? "-"),
-                },
-                ordem: orderId,
-                data: toBRDate(String(order.data ?? "")),
-                exchange: "MEXC",
-                quantidade: String(order.quantidade ?? "-"),
-                valor: String(order.valor ?? "-"),
-                ativo: String(order.token ?? "-"),
-                cryptotechIsBuyer: true,
-              }),
-            ]);
-            if (!receiptBase64) throw new Error("Não foi possível gerar o comprovante da MEXC.");
-            if (!contract?.pdfBase64) throw new Error("Não foi possível gerar o contrato da MEXC.");
-            const receiptFile = base64ToFile(receiptBase64, `recibo-${orderId}.png`, "image/png");
-            const contractFile = base64ToFile(
-              contract.pdfBase64,
-              contract.fileName || `contrato-${orderId}.pdf`,
-              "application/pdf",
-            );
-            await waitForMutation((completion) =>
-              sendChatMessageMexc(
-                {
-                  orderNo: orderId,
-                  keyType: modalMexcKeyType,
-                  file: receiptFile,
-                  type: "image",
-                  content: receiptFile.name,
-                },
-                completion,
-              ),
-            );
-            await waitForMutation((completion) =>
-              sendChatMessageMexc(
-                {
-                  orderNo: orderId,
-                  keyType: modalMexcKeyType,
-                  file: contractFile,
-                  type: "file",
-                  content: contractFile.name,
-                },
-                completion,
-              ),
-            );
+            await sendMexcReceiptAndContract(order, modalMexcKeyType, true);
             toast.success("Comprovante e contrato enviados no chat da MEXC.");
           } catch (error: unknown) {
             console.error("[MEXC][MARK_PAID][DOCUMENTS]", error);
@@ -507,8 +510,15 @@ export const usePendingOrdersController = () => {
         keyType: modalMexcKeyType,
       },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
           closeModal();
+          try {
+            await sendMexcReceiptAndContract(order, modalMexcKeyType, false);
+            toast.success("Comprovante e contrato enviados no chat da MEXC.");
+          } catch (error: unknown) {
+            console.error("[MEXC][RELEASE][DOCUMENTS]", error);
+            toast.error("Ordem liberada, mas o comprovante ou contrato não foi enviado na MEXC.");
+          }
         },
         onError: () => {
           closeModal();
@@ -530,20 +540,7 @@ export const usePendingOrdersController = () => {
         onSuccess: async () => {
           closeModal();
           try {
-            const receiptBase64 = await generateSingleReceipt(legacyOrder(order, "Gate"));
-            if (!receiptBase64) throw new Error("Não foi possível gerar o comprovante da Gate.");
-            const receiptFile = base64ToFile(receiptBase64, `recibo-${orderId}.png`, "image/png");
-            await waitForMutation((completion) =>
-              sendChatMessageGate(
-                {
-                  txid: orderId,
-                  keyType: modalGateKeyType,
-                  file: receiptFile,
-                  type: "image",
-                },
-                completion,
-              ),
-            );
+            await sendGateReceipt(order, modalGateKeyType);
             toast.success("Comprovante enviado no chat da Gate.");
           } catch (error: unknown) {
             console.error("[GATE][MARK_PAID][RECEIPT]", error);
@@ -563,8 +560,15 @@ export const usePendingOrdersController = () => {
         keyType: modalGateKeyType,
       },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
           closeModal();
+          try {
+            await sendGateReceipt(order, modalGateKeyType);
+            toast.success("Comprovante enviado no chat da Gate.");
+          } catch (error: unknown) {
+            console.error("[GATE][RELEASE][RECEIPT]", error);
+            toast.error("Ordem liberada, mas o comprovante não foi enviado na Gate.");
+          }
         },
         onError: () => {
           closeModal();
