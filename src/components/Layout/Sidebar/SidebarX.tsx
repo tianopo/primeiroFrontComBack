@@ -28,10 +28,10 @@ export const SidebarX = ({ navbar, menuOpen }: ISidebarX) => {
 
   const copyTexts = [
     { label: "PIX CNPJ", text: "ab512de6-aa7b-4750-8321-914416061baa" },
-    { label: "PIX Aleatório", text: "08878fc2-21ea-4b7f-8379-56986fa350a1" },
+    { label: "PIX Aleatório", text: "55.636.113/0001-70" },
     {
       label: "Transferência",
-      text: `Não há para Corpx`,
+      text: `Não há para GOWD`,
     },
     {
       label: "Envio Final",
