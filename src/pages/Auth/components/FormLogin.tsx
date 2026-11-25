@@ -68,6 +68,15 @@ export const FormLogin = () => {
           >
             {!isPending ? "LOGIN" : "loading..."}
           </button>
+          <a
+            href="https://wa.me/5512992546355?text=quero%20fazer%20o%20meu%20cadastro%20na%20cryptotech"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex w-full cursor-pointer items-center rounded-6 py-1 font-semibold hover:text-primary"
+          >
+            <ArrowFatLeft width={20} height={17} weight="duotone" />
+            Cadastrar
+          </a>
           <button
             className="flex w-full cursor-pointer items-center rounded-6 py-1 font-semibold hover:text-primary"
             onClick={() => navigate(app.first)}

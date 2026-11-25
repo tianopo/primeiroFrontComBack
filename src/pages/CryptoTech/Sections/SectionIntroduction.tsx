@@ -66,7 +66,7 @@ export const SectionIntroduction = () => {
             },
             {
               label: t("contactMyself"),
-              link: "https://api.whatsapp.com/send?phone=5512982435638",
+              link: "https://api.whatsapp.com/send?phone=5512992546355",
             },
           ]}
         />

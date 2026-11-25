@@ -8,7 +8,7 @@ export const SectionServicesTechnology = () => {
   const t = (t: string) => translator(`introduction.${t}`);
   const message = (message: string) => {
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://api.whatsapp.com/send?phone=5512982435638&text=${encodedMessage}`;
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=5512992546355&text=${encodedMessage}`;
     window.open(whatsappUrl, "_blank");
   };
 

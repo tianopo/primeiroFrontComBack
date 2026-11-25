@@ -27,8 +27,8 @@ export const SidebarX = ({ navbar, menuOpen }: ISidebarX) => {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const copyTexts = [
-    { label: "PIX CNPJ", text: "ab512de6-aa7b-4750-8321-914416061baa" },
-    { label: "PIX Aleatório", text: "55.636.113/0001-70" },
+    { label: "PIX CNPJ", text: "55.636.113/0001-70" },
+    { label: "PIX Aleatório", text: "ab512de6-aa7b-4750-8321-914416061baa" },
     {
       label: "Transferência",
       text: `Não há para GOWD`,

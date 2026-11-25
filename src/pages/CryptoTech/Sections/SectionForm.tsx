@@ -25,7 +25,7 @@ export const SectionForm = () => {
     const { nome, telefone, email } = data;
     const message = `${t("message")}:\n\n${t("name")}: ${nome}\n${t("phone")}: ${telefone}\nE-mail: ${email}`;
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://api.whatsapp.com/send?phone=5512982435638&text=${encodedMessage}`;
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=5512992546355&text=${encodedMessage}`;
     window.open(whatsappUrl, "_blank");
     reset();
   };
