@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 type AccessControlContextType = {
   token: string;
   name: string;
+  document: string;
   acesso: string;
   deviceLimited: boolean;
   hydrated: boolean;
@@ -16,6 +17,7 @@ type AccessControlContextType = {
 
 type JwtPayload = {
   name?: string;
+  document?: string;
   acesso?: string;
   role?: string;
   deviceLimited?: boolean;
@@ -30,6 +32,7 @@ type JwtPayload = {
 const AccessControlContext = createContext<AccessControlContextType>({
   token: "",
   name: "",
+  document: "",
   acesso: "",
   deviceLimited: false,
   hydrated: false,
@@ -63,6 +66,7 @@ export const normalizeRole = (value: string) =>
 export const AccessControlProvider = ({ children }: { children: React.ReactNode }) => {
   const [token, setToken] = useState("");
   const [name, setName] = useState("");
+  const [document, setDocument] = useState("");
   const [acesso, setAcesso] = useState("");
   const [deviceLimited, setDeviceLimited] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -74,6 +78,7 @@ export const AccessControlProvider = ({ children }: { children: React.ReactNode 
   const clearAccess = () => {
     setToken("");
     setName("");
+    setDocument("");
     setAcesso("");
     setDeviceLimited(false);
     setBankAccountId("");
@@ -92,10 +97,12 @@ export const AccessControlProvider = ({ children }: { children: React.ReactNode 
     const payload = decodeJwtPayload(nextToken);
 
     const nextName = String(payload?.name ?? "");
+    const nextDocument = String(payload?.document ?? "");
     const nextAcesso = String(payload?.acesso ?? payload?.role ?? "");
 
     setToken(nextToken);
     setName(nextName);
+    setDocument(nextDocument);
     setAcesso(nextAcesso);
     setDeviceLimited(false);
 
@@ -119,6 +126,7 @@ export const AccessControlProvider = ({ children }: { children: React.ReactNode 
 
     setToken(storedToken);
     setName(String(payload?.name ?? ""));
+    setDocument(String(payload?.document ?? ""));
     setAcesso(String(payload?.acesso ?? payload?.role ?? ""));
     setDeviceLimited(false);
 
@@ -134,6 +142,7 @@ export const AccessControlProvider = ({ children }: { children: React.ReactNode 
     () => ({
       token,
       name,
+      document,
       acesso,
       deviceLimited,
       hydrated,
@@ -147,6 +156,7 @@ export const AccessControlProvider = ({ children }: { children: React.ReactNode 
     [
       token,
       name,
+      document,
       acesso,
       deviceLimited,
       hydrated,

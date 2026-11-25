@@ -18,7 +18,7 @@ interface IHeader {
 export const Header = ({ navbar }: IHeader) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const { name } = useAccessControl();
+  const { name, document } = useAccessControl();
 
   const prices = useBinancePrices();
 
@@ -69,7 +69,9 @@ export const Header = ({ navbar }: IHeader) => {
           onClick={() => setShowPasswordModal(true)}
         >
           <Gear width={19.45} height={20} weight="fill" />
-          <h5>{name}</h5>
+          <h5>
+            {name} - {document}
+          </h5>
         </div>
 
         <div className="mr-2 w-fit">

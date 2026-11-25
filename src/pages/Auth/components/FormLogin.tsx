@@ -1,4 +1,4 @@
-import { ArrowFatLeft } from "@phosphor-icons/react";
+import { ArrowFatLeft, ArrowFatRight } from "@phosphor-icons/react";
 import { ChangeEvent, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -74,7 +74,7 @@ export const FormLogin = () => {
             rel="noopener noreferrer"
             className="flex w-full cursor-pointer items-center rounded-6 py-1 font-semibold hover:text-primary"
           >
-            <ArrowFatLeft width={20} height={17} weight="duotone" />
+            <ArrowFatRight width={20} height={17} weight="duotone" />
             Cadastrar
           </a>
           <button
